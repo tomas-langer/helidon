@@ -22,7 +22,7 @@ module io.helidon.security.examples.abac {
     requires cdi.api;
     // implementation of expression language to use (used by the abac provider: policy expression language
     requires javax.el;
-    requires io.helidon.microprofile.v1_2;
+    requires io.helidon.microprofile.bundle;
     // needed for security components and restrictions of this module
     requires io.helidon.security;
     requires io.helidon.security.annotations;

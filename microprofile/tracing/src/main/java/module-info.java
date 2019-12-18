@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import javax.enterprise.inject.spi.Extension;
+
 /**
  * Eclipse Microprofile Tracing implementation for helidon microprofile.
  */
@@ -42,6 +44,6 @@ module io.helidon.microprofile.tracing {
 
     exports io.helidon.microprofile.tracing;
 
-    provides io.helidon.microprofile.server.spi.MpService with io.helidon.microprofile.tracing.MpTracingService;
+    provides Extension with io.helidon.microprofile.tracing.TracingCdiExtension;
     provides org.glassfish.jersey.internal.spi.AutoDiscoverable with io.helidon.microprofile.tracing.MpTracingAutoDiscoverable;
 }

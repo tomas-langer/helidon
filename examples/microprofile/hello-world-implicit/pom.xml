@@ -32,7 +32,7 @@
     <name>Helidon Microprofile Examples Implicit Hello World</name>
 
     <description>
-        Microprofile example with implicit bootstrapping (server.Main(new String[0])
+        Microprofile example with implicit bootstrapping (cdi.Main(new String[0])
     </description>
 
     <dependencies>
@@ -43,6 +43,7 @@
         <dependency>
             <groupId>io.helidon.microprofile.bundles</groupId>
             <artifactId>internal-test-libs</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jboss</groupId>

@@ -32,7 +32,7 @@ import javax.interceptor.InvocationContext;
 import org.eclipse.microprofile.metrics.Metric;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 
-import static io.helidon.microprofile.metrics.MetricUtil.getMetricName;
+import static io.helidon.microprofile.metrics.MetricUtil.getMetricID;
 import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
 
 /**
@@ -48,6 +48,8 @@ import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
  * <li>a {@code Function} that accepts an instance of the annotation and returns
  * the name for that instance of the annotation,
  * <li>a {@code Function} that accepts an instance of the annotation and returns
+ * the array of tag values for that instance of the annotation,</li>
+ * <li>a {@code Function} that accepts an instance of the annotation and returns
  * whether the name is absolute or not,
  * <li>a {@code Function} that accepts an instance of {@code MetricRegistry} and
  * returns a map of the metrics of the relevant type.
@@ -59,6 +61,7 @@ import static io.helidon.microprofile.metrics.MetricUtil.lookupAnnotation;
  *     super(registry,
  *             Metered.class,
  *             Metered::name,
+ *             Metered::tags,
  *             Metered::absolute,
  *             MetricRegistry::getMeters);
  * }
@@ -75,18 +78,21 @@ abstract class InterceptorBase<T extends Metric, A extends Annotation> {
     private final MetricRegistry registry;
     private final Class<A> annotationClass;
     private final Function<A, String> nameFunction;
+    private final Function<A, String[]> tagsFunction;
     private final Function<A, Boolean> isAbsoluteFunction;
     private final Function<MetricRegistry, SortedMap<String, T>> metricsMapFunction;
     private final String metricTypeName;
     InterceptorBase(MetricRegistry registry,
                     Class<A> annotationClass,
                     Function<A, String> nameFunction,
+                    Function<A, String[]> tagsFunction,
                     Function<A, Boolean> isAbsoluteFunction,
                     Function<MetricRegistry, SortedMap<String, T>> metricsMapFunction,
                     String metricTypeName) {
         this.registry = registry;
         this.annotationClass = annotationClass;
         this.nameFunction = nameFunction;
+        this.tagsFunction = tagsFunction;
         this.isAbsoluteFunction = isAbsoluteFunction;
         this.metricsMapFunction = metricsMapFunction;
         this.metricTypeName = metricTypeName;
@@ -122,12 +128,12 @@ abstract class InterceptorBase<T extends Metric, A extends Annotation> {
         MetricUtil.LookupResult<A> lookupResult = lookupAnnotation(element, annotationClass, getClass(context, element));
         if (lookupResult != null) {
             A annot = lookupResult.getAnnotation();
-            String metricName = getMetricName(element, getClass(context, element), lookupResult.getType(),
-                                              nameFunction.apply(annot),
+            MetricID metricID = getMetricID(element, getClass(context, element), lookupResult.getType(),
+                                              nameFunction.apply(annot), tagsFunction.apply(annot),
                                               isAbsoluteFunction.apply(annot));
-            Optional<T> metric = getMetric(metricsMapFunction.apply(registry), metricName);
+            Optional<T> metric = getMetric(metricsMapFunction.apply(registry), metricID);
             T metricInstance = metric.orElseGet(() -> {
-                throw new IllegalStateException("No " + metricTypeName + " with name [" + metricName
+                throw new IllegalStateException("No " + metricTypeName + " with ID [" + metricID
                                                         + "] found in registry [" + registry + "]");
             });
             Exception ex = null;

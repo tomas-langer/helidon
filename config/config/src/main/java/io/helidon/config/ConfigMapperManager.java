@@ -127,8 +127,16 @@ class ConfigMapperManager implements ConfigMapper {
         }
     }
 
+    /**
+     * Provides mapping from a class to a supported class.
+     * This is used to map Java primitives to their respective object classes.
+     *
+     * @param type type to map
+     * @param <T> type of the class
+     * @return object type for primitives, or the same class if not a primitive
+     */
     @SuppressWarnings("unchecked")
-    static <T> Class<T> supportedType(Class<T> type) {
+    public static <T> Class<T> supportedType(Class<T> type) {
         return (Class<T>) REPLACED_TYPES.getOrDefault(type, type);
     }
 

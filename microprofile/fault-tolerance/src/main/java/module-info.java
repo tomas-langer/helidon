@@ -39,6 +39,5 @@ module io.helidon.microprofile.faulttolerance {
     requires microprofile.metrics.api;
     requires microprofile.fault.tolerance.api;
 
-    provides io.helidon.microprofile.server.spi.MpService with io.helidon.microprofile.faulttolerance.FaultToleranceMpService;
     provides javax.enterprise.inject.spi.Extension with io.helidon.microprofile.faulttolerance.FaultToleranceExtension;
 }

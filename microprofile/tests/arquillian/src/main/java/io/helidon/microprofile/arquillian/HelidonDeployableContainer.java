@@ -45,6 +45,7 @@ import javax.enterprise.inject.spi.DefinitionException;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.spi.ConfigSource;
+import io.helidon.microprofile.cdi.HelidonContainer;
 
 import org.jboss.arquillian.container.spi.client.container.DeployableContainer;
 import org.jboss.arquillian.container.spi.client.container.DeploymentException;
@@ -173,8 +174,10 @@ public class HelidonDeployableContainer implements DeployableContainer<HelidonCo
 
             startServer(context, classPath, classNames);
         } catch (IOException e) {
+            HelidonContainer.instance().shutdown();
             throw new DeploymentException("Failed to copy the archive assets into the deployment directory", e);
         } catch (ReflectiveOperationException e) {
+            HelidonContainer.instance().shutdown();
             throw new DefinitionException(e.getCause());        // validation exceptions
         }
 

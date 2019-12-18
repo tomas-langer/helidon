@@ -20,7 +20,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.RuntimeMXBean;
 import java.lang.management.ThreadMXBean;
 
-import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
 /**
@@ -28,7 +27,6 @@ import javax.enterprise.inject.Produces;
  * This was useful for testing and decoupling the code using these dependencies from the process by which
  * these dependencies are looked up.
  */
-@ApplicationScoped
 class JvmRuntimeProducers {
     /**
      * Gets a ThreadMXBean implementation.

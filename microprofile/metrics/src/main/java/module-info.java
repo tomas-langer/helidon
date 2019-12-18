@@ -36,6 +36,5 @@ module io.helidon.microprofile.metrics {
 
     exports io.helidon.microprofile.metrics;
 
-    provides io.helidon.microprofile.server.spi.MpService with io.helidon.microprofile.metrics.MetricsMpService;
     provides javax.enterprise.inject.spi.Extension with io.helidon.microprofile.metrics.MetricsCdiExtension;
 }

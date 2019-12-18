@@ -93,7 +93,13 @@ public final class TodosHandler implements Service {
     }
 
     private Metadata counterMetadata(String name, String description) {
-        return new Metadata(name, name, description, MetricType.COUNTER, MetricUnits.NONE);
+        return Metadata.builder()
+                .withName(name)
+                .withDisplayName(name)
+                .withDescription(description)
+                .withType(MetricType.COUNTER)
+                .withUnit(MetricUnits.NONE)
+                .build();
     }
 
     @Override

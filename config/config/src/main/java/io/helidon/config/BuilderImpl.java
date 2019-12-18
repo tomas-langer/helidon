@@ -569,11 +569,16 @@ class BuilderImpl implements Config.Builder {
     }
 
     private boolean hasSourceType(Class<?> sourceType) {
-        if (sources != null) {
-            for (ConfigSource source : sources) {
-                if (sourceType.isAssignableFrom(source.getClass())) {
-                    return true;
-                }
+
+        for (ConfigSource source : sources) {
+            if (sourceType.isAssignableFrom(source.getClass())) {
+                return true;
+            }
+        }
+
+        for (PrioritizedConfigSource prioritizedSource : prioritizedSources) {
+            if (sourceType.isAssignableFrom(prioritizedSource.configSourceClass())) {
+                return true;
             }
         }
         return false;
@@ -818,7 +823,7 @@ class BuilderImpl implements Config.Builder {
     private interface PrioritizedConfigSource extends Prioritized,
                                                       ConfigSource,
                                                       org.eclipse.microprofile.config.spi.ConfigSource {
-
+        Class<?> configSourceClass();
     }
 
     private static final class MpSourceWrapper implements PrioritizedConfigSource {
@@ -826,6 +831,11 @@ class BuilderImpl implements Config.Builder {
 
         private MpSourceWrapper(org.eclipse.microprofile.config.spi.ConfigSource delegate) {
             this.delegate = delegate;
+        }
+
+        @Override
+        public Class<?> configSourceClass() {
+            return delegate.getClass();
         }
 
         @Override
@@ -886,6 +896,11 @@ class BuilderImpl implements Config.Builder {
 
         AbstractMpSource<?> unwrap() {
             return delegate;
+        }
+
+        @Override
+        public Class<?> configSourceClass() {
+            return delegate.getClass();
         }
 
         @Override

@@ -147,7 +147,7 @@ public final class RegistryFactory implements io.helidon.common.metrics.Internal
      * for {@link Type#BASE} returns a final registry (cannot register new metrics).
      *
      * @param type type of registry
-     * @return Registry for the type defined.
+     * @return MetricRegistry for the type defined.
      */
     public MetricRegistry getRegistry(Type type) {
         if (type == Type.BASE) {

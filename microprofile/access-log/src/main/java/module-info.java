@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import javax.enterprise.inject.spi.Extension;
+
 /**
  * MicroProfile access log extension.
  */
@@ -25,5 +27,5 @@ module io.helidon.microprofile.accesslog {
 
     exports io.helidon.microprofile.accesslog;
 
-    provides io.helidon.microprofile.server.spi.MpService with io.helidon.microprofile.accesslog.MpAccessLogService;
+    provides Extension with io.helidon.microprofile.accesslog.AccessLogCdiExtension;
 }

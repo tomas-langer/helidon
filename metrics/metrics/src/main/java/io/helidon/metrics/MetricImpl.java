@@ -144,9 +144,13 @@ abstract class MetricImpl extends Metadata implements HelidonMetric {
         builder.add(getName(), metaBuilder);
     }
 
-    @Override
-    public String prometheusData() {
-        StringBuilder sb = new StringBuilder();
+    static String jsonFullKey(String baseName, MetricID metricID) {
+        return metricID.getTags().isEmpty() ? baseName
+                : String.format("%s;%s", baseName,
+                        metricID.getTagsAsList().stream()
+                                .map(MetricImpl::tagForJsonKey)
+                                .collect(Collectors.joining(";")));
+    }
 
         String name = prometheusName(getName());
         String tags = getTagsAsString();

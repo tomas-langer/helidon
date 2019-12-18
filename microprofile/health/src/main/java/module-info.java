@@ -38,5 +38,5 @@ module io.helidon.microprofile.health {
 
     uses io.helidon.microprofile.health.HealthCheckProvider;
 
-    provides io.helidon.microprofile.server.spi.MpService with io.helidon.microprofile.health.HealthMpService;
+    provides javax.enterprise.inject.spi.Extension with io.helidon.microprofile.health.HealthCdiExtension;
 }

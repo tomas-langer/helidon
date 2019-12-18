@@ -16,11 +16,11 @@
  */
 package io.helidon.microprofile.metrics;
 
-import org.eclipse.microprofile.metrics.annotation.Counted;
-
 import javax.enterprise.context.Dependent;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
+
+import org.eclipse.microprofile.metrics.annotation.Counted;
 
 @Dependent
 public class ResourceWithReusedMetricForInvocation {

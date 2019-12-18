@@ -35,7 +35,6 @@
         <module>config</module>
         <module>health</module>
         <module>metrics</module>
-        <module>metrics2</module>
         <module>oidc</module>
         <module>server</module>
         <module>security</module>
@@ -48,5 +47,7 @@
         <module>rest-client</module>
         <module>access-log</module>
         <module>grpc</module>
+        <module>cdi</module>
+        <module>weld</module>
     </modules>
 </project>

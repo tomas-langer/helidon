@@ -19,6 +19,7 @@ package io.helidon.microprofile.metrics;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 
+import io.helidon.metrics.HelidonMetadata;
 import io.helidon.metrics.RegistryFactory;
 import io.helidon.microprofile.server.Server;
 
@@ -67,7 +68,7 @@ public class MetricsMpServiceTest {
     }
 
     protected static void registerCounter(String name) {
-        Metadata meta = new Metadata(name,
+        Metadata meta = new HelidonMetadata(name,
                                      name,
                                      name,
                                      MetricType.COUNTER,

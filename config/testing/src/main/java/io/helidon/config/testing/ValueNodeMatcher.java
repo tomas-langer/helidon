@@ -24,7 +24,7 @@ import org.hamcrest.Description;
 /**
  * Hamcrest {@link org.hamcrest.Matcher} implementation that matches {@link ConfigNode.ValueNode} value.
  */
-public class ValueNodeMatcher extends BaseMatcher<ConfigNode> {
+public final class ValueNodeMatcher extends BaseMatcher<ConfigNode> {
 
     private String expectedValue;
 

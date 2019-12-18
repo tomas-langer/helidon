@@ -20,6 +20,9 @@
         <packages>
             <package name="org.eclipse.microprofile.rest.client.tck.*"/>
         </packages>
+<!--        <classes>-->
+<!--            <class name="org.eclipse.microprofile.rest.client.tck.cditests.HasRequestScopeTest"/>-->
+<!--        </classes>-->
     </test>
 
 </suite>

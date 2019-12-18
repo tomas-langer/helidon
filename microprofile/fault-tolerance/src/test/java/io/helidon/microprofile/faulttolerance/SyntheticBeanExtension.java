@@ -20,12 +20,8 @@ import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
 
-class SyntheticBeanExtension<T> implements Extension {
-    final Class<T> type;
-
-    SyntheticBeanExtension(Class<T> type) {
-        this.type = type;
-    }
+public class SyntheticBeanExtension implements Extension {
+    final Class<?> type = SyntheticRetryBean.class;
 
     void restSynthetic(@Observes AfterBeanDiscovery abd) {
     	abd.addBean(new SyntheticBean<>(type));

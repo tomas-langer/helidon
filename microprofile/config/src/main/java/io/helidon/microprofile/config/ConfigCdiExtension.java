@@ -39,9 +39,11 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
 import javax.enterprise.inject.spi.Annotated;
@@ -50,20 +52,17 @@ import javax.enterprise.inject.spi.AnnotatedMethod;
 import javax.enterprise.inject.spi.AnnotatedParameter;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.ProcessBean;
-import javax.enterprise.inject.spi.ProcessInjectionPoint;
 import javax.enterprise.inject.spi.ProcessObserverMethod;
-import javax.enterprise.util.AnnotationLiteral;
-import javax.enterprise.util.Nonbinding;
 import javax.inject.Provider;
-import javax.inject.Qualifier;
 
+import io.helidon.common.HelidonFeatures;
+import io.helidon.common.HelidonFlavor;
+import io.helidon.common.NativeImageHelper;
 import io.helidon.config.Config;
-import io.helidon.config.ConfigException;
 import io.helidon.config.MissingValueException;
 
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -228,7 +227,9 @@ public class ConfigCdiExtension implements Extension {
                 .createWith(creationalContext -> (Config) ConfigProvider.getConfig());
 
         abd.addBean()
-                .addType(org.eclipse.microprofile.config.Config.class)
+                .addTransitiveTypeClosure(org.eclipse.microprofile.config.Config.class)
+                .beanClass(org.eclipse.microprofile.config.Config.class)
+                .scope(ApplicationScoped.class)
                 .createWith(creationalContext -> new SerializableConfig());
     }
 

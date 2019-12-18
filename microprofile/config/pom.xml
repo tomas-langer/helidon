@@ -48,6 +48,10 @@
             <artifactId>helidon-config-object-mapping</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.microprofile.cdi</groupId>
+            <artifactId>helidon-microprofile-cdi</artifactId>
+        </dependency>
+        <dependency>
             <groupId>javax.enterprise</groupId>
             <artifactId>cdi-api</artifactId>
             <!-- provided by CDI implementation -->
