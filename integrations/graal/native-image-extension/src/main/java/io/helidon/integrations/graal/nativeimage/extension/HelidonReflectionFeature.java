@@ -68,8 +68,6 @@ public class HelidonReflectionFeature implements Feature {
         // to add a startup hook:
         //RuntimeSupport.getRuntimeSupport().addStartupHook(() -> {});
 
-
-
         // load configuration
         HelidonReflectionConfiguration config = loadConfiguration(access);
         // create context (to know what was processed and what should be registered)
@@ -194,6 +192,8 @@ public class HelidonReflectionFeature implements Feature {
                     case "equals":
                         register = !hasParams(method, Object.class);
                         break;
+                    default:
+                        // do nothing
                     }
                 }
 

@@ -222,12 +222,15 @@ public class WeldFeature implements Feature {
         }
     }
 
-    public static final class ProxyBean implements Bean<Object> {
+    /**
+     * Proxy used to initialize Weld.
+     */
+    static final class ProxyBean implements Bean<Object> {
 
         private final Class<?> beanClass;
         private final Set<Type> types;
 
-        public ProxyBean(Class<?> beanClass, Set<Type> types) {
+        ProxyBean(Class<?> beanClass, Set<Type> types) {
             this.beanClass = beanClass;
 
             this.types = types;

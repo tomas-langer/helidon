@@ -38,7 +38,6 @@ import io.helidon.webserver.WebTracingConfig;
 
 import io.opentracing.Tracer;
 import org.eclipse.microprofile.config.ConfigProvider;
-import org.glassfish.jersey.server.ResourceConfig;
 
 /**
  * CDI extension for Microprofile Tracing implementation.

@@ -39,7 +39,7 @@ public class WeldSubstitutions {
     @TargetClass(className = "org.jboss.weld.bootstrap.events.ContainerLifecycleEventPreloader")
     static final class ContainerLifecycleEventPreloader {
         @Alias
-        ObserverNotifier notifier;
+        private ObserverNotifier notifier;
 
         @Alias
         @RecomputeFieldValue(kind = RecomputeFieldValue.Kind.Reset, isFinal = true)
@@ -48,6 +48,7 @@ public class WeldSubstitutions {
         @Inject
         private final DaemonThreadFactory dtf = new DaemonThreadFactory(new ThreadGroup("weld-preloaders"),
                                                                         "weld-preloader-");
+
         @Substitute
         void preloadContainerLifecycleEvent(Class<?> eventRawType, Type... typeParameters) {
             dtf.newThread(new Runnable() {
@@ -70,11 +71,24 @@ public class WeldSubstitutions {
         private Executor asyncEventExecutor;
     }
 
+    /**
+     * Injected when building native-image.
+     */
     public static final class ForkJoinAccessors {
+        /**
+         * Getter.
+         * @param object object
+         * @return executor from {@link java.util.concurrent.ForkJoinPool}
+         */
         public static Executor get(Object object) {
             return ForkJoinPool.commonPool();
         }
 
+        /**
+         * Setter - does nothing.
+         * @param object object
+         * @param executor executor
+         */
         public static void set(Object object, Executor executor) {
 
         }
