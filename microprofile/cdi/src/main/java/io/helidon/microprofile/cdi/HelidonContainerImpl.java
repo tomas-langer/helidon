@@ -83,7 +83,7 @@ final class HelidonContainerImpl extends Weld implements HelidonContainer {
     private static final Logger LOGGER = Logger.getLogger(HelidonContainerImpl.class.getName());
     private static final AtomicBoolean IN_RUNTIME = new AtomicBoolean();
     private static final String EXIT_ON_STARTED_KEY = "exit.on.started";
-    private static final boolean EXIT_ON_STARTED = "✅".equals(System.getProperty(EXIT_ON_STARTED_KEY));
+    private static final boolean EXIT_ON_STARTED = "!".equals(System.getProperty(EXIT_ON_STARTED_KEY));
     private static final Context ROOT_CONTEXT;
 
     static {
