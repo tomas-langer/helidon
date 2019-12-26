@@ -32,7 +32,6 @@ public class MpConfigBuilder implements ConfigBuilder {
         delegate.disableEnvironmentVariablesSource();
         delegate.disableSourceServices();
         delegate.disableMpMapperServices();
-        delegate.metaConfig();
     }
 
     @Override
@@ -80,5 +79,10 @@ public class MpConfigBuilder implements ConfigBuilder {
     @Override
     public Config build() {
         return delegate.build();
+    }
+
+    ConfigBuilder metaConfig(io.helidon.config.Config metaConfig) {
+        delegate.config(metaConfig);
+        return this;
     }
 }

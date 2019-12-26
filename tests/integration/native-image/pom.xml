@@ -37,6 +37,7 @@
     <modules>
         <module>se-1</module>
         <module>static-content</module>
+        <module>mp-1</module>
     </modules>
 
 </project>

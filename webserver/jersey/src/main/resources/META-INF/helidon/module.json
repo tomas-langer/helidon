@@ -1,0 +1,8 @@
+{
+    "name": "WebServer Jersey",
+    "flavor": "SE",
+    "feature": false,
+    "activation": {
+        "exist": ["helidon-webserver", "helidon-jersey-server"]
+    }
+}

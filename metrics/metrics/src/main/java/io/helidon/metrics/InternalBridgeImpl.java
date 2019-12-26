@@ -17,10 +17,11 @@
 package io.helidon.metrics;
 
 import io.helidon.common.metrics.InternalBridge;
+import io.helidon.common.metrics.InternalBridge.Metadata.MetadataBuilder;
 import io.helidon.config.Config;
 
 /**
- * Implements the metrics bridge interface.
+ * Implements the metrics bridge interface based on MP Metrics 2.0.
  */
 public class InternalBridgeImpl implements InternalBridge {
 
@@ -45,7 +46,7 @@ public class InternalBridgeImpl implements InternalBridge {
     }
 
     @Override
-    public Metadata.MetadataBuilder.Factory getMetadataBuilderFactory() {
+    public MetadataBuilder.Factory getMetadataBuilderFactory() {
         return new InternalMetadataBuilderImpl.FactoryImpl();
     }
 

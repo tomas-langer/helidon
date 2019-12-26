@@ -114,7 +114,7 @@ public class ObjectConfigMapperProvider implements ConfigMapperProvider {
                                                          methodName,
                                                          String.class);
 
-        if (!method.isPresent()) {
+        if (method.isEmpty()) {
             method = findStaticMethod(type,
                                       methodName,
                                       CharSequence.class);

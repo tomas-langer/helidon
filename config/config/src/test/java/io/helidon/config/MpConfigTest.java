@@ -97,7 +97,4 @@ public class MpConfigTest {
         Integer[] values = config.getValue("mp-list", Integer[].class);
         assertThat(values, arrayContaining(1, 2, 3));
     }
-
-    // TODO if I use app1.node1.value instead to test overriding, the override fails
-    //   probably relate to it being an object node in properties and value node in map?
 }

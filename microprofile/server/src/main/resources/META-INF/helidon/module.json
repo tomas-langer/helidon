@@ -1,0 +1,8 @@
+{
+    "name": "JAX-RS",
+    "flavor": "MP",
+    "feature": true,
+    "activation": {
+        "optional": true
+    }
+}

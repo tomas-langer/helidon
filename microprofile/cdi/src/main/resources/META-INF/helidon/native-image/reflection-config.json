@@ -1,0 +1,16 @@
+{
+    "annotated":[
+        "javax.inject.Singleton",
+        "javax.enterprise.context.Dependent",
+        "javax.enterprise.context.RequestScoped",
+        "javax.enterprise.context.ApplicationScoped"
+    ],
+    "class-hierarchy": [
+        "org.slf4j.Logger",
+        "javax.inject.Provider"
+    ],
+    "classes": [
+    ],
+    "exclude": [
+    ]
+}

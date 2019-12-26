@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright (c) 2018, 2019 Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,7 +20,6 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Produces;
 
 import io.helidon.common.metrics.InternalBridge.MetricRegistry;
-import io.helidon.metrics.RegistryFactory;
 
 import org.eclipse.microprofile.metrics.MetricRegistry.Type;
 import org.eclipse.microprofile.metrics.annotation.RegistryType;
@@ -30,7 +29,8 @@ import org.eclipse.microprofile.metrics.annotation.RegistryType;
  */
 @ApplicationScoped
 final class RegistryProducer {
-    private static final RegistryFactory REGISTRY_FACTORY =
+
+    private static final io.helidon.metrics.RegistryFactory REGISTRY_FACTORY =
             io.helidon.metrics.RegistryFactory.getInstance();
 
     private RegistryProducer() {

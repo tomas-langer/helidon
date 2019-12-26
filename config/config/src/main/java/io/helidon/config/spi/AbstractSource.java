@@ -253,7 +253,7 @@ public abstract class AbstractSource<T, S> implements Source<T> {
                 } else {
                     LOGGER.log(Level.CONFIG, message + " " + cause.getLocalizedMessage());
                 }
-                LOGGER.log(Level.FINE,
+                LOGGER.log(Level.FINEST,
                            String.format("Load of '%s' source failed with an exception.",
                                          description()),
                            cause);

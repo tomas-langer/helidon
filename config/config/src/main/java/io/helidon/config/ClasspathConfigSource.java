@@ -107,6 +107,11 @@ public class ClasspathConfigSource extends AbstractParsableConfigSource<Instant>
                                                                                                          instant));
     }
 
+    @Override
+    public String toString() {
+        return "classpath: " + resource;
+    }
+
     /**
      * Classpath ConfigSource Builder.
      * <p>

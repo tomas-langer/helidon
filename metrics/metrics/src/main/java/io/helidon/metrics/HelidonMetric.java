@@ -16,9 +16,13 @@
 
 package io.helidon.metrics;
 
+import java.util.List;
+
 import javax.json.JsonObjectBuilder;
 
+import org.eclipse.microprofile.metrics.Metadata;
 import org.eclipse.microprofile.metrics.Metric;
+import org.eclipse.microprofile.metrics.MetricID;
 
 /**
  * Helidon Extension of {@link Metric}.
@@ -31,24 +35,42 @@ interface HelidonMetric extends Metric {
      * @return metric name
      */
     String getName();
+
     /**
      * Add this metrics data to the JSON builder.
      *
      * @param builder builder of the registry (or of a single metric) result
      */
-    void jsonData(JsonObjectBuilder builder);
+    void jsonData(JsonObjectBuilder builder, MetricID metricID);
 
     /**
      * Add this metrics metadata to the JSON builder.
      *
      * @param builder builder of the registry (or of a single metric) result
+     * @param metricIDs IDs from which to harvest tags (if present)
      */
-    void jsonMeta(JsonObjectBuilder builder);
+    void jsonMeta(JsonObjectBuilder builder, List<MetricID> metricIDs);
 
     /**
      * Return this metric data in prometheus format.
      *
-     * @return data and metadata of this metric in Prometheus format
+     * @param sb the {@code StringBuilder} used to accumulate the output
+     * @param metricID the {@code MetricID} for the metric to be formatted
      */
-    String prometheusData();
+    void prometheusData(StringBuilder sb, MetricID metricID);
+
+    /**
+     * Return a name for this metric, possibly including a unit suffix.
+     *
+     * @param metricID the {@code MetricID} for the metric to be formatted
+     * @return Name for metric.
+     */
+    String prometheusNameWithUnits(MetricID metricID);
+
+    /**
+     * Returns the metadata associated with this metric.
+     *
+     * @return the metric's {@link Metadata}
+     */
+    Metadata metadata();
 }

@@ -39,7 +39,7 @@
         <dependency>
             <groupId>org.eclipse.microprofile.metrics</groupId>
             <artifactId>microprofile-metrics-api</artifactId>
-            <version>${version.lib.microprofile-metrics1-api}</version>
+            <version>${version.lib.microprofile-metrics-api}</version>
             <scope>provided</scope>
             <exclusions>
                 <exclusion>

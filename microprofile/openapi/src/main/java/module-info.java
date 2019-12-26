@@ -15,6 +15,10 @@
  *
  */
 
+import javax.enterprise.inject.spi.Extension;
+
+import io.helidon.microprofile.openapi.OpenApiCdiExtension;
+
 module io.helidon.microprofile.openapi {
     requires java.logging;
     
@@ -27,4 +31,6 @@ module io.helidon.microprofile.openapi {
     requires jandex;
 
     exports io.helidon.microprofile.openapi;
+
+    provides Extension with OpenApiCdiExtension;
 }

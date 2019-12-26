@@ -1097,5 +1097,13 @@ public class Security {
                                             e);
             }
         }
+
+        /**
+         * Check whether any provider is configured.
+         * @return {@code true} if no provider is configured, {@code false} if there is at least one provider configured
+         */
+        public boolean noProvider() {
+            return allProviders.isEmpty();
+        }
     }
 }

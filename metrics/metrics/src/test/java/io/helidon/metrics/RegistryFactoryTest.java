@@ -23,6 +23,7 @@ import io.helidon.config.ConfigSources;
 
 import org.eclipse.microprofile.metrics.Counter;
 import org.eclipse.microprofile.metrics.Gauge;
+import org.eclipse.microprofile.metrics.MetricID;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
  * Unit test for {@link RegistryFactory}.
  */
 public class RegistryFactoryTest {
-    private static final String METRIC_USED_HEAP = "memory.usedHeap";
+    private static final MetricID METRIC_USED_HEAP = new MetricID("memory.usedHeap");
 
     private static RegistryFactory configured;
     private static RegistryFactory unconfigured;
@@ -56,7 +57,7 @@ public class RegistryFactoryTest {
         unconfigured = RegistryFactory.create();
         Config config = Config.builder()
                 .sources(ConfigSources.create(Map.of(
-                        "base." + METRIC_USED_HEAP + ".enabled",
+                        "base." + METRIC_USED_HEAP.getName() + ".enabled",
                         "false")))
                 .build();
         configured = RegistryFactory.create(config);
@@ -79,16 +80,6 @@ public class RegistryFactoryTest {
 
         gauge = baseUn.getGauges().get(METRIC_USED_HEAP);
         assertThat(METRIC_USED_HEAP + " should be available by default", gauge, notNullValue());
-    }
-
-    @Test
-    void testBaseCounters() {
-        Counter counter = base.counter("thread.count");
-
-        assertThrows(IllegalStateException.class, counter::inc);
-        assertThrows(IllegalStateException.class, () -> counter.inc(1400));
-        assertThrows(IllegalStateException.class, counter::dec);
-        assertThrows(IllegalStateException.class, () -> counter.dec(1400));
     }
 
     @Test

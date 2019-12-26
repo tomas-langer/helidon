@@ -457,6 +457,8 @@ public class JaegerTracerBuilder implements TracerBuilder<JaegerTracerBuilder> {
             }
 
             result = jaegerConfig().getTracer();
+            LOGGER.info(() -> "Creating Jaeger tracer for '" + serviceName + "' configured with " + protocol + "://"
+                    + host + ":" + port);
         } else {
             LOGGER.info("Jaeger Tracer is explicitly disabled.");
             result = NoopTracerFactory.create();

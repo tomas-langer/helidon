@@ -80,7 +80,7 @@ public class FileOverrideSource extends AbstractOverrideSource<byte[]> {
     }
 
     /**
-     * Create a new fluent API builder.
+     * Create a new builder.
      *
      * @return builder to create new instances of file override source
      */

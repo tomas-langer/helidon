@@ -19,7 +19,7 @@ package io.helidon.metrics;
 import java.util.concurrent.TimeUnit;
 
 /**
- * TODO javadoc.
+ * TestClock class.
  */
 public class TestClock implements Clock {
     private long nanoTime;

@@ -1,0 +1,23 @@
+sources:
+  - type: "system-properties"
+  - type: "environment-variables"
+  - type: "file"
+    properties:
+      optional: true
+      path: "mp-config.yaml"
+  - type: "classpath"
+    properties:
+      optional: true
+      resource: "application.yaml"
+  - type: "classpath"
+    properties:
+      resource: "META-INF/microprofile-config.properties"
+
+
+#    polling-strategy:
+#      type: "custom-polling-strategy"
+#      custom: "custom-polling-value"
+#    retry-policy:
+#      type: "custom-retry-policy"
+#      custom: "custom-retry-policy"
+#

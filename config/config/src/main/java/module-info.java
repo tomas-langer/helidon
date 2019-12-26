@@ -42,6 +42,10 @@ module io.helidon.config {
     uses io.helidon.config.spi.RetryPolicyProvider;
     uses io.helidon.config.spi.PollingStrategyProvider;
 
+    uses org.eclipse.microprofile.config.spi.ConfigSource;
+    uses org.eclipse.microprofile.config.spi.ConfigSourceProvider;
+    uses org.eclipse.microprofile.config.spi.Converter;
+
     uses java.nio.file.spi.FileTypeDetector;
 
     provides io.helidon.config.spi.ConfigParser with io.helidon.config.internal.PropertiesConfigParser;

@@ -1,0 +1,8 @@
+{
+    "name": "CDI",
+    "flavor": "MP",
+    "feature": true,
+    "activation": {
+        "optional": false
+    }
+}

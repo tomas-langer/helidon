@@ -91,9 +91,11 @@ class BuilderImpl implements Config.Builder {
      */
     private final List<Function<Config, ConfigFilter>> filterProviders;
     private boolean filterServicesEnabled;
-    /*
-     * Changes (TODO to be removed)
+    /**
+     * Change support now uses Flow API, which seems like an overkill.
+     * @deprecated change support must be refactored, it is too complex
      */
+    @Deprecated
     private Executor changesExecutor;
     private int changesMaxBuffer;
     /*
@@ -840,13 +842,23 @@ class BuilderImpl implements Config.Builder {
 
         @Override
         public int priority() {
+            // MP config is using "ordinals" - the higher the number, the more important it is
+            // We are using "priorities" - the lower the number, the more important it is
             String value = delegate.getValue(CONFIG_ORDINAL);
+
+            int priority;
+
             if (null != value) {
-                return 101 - Integer.parseInt(value);
+                priority = Integer.parseInt(value);
+            } else {
+                priority = Priorities.find(delegate, 100);
             }
 
             // priority from Prioritized and annotation (MP has it reversed)
-            return 101 - Priorities.find(delegate, 100);
+            // it is a tough call how to merge priorities and ordinals
+            // now we use a "101" as a constant, so components with ordinal 100 will have
+            // priority of 1
+            return 101 - priority;
         }
 
         @Override

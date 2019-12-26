@@ -32,5 +32,6 @@
 
     <modules>
         <module>native-image-extension</module>
+        <module>mp-native-image-extension</module>
     </modules>
 </project>

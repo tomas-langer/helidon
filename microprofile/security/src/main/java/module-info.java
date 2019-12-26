@@ -25,11 +25,9 @@ module io.helidon.microprofile.security {
     requires transitive io.helidon.security.integration.jersey;
     requires transitive io.helidon.security.integration.webserver;
     requires io.helidon.microprofile.server;
+    requires io.helidon.microprofile.cdi;
 
-    provides io.helidon.microprofile.server.spi.MpService with io.helidon.microprofile.security.SecurityMpService;
+    exports io.helidon.microprofile.security;
+
     provides javax.enterprise.inject.spi.Extension with io.helidon.microprofile.security.SecurityCdiExtension;
-
-    uses org.eclipse.microprofile.config.spi.ConfigSource;
-    uses org.eclipse.microprofile.config.spi.ConfigSourceProvider;
-    uses org.eclipse.microprofile.config.spi.Converter;
 }
