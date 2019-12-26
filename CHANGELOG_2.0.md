@@ -54,6 +54,9 @@ modules for 2.x were renamed from `metrics2` to `metrics`.
       support GraalVM `native-image`)
     - You can only run a single instance of Server in a JVM
     - If you use `SeContainerInitializer` you would get an exception
+        - this can be worked around by configuration property `mp.initializer.allow=true`, and warning can be removed
+            using `mp.initializer.no-warn=true`
+        - once `SeContainerInitializer` is used, you can no longer use MP with `native-image` 
 - You can no longer provide a `Context` instance, root context is now built-in
 - `MpService` and `MpServiceContext` have been removed
     - methods from context have been moved to `JaxRsCdiExtension` and `ServerCdiExtension` that can be accessed

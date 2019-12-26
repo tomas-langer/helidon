@@ -23,7 +23,7 @@ import java.util.function.Supplier;
 class LazyValueImpl<T> implements LazyValue<T> {
     private final Lock theLock = new ReentrantLock();
 
-    private volatile T value;
+    private T value;
 
     private Supplier<T> delegate;
     private volatile boolean loaded;
