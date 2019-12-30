@@ -96,7 +96,6 @@
         <version.lib.typesafe-config>1.4.0</version.lib.typesafe-config>
         <version.lib.ucp>19.3.0.0</version.lib.ucp>
         <version.lib.validation-api>2.0.1.Final</version.lib.validation-api>
-        <version.lib.weld>3.1.2.Final</version.lib.weld>
         <version.lib.zipkin>2.12.0</version.lib.zipkin>
         <version.lib.hystrix>1.5.18</version.lib.hystrix>
         <version.lib.failsafe>2.3.1</version.lib.failsafe>
@@ -377,24 +376,6 @@
             </dependency>
 
             <!-- Microprofile related -->
-            <dependency>
-                <groupId>org.jboss.weld.se</groupId>
-                <artifactId>weld-se-core</artifactId>
-                <version>${version.lib.weld}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.codehaus.groovy</groupId>
-                        <artifactId>groovy-all</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.jboss.weld</groupId>
-                <artifactId>weld-core-bom</artifactId>
-                <version>${version.lib.weld}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
             <dependency>
                 <groupId>org.eclipse.microprofile.config</groupId>
                 <artifactId>microprofile-config-api</artifactId>
