@@ -225,6 +225,37 @@ public final class JaxRsApplication {
         }
 
         /**
+         * Configure a routing name. This tells us this application should bind to a named port of the
+         * web server.
+         * To reset routing name to default, configure the {@link io.helidon.microprofile.server.RoutingName#DEFAULT_NAME}.
+         *
+         * @param routingName name to use
+         * @return updated builder instance
+         */
+        public Builder routingName(String routingName) {
+            if (routingName.equals(RoutingName.DEFAULT_NAME)) {
+                this.routingName = null;
+            } else {
+                this.routingName = routingName;
+            }
+            return this;
+        }
+
+        /**
+         * In case the {@link #routingName()} is configured to a non-default name, you can control with this property
+         * whether the name is required (and boot would fail if such a named port is not configured), or default
+         * routing is used when the named one is missing.
+         *
+         * @param routingNameRequired set to {@code true} if the named routing must be configured on web server, set to
+         * {@code false} to use default routing if the named routing is missing
+         * @return updated builder instance
+         */
+        public Builder routingNameRequired(boolean routingNameRequired) {
+            this.routingNameRequired = routingNameRequired;
+            return this;
+        }
+
+        /**
          * Create a new instance based on this builder.
          *
          * @return application ready to be registered with {@link Server.Builder#addApplication(JaxRsApplication)}
@@ -262,6 +293,12 @@ public final class JaxRsApplication {
             ApplicationPath path = clazz.getAnnotation(ApplicationPath.class);
             if (null != path) {
                 contextRoot = normalize(path.value());
+                return;
+            }
+
+            RoutingPath routingPath = clazz.getAnnotation(RoutingPath.class);
+            if (null != routingPath) {
+                contextRoot = routingPath.value();
             }
         }
 
@@ -273,7 +310,7 @@ public final class JaxRsApplication {
          */
         private static String normalize(String contextRoot) {
             int length = contextRoot.length();
-            return length > 1 && contextRoot.endsWith("/") ? contextRoot.substring(0, length - 1) : contextRoot;
+            return ((length > 1) && contextRoot.endsWith("/")) ? contextRoot.substring(0, length - 1) : contextRoot;
         }
 
         private void routingName(Class<?> clazz) {

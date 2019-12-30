@@ -21,6 +21,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 import javax.enterprise.event.Observes;
@@ -28,10 +32,14 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.WithAnnotations;
 import javax.ws.rs.Path;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.ext.ExceptionMapper;
 
 import io.helidon.common.HelidonFeatures;
 import io.helidon.common.HelidonFlavor;
+import io.helidon.webserver.jersey.JerseySupport;
 
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.ConfigProvider;
@@ -41,6 +49,8 @@ import org.glassfish.jersey.server.ResourceConfig;
  * Configure Jersey related things.
  */
 public class JaxRsCdiExtension implements Extension {
+    private static final Logger LOGGER = Logger.getLogger(JaxRsCdiExtension.class.getName());
+
     static {
         HelidonFeatures.register(HelidonFlavor.MP, "JAX-RS");
     }
@@ -72,15 +82,15 @@ public class JaxRsCdiExtension implements Extension {
         if (applications.isEmpty() && applicationMetas.isEmpty()) {
             // create a synthetic application from all resource classes
             applicationMetas.add(JaxRsApplication.builder()
-                            .applicationClass(Application.class)
-                            .config(ResourceConfig.forApplication(new Application() {
-                                @Override
-                                public Set<Class<?>> getClasses() {
-                                    return new HashSet<>(resources);
-                                }
-                            }))
-                            .appName("SyntheticApplication")
-                            .build());
+                                         .applicationClass(Application.class)
+                                         .config(ResourceConfig.forApplication(new Application() {
+                                             @Override
+                                             public Set<Class<?>> getClasses() {
+                                                 return new HashSet<>(resources);
+                                             }
+                                         }))
+                                         .appName("SyntheticApplication")
+                                         .build());
         }
 
         // make sure the resources are used as a default if application does not define any
@@ -210,5 +220,42 @@ public class JaxRsCdiExtension implements Extension {
                                           }))
                                           .appName("SyntheticApplication")
                                           .build());
+    }
+
+    JerseySupport toJerseySupport(Supplier<? extends ExecutorService> defaultExecutorService, JaxRsApplication jaxRsApplication) {
+        JerseySupport.Builder builder = JerseySupport.builder(jaxRsApplication.resourceConfig());
+        builder.executorService(jaxRsApplication.executorService().orElseGet(defaultExecutorService));
+        builder.register(new ExceptionMapper<Exception>() {
+            @Override
+            public Response toResponse(Exception exception) {
+                if (exception instanceof WebApplicationException) {
+                    return ((WebApplicationException) exception).getResponse();
+                } else {
+                    LOGGER.log(Level.WARNING, exception, () -> "Internal server error");
+                    return Response.serverError().build();
+                }
+            }
+        });
+        return builder.build();
+    }
+
+    Optional<String> findContextRoot(io.helidon.config.Config config, JaxRsApplication jaxRsApplication) {
+        return config.get(jaxRsApplication.appClassName() + "." + RoutingPath.CONFIG_KEY_PATH)
+                .asString()
+                .or(jaxRsApplication::contextRoot)
+                .map(path -> (path.startsWith("/") ? path : ("/" + path)));
+    }
+
+    Optional<String> findNamedRouting(io.helidon.config.Config config, JaxRsApplication jaxRsApplication) {
+        return config.get(jaxRsApplication.appClassName() + "." + RoutingName.CONFIG_KEY_NAME)
+                .asString()
+                .or(jaxRsApplication::routingName)
+                .flatMap(it -> RoutingName.DEFAULT_NAME.equals(it) ? Optional.empty() : Optional.of(it));
+    }
+
+    boolean isNamedRoutingRequired(io.helidon.config.Config config, JaxRsApplication jaxRsApplication) {
+        return config.get(jaxRsApplication.appClassName() + "." + RoutingName.CONFIG_KEY_REQUIRED)
+                .asBoolean()
+                .orElseGet(jaxRsApplication::routingNameRequired);
     }
 }

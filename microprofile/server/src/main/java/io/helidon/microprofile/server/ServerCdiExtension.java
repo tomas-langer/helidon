@@ -41,9 +41,6 @@ import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.DeploymentException;
 import javax.enterprise.inject.spi.Extension;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
 
 import io.helidon.common.HelidonFeatures;
 import io.helidon.common.HelidonFlavor;
@@ -106,9 +103,7 @@ public class ServerCdiExtension implements Extension {
         ServerConfiguration serverConfig = serverConfigBuilder.build();
 
         // JAX-RS applications (and resources)
-        beanManager.getExtension(JaxRsCdiExtension.class)
-                .applicationsToRun()
-                .forEach(it -> addApplication(it, serverConfig));
+        registerJaxRsApplications(beanManager, serverConfig);
 
         // reactive services
         registerWebServerServices(beanManager, serverConfig);
@@ -149,6 +144,13 @@ public class ServerCdiExtension implements Extension {
         serverConfigBuilder = null;
         routingBuilder = null;
         namedRoutings = null;
+    }
+
+    private void registerJaxRsApplications(BeanManager beanManager, ServerConfiguration serverConfig) {
+        JaxRsCdiExtension jaxRs = beanManager.getExtension(JaxRsCdiExtension.class);
+
+        jaxRs.applicationsToRun()
+                .forEach(it -> addApplication(serverConfig, jaxRs, it));
     }
 
     private void registerDefaultRedirect() {
@@ -226,38 +228,12 @@ public class ServerCdiExtension implements Extension {
         }
     }
 
-    private void addApplication(JaxRsApplication applicationMeta, ServerConfiguration serverConfig) {
+    private void addApplication(ServerConfiguration serverConfig, JaxRsCdiExtension jaxRs, JaxRsApplication applicationMeta) {
         LOGGER.info("Registering JAX-RS Application: " + applicationMeta.appName());
-        JerseySupport.Builder builder = JerseySupport.builder(applicationMeta.resourceConfig());
-        builder.executorService(applicationMeta.executorService().orElseGet(jaxRsExecutorService));
-        builder.register(new ExceptionMapper<Exception>() {
-            @Override
-            public Response toResponse(Exception exception) {
-                if (exception instanceof WebApplicationException) {
-                    return ((WebApplicationException) exception).getResponse();
-                } else {
-                    LOGGER.log(Level.WARNING, exception, () -> "Internal server error");
-                    return Response.serverError().build();
-                }
-            }
-        });
-        JerseySupport jerseySupport = builder.build();
-        String classPrefix = applicationMeta.appClassName() + ".";
 
-        Optional<String> contextRoot =
-                config.get(classPrefix + RoutingPath.CONFIG_KEY_PATH)
-                        .asString()
-                        .or(applicationMeta::contextRoot);
-
-        Optional<String> namedRouting =
-                config.get(classPrefix + RoutingName.CONFIG_KEY_NAME)
-                        .asString()
-                        .or(applicationMeta::routingName);
-
-        boolean routingNameRequired =
-                config.get(classPrefix + RoutingName.CONFIG_KEY_REQUIRED)
-                        .asBoolean()
-                        .orElseGet(applicationMeta::routingNameRequired);
+        Optional<String> contextRoot = jaxRs.findContextRoot(config, applicationMeta);
+        Optional<String> namedRouting = jaxRs.findNamedRouting(config, applicationMeta);
+        boolean routingNameRequired = jaxRs.isNamedRoutingRequired(config, applicationMeta);
 
         if (LOGGER.isLoggable(Level.FINEST)) {
             LOGGER.finest("Application " + applicationMeta.appName()
@@ -290,6 +266,7 @@ public class ServerCdiExtension implements Extension {
             routing = serverRoutingBuilder();
         }
 
+        JerseySupport jerseySupport = jaxRs.toJerseySupport(jaxRsExecutorService, applicationMeta);
         if (contextRoot.isPresent()) {
             String contextRootString = contextRoot.get();
             LOGGER.fine(() -> "JAX-RS application " + applicationMeta.appName() + " registered on '" + contextRootString + "'");
