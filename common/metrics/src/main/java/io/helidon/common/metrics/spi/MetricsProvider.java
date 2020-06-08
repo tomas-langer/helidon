@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2019 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,19 @@
  * limitations under the License.
  */
 
-/**
- * Common tools that use config component.
- *
- * @see io.helidon.common.configurable.Resource
- */
-module io.helidon.common.configurable {
-    requires java.logging;
-    requires java.management;
-    requires transitive io.helidon.config;
-    requires io.helidon.common;
-    requires io.helidon.common.context;
-    requires io.helidon.common.metrics;
+package io.helidon.common.metrics.spi;
 
-    exports io.helidon.common.configurable;
+import io.helidon.config.Config;
+
+import org.eclipse.microprofile.metrics.MetricRegistry;
+
+public interface MetricsProvider {
+    /**
+     * Create a metrics registry of the defined type.
+     *
+     * @param config configuration to use
+     * @param registryType type of registry
+     * @return a configured metric registry
+     */
+    MetricRegistry createRegistry(Config config, MetricRegistry.Type registryType);
 }

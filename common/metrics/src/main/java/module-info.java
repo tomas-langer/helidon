@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019 Oracle and/or its affiliates. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,28 +14,18 @@
  * limitations under the License.
  */
 
-import io.helidon.common.metrics.spi.MetricsProvider;
-import io.helidon.metrics.MpMetricsProvider;
-
 /**
- * Helidon Metrics implementation.
+ * Helidon Common Metrics.
  */
-module io.helidon.metrics {
+module io.helidon.common.metrics {
     requires java.logging;
-
-    requires io.helidon.common;
-    requires io.helidon.webserver.cors;
-
+    requires transitive io.helidon.common;
+    requires transitive io.helidon.common.serviceloader;
     requires transitive microprofile.metrics.api;
-    requires java.management;
-    requires io.helidon.webserver;
-    requires io.helidon.media.jsonp;
-    requires java.json;
-    requires io.helidon.config.mp;
-    requires microprofile.config.api;
-    requires io.helidon.common.metrics;
+    requires transitive io.helidon.config;
 
-    exports io.helidon.metrics;
+    exports io.helidon.common.metrics;
+    exports io.helidon.common.metrics.spi;
 
-    provides MetricsProvider with MpMetricsProvider;
+    uses io.helidon.common.metrics.spi.MetricsProvider;
 }

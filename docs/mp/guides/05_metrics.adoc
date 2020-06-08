@@ -656,7 +656,7 @@ metrics can be declared in a request scoped class and Helidon will store the met
 across requests. When GET `/metrics/application` is invoked, Helidon will return the current value of the metric stored in the `MetricRegistry`.
 The `Gauge` metric is different from all the other metrics. The application must provide a getter to return the gauge value in an
 application scoped class. When GET `/metrics/application` is invoked, Helidon will call the `Gauge` getter, store that value
-in the `MetricsRegistry`, and return it as part of the metrics response payload.  So, the `Gauge` metric value is updated real-time, in response to the
+in the `Metrics`, and return it as part of the metrics response payload.  So, the `Gauge` metric value is updated real-time, in response to the
 get metrics request.
 
 The following example demonstrates how to use a `Gauge` to track application up-time.

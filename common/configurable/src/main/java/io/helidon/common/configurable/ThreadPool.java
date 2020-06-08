@@ -50,11 +50,17 @@ import java.util.logging.Logger;
 import javax.management.NotificationEmitter;
 
 import io.helidon.common.context.ContextAwareExecutorService;
+import io.helidon.common.metrics.Metrics;
+
+import org.eclipse.microprofile.metrics.ConcurrentGauge;
+import org.eclipse.microprofile.metrics.Counter;
+import org.eclipse.microprofile.metrics.Meter;
+import org.eclipse.microprofile.metrics.MetricRegistry;
 
 /**
  * A {@link ThreadPoolExecutor} with an extensible growth policy and queue state accessors.
  */
-public class    ThreadPool extends ThreadPoolExecutor {
+public class ThreadPool extends ThreadPoolExecutor {
     private static final Logger LOGGER = Logger.getLogger(ThreadPool.class.getName());
     private static final int MAX_GROWTH_RATE = 100;
 
@@ -67,6 +73,8 @@ public class    ThreadPool extends ThreadPoolExecutor {
     private final AtomicInteger failedTasks;
     private final int growthThreshold;
     private final int growthRate;
+    private final Counter errorCounter;
+    private final Meter meter;
 
     /**
      * Returns the given executor as a {@link ThreadPool} if possible.
@@ -98,7 +106,8 @@ public class    ThreadPool extends ThreadPoolExecutor {
      * <li>there are no idle threads, and</li>
      * <li>the number of tasks in the queue exceeds the {@code growthThreshold}</li>
      * </ul>
-     * <p></p>For example, a rate of 20 means that while these conditions are met one thread will be added for every 5 submitted tasks.
+     * <p></p>For example, a rate of 20 means that while these conditions are met one thread will be added for every 5
+     *                   submitted tasks.
      * <p>A rate of 0 selects the default {@link ThreadPoolExecutor} growth behavior: a thread is added only when a submitted
      * task is rejected because the queue is full.
      * @param keepAliveTime When the number of threads is greater than the core, this is the maximum time that excess idle
@@ -186,6 +195,20 @@ public class    ThreadPool extends ThreadPoolExecutor {
         queue.setPool(this);
         if (LOGGER.isLoggable(Level.FINE)) {
             LOGGER.fine(toString());
+        }
+        MetricRegistry vendor = Metrics.vendor();
+        this.errorCounter = vendor.counter("executors." + name + ".errors");
+        this.meter = vendor.meter("executors." + name + ".meter");
+    }
+
+    @Override
+    public void execute(Runnable command) {
+        try {
+            meter.mark();
+            super.execute(command);
+        } catch (Throwable e) {
+            errorCounter.inc();
+            throw e;
         }
     }
 
@@ -350,20 +373,20 @@ public class    ThreadPool extends ThreadPoolExecutor {
     public String toString() {
         final boolean fixedSize = isFixedSize();
         return "ThreadPool '" + getName() + "' {"
-               + "corePoolSize=" + getCorePoolSize()
-               + ", maxPoolSize=" + getMaximumPoolSize()
-               + ", queueCapacity=" + getQueueCapacity()
-               + (fixedSize ? "" : ", growthThreshold=" + getGrowthThreshold())
-               + (fixedSize ? "" : ", growthRate=" + getGrowthRate() + "%")
-               + String.format(", averageQueueSize=%.2f", getAverageQueueSize())
-               + ", peakQueueSize=" + getPeakQueueSize()
-               + String.format(", averageActiveThreads=%.2f", getAverageActiveThreads())
-               + (fixedSize ? "" : ", peakPoolSize=" + getLargestPoolSize())
-               + ", currentPoolSize=" + getPoolSize()
-               + ", completedTasks=" + getCompletedTasks()
-               + ", failedTasks=" + getFailedTasks()
-               + ", rejectedTasks=" + getRejectionCount()
-               + '}';
+                + "corePoolSize=" + getCorePoolSize()
+                + ", maxPoolSize=" + getMaximumPoolSize()
+                + ", queueCapacity=" + getQueueCapacity()
+                + (fixedSize ? "" : ", growthThreshold=" + getGrowthThreshold())
+                + (fixedSize ? "" : ", growthRate=" + getGrowthRate() + "%")
+                + String.format(", averageQueueSize=%.2f", getAverageQueueSize())
+                + ", peakQueueSize=" + getPeakQueueSize()
+                + String.format(", averageActiveThreads=%.2f", getAverageActiveThreads())
+                + (fixedSize ? "" : ", peakPoolSize=" + getLargestPoolSize())
+                + ", currentPoolSize=" + getPoolSize()
+                + ", completedTasks=" + getCompletedTasks()
+                + ", failedTasks=" + getFailedTasks()
+                + ", rejectedTasks=" + getRejectionCount()
+                + '}';
     }
 
     @Override
@@ -439,18 +462,26 @@ public class    ThreadPool extends ThreadPoolExecutor {
         private final String namePrefix;
         private final boolean useDaemonThreads;
         private final AtomicInteger threadCount;
+        private final ConcurrentGauge activeGauge;
 
         GroupedThreadFactory(String groupName, String threadNamePrefix, boolean useDaemonThreads) {
             this.group = new ThreadGroup(groupName);
             this.namePrefix = threadNamePrefix;
             this.useDaemonThreads = useDaemonThreads;
             this.threadCount = new AtomicInteger();
+
+            MetricRegistry vendor = Metrics.vendor();
+            this.activeGauge = vendor.concurrentGauge("executors." + groupName + ".active");
         }
 
         @Override
         public Thread newThread(Runnable runnable) {
             final String name = namePrefix + threadCount.incrementAndGet();
-            final Thread thread = new Thread(group, runnable, name);
+            final Thread thread = new Thread(group, () -> {
+                activeGauge.inc();
+                runnable.run();
+                activeGauge.dec();
+            }, name);
             thread.setDaemon(useDaemonThreads);
             return thread;
         }
@@ -692,8 +723,8 @@ public class    ThreadPool extends ThreadPoolExecutor {
                 // alternatives such as a counter (which does not provide even distribution) or System.nanoTime().
 
                 if (alwaysAdd
-                    || queueSize > alwaysThreshold
-                    || ThreadLocalRandom.current().nextFloat() < rate) {
+                        || queueSize > alwaysThreshold
+                        || ThreadLocalRandom.current().nextFloat() < rate) {
 
                     // Yep
 
@@ -770,15 +801,19 @@ public class    ThreadPool extends ThreadPoolExecutor {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             final Event event = (Event) o;
             return time == event.time
-                   && threads == event.threads
-                   && activeThreads == event.activeThreads
-                   && queueSize == event.queueSize
-                   && completedTasks == event.completedTasks
-                   && type == event.type;
+                    && threads == event.threads
+                    && activeThreads == event.activeThreads
+                    && queueSize == event.queueSize
+                    && completedTasks == event.completedTasks
+                    && type == event.type;
         }
 
         @Override
