@@ -1,0 +1,24 @@
+app:
+  greeting: "Hello"
+
+webclient:
+  endpoints:
+    - name: "service-1"
+      url: "http://localhost:8081"
+
+dbclient:
+  databases:
+    - name: "pokemon-db"
+      source: jdbc
+      connection:
+        url: jdbc:mysql://127.0.0.1:3306/pokemon?useSSL=false
+        username: user
+        password: password
+        poolName: mysql
+        initializationFailTimeout: -1
+        connectionTimeout: 2000
+      statements:
+        ping: "DO 0"
+        select-all: "SELECT * FROM pokemons"
+        update: "UPDATE pokemons SET type = :type WHERE name = :name"
+        delete: "DELETE FROM pokemons WHERE name = ?"
