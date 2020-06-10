@@ -44,32 +44,32 @@ Similar to what was done in Helidon Micronaut POC:
 Other:
 - Use Java logging
 - Support for Helidon `Context` 
-- If possible drop rxjava and use just a single reactive library
+- Use just Helidon reactive implementation (depends on capabilities of the used framework)
 
 ## 1 - Declarative API for REST services
-There are three options here
- - use JAX-RS annotations and a subset of its features
- - use Micronaut annotations and features
- - define a new set of annotations and features (or repackage micronaut to helidon packages)
+It would be best to use the existing abstraction of request/response/headers etc., 
+and to use the same path mapping from WebServer.
 
-I would prefer to use JAX-RS + a few new annotations if possible,
-falling back to option three (as this is one of the main surfaces seen by 
-the user, and the very reason we have any server).
+There are three options to achieve this 
+ - JAX-RS annotations and a subset of its features
+ - Custom annotation define a new set of annotations and features (or repackage micronaut to helidon packages)
+ - Micronaut annotations and features
 
-JAX-RS and `@Inject` annotations are suitable for this task, also because
-we would keep a single approach in all of Helidon (SE and MP).
-Nevertheless this does not automatically mean a JAX-RS compliant implementation.
+Originally I though JAX-RS would be suitable, but the disadvantages (see below)
+seem to be too hard to overcome.
+I think the best approach would be to use a custom approach, and choose either
+JAX-RS, Micronaut, or Spring class names and annotation style.
+This will allow at least part of the users to migrate to Helidon without the need
+to learn new approach of doing things.
+Second best option would be to fall back to Micronaut REST API, because that is 
+already implemented.
 
-Supported annotations for first version:
- - `@Inject` annotation to mark injection points (fields and constructor)
- - `@Context` annotation to mark injection of parameters, with a limited support of injectable types 
+Supported annotations for first version (semantics is important, not the name of annotation):
  - `@Path` annotation on class and method level
  - `@GET` and other method annotations for methods
  - `@Consumes` to declare media type expected in request
  - `@Produces` to declare media type sent in response 
- - `@PathParam` to read path parameters from request
- 
-Non JAX-RS annotations: 
+ - Parameter annotations in resource methods (to read path parameters from request, entity etc.)
  - `@Status` to configure response status if not explicit in response
  - `@Error` to configure an error handler on a resource class or application (as Micronaut supports)
  - `@Valid` from Jakarta validation to validate entities mapped to objects
@@ -78,7 +78,7 @@ Non JAX-RS annotations:
 Types supported for injection:
  - `DbClient` - requires `@Named` annotation as well to map to configuration (may have a reasonable default name)
  - `WebClient` - requires `@Named` annotation as well to map to configuration (may have a reasonable default name)
- - REST client - using a subset of MP Rest client specification
+ - REST client - using a subset of MP Rest client specification?
  - `ServerRequest` and `ServerResponse` both as fields and method parameters
  
 Supported types for entities:
@@ -88,14 +88,54 @@ Supported types for entities:
  - any type supported by the above options as a synchronous operation
     - using an executor service to process synchronous operations
     
+### JAX-RS
+*advantages*
+ - we already use it in MP
+ - provides a wide set of features
+ - existing media types, filters etc. could be used to extend feature set
+ - big user base
+ 
+*disadvantages*
+ - we cannot use Jersey (unless we replace the injection engine, which would require a lot of refactoring)
+ - another abstraction layer of request/response/headers etc.
+ - support for subresource locators makes this quite a complex solution
+ - will include CDI prerequisite in next major version
+ 
+### Custom
+*advantages*
+ - Can do exactly what we want it to do
+ - Can be optimal for build time injection and AOT
+ - Reuse of all Helidon classes (Server request and Response, Headers, reactive libraries)
+
+*disadvantages*
+ - nobody knows how to use it (this can be mitigated by using the same class names as are used in JAX-RS or Spring)
+ - full implementation on us (this can be mitigated by designing this aligned with Micronaut and re-using existing code from it)
+ - depends on how Micronaut is implemented - may not be even possible
+ 
+### Micronaut
+*advantages*
+ - we already have a POC that works with it
+ - can be tailored to support Helidon APIs (even though underlying APIs are Micronaut)
+  
+*disadvantages*
+ - uses RxJava (need to investigate if this could be replaced)
+ - uses Micronaut packages (this is not Helidon...)
+ - the annotation style is very different from JAX-RS
+ 
+
+
+    
 ## 2 - Declarative API for other features
-Non JAX-RS annotations on resource methods (and if we would support a similar thing to CDI beans):
+Non REST annotations on constructors and resource methods (and if we would support a similar thing to CDI beans):
  - `@ConfigProperty` to inject configuration values (Supporting all types supported by Helidon SE)                   
  - Metrics annotations - would useful to use the MP metrics annotation (if we can do it without bringing in
                 the offensive MetricID class - we can live with that as well, though it would require
                 some mapping of config properties from Helidon config to MP config)
  - FT annotations - just the annotations, not the full spec
- - `@Traced` for tracing configuration (maybe again from MP spec?)                                                 
+ - `@Traced` for tracing configuration (maybe again from MP spec?)
+ - CORS dtto
+ - Security annotation (Helidon existing annotations)
+ - Open API annotations from MP spec (or from Swagger)                                                 
 
  
 Open tracing used for tracing implementation
