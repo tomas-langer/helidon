@@ -28,33 +28,35 @@ import io.helidon.Status;
 import io.helidon.common.http.Http;
 import io.helidon.common.reactive.Single;
 import io.helidon.dbclient.DbClient;
+import io.helidon.dbclient.DbClientException;
 import io.helidon.microprofile.server.RoutingName;
-import io.helidon.microprofile.server.RoutingPath;
 import io.helidon.webclient.WebClient;
 
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
-@RoutingPath("/greet")
-@RoutingName("port")
+@Path("/greet")
+@RoutingName(value = "plain")
 public class GreetService {
-    @Inject
-    @Named("service-1")
-    private WebClient webClient;
+    private final WebClient webClient;
+    private final GreetClient greetClient;
+    private final DbClient dbClient;
+    private final PetRepository petRepository;
+    private final String greeting;
 
     @Inject
-    private GreetClient greetClient;
-
-    @Inject
-    @Named("pokemon-db")
-    private DbClient dbClient;
-
-    @Inject
-    @ConfigProperty
-    @Named("app.greeting")
-    private String greeting;
+    public GreetService(@Named("service-1") WebClient webClient,
+                        GreetClient greetClient,
+                        DbClient dbClient,
+                        @ConfigProperty(name = "app.greeting") String greeting,
+                        PetRepository petRepository) {
+        this.webClient = webClient;
+        this.greetClient = greetClient;
+        this.dbClient = dbClient;
+        this.greeting = greeting;
+        this.petRepository = petRepository;
+    }
 
     @GET
-    @Path("/")
     public Single<String> defaultGreeting() {
         return Single.just(greeting + " World");
     }
@@ -69,7 +71,14 @@ public class GreetService {
     @Path("/greeting")
     @Status(Http.Status.CREATED_201)
     public Single<String> updateGreeting(@Entity String newGreeting) {
-        this.greeting = newGreeting;
-        return Single.just("Updated greeting to " +newGreeting);
+        return dbClient.execute(it -> it.namedUpdate("update-greeting", newGreeting))
+                .map(count -> "Updated greeting to " + newGreeting);
     }
+
+    @Error(DbClientException.class)
+    @Status(Http.Status.INTERNAL_SERVER_ERROR_500)
+    public String handleDbError(DbClientException error) {
+        return "Failed to invoke database: " + error.getMessage();
+    }
+
 }

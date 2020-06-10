@@ -97,7 +97,7 @@ Supported types for entities:
  
 *disadvantages*
  - we cannot use Jersey (unless we replace the injection engine, which would require a lot of refactoring)
- - another abstraction layer of request/response/headers etc.
+ - different request/response/headers/status abstraction
  - support for subresource locators makes this quite a complex solution
  - will include CDI prerequisite in next major version
  
@@ -121,6 +121,7 @@ Supported types for entities:
  - uses RxJava (need to investigate if this could be replaced)
  - uses Micronaut packages (this is not Helidon...)
  - the annotation style is very different from JAX-RS
+ - different request/response/headers/status abstraction
  
 
 
@@ -174,3 +175,55 @@ Must be connected to configuration in a similar way MP is (though I would prefer
 and `@Named` approach that would allow a section of the configuration to be used for 
 a specific injection point, to allow different configurations depending on usage)
 
+# Example
+
+## REST resource:
+```java
+@Path("/greet")
+@RoutingName(value = "plain")
+public class GreetService {
+    private final WebClient webClient;
+    private final GreetClient greetClient;
+    private final DbClient dbClient;
+    private final PetRepository petRepository;
+    private final String greeting;
+
+    @Inject
+    public GreetService(@Named("service-1") WebClient webClient,
+                        GreetClient greetClient,
+                        DbClient dbClient,
+                        @ConfigProperty(name = "app.greeting") String greeting,
+                        PetRepository petRepository) {
+        this.webClient = webClient;
+        this.greetClient = greetClient;
+        this.dbClient = dbClient;
+        this.greeting = greeting;
+        this.petRepository = petRepository;
+    }
+
+    @GET
+    public Single<String> defaultGreeting() {
+        return Single.just(greeting + " World");
+    }
+
+    @GET
+    @Path("/{name}")
+    public Single<String> greeting(@PathParam("name") String name) {
+        return Single.just(greeting + " " + name);
+    }
+
+    @PUT
+    @Path("/greeting")
+    @Status(Http.Status.CREATED_201)
+    public Single<String> updateGreeting(@Entity String newGreeting) {
+        return dbClient.execute(it -> it.namedUpdate("update-greeting", newGreeting))
+                .map(count -> "Updated greeting to " + newGreeting);
+    }
+    
+    @Error(DbClientException.class)
+    @Status(Http.Status.INTERNAL_SERVER_ERROR_500)
+    public String handleDbError(DbClientException error) {
+        return "Failed to invoke database: " + error.getMessage();
+    }
+}
+```
