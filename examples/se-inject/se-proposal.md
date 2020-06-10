@@ -3,8 +3,8 @@ Helidon SE Dependency injection support proposal
 
 # User story
 
-User wants to create a declarative style of application with 
-support for Helidon reactive APIs and all "usual" Helidon features
+User wants to create a declarative style of application using dependency
+injection with support for Helidon reactive APIs and all "usual" Helidon features
 such as:
 
 - Config
@@ -30,6 +30,8 @@ while keeping support for native image AOT without extensive configuration
 5. NO runtime reflection
 6. Database access support
 7. A declarative client to call other REST services
+8. Use MP and Jakarta APIs for features as much as we can (considering AOT)
+9. Have a synchronous API support to leverage project Loom (once it is available) 
 
 # Initial Design proposal
 This proposal is not based on a POC - this is a set of ideas that we should use for a POC. 
@@ -122,8 +124,6 @@ Supported types for entities:
  - uses Micronaut packages (this is not Helidon...)
  - the annotation style is very different from JAX-RS
  - different request/response/headers/status abstraction
- 
-
 
     
 ## 2 - Declarative API for other features
@@ -227,3 +227,24 @@ public class GreetService {
     }
 }
 ```
+
+# Positioning
+
+The proposal above is to be part of Helidon SE - a new library (such as `helidon-di`), or a bundle
+ (such as `helidon-se`) would be created to support all of the features above.
+
+## Helidon SE vs. Helidon MP
+MP is an implementation of MicroProfile with support for (old school) Jakarta APIs, such as CDI.
+SE is a moder compile-time injection framework optimized for startup time and AOT
+
+Declarative style of both implementations is similar. 
+
+Future
+ - depends on CDI lite
+ - depends on future of JAX-RS
+ - depends on future AOT features
+
+## Project Loom
+The design and POC should be done with project Loom in mind (and actually tested against the Loom builds).
+
+We should have a branch (and public builds) that support Loom and utilize it as much as possible
