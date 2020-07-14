@@ -30,10 +30,11 @@ import org.eclipse.microprofile.metrics.MetricRegistry;
  * Holder of metrics registries.
  * This class is statically configured and used by all components in Helidon.
  *
- * @see #configure(io.helidon.config.Config)
+ * @see #config(io.helidon.config.Config)
  */
 public class Metrics {
     private static final AtomicReference<Config> CONFIG_REF = new AtomicReference<>();
+    private static final LazyValue<Metrics> INSTANCE = LazyValue.create(Metrics::createInstance);
 
     private final LazyValue<MetricRegistry> application;
     private final LazyValue<MetricRegistry> base;
@@ -45,19 +46,47 @@ public class Metrics {
         this.base = LazyValue.create(() -> provider.createRegistry(config, MetricRegistry.Type.BASE));
     }
 
+    /**
+     * Application metric registry. This is used for registering application metrics.
+     *
+     * @return a metric registry for application metrics
+     */
     public static MetricRegistry application() {
-        return instance().application.get();
+        return INSTANCE.get().application.get();
     }
 
+    /**
+     * Base metric registry.
+     *
+     * @return a metric registry for base metrics
+     */
     public static MetricRegistry base() {
-        return instance().base.get();
+        return INSTANCE.get().base.get();
     }
 
+    /**
+     * Vendor metric registry. This is used for registering vendor specific metrics (including Helidon vendor metrics).
+     *
+     * @return a metric registry for vendor metrics
+     */
     public static MetricRegistry vendor() {
-        return instance().vendor.get();
+        return INSTANCE.get().vendor.get();
     }
 
-    private static synchronized Metrics instance() {
+    /**
+     * Configure the metrics module using the provided config.
+     *
+     * @param config on the node of metrics configuration (usually {@code metrics})
+     * @throws java.lang.IllegalStateException in case metrics are already initialized (and cannot be reconfigured)
+     */
+    public static void config(Config config) {
+        if (!CONFIG_REF.compareAndSet(null, config)) {
+            throw new IllegalStateException("Metrics are already configured, please call this method earlier in the"
+                                                       + " application lifecycle");
+        }
+    }
+
+    private static synchronized Metrics createInstance() {
         CONFIG_REF.compareAndSet(null, Config.empty());
 
         MetricsProvider provider = HelidonServiceLoader.builder(ServiceLoader.load(MetricsProvider.class))
@@ -67,18 +96,5 @@ public class Metrics {
                 .get(0);
 
         return new Metrics(provider, CONFIG_REF.get());
-    }
-
-    /**
-     * Configure the metrics module using the provided config.
-     *
-     * @param config on the node of metrics configuration (usually {@code metrics})
-     * @throws java.lang.IllegalStateException in case metrics are already initialized (and cannot be reconfigured)
-     */
-    public static void configure(Config config) {
-        if (!CONFIG_REF.compareAndSet(null, config)) {
-            throw new IllegalArgumentException("Metrics are already configured, please call this method earlier in the"
-                                                       + " application lifecycle");
-        }
     }
 }

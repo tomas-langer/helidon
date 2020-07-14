@@ -14,23 +14,8 @@
  * limitations under the License.
  */
 
-package io.helidon.common.metrics.spi;
-
-import io.helidon.config.Config;
-
-import org.eclipse.microprofile.metrics.MetricRegistry;
-
 /**
- * SPI to be implemented to support metrics in Helidon for built-in metrics.
- * This library implements a default no-op provider.
+ * Metrics API to be used by Helidon (or other vendor) to obtain metric registries
+ * that supports a no-op implementation (e.g. there is no hard coded dependency on any metrics implementation).
  */
-public interface MetricsProvider {
-    /**
-     * Create a metrics registry of the defined type.
-     *
-     * @param config configuration to use
-     * @param registryType type of registry
-     * @return a configured metric registry
-     */
-    MetricRegistry createRegistry(Config config, MetricRegistry.Type registryType);
-}
+package io.helidon.common.metrics;
