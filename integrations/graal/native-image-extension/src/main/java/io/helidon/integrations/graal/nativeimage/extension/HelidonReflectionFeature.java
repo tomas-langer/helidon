@@ -191,6 +191,7 @@ public class HelidonReflectionFeature implements Feature {
         return context.scan()
                 .getClassesWithAnnotation(annotation)
                 .stream()
+                .filter(classInfo -> !context.isExcluded(classInfo.getName()))
                 .map(classInfo -> {
                     Class<?> clazz = null;
                     try {
@@ -321,7 +322,7 @@ public class HelidonReflectionFeature implements Feature {
         // all annotated classes
         findAnnotated(context, annotation)
                 .forEach(it -> {
-                    if (context.isExcluded(it)) {
+                    if (context.isExcluded(it.getName())) {
                         traceParsing(() -> " class " + it.getName() + " annotated by " + annotation + " is excluded.");
                     } else {
                         traceParsing(() -> " class " + it.getName());
@@ -432,7 +433,7 @@ public class HelidonReflectionFeature implements Feature {
         Class<?> closeable = context.access().findClassByName("java.io.Closeable");
 
         annotatedList.forEach(it -> {
-            if (context.isExcluded(it)) {
+            if (context.isExcluded(it.getName())) {
                 traceParsing(() -> "Class " + it.getName() + " annotated by " + AT_REGISTER_REST_CLIENT + " is excluded");
             } else {
                 // we need to add it for reflection
@@ -535,7 +536,7 @@ public class HelidonReflectionFeature implements Feature {
         findSubclasses(context, superclass);
         for (Class<?> anInterface : superclass.getInterfaces()) {
             // unless excluded
-            if (context.isExcluded(anInterface)) {
+            if (context.isExcluded(anInterface.getName())) {
                 traceParsing(() -> "  Interface " + anInterface.getName() + " is explicitly excluded");
             } else {
                 addSingleClass(context, anInterface);
@@ -560,7 +561,7 @@ public class HelidonReflectionFeature implements Feature {
         List<Class<?>> annotatedList = findAnnotated(context, annotationClass.getName());
 
         annotatedList.forEach(it -> {
-            if (context.isExcluded(it)) {
+            if (context.isExcluded(it.getName())) {
                 traceParsing(() -> "Class " + it.getName() + " annotated by " + annotationClass.getName() + " is excluded");
             } else {
                 processClassHierarchy(context, it);
@@ -577,7 +578,7 @@ public class HelidonReflectionFeature implements Feature {
     private void processClasses(BeforeAnalysisContext context, List<Class<?>> classes) {
         for (Class<?> aClass : classes) {
             if (context.process(aClass)) {
-                if (context.isExcluded(aClass)) {
+                if (context.isExcluded(aClass.getName())) {
                     traceParsing(() -> "    Excluding " + aClass.getName() + " from registration");
                     continue;
                 }
@@ -602,7 +603,7 @@ public class HelidonReflectionFeature implements Feature {
         Class<?> nextSuper = aClass.getSuperclass();
         while (null != nextSuper) {
             if (context.process(nextSuper)) {
-                if (context.isExcluded(nextSuper)) {
+                if (context.isExcluded(nextSuper.getName())) {
                     Class<?> toLog = nextSuper;
                     traceParsing(() -> "  Class " + toLog.getName() + " is explicitly excluded");
                     nextSuper = null;
@@ -631,7 +632,7 @@ public class HelidonReflectionFeature implements Feature {
                     jsonArray(access, config.annotations, configurationJson.getJsonArray("annotated"), "Annotation");
                     jsonArray(access, config.hierarchy, configurationJson.getJsonArray("class-hierarchy"), "Class hierarchy");
                     jsonArray(access, config.classes, configurationJson.getJsonArray("classes"), "Single");
-                    jsonArray(access, config.excluded, configurationJson.getJsonArray("exclude"), "Exclude");
+                    jsonArrayNames(access, config.excluded, configurationJson.getJsonArray("exclude"), "Exclude");
                 } catch (JsonParsingException e) {
                     System.err.println("Failed to process configuration file: " + url);
                     throw e;
@@ -641,6 +642,16 @@ public class HelidonReflectionFeature implements Feature {
             return config;
         } catch (Exception e) {
             throw new IllegalStateException("Failed to process configuration from helidon-reflection-config.json files", e);
+        }
+    }
+
+    private void jsonArrayNames(BeforeAnalysisAccess access, Collection<String> classList, JsonArray classNames, String desc) {
+        if (null == classNames) {
+            return;
+        }
+        for (int i = 0; i < classNames.size(); i++) {
+            String className = classNames.getString(i);
+            classList.add(className);
         }
     }
 
@@ -682,7 +693,7 @@ public class HelidonReflectionFeature implements Feature {
         private final List<Class<?>> annotations = new LinkedList<>();
         private final List<Class<?>> hierarchy = new LinkedList<>();
         private final List<Class<?>> classes = new LinkedList<>();
-        private final Set<Class<?>> excluded = new HashSet<>();
+        private final Set<String> excluded = new HashSet<>();
 
         private List<Class<?>> annotations() {
             return annotations;
@@ -701,10 +712,10 @@ public class HelidonReflectionFeature implements Feature {
         private final BeforeAnalysisAccess access;
         private ScanResult scan;
         private final Set<Class<?>> processed = new HashSet<>();
-        private final Set<Class<?>> excluded = new HashSet<>();
+        private final Set<String> excluded = new HashSet<>();
         private final Map<Class<?>, Register> registers = new HashMap<>();
 
-        private BeforeAnalysisContext(BeforeAnalysisAccess access, ScanResult scan, Set<Class<?>> excluded) {
+        private BeforeAnalysisContext(BeforeAnalysisAccess access, ScanResult scan, Set<String> excluded) {
             this.access = access;
             this.scan = scan;
             this.excluded.addAll(excluded);
@@ -730,8 +741,8 @@ public class HelidonReflectionFeature implements Feature {
             return registers.values();
         }
 
-        boolean isExcluded(Class<?> theClass) {
-            return excluded.contains(theClass);
+        boolean isExcluded(String theClassName) {
+            return excluded.contains(theClassName);
         }
     }
 

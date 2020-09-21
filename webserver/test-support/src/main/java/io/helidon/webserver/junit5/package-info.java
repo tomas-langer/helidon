@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,9 @@
  * limitations under the License.
  */
 
-module io.helidon.webserver.test.support {
-    requires io.helidon.webserver;
-    requires io.helidon.common.http;
-    requires io.helidon.webclient;
-
-    requires java.logging;
-    requires org.junit.jupiter.api;
-}
+/**
+ * JUnit5 extension to run CDI tests.
+ *
+ * @see io.helidon.microprofile.tests.junit5.HelidonTest
+ */
+package io.helidon.webserver.junit5;

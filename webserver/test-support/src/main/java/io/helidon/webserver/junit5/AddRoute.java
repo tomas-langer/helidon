@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Oracle and/or its affiliates. All rights reserved.
+ * Copyright (c) 2020 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package io.helidon.webserver.junit5;
 
-module io.helidon.webserver.test.support {
-    requires io.helidon.webserver;
-    requires io.helidon.common.http;
-    requires io.helidon.webclient;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    requires java.logging;
-    requires org.junit.jupiter.api;
+import io.helidon.common.http.Http;
+
+/**
+ * Add a {@link io.helidon.webserver.Service} to server.
+ * This annotation can be repeated.
+ */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface AddRoute {
+    String value();
+
+    Http.Method[] methods() default Http.Method.GET;
 }
