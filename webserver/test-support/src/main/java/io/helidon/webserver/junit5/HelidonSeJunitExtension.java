@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 import io.helidon.common.http.Http;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
+import io.helidon.media.common.DefaultMediaSupport;
+import io.helidon.media.common.MediaSupport;
 import io.helidon.webclient.WebClient;
 import io.helidon.webserver.Handler;
 import io.helidon.webserver.Routing;
@@ -40,6 +42,7 @@ import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 import io.helidon.webserver.Service;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.testsupport.TestClient;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
@@ -76,11 +79,16 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
     private Config methodConfig;
     private WebServer webServer;
     private WebClient webClient;
+    private boolean local;
+    private Routing routing;
 
     @SuppressWarnings("unchecked")
     @Override
     public void beforeAll(ExtensionContext context) {
         testClass = context.getRequiredTestClass();
+
+        HelidonReactiveTest test = testClass.getAnnotation(HelidonReactiveTest.class);
+        local = test.local();
 
         AddConfig[] configs = testClass.getAnnotationsByType(AddConfig.class);
         classLevelConfigMeta.addConfig(configs);
@@ -94,12 +102,18 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
 
         config = configure(classLevelConfigMeta);
 
-        startServer(classLevelServices, classLevelMedia);
+        routing = createRouting(classLevelServices);
+        mediaSupport = createMediaSupport(classLevelMedia);
 
-        webClient = WebClient.builder()
-                .config(config.get("webclient"))
-                .baseUri("http://localhost:" + webServer.port())
-                .build();
+
+        testClient = TestClient.create(routing, mediaSupport);
+        if (!local) {
+            webServer = startServer();
+            webClient = WebClient.builder()
+                    .config(config.get("webclient"))
+                    .baseUri("http://localhost:" + webServer.port())
+                    .build();
+        }
     }
 
     @Override
@@ -172,6 +186,30 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
                 .build();
     }
 
+    private MediaSupport createMediaSupport(List<AddMedia> media) {
+        Media
+        DefaultMediaSupport support = DefaultMediaSupport.builder().build();
+
+        for (AddMedia addMedia : media) {
+            MediaSupport mediaSupport = instantiate(addMedia.value());;
+            support.register(mediaSupport.re);
+        }
+    }
+
+    private Routing createRouting(List<AddService> services) {
+        Set<Method> routeMethods = new HashSet<>();
+        Set<Method> serviceMethods = new HashSet<>();
+        addRouteMethods(routeMethods, serviceMethods, testClass.getMethods());
+        addRouteMethods(routeMethods, serviceMethods, testClass.getDeclaredMethods());
+
+        Routing.Builder routing = Routing.builder();
+
+        registerRouteMethods(routing, routeMethods);
+        registerServices(routing, serviceMethods, services);
+
+        return routing.build();
+    }
+
     private void startServer(List<AddService> services,
                              List<AddMedia> media) {
 
@@ -195,12 +233,6 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
 
     }
 
-    private void registerMedia(WebServer.Builder builder, List<AddMedia> media) {
-        for (AddMedia addMedia : media) {
-            builder.addMediaSupport(instantiate(addMedia.value()));
-        }
-
-    }
 
     private void registerServices(Routing.Builder routing,
                                   Set<Method> serviceMethods,

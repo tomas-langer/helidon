@@ -39,4 +39,10 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Target(ElementType.TYPE)
 @ExtendWith(HelidonSeJunitExtension.class)
 public @interface HelidonReactiveTest {
+    /**
+     * When this is set to {@code true}, no network port is opened, and access to routing is available
+     * through {@link io.helidon.webserver.testsupport.TestClient} only.
+     * @return whether to run only a local test without network
+     */
+    boolean local() default false;
 }
