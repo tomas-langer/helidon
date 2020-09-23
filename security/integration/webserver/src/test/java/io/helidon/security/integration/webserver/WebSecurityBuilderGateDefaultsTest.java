@@ -18,9 +18,7 @@ package io.helidon.security.integration.webserver;
 
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import io.helidon.common.http.Http;
 import io.helidon.common.http.MediaType;
@@ -34,9 +32,9 @@ import io.helidon.webclient.WebClientResponse;
 import io.helidon.webclient.security.WebClientSecurity;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.junit5.HelidonReactiveTest;
+import io.helidon.webserver.junit5.SetupRouting;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -48,38 +46,36 @@ import static org.hamcrest.MatcherAssert.assertThat;
 /**
  * Unit test for {@link WebSecurity}.
  */
+@HelidonReactiveTest
 public class WebSecurityBuilderGateDefaultsTest {
     private static UnitTestAuditProvider myAuditProvider;
-    private static WebServer server;
-    private static WebClient securitySetup;
-    private static WebClient webClient;
-    private static String serverBaseUri;
 
-    @BeforeAll
-    public static void setupClients() {
+    private final WebClient securitySetup;
+    private final WebClient webClient;
+
+    WebSecurityBuilderGateDefaultsTest(WebServer server, WebClient webClient) {
+        this.webClient = webClient;
+
+        WebSecurityTestUtil.auditLogFinest();
+
         Security clientSecurity = Security.builder()
                 .addProvider(HttpBasicAuthProvider.builder().build())
                 .build();
 
         securitySetup = WebClient.builder()
+                .baseUri("http://localhost:" + server.port())
                 .addService(WebClientSecurity.create(clientSecurity))
                 .build();
-
-
-        webClient = WebClient.create();
     }
 
-    @BeforeAll
-    public static void initClass() throws InterruptedException {
-        WebSecurityTestUtil.auditLogFinest();
+    @SetupRouting
+    static Routing setupRouting(Config config) {
         myAuditProvider = new UnitTestAuditProvider();
-
-        Config config = Config.create();
 
         Security security = Security.builder(config.get("security"))
                 .addAuditProvider(myAuditProvider).build();
 
-        Routing routing = Routing.builder()
+        return Routing.builder()
                 .register(WebSecurity.create(security).securityDefaults(WebSecurity.rolesAllowed("admin").audit()))
                 // will only accept admin (due to gate defaults)
                 .get("/noRoles", WebSecurity.enforce())
@@ -103,25 +99,6 @@ public class WebSecurityBuilderGateDefaultsTest {
                             .orElse("Security context is null"));
                 })
                 .build();
-
-        server = WebServer.create(routing);
-        long t = System.currentTimeMillis();
-        CountDownLatch cdl = new CountDownLatch(1);
-        server.start().thenAccept(webServer -> {
-            long time = System.currentTimeMillis() - t;
-            System.out.println("Started server on localhost:" + webServer.port() + " in " + time + " millis");
-            cdl.countDown();
-        });
-
-        //we must wait for server to start, so other tests are not triggered until it is ready!
-        assertThat("Timeout while waiting for server to start!", cdl.await(5, TimeUnit.SECONDS), is(true));
-
-        serverBaseUri = "http://localhost:" + server.port();
-    }
-
-    @AfterAll
-    public static void stopIt() throws InterruptedException {
-        WebSecurityTestUtil.stopServer(server);
     }
 
     @Test
@@ -129,10 +106,10 @@ public class WebSecurityBuilderGateDefaultsTest {
         String username = "john";
         String password = "password";
 
-        testForbidden(serverBaseUri + "/noRoles", username, password);
-        testForbidden(serverBaseUri + "/user", username, password);
-        testForbidden(serverBaseUri + "/admin", username, password);
-        testForbidden(serverBaseUri + "/deny", username, password);
+        testForbidden("/noRoles", username, password);
+        testForbidden("/user", username, password);
+        testForbidden("/admin", username, password);
+        testForbidden("/deny", username, password);
     }
 
     @Test
@@ -140,22 +117,22 @@ public class WebSecurityBuilderGateDefaultsTest {
         String username = "jack";
         String password = "jackIsGreat";
 
-        testProtected(serverBaseUri + "/noRoles",
+        testProtected("/noRoles",
                       username,
                       password,
                       Set.of("user", "admin"),
                       Set.of());
-        testProtected(serverBaseUri + "/user",
+        testProtected("/user",
                       username,
                       password,
                       Set.of("user", "admin"),
                       Set.of());
-        testProtected(serverBaseUri + "/admin",
+        testProtected("/admin",
                       username,
                       password,
                       Set.of("user", "admin"),
                       Set.of());
-        testProtected(serverBaseUri + "/deny",
+        testProtected("/deny",
                       username,
                       password,
                       Set.of("user", "admin"),
@@ -167,21 +144,21 @@ public class WebSecurityBuilderGateDefaultsTest {
         String username = "jill";
         String password = "password";
 
-        testForbidden(serverBaseUri + "/noRoles", username, password);
-        testProtected(serverBaseUri + "/user",
+        testForbidden("/noRoles", username, password);
+        testProtected("/user",
                       username,
                       password,
                       Set.of("user"),
                       Set.of("admin"));
-        testForbidden(serverBaseUri + "/admin", username, password);
-        testForbidden(serverBaseUri + "/deny", username, password);
+        testForbidden("/admin", username, password);
+        testForbidden("/deny", username, password);
     }
 
     @Test
     public void basicTest401() throws ExecutionException, InterruptedException {
         // here we call the endpoint
         webClient.get()
-                .uri(serverBaseUri + "/noRoles")
+                .path("/noRoles")
                 .request()
                 .thenAccept(it -> {
                     assertThat(it.status(), is(Http.Status.UNAUTHORIZED_401));
@@ -196,7 +173,7 @@ public class WebSecurityBuilderGateDefaultsTest {
                 .toCompletableFuture()
                 .get();
 
-        WebClientResponse webClientResponse = callProtected(serverBaseUri + "/noRoles", "invalidUser", "invalidPassword");
+        WebClientResponse webClientResponse = callProtected("/noRoles", "invalidUser", "invalidPassword");
         assertThat(webClientResponse.status(), is(Http.Status.UNAUTHORIZED_401));
         webClientResponse.headers()
                 .first(Http.Header.WWW_AUTHENTICATE)
@@ -213,7 +190,7 @@ public class WebSecurityBuilderGateDefaultsTest {
         // as then audit is called twice - first time with 401 (challenge) and second time with 200 (correct request)
         // and that intermittently breaks this test
         webClient.get()
-                .uri(serverBaseUri + "/auditOnly")
+                .path("/auditOnly")
                 .request()
                 .thenCompose(it -> {
                     assertThat(it.status(), is(Http.Status.OK_200));
@@ -258,11 +235,11 @@ public class WebSecurityBuilderGateDefaultsTest {
                 .get();
     }
 
-    private WebClientResponse callProtected(String uri, String username, String password)
+    private WebClientResponse callProtected(String path, String username, String password)
             throws ExecutionException, InterruptedException {
         // here we call the endpoint
         return securitySetup.get()
-                .uri(uri)
+                .path(path)
                 .property(HttpBasicAuthProvider.EP_PROPERTY_OUTBOUND_USER, username)
                 .property(HttpBasicAuthProvider.EP_PROPERTY_OUTBOUND_PASSWORD, password)
                 .request()

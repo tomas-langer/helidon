@@ -16,51 +16,13 @@
 
 package io.helidon.webserver.tyrus;
 
-import java.net.InetAddress;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
 import javax.websocket.server.ServerEndpointConfig;
-
-import io.helidon.webserver.Routing;
-import io.helidon.webserver.WebServer;
-
-import org.junit.jupiter.api.AfterAll;
 
 /**
  * The TyrusSupportBaseTest.
  */
 public class TyrusSupportBaseTest {
-
-    private static WebServer webServer;
-
-    @AfterAll
-    public static void stopServer() {
-        webServer.shutdown();
-        webServer = null;
-    }
-
-    WebServer webServer() {
-        return webServer;
-    }
-
-    synchronized static WebServer webServer(boolean testing, Object... endpoints)
-            throws InterruptedException, TimeoutException, ExecutionException {
-        if (webServer != null) {
-            return webServer;
-        }
-
-        WebServer.Builder builder = WebServer.builder()
-                .bindAddress(InetAddress.getLoopbackAddress());
-
-
-        if (!testing) {
-            // in case we're running as main an not in test, run on a fixed port
-            builder.port(8080);
-        }
-
-        // Register each of the endpoints
+    static TyrusSupport tyrus(Object... endpoints) {
         TyrusSupport.Builder tyrusSupportBuilder = TyrusSupport.builder();
         for (Object o : endpoints) {
             if (o instanceof ServerEndpointConfig) {
@@ -71,22 +33,6 @@ public class TyrusSupportBaseTest {
                 throw new IllegalArgumentException("Illegal argument " + o.toString());
             }
         }
-
-        webServer = builder
-                .routing(Routing.builder().register(
-                        "/tyrus", tyrusSupportBuilder.build()))
-                .build();
-
-        webServer.start()
-                .toCompletableFuture()
-                .get(10, TimeUnit.SECONDS);
-
-        if (!testing) {
-            System.out.println("WebServer Tyrus application started.");
-            System.out.println("Hit CTRL+C to stop.");
-            Thread.currentThread().join();
-        }
-
-        return webServer;
+        return tyrusSupportBuilder.build();
     }
 }

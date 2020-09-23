@@ -34,6 +34,8 @@ import io.helidon.webserver.Service;
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Repeatable(AddServices.class)
 public @interface AddService {
+    String UNCONFIGURED_PATH = "\\tsfd\\unconfigured_value\\tsfd\\";
+
     /**
      * Class of the service to add. The class must have no-arg constructor.
      * @return service class
@@ -44,7 +46,7 @@ public @interface AddService {
      * Path pattern to register the service on
      * @return path
      */
-    String path() default "/";
+    String path() default UNCONFIGURED_PATH;
 
     /**
      * If set to {@code true} we look for a {@code static X create(Config)} method to create an instance.

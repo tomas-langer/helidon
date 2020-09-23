@@ -16,11 +16,15 @@
 
 package io.helidon.webserver.tyrus;
 
-import javax.websocket.server.ServerEndpointConfig;
 import java.net.URI;
 import java.util.Collections;
 
-import org.junit.jupiter.api.BeforeAll;
+import javax.websocket.server.ServerEndpointConfig;
+
+import io.helidon.webserver.WebServer;
+import io.helidon.webserver.junit5.AddService;
+import io.helidon.webserver.junit5.HelidonReactiveTest;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -28,21 +32,22 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Class EchoServiceTest.
  */
+@HelidonReactiveTest
 public class EchoServiceProgTest extends TyrusSupportBaseTest {
-
-    @BeforeAll
-    public static void startServer() throws Exception {
+    @AddService(value = TyrusSupport.class, path = "/tyrus")
+    static TyrusSupport createTyrusSupport() {
         ServerEndpointConfig.Builder builder = ServerEndpointConfig.Builder.create(
                 EchoEndpointProg.class, "/echo");
         builder.encoders(Collections.singletonList(UppercaseCodec.class));
         builder.decoders(Collections.singletonList(UppercaseCodec.class));
-        webServer(true, builder.build());
+
+        return tyrus(builder.build());
     }
 
     @Test
-    public void testEchoSingle() {
+    public void testEchoSingle(WebServer webServer) {
         try {
-            URI uri = URI.create("ws://localhost:" + webServer().port() + "/tyrus/echo");
+            URI uri = URI.create("ws://localhost:" + webServer.port() + "/tyrus/echo");
             new EchoClient(uri).echo("One");
         } catch (Exception e) {
             fail("Unexpected exception " + e);
@@ -50,9 +55,9 @@ public class EchoServiceProgTest extends TyrusSupportBaseTest {
     }
 
     @Test
-    public void testEchoMultiple() {
+    public void testEchoMultiple(WebServer webServer) {
         try {
-            URI uri = URI.create("ws://localhost:" + webServer().port() + "/tyrus/echo");
+            URI uri = URI.create("ws://localhost:" + webServer.port() + "/tyrus/echo");
             new EchoClient(uri).echo("One", "Two", "Three");
         } catch (Exception e) {
             fail("Unexpected exception " + e);

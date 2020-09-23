@@ -16,17 +16,10 @@
 
 package io.helidon.security.integration.webserver;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-
-import io.helidon.webserver.WebServer;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 /**
  * Helper class.
@@ -43,20 +36,5 @@ class WebSecurityTestUtil {
         l.addHandler(ch);
         l.setUseParentHandlers(false);
         l.setLevel(Level.FINEST);
-    }
-
-    static void stopServer(WebServer server) throws InterruptedException {
-        CountDownLatch cdl = new CountDownLatch(1);
-        long t = System.currentTimeMillis();
-        if (null == server) {
-            return;
-        }
-        server.shutdown().thenAccept(webServer -> {
-            long time = System.currentTimeMillis() - t;
-            System.out.println("Stopped server in " + time + " millis");
-            cdl.countDown();
-        });
-        //we must wait until server is shutdown, so another test class doesn't try to use the same port
-        assertThat("Timeout while waiting for server to stop", cdl.await(5, TimeUnit.SECONDS), is(true));
     }
 }

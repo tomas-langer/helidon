@@ -24,16 +24,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import io.helidon.common.LogConfig;
 import io.helidon.common.http.Http;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
-import io.helidon.media.common.DefaultMediaSupport;
+import io.helidon.media.common.MediaContext;
 import io.helidon.media.common.MediaSupport;
 import io.helidon.webclient.WebClient;
 import io.helidon.webserver.Handler;
@@ -68,6 +70,8 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
     static {
         SUPPORTED_PARAM_TYPES.add(WebClient.class);
         SUPPORTED_PARAM_TYPES.add(Config.class);
+        SUPPORTED_PARAM_TYPES.add(TestClient.class);
+        SUPPORTED_PARAM_TYPES.add(WebServer.class);
     }
 
     private final List<AddService> classLevelServices = new ArrayList<>();
@@ -81,10 +85,12 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
     private WebClient webClient;
     private boolean local;
     private Routing routing;
+    private MediaContext mediaContext;
+    private TestClient testClient;
 
-    @SuppressWarnings("unchecked")
     @Override
     public void beforeAll(ExtensionContext context) {
+        LogConfig.initClass();
         testClass = context.getRequiredTestClass();
 
         HelidonReactiveTest test = testClass.getAnnotation(HelidonReactiveTest.class);
@@ -103,14 +109,21 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
         config = configure(classLevelConfigMeta);
 
         routing = createRouting(classLevelServices);
-        mediaSupport = createMediaSupport(classLevelMedia);
+        mediaContext = createMediaContext(classLevelMedia);
 
+        testClient = TestClient.create(routing, mediaContext);
 
-        testClient = TestClient.create(routing, mediaSupport);
         if (!local) {
-            webServer = startServer();
+            webServer = WebServer.builder()
+                    .routing(routing)
+                    .mediaContext(mediaContext)
+                    .build()
+                    .start()
+                    .await(10, TimeUnit.SECONDS);
+
             webClient = WebClient.builder()
                     .config(config.get("webclient"))
+                    .mediaContext(mediaContext)
                     .baseUri("http://localhost:" + webServer.port())
                     .build();
         }
@@ -139,7 +152,13 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
 
     @Override
     public void afterAll(ExtensionContext context) {
-        stopServer();
+        if (webServer != null) {
+            webServer.shutdown()
+                    .await(10, TimeUnit.SECONDS);
+            webServer = null;
+        }
+        webClient = null;
+        testClient = null;
     }
 
     @Override
@@ -158,7 +177,21 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
         Class<?> parameterType = parameterContext.getParameter().getType();
 
         if (parameterType.equals(WebClient.class)) {
+            if (local) {
+                throw new IllegalStateException("Cannot resolve WebClient parameter when test is running locally");
+            }
             return webClient;
+        }
+
+        if (parameterType.equals(WebServer.class)) {
+            if (local) {
+                throw new IllegalStateException("Cannot resolve WebServer parameter when test is running locally");
+            }
+            return webServer;
+        }
+
+        if (parameterType.equals(TestClient.class)) {
+            return testClient;
         }
 
         if (parameterType.equals(Config.class)) {
@@ -186,14 +219,16 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
                 .build();
     }
 
-    private MediaSupport createMediaSupport(List<AddMedia> media) {
-        Media
-        DefaultMediaSupport support = DefaultMediaSupport.builder().build();
+    private MediaContext createMediaContext(List<AddMedia> media) {
+        MediaContext.Builder builder = MediaContext.builder();
 
         for (AddMedia addMedia : media) {
-            MediaSupport mediaSupport = instantiate(addMedia.value());;
-            support.register(mediaSupport.re);
+            MediaSupport mediaSupport = instantiate(addMedia.value());
+            ;
+            builder.addMediaSupport(mediaSupport);
         }
+
+        return builder.build();
     }
 
     private Routing createRouting(List<AddService> services) {
@@ -202,6 +237,26 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
         addRouteMethods(routeMethods, serviceMethods, testClass.getMethods());
         addRouteMethods(routeMethods, serviceMethods, testClass.getDeclaredMethods());
 
+        Set<Method> setupRoutingMethods = new LinkedHashSet<>();
+        addSetupRoutingMethods(setupRoutingMethods, testClass.getMethods());
+        addSetupRoutingMethods(setupRoutingMethods, testClass.getDeclaredMethods());
+
+        if (setupRoutingMethods.size() > 0) {
+            if (setupRoutingMethods.size() > 1) {
+                throw new IllegalStateException("There can only be one method annotated with @SetupRouting");
+            }
+            if (routeMethods.size() > 0) {
+                throw new IllegalStateException(
+                        "If there is a method annotated with @SetupRouting, you cannot add methods with @AddRoute annotation");
+            }
+            if (serviceMethods.size() > 0) {
+                throw new IllegalStateException(
+                        "If there is a method annotated with @SetupRouting, you cannot add methods with @AddService annotation");
+            }
+            Method m = setupRoutingMethods.iterator().next();
+            return invokeMethodWithOptionalConfig(m);
+        }
+
         Routing.Builder routing = Routing.builder();
 
         registerRouteMethods(routing, routeMethods);
@@ -209,30 +264,6 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
 
         return routing.build();
     }
-
-    private void startServer(List<AddService> services,
-                             List<AddMedia> media) {
-
-        Set<Method> routeMethods = new HashSet<>();
-        Set<Method> serviceMethods = new HashSet<>();
-        addRouteMethods(routeMethods, serviceMethods, testClass.getMethods());
-        addRouteMethods(routeMethods, serviceMethods, testClass.getDeclaredMethods());
-
-        WebServer.Builder builder = WebServer.builder();
-        Routing.Builder routing = Routing.builder();
-
-        registerRouteMethods(routing, routeMethods);
-        registerServices(routing, serviceMethods, services);
-        registerMedia(builder, media);
-
-        webServer = builder
-                .routing(routing)
-                .build()
-                .start()
-                .await(10, TimeUnit.SECONDS);
-
-    }
-
 
     private void registerServices(Routing.Builder routing,
                                   Set<Method> serviceMethods,
@@ -250,7 +281,11 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
                 serviceInstance = instantiate(service.value());
 
             }
-            routing.register(service.path(), serviceInstance);
+            if (service.path().equals(AddService.UNCONFIGURED_PATH)) {
+                routing.register(serviceInstance);
+            } else {
+                routing.register(service.path(), serviceInstance);
+            }
         }
         for (Method serviceMethod : serviceMethods) {
             AddService service = serviceMethod.getAnnotation(AddService.class);
@@ -258,18 +293,24 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
             Service serviceInstance;
             if (serviceMethod.getParameterCount() == 0) {
                 try {
+                    serviceMethod.setAccessible(true);
                     serviceInstance = (Service) serviceMethod.invoke(null);
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to create service from method " + serviceMethod, e);
                 }
             } else {
                 try {
+                    serviceMethod.setAccessible(true);
                     serviceInstance = (Service) serviceMethod.invoke(null, config);
                 } catch (Exception e) {
                     throw new RuntimeException("Failed to create service from method " + serviceMethod, e);
                 }
             }
-            routing.register(service.path(), serviceInstance);
+            if (service.path().equals(AddService.UNCONFIGURED_PATH)) {
+                routing.register(serviceInstance);
+            } else {
+                routing.register(service.path(), serviceInstance);
+            }
         }
     }
 
@@ -319,6 +360,21 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
 
         throw new RuntimeException(value + " does not have a constructor with Config parameter, "
                                            + "nor a static create(Config) method, cannot instantiate");
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T invokeMethodWithOptionalConfig(Method m) {
+        try {
+            m.setAccessible(true);
+            if (m.getParameterCount() == 0) {
+                return (T) m.invoke(null);
+            } else {
+                return (T) m.invoke(null, config);
+            }
+
+        } catch (Throwable throwable) {
+            throw new RuntimeException("Failed to invoke method " + m, throwable);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -393,6 +449,19 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
         return new LinkedList<>(Arrays.asList(addRoute.methods()));
     }
 
+    private void addSetupRoutingMethods(Set<Method> setupRoutingMethods, Method[] methods) {
+        // static methods that return Routing
+        for (Method method : methods) {
+            SetupRouting setup = method.getAnnotation(SetupRouting.class);
+            if (setup != null) {
+                validateStatic(method, "@SetupRouting");
+                validateReturnType(method, Routing.class);
+                validateParamsWithOptionalConfig(method, "@SetupRouting");
+                setupRoutingMethods.add(method);
+            }
+        }
+    }
+
     private void addRouteMethods(Set<Method> routeMethods, Set<Method> serviceMethods, Method[] methods) {
         // static methods that have server request and response as params
         for (Method method : methods) {
@@ -409,21 +478,24 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
 
         validateStatic(method, "@AddService");
         validateReturnType(method, service.value());
+        validateParamsWithOptionalConfig(method, "@AddService");
 
+        serviceMethods.add(method);
+    }
+
+    private void validateParamsWithOptionalConfig(Method method, String annotation) {
         Class<?>[] parameterTypes = method.getParameterTypes();
         if (parameterTypes.length == 0) {
-            serviceMethods.add(method);
+            return;
         }
         if (parameterTypes.length != 1) {
-            throw new RuntimeException("Method " + method + " is annotated with @AddService, yet it does not have zero "
+            throw new RuntimeException("Method " + method + " is annotated with " + annotation + ", yet it does not have zero "
                                                + " or one parameters.");
         }
         if (parameterTypes[0] != Config.class) {
-            throw new RuntimeException("Method " + method + " is annotated with @AddService, yet its parameter is not "
+            throw new RuntimeException("Method " + method + " is annotated with " + annotation + ", yet its parameter is not "
                                                + "Config, but " + parameterTypes[0]);
         }
-
-        serviceMethods.add(method);
     }
 
     private void validateReturnType(Method method, Class<?> expected) {
@@ -454,14 +526,6 @@ class HelidonSeJunitExtension implements BeforeAllCallback,
         }
 
         routeMethods.add(method);
-    }
-
-    private void stopServer() {
-        if (webServer != null) {
-            webServer.shutdown()
-                    .await(10, TimeUnit.SECONDS);
-            webServer = null;
-        }
     }
 
     private static final class ConfigMeta {

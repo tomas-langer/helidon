@@ -17,8 +17,6 @@
 package io.helidon.security.integration.webserver;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import io.helidon.common.http.Http;
@@ -27,31 +25,28 @@ import io.helidon.config.Config;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.util.TokenHandler;
+import io.helidon.webclient.WebClient;
 import io.helidon.webserver.Routing;
 import io.helidon.webserver.WebServer;
-
-import org.junit.jupiter.api.BeforeAll;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import io.helidon.webserver.junit5.SetupRouting;
 
 /**
  * Unit test for {@link WebSecurity}.
  */
 public class WebSecurityProgrammaticTest extends WebSecurityTests {
-    private static String baseUri;
+    WebSecurityProgrammaticTest(WebServer server, WebClient webClient) {
+        super(server, webClient);
+    }
 
-    @BeforeAll
-    public static void initClass() throws InterruptedException {
+    @SetupRouting
+    public static Routing setupRouting(Config config)  {
         WebSecurityTestUtil.auditLogFinest();
         myAuditProvider = new UnitTestAuditProvider();
-
-        Config config = Config.create();
 
         Security security = Security.builder(config.get("security"))
                 .addAuditProvider(myAuditProvider).build();
 
-        Routing routing = Routing.builder()
+        return Routing.builder()
                 .register(WebSecurity.create(security)
                                   .securityDefaults(
                                           SecurityHandler.create()
@@ -86,24 +81,5 @@ public class WebSecurityProgrammaticTest extends WebSecurityTests {
                             .orElse("Security context is null"));
                 })
                 .build();
-
-        server = WebServer.create(routing);
-        long t = System.currentTimeMillis();
-        CountDownLatch cdl = new CountDownLatch(1);
-        server.start().thenAccept(webServer -> {
-            long time = System.currentTimeMillis() - t;
-            System.out.println("Started server on localhost:" + webServer.port() + " in " + time + " millis");
-            cdl.countDown();
-        });
-
-        //we must wait for server to start, so other tests are not triggered until it is ready!
-        assertThat("Timeout while waiting for server to start!", cdl.await(5, TimeUnit.SECONDS), is(true));
-
-        baseUri = "http://localhost:" + server.port();
-    }
-
-    @Override
-    String serverBaseUri() {
-        return baseUri;
     }
 }

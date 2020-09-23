@@ -16,6 +16,7 @@
 package io.helidon.webserver.junit5;
 
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @ExtendWith(HelidonSeJunitExtension.class)
+@Inherited
 public @interface HelidonReactiveTest {
     /**
      * When this is set to {@code true}, no network port is opened, and access to routing is available

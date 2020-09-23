@@ -25,7 +25,7 @@
 
 Use the `StaticContentSupport` class to serve files and classpath resources. 
 `StaticContentSupport` can be created for any readable directory or classpath
- context root and registered on a path in `Routing`.
+ context root and registered on a path in `SetupRouting`.
 
 You can combine dynamic handlers with `StaticContentSupport` objects: if no file matches the request path, then the request is forwarded to
  the next handler. 

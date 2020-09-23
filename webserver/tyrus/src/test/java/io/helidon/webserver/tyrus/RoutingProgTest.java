@@ -16,11 +16,15 @@
 
 package io.helidon.webserver.tyrus;
 
-import javax.websocket.server.ServerEndpointConfig;
 import java.net.URI;
 import java.util.Collections;
 
-import org.junit.jupiter.api.BeforeAll;
+import javax.websocket.server.ServerEndpointConfig;
+
+import io.helidon.webserver.WebServer;
+import io.helidon.webserver.junit5.AddService;
+import io.helidon.webserver.junit5.HelidonReactiveTest;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -28,10 +32,10 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Class RoutingProgTest.
  */
+@HelidonReactiveTest
 public class RoutingProgTest extends TyrusSupportBaseTest {
-
-    @BeforeAll
-    public static void startServer() throws Exception {
+    @AddService(value = TyrusSupport.class, path = "/tyrus")
+    static TyrusSupport createTyrusSupport() {
         ServerEndpointConfig.Builder builder1 = ServerEndpointConfig.Builder.create(
                 EchoEndpointProg.class, "/echo");
         builder1.encoders(Collections.singletonList(UppercaseCodec.class));
@@ -40,13 +44,14 @@ public class RoutingProgTest extends TyrusSupportBaseTest {
                 DoubleEchoEndpointProg.class, "/doubleEcho");
         builder2.encoders(Collections.singletonList(UppercaseCodec.class));
         builder2.decoders(Collections.singletonList(UppercaseCodec.class));
-        webServer(true, builder1.build(), builder2.build());
+
+        return tyrus(builder1.build(), builder2.build());
     }
 
     @Test
-    public void testEcho() {
+    public void testEcho(WebServer webServer) {
         try {
-            URI uri = URI.create("ws://localhost:" + webServer().port() + "/tyrus/echo");
+            URI uri = URI.create("ws://localhost:" + webServer.port() + "/tyrus/echo");
             new EchoClient(uri).echo("One");
         } catch (Exception e) {
             fail("Unexpected exception " + e);
@@ -54,9 +59,9 @@ public class RoutingProgTest extends TyrusSupportBaseTest {
     }
 
     @Test
-    public void testDoubleEcho() {
+    public void testDoubleEcho(WebServer webServer) {
         try {
-            URI uri = URI.create("ws://localhost:" + webServer().port() + "/tyrus/doubleEcho");
+            URI uri = URI.create("ws://localhost:" + webServer.port() + "/tyrus/doubleEcho");
             new EchoClient(uri, (s1, s2) -> s2.equals(s1 + s1)).echo("One");
         } catch (Exception e) {
             fail("Unexpected exception " + e);

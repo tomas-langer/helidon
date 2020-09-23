@@ -18,6 +18,7 @@ package io.helidon.security.integration.webserver;
 
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import io.helidon.common.http.Http;
 import io.helidon.security.AuditEvent;
@@ -27,9 +28,8 @@ import io.helidon.webclient.WebClient;
 import io.helidon.webclient.WebClientResponse;
 import io.helidon.webclient.security.WebClientSecurity;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.junit5.HelidonReactiveTest;
 
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -42,46 +42,39 @@ import static org.hamcrest.MatcherAssert.assertThat;
  * A set of tests that are used both by configuration based
  * and programmatic tests.
  */
+@HelidonReactiveTest
 public abstract class WebSecurityTests {
-    static final String HEADER_BEARER_TOKEN = "BEARER_TOKEN";
-    static final String HEADER_NAME = "NAME_FROM_REQUEST";
-
     static final String AUDIT_MESSAGE_FORMAT = "Unit test message format";
     static UnitTestAuditProvider myAuditProvider;
-    static WebServer server;
-    private static WebClient securitySetup;
-    private static WebClient webClient;
 
-    @BeforeAll
-    static void buildClients() {
-        Security security = Security.builder()
+    private final WebClient securitySetup;
+    private final WebClient webClient;
+
+    WebSecurityTests(WebServer server, WebClient webClient) {
+        this.webClient = webClient;
+
+        WebSecurityTestUtil.auditLogFinest();
+
+        Security clientSecurity = Security.builder()
                 .addProvider(HttpBasicAuthProvider.builder().build())
                 .build();
 
-        securitySetup = WebClient.builder()
-                .addService(WebClientSecurity.create(security))
+        this.securitySetup = WebClient.builder()
+                .baseUri("http://localhost:" + server.port())
+                .addService(WebClientSecurity.create(clientSecurity))
                 .build();
-
-        webClient = WebClient.create();
     }
-
-    @AfterAll
-    static void stopIt() throws InterruptedException {
-        WebSecurityTestUtil.stopServer(server);
-    }
-
-    abstract String serverBaseUri();
 
     @Test
     void basicTestJohn() throws ExecutionException, InterruptedException {
         String username = "john";
         String password = "password";
 
-        testProtected(serverBaseUri() + "/noRoles", username, password, Set.of(), Set.of());
+        testProtected("/noRoles", username, password, Set.of(), Set.of());
         // this user has no roles, all requests should fail except for public
-        testForbidden(serverBaseUri() + "/user", username, password);
-        testForbidden(serverBaseUri() + "/admin", username, password);
-        testForbidden(serverBaseUri() + "/deny", username, password);
+        testForbidden("/user", username, password);
+        testForbidden("/admin", username, password);
+        testForbidden("/deny", username, password);
     }
 
     @Test
@@ -89,22 +82,22 @@ public abstract class WebSecurityTests {
         String username = "jack";
         String password = "jackIsGreat";
 
-        testProtected(serverBaseUri() + "/noRoles",
+        testProtected("/noRoles",
                       username,
                       password,
                       Set.of("user", "admin"),
                       Set.of());
-        testProtected(serverBaseUri() + "/user",
+        testProtected("/user",
                       username,
                       password,
                       Set.of("user", "admin"),
                       Set.of());
-        testProtected(serverBaseUri() + "/admin",
+        testProtected("/admin",
                       username,
                       password,
                       Set.of("user", "admin"),
                       Set.of());
-        testForbidden(serverBaseUri() + "/deny", username, password);
+        testForbidden("/deny", username, password);
     }
 
     @Test
@@ -112,24 +105,24 @@ public abstract class WebSecurityTests {
         String username = "jill";
         String password = "password";
 
-        testProtected(serverBaseUri() + "/noRoles",
+        testProtected("/noRoles",
                       username,
                       password,
                       Set.of("user"),
                       Set.of("admin"));
-        testProtected(serverBaseUri() + "/user",
+        testProtected("/user",
                       username,
                       password,
                       Set.of("user"),
                       Set.of("admin"));
-        testForbidden(serverBaseUri() + "/admin", username, password);
-        testForbidden(serverBaseUri() + "/deny", username, password);
+        testForbidden("/admin", username, password);
+        testForbidden("/deny", username, password);
     }
 
     @Test
     void basicTest401() throws ExecutionException, InterruptedException {
         webClient.get()
-                .uri(serverBaseUri() + "/noRoles")
+                .path("/noRoles")
                 .request()
                 .thenAccept(it -> {
                     assertThat(it.status(), is(Http.Status.UNAUTHORIZED_401));
@@ -144,7 +137,7 @@ public abstract class WebSecurityTests {
                 .toCompletableFuture()
                 .get();
 
-        WebClientResponse webClientResponse = callProtected(serverBaseUri() + "/noRoles", "invalidUser", "invalidPassword");
+        WebClientResponse webClientResponse = callProtected("/noRoles", "invalidUser", "invalidPassword");
         assertThat(webClientResponse.status(), is(Http.Status.UNAUTHORIZED_401));
         webClientResponse.headers()
                 .first(Http.Header.WWW_AUTHENTICATE)
@@ -158,14 +151,13 @@ public abstract class WebSecurityTests {
     @Test
     void testCustomizedAudit() throws InterruptedException, ExecutionException {
         webClient.get()
-                .uri(serverBaseUri() + "/auditOnly")
+                .path("/auditOnly")
                 .request()
                 .thenCompose(it -> {
                     assertThat(it.status(), is(Http.Status.OK_200));
                     return it.close();
                 })
-                .toCompletableFuture()
-                .get();
+                .await(10, TimeUnit.SECONDS);
 
         // audit
         AuditEvent auditEvent = myAuditProvider.getAuditEvent();
@@ -204,10 +196,10 @@ public abstract class WebSecurityTests {
                 .get();
     }
 
-    private WebClientResponse callProtected(String uri, String username, String password)
+    private WebClientResponse callProtected(String path, String username, String password)
             throws ExecutionException, InterruptedException {
         return securitySetup.get()
-                .uri(uri)
+                .path(path)
                 .property(HttpBasicAuthProvider.EP_PROPERTY_OUTBOUND_USER, username)
                 .property(HttpBasicAuthProvider.EP_PROPERTY_OUTBOUND_PASSWORD, password)
                 .request()

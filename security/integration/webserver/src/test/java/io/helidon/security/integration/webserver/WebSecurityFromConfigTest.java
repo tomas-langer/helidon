@@ -17,65 +17,45 @@
 package io.helidon.security.integration.webserver;
 
 import java.util.Optional;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import io.helidon.common.http.MediaType;
 import io.helidon.config.Config;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
-import io.helidon.webserver.Routing;
+import io.helidon.webclient.WebClient;
+import io.helidon.webserver.ServerRequest;
+import io.helidon.webserver.ServerResponse;
 import io.helidon.webserver.WebServer;
-
-import org.junit.jupiter.api.BeforeAll;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
+import io.helidon.webserver.junit5.AddRoute;
+import io.helidon.webserver.junit5.AddService;
 
 /**
  * Unit test for {@link WebSecurity}.
  */
 public class WebSecurityFromConfigTest extends WebSecurityTests {
-    private static String baseUri;
+    WebSecurityFromConfigTest(WebServer server, WebClient webClient) {
+        super(server, webClient);
+    }
 
-    @BeforeAll
-    public static void initClass() throws InterruptedException {
+    @AddService(WebSecurity.class)
+    static WebSecurity setupSecurity(Config config) {
         WebSecurityTestUtil.auditLogFinest();
+
         myAuditProvider = new UnitTestAuditProvider();
 
-        Config securityConfig = Config.create().get("security");
+        Config securityConfig = config.get("security");
 
         Security security = Security.builder(securityConfig)
                 .addAuditProvider(myAuditProvider).build();
-
-        Routing routing = Routing.builder()
-                .register(WebSecurity.create(security, securityConfig))
-                .get("/{*}", (req, res) -> {
-                    Optional<SecurityContext> securityContext = req.context().get(SecurityContext.class);
-                    res.headers().contentType(MediaType.TEXT_PLAIN.withCharset("UTF-8"));
-                    res.send("Hello, you are: \n" + securityContext
-                            .map(ctx -> ctx.user().orElse(SecurityContext.ANONYMOUS).toString())
-                            .orElse("Security context is null"));
-                })
-                .build();
-
-        server = WebServer.create(routing);
-        long t = System.currentTimeMillis();
-        CountDownLatch cdl = new CountDownLatch(1);
-        server.start().thenAccept(webServer -> {
-            long time = System.currentTimeMillis() - t;
-            System.out.println("Started server on localhost:" + webServer.port() + " in " + time + " millis");
-            cdl.countDown();
-        });
-
-        //we must wait for server to start, so other tests are not triggered until it is ready!
-        assertThat("Timeout while waiting for server to start!", cdl.await(5, TimeUnit.SECONDS), is(true));
-
-        baseUri = "http://localhost:" + server.port();
+        return WebSecurity.create(security, securityConfig);
     }
 
-    @Override
-    String serverBaseUri() {
-        return baseUri;
+    @AddRoute("/{*}")
+    static void routing(ServerRequest req, ServerResponse res) {
+        Optional<SecurityContext> securityContext = req.context().get(SecurityContext.class);
+        res.headers().contentType(MediaType.TEXT_PLAIN.withCharset("UTF-8"));
+        res.send("Hello, you are: \n" + securityContext
+                .map(ctx -> ctx.user().orElse(SecurityContext.ANONYMOUS).toString())
+                .orElse("Security context is null"));
     }
 }

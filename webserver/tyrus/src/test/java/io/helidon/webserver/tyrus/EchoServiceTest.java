@@ -18,7 +18,10 @@ package io.helidon.webserver.tyrus;
 
 import java.net.URI;
 
-import org.junit.jupiter.api.BeforeAll;
+import io.helidon.webserver.WebServer;
+import io.helidon.webserver.junit5.AddService;
+import io.helidon.webserver.junit5.HelidonReactiveTest;
+
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -26,17 +29,17 @@ import static org.junit.jupiter.api.Assertions.fail;
 /**
  * Class EchoServiceTest.
  */
+@HelidonReactiveTest
 public class EchoServiceTest extends TyrusSupportBaseTest {
-
-    @BeforeAll
-    public static void startServer() throws Exception {
-        webServer(true, EchoEndpoint.class);
+    @AddService(value = TyrusSupport.class, path = "/tyrus")
+    static TyrusSupport createTyrusSupport() {
+        return tyrus(EchoEndpoint.class);
     }
 
     @Test
-    public void testEchoSingle() {
+    public void testEchoSingle(WebServer webServer) {
         try {
-            URI uri = URI.create("ws://localhost:" + webServer().port() + "/tyrus/echo");
+            URI uri = URI.create("ws://localhost:" + webServer.port() + "/tyrus/echo");
             new EchoClient(uri).echo("One");
         } catch (Exception e) {
             fail("Unexpected exception " + e);
@@ -44,9 +47,9 @@ public class EchoServiceTest extends TyrusSupportBaseTest {
     }
 
     @Test
-    public void testEchoMultiple() {
+    public void testEchoMultiple(WebServer webServer) {
         try {
-            URI uri = URI.create("ws://localhost:" + webServer().port() + "/tyrus/echo");
+            URI uri = URI.create("ws://localhost:" + webServer.port() + "/tyrus/echo");
             new EchoClient(uri).echo("One", "Two", "Three");
         } catch (Exception e) {
             fail("Unexpected exception " + e);

@@ -33,7 +33,7 @@ This implies that if you register it last and another `Service` or
 
 == Configuring Access Log in your code
 
-Access log is configured in your code by registering it as a service with `Routing`
+Access log is configured in your code by registering it as a service with `SetupRouting`
 
 [source,java]
 ----

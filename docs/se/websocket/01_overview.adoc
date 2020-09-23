@@ -111,7 +111,7 @@ is received, it empties the shared queue sending messages one at a time over
 the WebSocket connection.
 
 In Helidon SE, REST and WebSocket classes need to be manually registered into
-the web server. This is accomplished via a `Routing` builder:
+the web server. This is accomplished via a `SetupRouting` builder:
 
 [source,java]
 ----
@@ -128,7 +128,7 @@ the web server. This is accomplished via a `Routing` builder:
                 .build();
 ----
 
-This code snippet uses multiple builders for `Routing`, `TyrusSupport` and `ServerEndpointConfig`.
+This code snippet uses multiple builders for `SetupRouting`, `TyrusSupport` and `ServerEndpointConfig`.
 In particular, it registers `MessageBoardEndpoint.class` at `"/websocket/board"` and associates
 with it a _message encoder_. For more information on message encoders and decoders the
 reader see the {websocket-spec-url}[websocket specification]; in this {helidon-websocket-example-url}[example],
