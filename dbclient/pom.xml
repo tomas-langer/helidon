@@ -42,5 +42,6 @@
         <module>metrics-jdbc</module>
         <module>health</module>
         <module>jsonp</module>
+        <module>r2dbc</module>
     </modules>
 </project>
