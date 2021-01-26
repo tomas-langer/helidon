@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,6 +77,11 @@ public interface DbClient {
      * @return name of the database provider
      */
     String dbType();
+
+    /**
+     * Close the resources associated with this client.
+     */
+    Single<Void> close();
 
     /**
      * Create Helidon database handler builder.

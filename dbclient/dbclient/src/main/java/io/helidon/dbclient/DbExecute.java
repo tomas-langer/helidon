@@ -156,9 +156,7 @@ public interface DbExecute {
      * @param statement the statement text
      * @return database statement that can insert data
      */
-    default DbStatementDml createNamedInsert(String statementName, String statement) {
-        return createNamedDmlStatement(statementName, statement);
-    }
+    DbStatementInsert createNamedInsert(String statementName, String statement);
 
     /**
      * Create an insert statement using a named statement.
@@ -166,7 +164,7 @@ public interface DbExecute {
      * @param statementName the name of the statement
      * @return database statement that can insert data
      */
-    DbStatementDml createNamedInsert(String statementName);
+    DbStatementInsert createNamedInsert(String statementName);
 
     /**
      * Create an insert statement using a statement text.
@@ -174,7 +172,7 @@ public interface DbExecute {
      * @param statement the statement text
      * @return database statement that can insert data
      */
-    DbStatementDml createInsert(String statement);
+    DbStatementInsert createInsert(String statement);
 
     /**
      * Create and execute insert statement using a statement defined in the configuration file.

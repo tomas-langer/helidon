@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import io.helidon.common.GenericType;
-import io.helidon.common.mapper.MapperException;
 import io.helidon.common.mapper.MapperManager;
 import io.helidon.common.reactive.Multi;
 import io.helidon.common.reactive.Single;
@@ -147,38 +146,13 @@ class JdbcStatementQuery extends JdbcStatement<DbStatementQuery, Multi<DbRow>> i
             String name = metaData.getColumnLabel(i);
             String sqlType = metaData.getColumnTypeName(i);
             Class<?> javaClass = classByName(metaData.getColumnClassName(i));
-            DbColumn column = new DbColumn() {
-                @Override
-                public <T> T as(Class<T> type) {
-                    return null;
-                }
-
-                @Override
-                public <T> T as(GenericType<T> type) {
-                    return null;
-                }
-
-                @Override
-                public Class<?> javaType() {
-                    return javaClass;
-                }
-
-                @Override
-                public String dbType() {
-                    return sqlType;
-                }
-
-                @Override
-                public String name() {
-                    return name;
-                }
-            };
+            DbColumn column = JdbcDbColumn.create(javaClass, sqlType, name);
             byNumbers.put((long) i, column);
         }
         return byNumbers;
     }
 
-    private static Class<?> classByName(String columnClassName) {
+    static Class<?> classByName(String columnClassName) {
         if (columnClassName == null) {
             return null;
         }
@@ -335,74 +309,7 @@ class JdbcStatementQuery extends JdbcStatement<DbStatementQuery, Multi<DbRow>> i
             for (int i = 1; i <= metadata.size(); i++) {
                 DbColumn meta = metadata.get((long) i);
                 Object value = rs.getObject(i);
-                DbColumn withValue = new DbColumn() {
-                    @Override
-                    public <T> T as(Class<T> type) {
-                        if (null == value) {
-                            return null;
-                        }
-                        if (type.isAssignableFrom(value.getClass())) {
-                            return type.cast(value);
-                        }
-                        return map(value, type);
-                    }
-
-                    @SuppressWarnings("unchecked")
-                    <SRC, T> T map(SRC value, Class<T> type) {
-                        Class<SRC> theClass = (Class<SRC>) value.getClass();
-
-                        try {
-                            return mapperManager.map(value, theClass, type);
-                        } catch (MapperException e) {
-                            if (type.equals(String.class)) {
-                                return (T) String.valueOf(value);
-                            }
-                            throw e;
-                        }
-                    }
-
-                    @SuppressWarnings("unchecked")
-                    <SRC, T> T map(SRC value, GenericType<T> type) {
-                        Class<SRC> theClass = (Class<SRC>) value.getClass();
-                        return mapperManager.map(value, GenericType.create(theClass), type);
-                    }
-
-                    @Override
-                    public <T> T as(GenericType<T> type) {
-                        if (null == value) {
-                            return null;
-                        }
-                        if (type.isClass()) {
-                            Class<?> theClass = type.rawType();
-                            if (theClass.isAssignableFrom(value.getClass())) {
-                                return type.cast(value);
-                            }
-                        }
-                        return map(value, type);
-                    }
-
-                    @Override
-                    public Class<?> javaType() {
-                        if (null == meta.javaType()) {
-                            if (null == value) {
-                                return null;
-                            }
-                            return value.getClass();
-                        } else {
-                            return meta.javaType();
-                        }
-                    }
-
-                    @Override
-                    public String dbType() {
-                        return meta.dbType();
-                    }
-
-                    @Override
-                    public String name() {
-                        return meta.name();
-                    }
-                };
+                DbColumn withValue = JdbcDbColumn.create(mapperManager, meta, value);
                 byStringsWithValues.put(meta.name(), withValue);
                 byNumbersWithValues.put(i, withValue);
             }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 202 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ import io.helidon.dbclient.DbExecute;
 import io.helidon.dbclient.DbMapperManager;
 import io.helidon.dbclient.DbStatementDml;
 import io.helidon.dbclient.DbStatementGet;
+import io.helidon.dbclient.DbStatementInsert;
 import io.helidon.dbclient.DbStatementQuery;
 import io.helidon.dbclient.DbStatementType;
 import io.helidon.dbclient.DbStatements;
@@ -213,6 +214,22 @@ class JdbcDbClient implements DbClient {
         return connectionPool.dbType();
     }
 
+    @Override
+    public Single<Void> close() {
+        CompletableFuture<Boolean> result = new CompletableFuture<>();
+        executorService.submit(() -> {
+            try {
+                connectionPool.close();
+                result.complete(true);
+            } catch (Exception e) {
+                result.completeExceptionally(e);
+            }
+        });
+
+        return Single.create(result)
+                .flatMapSingle(it -> Single.empty());
+    }
+
     private static final class JdbcTxExecute extends JdbcExecute implements DbTransaction {
 
         private volatile boolean setRollbackOnly = false;
@@ -340,9 +357,9 @@ class JdbcDbClient implements DbClient {
         }
 
         @Override
-        public DbStatementDml createNamedInsert(String statementName, String statement) {
-            return new JdbcStatementDml(context,
-                                        DbStatementContext.create(context, DbStatementType.INSERT, statementName, statement));
+        public DbStatementInsert createNamedInsert(String statementName, String statement) {
+            return new JdbcStatementInsert(context,
+                                           DbStatementContext.create(context, DbStatementType.INSERT, statementName, statement));
         }
 
         @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2020 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 2021 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package io.helidon.dbclient.jdbc;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -97,7 +98,7 @@ abstract class JdbcStatement<S extends DbStatement<S, R>, R> extends AbstractSta
 
     private PreparedStatement prepareStatement(Connection conn, String statementName, String statement) {
         try {
-            return conn.prepareStatement(statement);
+            return conn.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS);
         } catch (SQLException e) {
             throw new DbClientException(String.format("Failed to prepare statement: %s", statementName), e);
         }
@@ -114,7 +115,7 @@ abstract class JdbcStatement<S extends DbStatement<S, R>, R> extends AbstractSta
             Parser parser = new Parser(statement);
             String jdbcStatement = parser.convert();
             LOGGER.finest(() -> String.format("Converted statement: %s", jdbcStatement));
-            preparedStatement = connection.prepareStatement(jdbcStatement);
+            preparedStatement = connection.prepareStatement(jdbcStatement, Statement.RETURN_GENERATED_KEYS);
             List<String> namesOrder = parser.namesOrder();
             // SQL statement and provided parameters integrity check
             if (namesOrder.size() > parameters.size()) {
@@ -146,7 +147,7 @@ abstract class JdbcStatement<S extends DbStatement<S, R>, R> extends AbstractSta
 
         PreparedStatement preparedStatement = null;
         try {
-            preparedStatement = connection.prepareStatement(statement);
+            preparedStatement = connection.prepareStatement(statement, Statement.RETURN_GENERATED_KEYS);
             int i = 1; // JDBC set position parameter starts from 1.
             for (Object value : parameters) {
                 LOGGER.finest(String.format("Indexed parameter %d: %s", i, value));
