@@ -97,7 +97,7 @@ You can configure service path using an annotation or configuration (or both to 
 
 ===== Annotation `@RoutingPath`
 
-You can configure `@RoutingPath` to define the path a service is registered on.
+You can configure `Path` to define the path a service is registered on.
 
 ===== Configuration override of routing path
 

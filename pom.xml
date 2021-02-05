@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.helidon</groupId>
         <artifactId>helidon-dependencies</artifactId>
-        <version>2.2.1-SNAPSHOT</version>
+        <version>3.0.0-MN-SNAPSHOT</version>
         <relativePath>./dependencies/pom.xml</relativePath>
     </parent>
     <artifactId>helidon-project</artifactId>
@@ -183,6 +183,9 @@
         <module>fault-tolerance</module>
         <module>graphql</module>
         <module>logging</module>
+        <module>annotation</module>
+        <module>mn</module>
+        <module>jakarta</module>
     </modules>
 
 

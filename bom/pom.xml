@@ -23,7 +23,7 @@
     <parent>
         <groupId>io.helidon</groupId>
         <artifactId>helidon-parent</artifactId>
-        <version>2.2.1-SNAPSHOT</version>
+        <version>3.0.0-MN-SNAPSHOT</version>
         <relativePath>../parent/pom.xml</relativePath>
     </parent>
     <groupId>io.helidon</groupId>
@@ -32,7 +32,7 @@
     <name>Helidon BOM POM</name>
 
     <properties>
-        <helidon.version>2.2.1-SNAPSHOT</helidon.version>
+        <helidon.version>3.0.0-MN-SNAPSHOT</helidon.version>
     </properties>
 
     <dependencyManagement>
@@ -902,6 +902,23 @@
             <dependency>
                 <groupId>io.helidon.logging</groupId>
                 <artifactId>helidon-logging-log4j</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
+            <!-- DI support -->
+            <dependency>
+                <groupId>io.helidon.annotation</groupId>
+                <artifactId>helidon-annotation-http</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
+            <!-- Micronaut DI based Helidon -->
+            <dependency>
+                <groupId>io.helidon.mn</groupId>
+                <artifactId>helidon-mn</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.helidon.mn</groupId>
+                <artifactId>helidon-mn-webserver</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
         </dependencies>

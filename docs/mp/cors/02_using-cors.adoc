@@ -81,12 +81,12 @@ include::{common-page-prefix-inc}[tag=add-cors-dependency]
 Adding CORS behavior to your Helidon MP application involves two simple changes to your application code:
 
 . For each resource and subresource in each resource class, make sure you have a Java method annotated with
-`@OPTIONS` and with the correct `@Path`. Create these methods for each resource if you do not already have them.
+`@OPTIONS` and with the correct `Path`. Create these methods for each resource if you do not already have them.
 . To each of those methods, add a `@CrossOrigin` annotation that describes the cross-origin sharing you want
 for that resource.
 
 The Helidon MP CORS implementation automatically uses the `@CrossOrigin` annotation you add to each `@OPTIONS` method to
-enforce cross-origin sharing behavior for the resource identified by that method's `@Path` annotation.
+enforce cross-origin sharing behavior for the resource identified by that method's `Path` annotation.
 
 For an informal look at the reasons for applying the `@CrossOrigin` annotation to the `@OPTIONS` method, instead of another
 method, see <<mp/cors/hide_why-options.adoc, Why `@OPTIONS`?>>.
