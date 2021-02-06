@@ -921,6 +921,11 @@
                 <artifactId>helidon-mn-webserver</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.helidon.jaxrs</groupId>
+                <artifactId>helidon-jaxrs</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

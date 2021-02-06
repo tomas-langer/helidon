@@ -22,6 +22,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.micronaut.core.bind.annotation.Bindable;
+
 /**
  * This annotation is used to inject information into a class field, bean property or method parameter.
  *
@@ -38,5 +40,6 @@ import java.lang.annotation.Target;
 @Target({ ElementType.PARAMETER, ElementType.METHOD, ElementType.FIELD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Bindable
 public @interface Context {
 }

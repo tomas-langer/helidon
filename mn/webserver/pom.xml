@@ -44,6 +44,10 @@
             <artifactId>helidon-annotation-http</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.jaxrs</groupId>
+            <artifactId>helidon-jaxrs</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.webserver</groupId>
             <artifactId>helidon-webserver</artifactId>
         </dependency>

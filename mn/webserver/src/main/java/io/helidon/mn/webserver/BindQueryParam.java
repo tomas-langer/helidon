@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import javax.inject.Singleton;
 
-import io.helidon.annotation.http.QueryParam;
 import io.helidon.common.http.Parameters;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
@@ -15,6 +14,7 @@ import io.micronaut.core.bind.annotation.Bindable;
 import io.micronaut.core.convert.ArgumentConversionContext;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.Argument;
+import jakarta.ws.rs.QueryParam;
 
 @Singleton
 @Internal

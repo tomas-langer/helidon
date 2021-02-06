@@ -5,7 +5,6 @@ import java.util.Optional;
 
 import javax.inject.Singleton;
 
-import io.helidon.annotation.http.Header;
 import io.helidon.common.http.Parameters;
 
 import io.micronaut.core.annotation.AnnotationMetadata;
@@ -15,10 +14,11 @@ import io.micronaut.core.bind.annotation.Bindable;
 import io.micronaut.core.convert.ArgumentConversionContext;
 import io.micronaut.core.convert.ConversionService;
 import io.micronaut.core.type.Argument;
+import jakarta.ws.rs.HeaderParam;
 
 @Singleton
 @Internal
-public class BindHeader<T> implements AnnotatedArgumentBinder<Header, T, HttpExchange> {
+public class BindHeader<T> implements AnnotatedArgumentBinder<HeaderParam, T, HttpExchange> {
 
     private final ConversionService<?> conversionService;
 
@@ -27,8 +27,8 @@ public class BindHeader<T> implements AnnotatedArgumentBinder<Header, T, HttpExc
     }
 
     @Override
-    public Class<Header> getAnnotationType() {
-        return Header.class;
+    public Class<HeaderParam> getAnnotationType() {
+        return HeaderParam.class;
     }
 
     @SuppressWarnings("unchecked")
@@ -37,7 +37,7 @@ public class BindHeader<T> implements AnnotatedArgumentBinder<Header, T, HttpExc
         Argument<T> argument = context.getArgument();
         AnnotationMetadata annotationMetadata = argument.getAnnotationMetadata();
 
-        String name = annotationMetadata.stringValue(Header.class)
+        String name = annotationMetadata.stringValue(HeaderParam.class)
                 .orElse(argument.getName());
 
         Parameters parameters = source.request().headers();

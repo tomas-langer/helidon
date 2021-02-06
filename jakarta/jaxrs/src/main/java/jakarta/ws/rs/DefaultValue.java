@@ -22,6 +22,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.micronaut.context.annotation.AliasFor;
+import io.micronaut.core.bind.annotation.Bindable;
+
 /**
  * Defines the default value of request meta-data that is bound using one of the following annotations:
  * {@link jakarta.ws.rs.PathParam}, {@link jakarta.ws.rs.QueryParam}, {@link jakarta.ws.rs.MatrixParam},
@@ -58,5 +61,6 @@ public @interface DefaultValue {
      *
      * @return default value.
      */
+    @AliasFor(annotation = Bindable.class, member = "defaultValue")
     String value();
 }

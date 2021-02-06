@@ -12,12 +12,8 @@ import java.util.function.Consumer;
 
 import javax.inject.Singleton;
 
-import io.helidon.annotation.http.Controller;
 import io.helidon.annotation.http.Entity;
 import io.helidon.annotation.http.Error;
-import io.helidon.annotation.http.HttpEntry;
-import io.helidon.annotation.http.HttpMethod;
-import io.helidon.annotation.http.Path;
 import io.helidon.annotation.http.Status;
 import io.helidon.annotation.http.StatusCode;
 import io.helidon.common.http.DataChunk;
@@ -38,10 +34,12 @@ import io.micronaut.core.type.ReturnType;
 import io.micronaut.inject.BeanDefinition;
 import io.micronaut.inject.ExecutableMethod;
 import io.micronaut.inject.MethodExecutionHandle;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.Path;
 
 @Internal
 @Singleton
-public class MethodRouteBuilder implements ExecutableMethodProcessor<Controller> {
+public class MethodRouteBuilder implements ExecutableMethodProcessor<Path> {
     private final Routing.Builder defaultRouting;
     private final ExecutionHandleLocator executionHandleLocator;
     private final HttpBindingRegistry bindingRegistry;
@@ -58,59 +56,56 @@ public class MethodRouteBuilder implements ExecutableMethodProcessor<Controller>
     @SuppressWarnings("unchecked")
     @Override
     public void process(BeanDefinition<?> beanDefinition, ExecutableMethod<?, ?> method) {
-        Optional<Class<? extends Annotation>> httpEntry = method.getAnnotationTypeByStereotype(HttpEntry.class);
+        Optional<Class<? extends Annotation>> httpEntry = method.getAnnotationTypeByStereotype(HttpMethod.class);
+        Optional<AnnotationValue<Error>> error = method.findAnnotation(Error.class);
 
-        if (httpEntry.isPresent()) {
-            MethodExecutionHandle<?, Object> executionHandle = executionHandleLocator
-                    .createExecutionHandle(beanDefinition, (ExecutableMethod<Object, ?>) method);
+        MethodExecutionHandle<?, Object> executionHandle = executionHandleLocator
+                .createExecutionHandle(beanDefinition, (ExecutableMethod<Object, ?>) method);
+        Consumer<HttpExchangeResult> postProcessing = postProcessing(method);
 
+        if (error.isPresent()) {
+            Class<? extends Throwable> errorClass = method.getAnnotationMetadata()
+                    .classValue(Error.class)
+                    .orElse(Throwable.class);
+
+            configureErrorRouting(defaultRouting,
+                                  executionHandle,
+                                  method,
+                                  postProcessing,
+                                  errorClass);
+        } else if (httpEntry.isPresent()) {
             Class<? extends Annotation> entryAnnotation = httpEntry.get();
 
-            Consumer<HttpExchangeResult> postProcessing = postProcessing(method);
+            Http.RequestMethod httpMethod;
 
-            if (entryAnnotation == Error.class) {
-                Class<? extends Throwable> errorClass = method.getAnnotationMetadata()
-                        .classValue(Error.class)
-                        .orElse(Throwable.class);
-
-                configureErrorRouting(defaultRouting,
-                                      executionHandle,
-                                      method,
-                                      postProcessing,
-                                      errorClass);
+            if (entryAnnotation == HttpMethod.class) {
+                httpMethod = Http.RequestMethod.create(method.getAnnotationMetadata()
+                                                               .stringValue(HttpMethod.class)
+                                                               .orElse("GET"));
             } else {
-                Http.RequestMethod httpMethod;
-
-                if (entryAnnotation == HttpMethod.class) {
-                    httpMethod = Http.RequestMethod.create(method.getAnnotationMetadata()
-                                                                   .stringValue(HttpMethod.class)
-                                                                   .orElse("GET"));
-                } else {
-                    httpMethod = Http.Method.valueOf(entryAnnotation.getSimpleName().toUpperCase());
-                }
-
-                String path = methodPath(beanDefinition, method);
-
-                Optional<Argument<?>> entityType = entityType(method);
-
-                if (entityType.isEmpty()) {
-                    configureRouting(defaultRouting,
-                                     executionHandle,
-                                     method,
-                                     httpMethod,
-                                     path,
-                                     postProcessing);
-                } else {
-                    configureRouting(defaultRouting,
-                                     executionHandle,
-                                     method,
-                                     httpMethod,
-                                     path,
-                                     entityType.get(),
-                                     postProcessing);
-                }
+                httpMethod = Http.Method.valueOf(entryAnnotation.getSimpleName().toUpperCase());
             }
 
+            String path = methodPath(beanDefinition, method);
+
+            Optional<Argument<?>> entityType = entityType(method);
+
+            if (entityType.isEmpty()) {
+                configureRouting(defaultRouting,
+                                 executionHandle,
+                                 method,
+                                 httpMethod,
+                                 path,
+                                 postProcessing);
+            } else {
+                configureRouting(defaultRouting,
+                                 executionHandle,
+                                 method,
+                                 httpMethod,
+                                 path,
+                                 entityType.get(),
+                                 postProcessing);
+            }
         }
     }
 

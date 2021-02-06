@@ -22,6 +22,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import io.micronaut.context.annotation.Executable;
+import io.micronaut.core.annotation.EntryPoint;
+
 /**
  * Associates the name of a HTTP method with an annotation. A Java method annotated with a runtime annotation that is
  * itself annotated with this annotation will be used to handle HTTP requests of the indicated HTTP method. It is an
@@ -41,6 +44,8 @@ import java.lang.annotation.Target;
 @Target({ ElementType.ANNOTATION_TYPE })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Executable
+@EntryPoint
 public @interface HttpMethod {
 
     /**

@@ -22,6 +22,12 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import javax.inject.Singleton;
+
+import io.micronaut.context.annotation.Bean;
+import io.micronaut.context.annotation.DefaultScope;
+import io.micronaut.context.annotation.Executable;
+
 /**
  * Identifies the URI path that a resource class or class method will serve requests for.
  *
@@ -65,6 +71,9 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE, ElementType.METHOD })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
+@Bean
+@Executable(processOnStartup = true)
+@DefaultScope(Singleton.class)
 public @interface Path {
 
     /**
