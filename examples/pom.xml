@@ -58,7 +58,7 @@
         <module>cors</module>
         <module>messaging</module>
         <module>logging</module>
-        <module>mn</module>
+        <module>di</module>
     </modules>
 
     <build>

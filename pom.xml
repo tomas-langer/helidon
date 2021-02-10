@@ -183,9 +183,7 @@
         <module>fault-tolerance</module>
         <module>graphql</module>
         <module>logging</module>
-        <module>annotation</module>
-        <module>mn</module>
-        <module>jakarta</module>
+        <module>di</module>
     </modules>
 
 
@@ -678,34 +676,34 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>copy-license</id>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <phase>process-sources</phase>
-                        <configuration>
-                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
-                            <resources>
-                                <resource>
-                                    <!--suppress UnresolvedMavenProperty -->
-                                    <directory>${top.parent.basedir}</directory>
-                                    <targetPath>META-INF/</targetPath>
-                                    <filtering>true</filtering>
-                                    <includes>
-                                        <include>LICENSE.txt</include>
-                                        <include>NOTICE.txt</include>
-                                    </includes>
-                                </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+<!--            <plugin>-->
+<!--                <groupId>org.apache.maven.plugins</groupId>-->
+<!--                <artifactId>maven-resources-plugin</artifactId>-->
+<!--                <executions>-->
+<!--                    <execution>-->
+<!--                        <id>copy-license</id>-->
+<!--                        <goals>-->
+<!--                            <goal>copy-resources</goal>-->
+<!--                        </goals>-->
+<!--                        <phase>process-sources</phase>-->
+<!--                        <configuration>-->
+<!--                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>-->
+<!--                            <resources>-->
+<!--                                <resource>-->
+<!--                                    &lt;!&ndash;suppress UnresolvedMavenProperty &ndash;&gt;-->
+<!--                                    <directory>${top.parent.basedir}</directory>-->
+<!--                                    <targetPath>META-INF/</targetPath>-->
+<!--                                    <filtering>true</filtering>-->
+<!--                                    <includes>-->
+<!--                                        <include>LICENSE.txt</include>-->
+<!--                                        <include>NOTICE.txt</include>-->
+<!--                                    </includes>-->
+<!--                                </resource>-->
+<!--                            </resources>-->
+<!--                        </configuration>-->
+<!--                    </execution>-->
+<!--                </executions>-->
+<!--            </plugin>-->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>

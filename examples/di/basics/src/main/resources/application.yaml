@@ -1,0 +1,23 @@
+server:
+  host: "localhost"
+  port: 8080
+  sockets:
+    admin:
+      port: 8090
+
+metrics:
+  web-context: "metrics"
+  routing: admin
+
+db.pokemon:
+  source: jdbc
+  connection:
+    url: "jdbc:h2:tcp://localhost:9092/test"
+    username: sa
+    password:
+  statements:
+    create-table: "CREATE TABLE pokemons (name VARCHAR(64) NOT NULL PRIMARY KEY, type VARCHAR(32))"
+    insert: "INSERT INTO pokemons VALUES(:name, :type)"
+    insert-indexed: "INSERT INTO pokemons VALUES(?, ?)"
+    select-one: "SELECT * FROM pokemons WHERE name = ?"
+    select-all: "SELECT * FROM pokemons"

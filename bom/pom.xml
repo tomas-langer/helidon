@@ -906,24 +906,34 @@
             </dependency>
             <!-- DI support -->
             <dependency>
-                <groupId>io.helidon.annotation</groupId>
-                <artifactId>helidon-annotation-http</artifactId>
+                <groupId>io.helidon.di.annotation</groupId>
+                <artifactId>helidon-di-annotation-http</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.helidon.di.annotation</groupId>
+                <artifactId>helidon-di-annotation-database</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <!-- Micronaut DI based Helidon -->
             <dependency>
-                <groupId>io.helidon.mn</groupId>
-                <artifactId>helidon-mn</artifactId>
+                <groupId>io.helidon.di</groupId>
+                <artifactId>helidon-di</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.helidon.mn</groupId>
-                <artifactId>helidon-mn-webserver</artifactId>
+                <groupId>io.helidon.di</groupId>
+                <artifactId>helidon-di-webserver</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.helidon.jaxrs</groupId>
-                <artifactId>helidon-jaxrs</artifactId>
+                <groupId>io.helidon.di</groupId>
+                <artifactId>helidon-di-dbclient</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.helidon.di</groupId>
+                <artifactId>helidon-di-metrics</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
         </dependencies>
