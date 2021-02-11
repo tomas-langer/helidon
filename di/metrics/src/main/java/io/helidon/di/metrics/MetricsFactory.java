@@ -12,7 +12,7 @@ import io.micronaut.context.annotation.Primary;
 import org.eclipse.microprofile.metrics.MetricRegistry;
 
 @Factory
-public class MetricsFactory {
+class MetricsFactory {
     private final MetricsSupport.Builder builder = MetricsSupport.builder();
     private final RegistryFactory registryFactory;
 

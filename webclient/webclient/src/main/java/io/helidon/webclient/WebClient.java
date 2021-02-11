@@ -354,6 +354,10 @@ public interface WebClient {
             }
         }
 
+        public URI uri() {
+            return configuration.uri();
+        }
+
         /**
          * Sets if redirects should be followed or not.
          *

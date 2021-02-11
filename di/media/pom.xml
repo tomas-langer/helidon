@@ -26,30 +26,50 @@
 
     <packaging>jar</packaging>
 
-    <artifactId>helidon-di-webserver</artifactId>
+    <artifactId>helidon-di-media</artifactId>
 
-    <name>Helidon DI WebServer</name>
+    <name>Helidon DI Media</name>
 
     <description>
-        Integration with Helidon WebServer and HTTP features.
+        Integration with Helidon Media supports.
     </description>
 
     <dependencies>
         <dependency>
-            <groupId>io.helidon.di</groupId>
-            <artifactId>helidon-di</artifactId>
+            <groupId>io.micronaut</groupId>
+            <artifactId>micronaut-inject</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.di.annotation</groupId>
-            <artifactId>helidon-di-annotation-http</artifactId>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.di</groupId>
-            <artifactId>helidon-di-media</artifactId>
+            <groupId>io.helidon.config</groupId>
+            <artifactId>helidon-config</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.webserver</groupId>
-            <artifactId>helidon-webserver</artifactId>
+            <groupId>io.helidon.media</groupId>
+            <artifactId>helidon-media-jsonp</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.media</groupId>
+            <artifactId>helidon-media-jsonb</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.media</groupId>
+            <artifactId>helidon-media-multipart</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.media</groupId>
+            <artifactId>helidon-media-jackson</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

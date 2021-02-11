@@ -248,8 +248,8 @@ public class Client {
 <3> The `@GrpcChannel` annotation identifies the gRPC channel to be used by the client. The name used in the annotation refers to
 a channel name in the application configuration.
 
-Now when the CDI container instantiates instances of the `Client` it will inject a dynamic proxy into the `stringService` field
-and then any code in methods in the `Client` class can call methods on the `StringService` which will be translated to gRPC calls.
+Now when the CDI container instantiates instances of the `ClientVisitor` it will inject a dynamic proxy into the `stringService` field
+and then any code in methods in the `ClientVisitor` class can call methods on the `StringService` which will be translated to gRPC calls.
 
 In the example above there is no need to directly use a `Channel` directly. The correct channel is added to the dynamic client
 proxy internally by the Helidon MP gRPC APIs.

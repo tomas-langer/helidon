@@ -39,9 +39,13 @@
         <module>annotation</module>
         <module>di</module>
         <module>processor</module>
+        <module>media</module>
         <module>webserver</module>
+        <module>webclient</module>
         <module>dbclient</module>
         <module>metrics</module>
+        <module>validation</module>
+        <module>security</module>
     </modules>
 
 </project>

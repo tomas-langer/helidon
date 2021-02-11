@@ -26,12 +26,12 @@
 
     <packaging>jar</packaging>
 
-    <artifactId>helidon-di-webserver</artifactId>
+    <artifactId>helidon-di-webclient</artifactId>
 
-    <name>Helidon DI WebServer</name>
+    <name>Helidon DI WebClient</name>
 
     <description>
-        Integration with Helidon WebServer and HTTP features.
+        Integration with Helidon WebClient.
     </description>
 
     <dependencies>
@@ -48,8 +48,8 @@
             <artifactId>helidon-di-media</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.webserver</groupId>
-            <artifactId>helidon-webserver</artifactId>
+            <groupId>io.helidon.webclient</groupId>
+            <artifactId>helidon-webclient</artifactId>
         </dependency>
     </dependencies>
 

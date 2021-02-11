@@ -21,14 +21,14 @@ import io.micronaut.core.annotation.Order;
 
 @Singleton
 @Order(ServiceOrder.METRICS)
-public class MetricsService implements ApplicationEventListener<ContextStartedEvent> {
+class MetricsService implements ApplicationEventListener<ContextStartedEvent> {
     private final Config config;
     private final RouteBuilders builders;
     private final MetricsSupport metricsSupport;
 
-    public MetricsService(Config config,
-                          RouteBuilders builders,
-                          MetricsSupport.Builder builder) {
+    MetricsService(Config config,
+                   RouteBuilders builders,
+                   MetricsSupport.Builder builder) {
 
         this.config = config;
         this.builders = builders;

@@ -26,12 +26,12 @@
 
     <packaging>jar</packaging>
 
-    <artifactId>helidon-di-webserver</artifactId>
+    <artifactId>helidon-di-security</artifactId>
 
-    <name>Helidon DI WebServer</name>
+    <name>Helidon DI Security</name>
 
     <description>
-        Integration with Helidon WebServer and HTTP features.
+        Integration with Helidon Security
     </description>
 
     <dependencies>
@@ -40,16 +40,24 @@
             <artifactId>helidon-di</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.di.annotation</groupId>
-            <artifactId>helidon-di-annotation-http</artifactId>
+            <groupId>io.helidon.security</groupId>
+            <artifactId>helidon-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.security.providers</groupId>
+            <artifactId>helidon-security-providers-common</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.security.integration</groupId>
+            <artifactId>helidon-security-integration-webserver</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>io.helidon.di</groupId>
-            <artifactId>helidon-di-media</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.webserver</groupId>
-            <artifactId>helidon-webserver</artifactId>
+            <artifactId>helidon-di-webserver</artifactId>
+            <scope>provided</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

@@ -1,1 +1,3 @@
+io.helidon.di.processor.MetricsCounted
 io.helidon.di.processor.MetricsSimplyTimed
+io.helidon.di.processor.MetricsTimed

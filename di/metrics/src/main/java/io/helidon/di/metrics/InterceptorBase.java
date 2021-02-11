@@ -139,6 +139,8 @@ abstract class InterceptorBase<T extends Metric, A extends Annotation> implement
                 return metricClass.cast(registry.concurrentGauge(meta, tags));
             case METERED:
                 return metricClass.cast(registry.meter(meta, tags));
+            case SIMPLE_TIMER:
+                return metricClass.cast(registry.simpleTimer(meta, tags));
             default:
                 throw new IllegalStateException("Metric type " + metricType + " is not supported for interceptors");
             }

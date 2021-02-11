@@ -2,11 +2,16 @@ package io.helidon.examples.di.basics;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import javax.annotation.security.RolesAllowed;
 import javax.validation.ConstraintViolationException;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
 
+import io.helidon.common.http.Http;
+import io.helidon.common.reactive.Multi;
+import io.helidon.common.reactive.Single;
+import io.helidon.di.annotation.http.Client;
 import io.helidon.di.annotation.http.DefaultValue;
 import io.helidon.di.annotation.http.Entity;
 import io.helidon.di.annotation.http.ErrorHandle;
@@ -18,26 +23,28 @@ import io.helidon.di.annotation.http.Path;
 import io.helidon.di.annotation.http.PathParam;
 import io.helidon.di.annotation.http.QueryParam;
 import io.helidon.di.annotation.http.Status;
-import io.helidon.common.http.Http;
-import io.helidon.common.reactive.Multi;
-import io.helidon.common.reactive.Single;
+import io.helidon.security.annotations.Authenticated;
+import io.helidon.webclient.WebClient;
 import io.helidon.webserver.NotFoundException;
 import io.helidon.webserver.ServerRequest;
 import io.helidon.webserver.ServerResponse;
 
+import org.eclipse.microprofile.metrics.annotation.Counted;
 import org.eclipse.microprofile.metrics.annotation.SimplyTimed;
 
-// TODO try injecting a bean into parameters
 @Path("/greet")
+@Authenticated
 public class GreetController {
     private final AtomicReference<String> message = new AtomicReference<>("Hello");
 
     private final PrototypeBean pb;
     private final SingletonBean sb;
+    private final WebClient webClient;
 
-    protected GreetController(PrototypeBean pb, SingletonBean sb) {
+    protected GreetController(PrototypeBean pb, SingletonBean sb, @Client(basePath = "/greet") WebClient client) {
         this.pb = pb;
         this.sb = sb;
+        this.webClient = client;
     }
 
     /*
@@ -45,7 +52,9 @@ public class GreetController {
      */
 
     @GET
-    @SimplyTimed
+    @SimplyTimed(name = "timer", absolute = true)
+    @Counted
+    @RolesAllowed("user")
     // implicitly non-blocking (Handler signature)
     public void nonBlocking1(ServerRequest req, ServerResponse res) {
         res.send(message.get());

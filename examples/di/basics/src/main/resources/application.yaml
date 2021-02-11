@@ -5,6 +5,9 @@ server:
     admin:
       port: 8090
 
+client.default:
+  uri: "http://localhost:8080"
+
 metrics:
   web-context: "metrics"
   routing: admin
@@ -21,3 +24,25 @@ db.pokemon:
     insert-indexed: "INSERT INTO pokemons VALUES(?, ?)"
     select-one: "SELECT * FROM pokemons WHERE name = ?"
     select-all: "SELECT * FROM pokemons"
+
+
+security:
+  providers:
+    - http-basic-auth:
+        users:
+          - login: "john"
+            password: "password"
+            roles: ["admin"]
+          - login: "jack"
+            password: "password"
+            roles: ["user"]
+          - login: "jill"
+            password: "password"
+    - abac:
+  web-server:
+    defaults:
+      authenticate: true
+    paths:
+      - path: "/service"
+        methods: ["get"]
+        roles-allowed: "user"

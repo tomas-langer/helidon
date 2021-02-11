@@ -3,7 +3,7 @@ package io.helidon.di.webserver;
 import javax.inject.Singleton;
 
 import io.helidon.di.ContextStartedEvent;
-import io.helidon.media.jsonb.JsonbSupport;
+import io.helidon.media.common.MediaContext;
 import io.helidon.webserver.WebServer;
 
 import io.micronaut.context.BeanLocator;
@@ -19,9 +19,12 @@ class WebServerService implements LifeCycle<WebServerService>, ApplicationEventL
 
     private volatile WebServer webServer;
 
-    protected WebServerService(BeanLocator beanLocator, WebServer.Builder builder) {
+    protected WebServerService(BeanLocator beanLocator,
+                               WebServer.Builder builder,
+                               MediaContext mediaContext) {
         this.beanLocator = beanLocator;
         this.builder = builder;
+        this.builder.mediaContext(mediaContext);
     }
 
     @Override
@@ -41,7 +44,6 @@ class WebServerService implements LifeCycle<WebServerService>, ApplicationEventL
                     }
                 });
         webServer = builder
-                .addMediaSupport(JsonbSupport.create())
                 .build()
                 .start()
                 .await();

@@ -12,6 +12,7 @@ import javax.inject.Singleton;
 import io.helidon.di.annotation.http.ErrorHandle;
 import io.helidon.webserver.ErrorHandler;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
 import io.micronaut.core.annotation.AnnotationValue;
@@ -35,18 +36,23 @@ class ProcessErrorHandlers extends ProcessRoutes implements ExecutableMethodProc
     private final RouteBuilders routeBuilders;
     private final ExecutionHandleLocator executionHandleLocator;
     private final HttpBindingRegistry bindingRegistry;
+    private final BeanContext beanContext;
 
     protected ProcessErrorHandlers(RouteBuilders routeBuilders,
                                    ExecutionHandleLocator executionHandleLocator,
-                                   HttpBindingRegistry bindingRegistry) {
+                                   HttpBindingRegistry bindingRegistry,
+                                   BeanContext beanContext) {
         this.routeBuilders = routeBuilders;
         this.executionHandleLocator = executionHandleLocator;
         this.bindingRegistry = bindingRegistry;
+        this.beanContext = beanContext;
     }
 
     @SuppressWarnings("unchecked")
     @Override
-    public void process(BeanDefinition<?> beanDefinition, ExecutableMethod<?, ?> method) {
+    public void process(BeanDefinition<?> beanDefinitionParam, ExecutableMethod<?, ?> method) {
+        BeanDefinition<?> beanDefinition = beanContext.getBeanDefinition(beanDefinitionParam.getBeanType());
+
         Optional<AnnotationValue<ErrorHandle>> annotation = method.findAnnotation(ErrorHandle.class);
         // this should be present, as otherwise this class should not be called, but to be sure
 

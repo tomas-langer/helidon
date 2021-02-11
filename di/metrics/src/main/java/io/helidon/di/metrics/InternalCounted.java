@@ -12,8 +12,8 @@ import io.micronaut.core.annotation.Internal;
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @Around
-@Type(InterceptSimplyTimed.class)
+@Type(InterceptCounted.class)
 @Internal
 // this class must be public, as otherwise it is ignored and interceptor is not triggered
-public @interface InternalSimplyTimed {
+public @interface InternalCounted {
 }

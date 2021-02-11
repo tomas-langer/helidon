@@ -16,10 +16,12 @@ import io.helidon.di.annotation.http.Path;
 import io.helidon.webserver.Handler;
 import io.helidon.webserver.Routing;
 
+import io.micronaut.context.BeanContext;
 import io.micronaut.context.ExecutionHandleLocator;
 import io.micronaut.context.processor.ExecutableMethodProcessor;
 import io.micronaut.core.annotation.AnnotationValue;
 import io.micronaut.core.annotation.Internal;
+import io.micronaut.core.annotation.Order;
 import io.micronaut.core.bind.BoundExecutable;
 import io.micronaut.core.bind.DefaultExecutableBinder;
 import io.micronaut.core.bind.ExecutableBinder;
@@ -30,18 +32,22 @@ import io.micronaut.inject.MethodExecutionHandle;
 
 @Internal
 @Singleton
+@Order(ServiceOrder.SERVER)
 class ProcessHttpMethods extends ProcessRoutes implements ExecutableMethodProcessor<HttpEntry> {
     private final ExecutableBinder<HttpExchange> binder = new DefaultExecutableBinder<>();
 
+    private final BeanContext beanContext;
     private final Config config;
     private final RouteBuilders routeBuilders;
     private final ExecutionHandleLocator executionHandleLocator;
     private final HttpBindingRegistry bindingRegistry;
 
-    protected ProcessHttpMethods(Config config,
+    protected ProcessHttpMethods(BeanContext beanContext,
+                                 Config config,
                                  RouteBuilders routeBuilders,
                                  ExecutionHandleLocator executionHandleLocator,
                                  HttpBindingRegistry bindingRegistry) {
+        this.beanContext = beanContext;
         this.config = config;
         this.routeBuilders = routeBuilders;
         this.executionHandleLocator = executionHandleLocator;
@@ -50,10 +56,13 @@ class ProcessHttpMethods extends ProcessRoutes implements ExecutableMethodProces
 
     @SuppressWarnings("unchecked")
     @Override
-    public void process(BeanDefinition<?> beanDefinition, ExecutableMethod<?, ?> method) {
+    public void process(BeanDefinition<?> beanDefinitionParam, ExecutableMethod<?, ?> method) {
         Optional<Class<? extends Annotation>> httpEntry = method.getAnnotationTypeByStereotype(HttpEntry.class);
 
         if (httpEntry.isPresent()) {
+            // need to find the correct bean definition
+            // as otherwise interceptors do not work
+            BeanDefinition<?> beanDefinition = beanContext.getBeanDefinition(beanDefinitionParam.getBeanType());
             MethodExecutionHandle<?, Object> executionHandle = executionHandleLocator
                     .createExecutionHandle(beanDefinition, (ExecutableMethod<Object, ?>) method);
 

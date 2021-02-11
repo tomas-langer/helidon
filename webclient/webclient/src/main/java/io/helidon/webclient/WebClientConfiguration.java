@@ -698,5 +698,8 @@ class WebClientConfiguration {
                                                              header.get("value").asString().get())));
         }
 
+        public URI uri() {
+            return uri;
+        }
     }
 }
