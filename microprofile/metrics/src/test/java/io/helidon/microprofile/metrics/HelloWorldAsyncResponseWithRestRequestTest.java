@@ -37,18 +37,16 @@ import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.hasKey;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @HelidonTest
 @AddConfig(key = "metrics." + MetricsCdiExtension.REST_ENDPOINTS_METRIC_ENABLED_PROPERTY_NAME, value = "true")
-
-public class HelloWorldAsyncResponseWithRestRequestTest {
+class HelloWorldAsyncResponseWithRestRequestTest {
 
     @Inject
     WebTarget webTarget;
 
     @Test
-    void checkForAsyncMethodRESTRequestMetric() throws NoSuchMethodException {
+    void checkForAsyncMethodRESTRequestMetric() {
 
         JsonObject restRequest = getRESTRequestJSON();
 
