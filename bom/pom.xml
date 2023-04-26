@@ -1389,6 +1389,11 @@
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.helidon.nima.fault-tolerance</groupId>
+                <artifactId>helidon-nima-fault-tolerance-processor</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.helidon.nima.openapi</groupId>
                 <artifactId>helidon-nima-openapi</artifactId>
                 <version>${helidon.version}</version>
