@@ -51,4 +51,15 @@ public interface Fallback<T> extends FtHandlerTyped<T> {
         configConsumer.accept(builder);
         return create(builder.build());
     }
+
+    /**
+     * Create a fallback from the fallback method.
+     *
+     * @param method method to use
+     * @return a new fallback
+     * @param <T> fallback method return type
+     */
+    static <T> Fallback<T> createFromMethod(Function<Throwable, ? extends T> method) {
+        return create(builder -> builder.fallback(method));
+    }
 }

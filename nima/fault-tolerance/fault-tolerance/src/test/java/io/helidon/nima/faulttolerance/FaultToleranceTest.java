@@ -40,9 +40,8 @@ class FaultToleranceTest {
                 .addBreaker(breaker)
                 .addBulkhead(bulkhead)
                 .addTimeout(Timeout.create(TimeoutConfigDefault.builder().timeout(Duration.ofMillis(1000)).build()))
-                .addFallback(Fallback.<String>builder()
-                        .fallback(this::fallback)
-                        .build())
+                .addFallback(Fallback.<String>create(builder -> builder
+                        .fallback(this::fallback)))
                 .build();
 
         // First call should not open breaker and execute call back

@@ -24,6 +24,7 @@ import io.helidon.config.ConfigException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static io.helidon.nima.faulttolerance.Fallback.createFromMethod;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -41,7 +42,7 @@ class FallbackTest {
 
     @Test
     void testFallback() {
-        String result = Fallback.create(this::fallback).invoke(this::primary);
+        String result = createFromMethod(this::fallback).invoke(this::primary);
 
         assertThat(result, is("fallback"));
         assertThat(primaryCounter.get(), is(1));
@@ -51,7 +52,7 @@ class FallbackTest {
     @Test
     void testFallbackFails() {
         ConfigException configException = assertThrows(ConfigException.class,
-                                                       () -> Fallback.create(this::fallbackFail).invoke(this::primary));
+                                                       () -> createFromMethod(this::fallbackFail).invoke(this::primary));
         Throwable[] suppressed = configException.getSuppressed();
         assertThat("Should have a suppressed exception: " + Arrays.toString(suppressed), suppressed.length, is(1));
         assertThat(suppressed[0], instanceOf(IllegalArgumentException.class));

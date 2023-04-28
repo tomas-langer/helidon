@@ -120,17 +120,29 @@ public class FallbackMethodCreator extends FtMethodCreatorBase implements Custom
 
         // now we need to locate the fallback method
         // we do have enclosing type, so we need to iterate through its elements and find the matching method(s)
-        List<TypedElementName> matchingMethodsByName = enclosingType.elementInfo()
+        List<TypedElementName> matchingMethodsByName = enclosingType.otherElementInfo()
                 .stream()
                 .filter(it -> TypeInfo.KIND_METHOD.equals(it.elementTypeKind()))
                 .filter(it -> fallback.fallbackName.equals(it.elementName()))
+                .filter(it -> !it.modifierNames().contains("private"))
                 .toList();
 
-        // TODO: cannot query method parameters, return type, and modifiers from enclosing type for now
+        // TODO: cannot query method parameters
         if (matchingMethodsByName.isEmpty()) {
-            throw new ToolsException("Could not find matching fallback method for name " + fallback.fallbackName + " in"
-                                             + enclosingType.typeName());
+            throw new ToolsException("Could not find matching fallback method for name " + fallback.fallbackName + " in "
+                                             + enclosingType.typeName() + ", private methods are not eligible.");
         }
+        TypedElementName targetMethod = matchingMethodsByName.get(0);
+        if (targetMethod.modifierNames().contains("static")) {
+            fallback.fallbackStatic = true;
+        }
+        if (!targetMethod.typeName().name().equals(fallback.returnType)) {
+            throw new ToolsException("Fallback method " + fallback.fallbackName + " in"
+                                             + enclosingType.typeName() + " has different return type. Expected: "
+                                             + fallback.returnType + ", got: " + targetMethod.typeName().name());
+        }
+        // hardcode to true for now
+        fallback.fallbackAcceptsThrowable = true;
         /*
         boolean found = false;
         // matches by name, but not by return type or parameters

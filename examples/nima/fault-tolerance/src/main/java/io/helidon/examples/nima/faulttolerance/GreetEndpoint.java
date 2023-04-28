@@ -43,13 +43,6 @@ class GreetEndpoint {
         this.services = PicoServices.realizedServices();
     }
 
-    static String greetNamedFallback(String name,
-                                     String shouldThrow,
-                                     String hostHeader,
-                                     Throwable t) {
-        return "Fallback for \"greetNamed\": Failed to obtain greeting for " + name + ", message: " + t.getMessage();
-    }
-
     public static void main(String[] args) {
         /*
         Nima.start();
@@ -89,6 +82,13 @@ class GreetEndpoint {
                                                  .calls(5));
 
          */
+    }
+
+    static String greetNamedFallback(String name,
+                                     String shouldThrow,
+                                     String hostHeader,
+                                     Throwable t) {
+        return "Fallback for \"greetNamed\": Failed to obtain greeting for " + name + ", message: " + t.getMessage();
     }
 
     @GET
