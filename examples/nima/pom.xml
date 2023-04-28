@@ -42,6 +42,7 @@
         <module>static-content</module>
         <module>pico</module>
         <module>fault-tolerance</module>
+        <module>imperative</module>
     </modules>
 
 </project>

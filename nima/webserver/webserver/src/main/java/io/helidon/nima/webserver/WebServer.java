@@ -53,6 +53,12 @@ public interface WebServer {
      */
     String DEFAULT_SOCKET_NAME = "@default";
 
+    static WebServer create(Consumer<Builder> builderConsumer) {
+        Builder b = builder();
+        builderConsumer.accept(b);
+        return new LoomServer(b.build());
+    }
+
     /**
      * A new builder to set up server.
      *

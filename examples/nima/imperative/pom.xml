@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    Copyright (c) 2023 Oracle and/or its affiliates.
+    Copyright (c) 2022, 2023 Oracle and/or its affiliates.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -26,11 +26,12 @@
     </parent>
 
     <groupId>io.helidon.examples.nima</groupId>
-    <artifactId>helidon-examples-nima-fault-tolerance</artifactId>
-    <name>Helidon Examples Níma Fault Tolerance</name>
+    <artifactId>helidon-nima-examples-imperative</artifactId>
+    <name>Helidon Níma Examples Imperative</name>
+    <description>Example of imperative ("pure" programmatic) approach using Helidon SE</description>
 
     <properties>
-        <mainClass>io.helidon.examples.nima.faulttolerance.FtMain</mainClass>
+        <mainClass>io.helidon.examples.nima.imperative.ImperativeMain</mainClass>
     </properties>
 
     <dependencies>
@@ -41,10 +42,6 @@
         <dependency>
             <groupId>io.helidon.nima.webserver</groupId>
             <artifactId>helidon-nima-webserver</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.nima.webclient</groupId>
-            <artifactId>helidon-nima-webclient</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.pico</groupId>
@@ -61,10 +58,6 @@
         <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config-yaml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.nima.fault-tolerance</groupId>
-            <artifactId>helidon-nima-fault-tolerance</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -89,26 +82,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <forceJavacCompilerUse>true</forceJavacCompilerUse>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>io.helidon.pico</groupId>
-                            <artifactId>helidon-pico-processor</artifactId>
-                            <version>${helidon.version}</version>
-                        </path>
-                        <path>
-                            <groupId>io.helidon.nima.http</groupId>
-                            <artifactId>helidon-nima-http-processor</artifactId>
-                            <version>${helidon.version}</version>
-                        </path>
-                        <path>
-                            <groupId>io.helidon.nima.fault-tolerance</groupId>
-                            <artifactId>helidon-nima-fault-tolerance-processor</artifactId>
-                            <version>${helidon.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
                     <compilerArgs>
-                        <arg>-Aio.helidon.pico.autoAddNonContractInterfaces=true</arg>
                         <arg>--enable-preview</arg>
                     </compilerArgs>
                 </configuration>
