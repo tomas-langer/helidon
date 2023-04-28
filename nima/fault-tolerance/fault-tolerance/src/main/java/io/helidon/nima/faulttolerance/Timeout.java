@@ -17,6 +17,7 @@
 package io.helidon.nima.faulttolerance;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 
 /**
  * Timeout attempts to terminate execution after defined duration of time.
@@ -31,6 +32,19 @@ public interface Timeout extends FtHandler {
     static Timeout create(TimeoutConfig config) {
         return new TimeoutImpl(config);
     }
+
+    /**
+     * Create a timeout with a possibility to customize its configuration.
+     *
+     * @param builderConsumer consumer to customize configuration
+     * @return a new timeout
+     */
+    static Timeout create(Consumer<TimeoutConfigDefault.Builder> builderConsumer) {
+        TimeoutConfigDefault.Builder builder = TimeoutConfigDefault.builder();
+        builderConsumer.accept(builder);
+        return create(builder.build());
+    }
+
     /**
      * Create a {@link Timeout} with specified timeout.
      *

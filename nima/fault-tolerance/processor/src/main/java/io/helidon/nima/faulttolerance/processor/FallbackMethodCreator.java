@@ -16,7 +16,6 @@
 
 package io.helidon.nima.faulttolerance.processor;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,17 +23,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 
 import io.helidon.common.types.AnnotationAndValue;
-import io.helidon.common.types.DefaultTypeName;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNameDefault;
 import io.helidon.common.types.TypedElementName;
 import io.helidon.pico.tools.CustomAnnotationTemplateRequest;
 import io.helidon.pico.tools.CustomAnnotationTemplateResponse;
@@ -72,7 +67,7 @@ public class FallbackMethodCreator extends FtMethodCreatorBase implements Custom
         }
 
         String classname = className(request.annoTypeName(), enclosingType.typeName(), request.targetElement().elementName());
-        TypeName generatedTypeName = DefaultTypeName.create(enclosingType.typeName().packageName(), classname);
+        TypeName generatedTypeName = TypeNameDefault.create(enclosingType.typeName().packageName(), classname);
 
         GenericTemplateCreator genericTemplateCreator = request.genericTemplateCreator();
         GenericTemplateCreatorRequest genericCreatorRequest = GenericTemplateCreatorRequestDefault.builder()
@@ -124,26 +119,23 @@ public class FallbackMethodCreator extends FtMethodCreatorBase implements Custom
                 .toList();
 
         // now we need to locate the fallback method
-        Element element = request.processedElement()
-                .orElseThrow(() -> new ToolsException("Cannot obtain processed element for "
-                                                              + fallback.beanType
-                                                              + ", cannot find fallback method."));
-
-        // we are processing a method, I need to get the class, and find a method with the correct name and
-        // same parameters (may have Throwable as an additional parameter)
-        TypeElement typeElement = (TypeElement) element.getEnclosingElement();
-        // let's find matching types
-
-        List<? extends Element> matchingMethodsByName = typeElement.getEnclosedElements()
+        // we do have enclosing type, so we need to iterate through its elements and find the matching method(s)
+        List<TypedElementName> matchingMethodsByName = enclosingType.elementInfo()
                 .stream()
-                .filter(it -> it.getKind() == ElementKind.METHOD)
-                .filter(it -> it.getSimpleName().contentEquals(fallback.fallbackName))
+                .filter(it -> TypeInfo.KIND_METHOD.equals(it.elementTypeKind()))
+                .filter(it -> fallback.fallbackName.equals(it.elementName()))
                 .toList();
 
+        // TODO: cannot query method parameters, return type, and modifiers from enclosing type for now
+        if (matchingMethodsByName.isEmpty()) {
+            throw new ToolsException("Could not find matching fallback method for name " + fallback.fallbackName + " in"
+                                             + enclosingType.typeName());
+        }
+        /*
         boolean found = false;
         // matches by name, but not by return type or parameters
         List<BadCandidate> badCandidates = new ArrayList<>();
-        for (Element matchingMethodByName : matchingMethodsByName) {
+        for (TypedElementName matchingMethodByName : matchingMethodsByName) {
             // now we need to find a method that matches parameters, or has one more parameter of Throwable
             ExecutableElement method = (ExecutableElement) matchingMethodByName;
             if (!method.getReturnType().toString().equals(fallback.getReturnType())) {
@@ -189,6 +181,7 @@ public class FallbackMethodCreator extends FtMethodCreatorBase implements Custom
             throw new ToolsException("Could not find matching fallback method for name " + fallback.fallbackName + ","
                                              + " following bad candidates found: " + badCandidates);
         }
+        */
 
         response.put("fallback", fallback);
         return response;

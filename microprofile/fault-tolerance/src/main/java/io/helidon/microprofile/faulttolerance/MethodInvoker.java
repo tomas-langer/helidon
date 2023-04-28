@@ -36,6 +36,7 @@ import io.helidon.nima.faulttolerance.Bulkhead;
 import io.helidon.nima.faulttolerance.CircuitBreaker;
 import io.helidon.nima.faulttolerance.CircuitBreaker.State;
 import io.helidon.nima.faulttolerance.Fallback;
+import io.helidon.nima.faulttolerance.FallbackConfigDefault;
 import io.helidon.nima.faulttolerance.FaultTolerance;
 import io.helidon.nima.faulttolerance.FtHandlerTyped;
 import io.helidon.nima.faulttolerance.Retry;
@@ -455,29 +456,26 @@ class MethodInvoker implements FtSupplier<Object> {
      */
     private void initMethodHandler(MethodState methodState) {
         if (introspector.hasBulkhead()) {
-            methodState.bulkhead = Bulkhead.builder()
-                    .limit(introspector.getBulkhead().value())
-                    .queueLength(introspector.isAsynchronous() ? introspector.getBulkhead().waitingTaskQueue() : 0)
-                    .build();
+            methodState.bulkhead = Bulkhead.create(builder -> builder.limit(introspector.getBulkhead().value())
+                    .queueLength(introspector.isAsynchronous() ? introspector.getBulkhead().waitingTaskQueue() : 0));
         }
 
         if (introspector.hasTimeout()) {
-            methodState.timeout = Timeout.builder()
-                    .timeout(Duration.of(introspector.getTimeout().value(), introspector.getTimeout().unit()))
-                    .currentThread(!introspector.isAsynchronous())
-                    .build();
+            methodState.timeout = Timeout.create(builder -> builder.timeout(Duration.of(introspector.getTimeout().value(),
+                                                                                        introspector.getTimeout().unit()))
+                    .currentThread(!introspector.isAsynchronous()));
         }
 
         if (introspector.hasCircuitBreaker()) {
-            methodState.breaker = CircuitBreaker.builder()
-                    .delay(Duration.of(introspector.getCircuitBreaker().delay(),
-                            introspector.getCircuitBreaker().delayUnit()))
+            methodState.breaker = CircuitBreaker.create(builder -> builder.delay(Duration.of(introspector.getCircuitBreaker()
+                                                                                                     .delay(),
+                                                                                             introspector.getCircuitBreaker()
+                                                                                                     .delayUnit()))
                     .successThreshold(introspector.getCircuitBreaker().successThreshold())
                     .errorRatio((int) (introspector.getCircuitBreaker().failureRatio() * 100))
                     .volume(introspector.getCircuitBreaker().requestVolumeThreshold())
                     .applyOn(mapTypes(introspector.getCircuitBreaker().failOn()))
-                    .skipOn(mapTypes(introspector.getCircuitBreaker().skipOn()))
-                    .build();
+                    .skipOn(mapTypes(introspector.getCircuitBreaker().skipOn())));
         }
     }
 
@@ -508,31 +506,26 @@ class MethodInvoker implements FtSupplier<Object> {
 
         // Create a retry for this invocation only
         if (introspector.hasRetry()) {
-            int maxRetries = introspector.getRetry().maxRetries();
-            if (maxRetries == -1) {
-                maxRetries = Integer.MAX_VALUE;
-            } else {
-                maxRetries++;       // add 1 for initial call
-            }
-            methodState.retry = Retry.builder()
+            int maxRetries = calls(introspector.getRetry().maxRetries());
+
+            methodState.retry = Retry.create(retryBuilder -> retryBuilder
                     .retryPolicy(Retry.JitterRetryPolicy.builder()
-                            .calls(maxRetries)
-                            .delay(Duration.of(introspector.getRetry().delay(),
-                                    introspector.getRetry().delayUnit()))
-                            .jitter(Duration.of(introspector.getRetry().jitter(),
-                                    introspector.getRetry().jitterDelayUnit()))
-                            .build())
+                                         .calls(maxRetries)
+                                         .delay(Duration.of(introspector.getRetry().delay(),
+                                                            introspector.getRetry().delayUnit()))
+                                         .jitter(Duration.of(introspector.getRetry().jitter(),
+                                                             introspector.getRetry().jitterDelayUnit()))
+                                         .build())
                     .overallTimeout(Duration.of(introspector.getRetry().maxDuration(),
-                            introspector.getRetry().durationUnit()))
+                                                introspector.getRetry().durationUnit()))
                     .applyOn(mapTypes(introspector.getRetry().retryOn()))
-                    .skipOn(mapTypes(introspector.getRetry().abortOn()))
-                    .build();
+                    .skipOn(mapTypes(introspector.getRetry().abortOn())));
             builder.addRetry(methodState.retry);
         }
 
         // Create and add fallback handler for this invocation
         if (introspector.hasFallback()) {
-            Fallback<Object> fallback = Fallback.builder()
+            Fallback<Object> fallback = Fallback.create(fallbackBuilder -> fallbackBuilder
                     .fallback(throwable -> {
                         FallbackHelper cfb = new FallbackHelper(context, introspector, throwable);
 
@@ -563,12 +556,16 @@ class MethodInvoker implements FtSupplier<Object> {
                         }
                     })
                     .applyOn(mapTypes(introspector.getFallback().applyOn()))
-                    .skipOn(mapTypes(introspector.getFallback().skipOn()))
-                    .build();
+                    .skipOn(mapTypes(introspector.getFallback().skipOn())));
             builder.addFallback(fallback);
         }
 
         return builder.build();
+    }
+
+    private int calls(int configuredMaxRetries) {
+        // add 1 for initial call
+        return configuredMaxRetries == -1 ? Integer.MAX_VALUE : configuredMaxRetries + 1;
     }
 
     /**

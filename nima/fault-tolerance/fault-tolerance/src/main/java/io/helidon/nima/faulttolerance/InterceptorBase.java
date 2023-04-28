@@ -10,14 +10,14 @@ import java.util.function.Predicate;
 
 import io.helidon.common.GenericType;
 import io.helidon.common.types.AnnotationAndValue;
-import io.helidon.common.types.DefaultTypeName;
 import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNameDefault;
 import io.helidon.common.types.TypedElementName;
-import io.helidon.pico.api.DefaultQualifierAndValue;
 import io.helidon.pico.api.Interceptor;
 import io.helidon.pico.api.InvocationContext;
 import io.helidon.pico.api.PicoException;
 import io.helidon.pico.api.QualifierAndValue;
+import io.helidon.pico.api.QualifierAndValueDefault;
 import io.helidon.pico.api.ServiceInfoCriteriaDefault;
 import io.helidon.pico.api.ServiceProvider;
 import io.helidon.pico.api.Services;
@@ -35,7 +35,7 @@ abstract class InterceptorBase<T> implements Interceptor {
     InterceptorBase(Services services, Class<T> ftType, Class<? extends Annotation> annotationType) {
         this.services = services;
         this.ftType = ftType;
-        this.annotationTypeName = DefaultTypeName.create(annotationType);
+        this.annotationTypeName = TypeNameDefault.create(annotationType);
     }
 
     @Override
@@ -108,7 +108,7 @@ abstract class InterceptorBase<T> implements Interceptor {
 
     <L> Optional<L> lookupNamed(Class<L> type, String name) {
         // not cached yet
-        QualifierAndValue qualifier = DefaultQualifierAndValue.create(Named.class, name);
+        QualifierAndValue qualifier = QualifierAndValueDefault.create(Named.class, name);
 
         Optional<ServiceProvider<L>> lServiceProvider = services.lookupFirst(type,
                                                                              ServiceInfoCriteriaDefault.builder()
@@ -119,7 +119,7 @@ abstract class InterceptorBase<T> implements Interceptor {
     }
 
     <M extends FtMethod> Optional<M> generatedMethod(Class<M> type, CacheRecord cacheRecord) {
-        var qualifier = DefaultQualifierAndValue.create(Named.class,
+        var qualifier = QualifierAndValueDefault.create(Named.class,
                                                         cacheRecord.typeName().name()
                                                                 + "."
                                                                 + cacheRecord.methodName());

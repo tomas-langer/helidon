@@ -19,6 +19,7 @@ package io.helidon.nima.faulttolerance;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -28,121 +29,26 @@ import java.util.function.Function;
  */
 public interface Fallback<T> extends FtHandlerTyped<T> {
     /**
-     * A builder to customize {@link Fallback}.
+     * Create a fallback based on configuration.
      *
+     * @param fallbackConfig fallback configuration
      * @param <T> type of the values returned by the failing method
-     * @return a new builder
-     */
-    static <T> Builder<T> builder() {
-        return new Builder<>();
-    }
-
-    /**
-     * Create a fallback for a callable.
-     *
-     * @param fallback fallback supplier to obtain the alternative result
-     * @param <T>      type of the result
      * @return a new fallback
      */
-    static <T> Fallback<T> create(Function<Throwable, ? extends T> fallback) {
-        Builder<T> builder = builder();
-        return builder.fallback(fallback).build();
+    static <T> Fallback<T> create(FallbackConfig<T> fallbackConfig) {
+        return new FallbackImpl<>(fallbackConfig);
     }
 
     /**
-     * Fluent API builder for {@link Fallback}.
+     * Create a fallback and customize its configuration.
      *
-     * @param <T> type of the values returned
+     * @param configConsumer consumer of configuration
+     * @param <T> type of the values returned by the failing method
+     * @return a new fallback
      */
-    class Builder<T> implements io.helidon.common.Builder<Builder<T>, Fallback<T>> {
-        private final Set<Class<? extends Throwable>> applyOn = new HashSet<>();
-        private final Set<Class<? extends Throwable>> skipOn = new HashSet<>();
-
-        private Function<Throwable, ? extends T> fallback;
-
-        private Builder() {
-        }
-
-        @Override
-        public Fallback<T> build() {
-            return new FallbackImpl<>(this);
-        }
-
-        /**
-         * Configure a fallback for a type.
-         *
-         * @param fallback fallback supplier to obtain the alternative result
-         * @return updated builder instance
-         */
-        public Builder<T> fallback(Function<Throwable, ? extends T> fallback) {
-            this.fallback = fallback;
-            return this;
-        }
-
-        /**
-         * Apply fallback on these throwable classes.
-         * Cannot be combined with {@link #skipOn(Class[])}.
-         *
-         * @param classes classes to fallback on
-         * @return updated builder instance
-         */
-        @SafeVarargs
-        public final Builder<T> applyOn(Class<? extends Throwable>... classes) {
-            applyOn.clear();
-            Arrays.stream(classes)
-                    .forEach(this::addApplyOn);
-
-            return this;
-        }
-
-        /**
-         * Apply fallback on this throwable class.
-         *
-         * @param clazz class to fallback on
-         * @return updated builder instance
-         */
-        public Builder<T> addApplyOn(Class<? extends Throwable> clazz) {
-            this.applyOn.add(clazz);
-            return this;
-        }
-
-        /**
-         * Do not apply fallback on these throwable classes.
-         * Cannot be combined with {@link #applyOn(Class[])}.
-         *
-         * @param classes classes not to fallback on
-         * @return updated builder instance
-         */
-        @SafeVarargs
-        public final Builder<T> skipOn(Class<? extends Throwable>... classes) {
-            skipOn.clear();
-            Arrays.stream(classes)
-                    .forEach(this::addSkipOn);
-
-            return this;
-        }
-
-        /**
-         * Do not apply fallback on this throwable class.
-         *
-         * @param clazz class not to fallback on
-         * @return updated builder instance
-         */
-        public Builder<T> addSkipOn(Class<? extends Throwable> clazz) {
-            this.skipOn.add(clazz);
-            return this;
-        }
-
-        Set<Class<? extends Throwable>> applyOn() {
-            return applyOn;
-        }
-
-        Set<Class<? extends Throwable>> skipOn() {
-            return skipOn;
-        }
-
-        Function<Throwable, ? extends T> fallback() {
-            return fallback;
-        }
+    static <T> Fallback<T> create(Consumer<FallbackConfigDefault.Builder<T>> configConsumer) {
+        FallbackConfigDefault.Builder<T> builder = FallbackConfigDefault.builder();
+        configConsumer.accept(builder);
+        return create(builder.build());
     }
 }

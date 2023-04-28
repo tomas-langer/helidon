@@ -16,6 +16,7 @@
 
 package io.helidon.nima.faulttolerance;
 
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.helidon.pico.api.Contract;
@@ -32,12 +33,24 @@ import io.helidon.pico.api.Contract;
 @Contract
 public interface Bulkhead extends FtHandler {
     /**
-     * A new builder for {@link Bulkhead}.
+     * Create {@link Bulkhead} from its configuration.
      *
-     * @return a new builder
+     * @return a new bulkhead
      */
     static Bulkhead create(BulkheadConfig config) {
         return new BulkheadImpl(config);
+    }
+
+    /**
+     * Create {@link Bulkhead} customizing its configuration.
+     *
+     * @param builderConsumer consumer to update configuration of bulkhead
+     * @return a new bulkhead
+     */
+    static Bulkhead create(Consumer<BulkheadConfigDefault.Builder> builderConsumer) {
+        BulkheadConfigDefault.Builder builder = BulkheadConfigDefault.builder();
+        builderConsumer.accept(builder);
+        return create(builder.build());
     }
 
     /**

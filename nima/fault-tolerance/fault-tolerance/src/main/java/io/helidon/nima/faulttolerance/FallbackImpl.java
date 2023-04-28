@@ -26,7 +26,7 @@ class FallbackImpl<T> implements Fallback<T> {
     private final Function<Throwable, ? extends T> fallback;
     private final ErrorChecker errorChecker;
 
-    FallbackImpl(Builder<T> builder) {
+    FallbackImpl(FallbackConfig<T> builder) {
         this.fallback = builder.fallback();
         this.errorChecker = ErrorChecker.create(builder.skipOn(), builder.applyOn());
     }

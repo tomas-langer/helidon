@@ -23,8 +23,8 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
-import io.helidon.pico.api.DefaultQualifierAndValue;
 import io.helidon.pico.api.PicoServices;
+import io.helidon.pico.api.QualifierAndValueDefault;
 import io.helidon.pico.api.ServiceInfoCriteriaDefault;
 import io.helidon.pico.api.ServiceProvider;
 import io.helidon.pico.configdriven.api.ConfiguredBy;
@@ -59,7 +59,7 @@ class AsyncImpl implements Async {
     }
 
     private static Optional<ExecutorService> executorService(String name) {
-        var qualifier = DefaultQualifierAndValue.create(Named.class, name);
+        var qualifier = QualifierAndValueDefault.create(Named.class, name);
         return PicoServices.realizedServices().lookupFirst(ExecutorService.class,
                                                            ServiceInfoCriteriaDefault.builder()
                                                                    .addQualifier(qualifier)

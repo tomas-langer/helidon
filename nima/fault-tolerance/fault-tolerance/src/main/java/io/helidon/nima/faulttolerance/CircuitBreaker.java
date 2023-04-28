@@ -16,6 +16,8 @@
 
 package io.helidon.nima.faulttolerance;
 
+import java.util.function.Consumer;
+
 /**
  * CircuitBreaker protects a potentially failing endpoint from overloading and the application
  * from spending resources on those endpoints.
@@ -27,12 +29,24 @@ package io.helidon.nima.faulttolerance;
  */
 public interface CircuitBreaker extends FtHandler {
     /**
-     * Builder to customize configuration of the breaker.
+     * Create a new circuit builder based on its configuration.
      *
-     * @return a new builder
+     * @return a new circuit breaker
      */
     static CircuitBreaker create(CircuitBreakerConfig config) {
         return new CircuitBreakerImpl(config);
+    }
+
+    /**
+     * Create a new circuit breaker with a possibility to customize its configuration.
+     *
+     * @param builderConsumer consumer of configuration
+     * @return a new circuit breaker
+     */
+    static CircuitBreaker create(Consumer<CircuitBreakerConfigDefault.Builder> builderConsumer) {
+        CircuitBreakerConfigDefault.Builder builder = CircuitBreakerConfigDefault.builder();
+        builderConsumer.accept(builder);
+        return create(builder.build());
     }
 
     /**
