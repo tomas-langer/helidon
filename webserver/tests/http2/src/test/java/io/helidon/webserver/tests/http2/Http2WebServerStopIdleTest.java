@@ -50,19 +50,19 @@ class Http2WebServerStopIdleTest {
         Keys privateKeyConfig = Keys.builder()
                 .keystore(keystore -> keystore
                 .keystore(Resource.create("certificate.p12"))
-                .keystorePassphrase("helidon"))
+                .passphrase("helidon"))
                 .build();
         Tls tls = Tls.builder()
                 .privateKey(privateKeyConfig.privateKey().get())
                 .privateKeyCertChain(privateKeyConfig.certChain())
                 .build();
         WebServer webServer = WebServer.builder()
-                .putSocket("https", socketBuilder -> socketBuilder.tls(tls))
+                .tls(tls)
                 .routing(router -> router.get("ok", (req, res) -> res.send("ok")))
                 .build();
         webServer.start();
 
-        int port = webServer.port("https");
+        int port = webServer.port();
         HttpResponse<String> response = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .sslContext(insecureTls.sslContext())
