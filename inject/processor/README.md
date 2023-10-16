@@ -21,3 +21,9 @@ In your pom.xml, add this plugin to be run as part of the compilation phase:
         </configuration>
     </plugin>
 ```
+
+What do we want to do?
+
+- code generate activators that are independent on the runtime
+- enable extensibility, to support stuff such as Config driven instances
+

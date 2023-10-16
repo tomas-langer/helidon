@@ -20,13 +20,13 @@
 module io.helidon.inject.api {
 
     requires io.helidon.common.config;
-    requires io.helidon.common.types;
     requires io.helidon.common;
     requires io.helidon.logging.common;
     requires jakarta.inject;
 
     requires static jakarta.annotation;
 
+    requires transitive io.helidon.common.types;
     requires transitive io.helidon.builder.api;
 
     exports io.helidon.inject.api;

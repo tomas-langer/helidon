@@ -21,6 +21,8 @@ module io.helidon.inject.processor {
 
     exports io.helidon.inject.processor.spi;
     exports io.helidon.inject.processor;
+
+    requires io.helidon.common.processor.classmodel;
     requires io.helidon.builder.api;
     requires io.helidon.common.processor;
     requires io.helidon.common;
@@ -33,6 +35,7 @@ module io.helidon.inject.processor {
     uses io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
 
     provides javax.annotation.processing.Processor with
+            io.helidon.inject.processor.InjectAnnotationProcessor,
             io.helidon.inject.processor.CustomAnnotationProcessor,
             io.helidon.inject.processor.UnsupportedConstructsProcessor,
             io.helidon.inject.processor.InjectionAnnotationProcessor;
