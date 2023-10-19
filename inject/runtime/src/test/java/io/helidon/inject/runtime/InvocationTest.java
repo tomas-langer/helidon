@@ -22,8 +22,8 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
-import io.helidon.common.types.TypeValues;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
@@ -65,7 +65,7 @@ class InvocationTest {
                 .serviceTypeName(TypeName.create(DummyServiceProvider.class))
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
-                                     .elementTypeKind(TypeValues.KIND_METHOD)
+                                     .elementTypeKind(ElementKind.METHOD)
                                      .typeName(TypeName.create(InvocationTest.class)))
                 .interceptors(List.of(first.provider, second.provider))
                 .build();
@@ -92,7 +92,7 @@ class InvocationTest {
                 .serviceTypeName(TypeName.create(DummyServiceProvider.class))
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
-                                     .elementTypeKind(TypeValues.KIND_METHOD)
+                                     .elementTypeKind(ElementKind.METHOD)
                                      .typeName(TypeName.create(InvocationTest.class))
                                      .build())
                 .interceptors(List.of())

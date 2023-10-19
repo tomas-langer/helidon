@@ -46,14 +46,14 @@ import io.helidon.common.processor.TypeFactory;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
+import io.helidon.common.types.ElementKind;
+import io.helidon.common.types.Modifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
-import io.helidon.common.types.TypeValues;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.Contract;
 import io.helidon.inject.api.DependenciesInfo;
-import io.helidon.inject.api.ElementKind;
 import io.helidon.inject.api.ExternalContracts;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Qualifier;
@@ -88,7 +88,6 @@ import static io.helidon.inject.processor.GeneralProcessorUtils.toServiceTypeHie
 import static io.helidon.inject.processor.GeneralProcessorUtils.toWeight;
 import static io.helidon.inject.tools.CodeGenFiler.scratchClassOutputPath;
 import static io.helidon.inject.tools.CodeGenFiler.targetClassOutputPath;
-import static io.helidon.inject.tools.TypeTools.toAccess;
 import static java.util.Objects.requireNonNull;
 
 /**
@@ -322,26 +321,26 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                 elementsOfInterest,
                 "There can be max of one injectable constructor per class",
                 1,
-                (it) -> it.elementTypeKind().equals(TypeValues.KIND_CONSTRUCTOR)
+                (it) -> it.elementTypeKind() == io.helidon.common.types.ElementKind.CONSTRUCTOR
                         && it.hasAnnotation(TypeNames.JAKARTA_INJECT_TYPE));
         validatePerClass(
                 elementsOfInterest,
                 "There can be max of one PostConstruct method per class",
                 1,
-                (it) -> it.elementTypeKind().equals(TypeValues.KIND_METHOD)
+                (it) -> it.elementTypeKind() == io.helidon.common.types.ElementKind.METHOD
                         && it.hasAnnotation(TypeNames.JAKARTA_POST_CONSTRUCT_TYPE));
         validatePerClass(
                 elementsOfInterest,
                 "There can be max of one PreDestroy method per class",
                 1,
-                (it) -> it.elementTypeKind().equals(TypeValues.KIND_METHOD)
+                (it) -> it.elementTypeKind() == io.helidon.common.types.ElementKind.METHOD
                         && it.hasAnnotation(TypeNames.JAKARTA_PRE_DESTROY_TYPE));
         validatePerClass(
                 elementsOfInterest,
                 "Injection does not currently support static or private elements",
                 0,
-                (it) -> it.modifiers().contains(TypeValues.MODIFIER_PRIVATE)
-                        || it.modifiers().contains(TypeValues.MODIFIER_STATIC));
+                (it) -> it.accessModifier() == AccessModifier.PRIVATE
+                        || it.modifiers().contains(Modifier.STATIC));
     }
 
     /**
@@ -413,7 +412,6 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                 }
             }
         }
-        Set<String> modifierNames = toModifierNames(service.modifiers());
 
         toRunLevel(service).ifPresent(it -> services.addDeclaredRunLevel(serviceTypeName, it));
         toWeight(service).ifPresent(it -> services.addDeclaredWeight(serviceTypeName, it));
@@ -422,9 +420,9 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
         toPreDestroyMethod(service).ifPresent(it -> services.addPreDestroyMethod(serviceTypeName, it));
         toInjectionDependencies(service, allElementsOfInterest).ifPresent(services::addDependencies);
         services.addAccessLevel(serviceTypeName,
-                                toAccess(modifierNames));
+                                service.accessModifier());
         services.addIsAbstract(serviceTypeName,
-                               modifierNames.contains(TypeValues.MODIFIER_ABSTRACT));
+                               service.modifiers().contains(Modifier.ABSTRACT));
         services.addServiceTypeHierarchy(serviceTypeName,
                                          toServiceTypeHierarchy(service));
         services.addQualifiers(serviceTypeName,
@@ -468,10 +466,10 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
     private static void gatherInjectionPoints(Dependencies.BuilderContinuation builder,
                                               TypedElementInfo typedElement,
                                               TypeInfo service,
-                                              Set<String> modifierNames) {
+                                              Set<Modifier> modifiers,
+                                              AccessModifier accessModifier) {
         String elemName = typedElement.elementName();
-        AccessModifier access = toAccess(modifierNames);
-        ElementKind elemKind = ElementKind.valueOf(typedElement.elementTypeKind());
+        ElementKind elemKind = typedElement.elementTypeKind();
         boolean isField = (elemKind == ElementKind.FIELD);
         if (isField) {
             TypeName typeName = typedElement.typeName();
@@ -488,7 +486,7 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                         typeName,
                         elemKind,
                         0,
-                        access)
+                        accessModifier)
                     .ipName(elemName)
                     .ipType(typedElement.typeName())
                     .qualifiers(qualifiers)
@@ -515,7 +513,7 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                             typeName,
                             elemKind,
                             elemArgs,
-                            access)
+                            accessModifier)
                         .ipName(it.elementName())
                         .ipType(it.typeName())
                         .qualifiers(qualifiers)
@@ -525,11 +523,6 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                         .optionalWrapped(isOptional);
             });
         }
-    }
-
-    // will be resolved in https://github.com/helidon-io/helidon/issues/6764
-    private static Set<String> toModifierNames(Set<String> names) {
-        return names.stream().map(String::toLowerCase).collect(Collectors.toSet());
     }
 
     private static ServiceLoader<InjectionAnnotationProcessorObserver> observerLoader() {
@@ -562,7 +555,7 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                 return Optional.of(superTypeInfo.typeName());
             }
         }
-        Set<String> kindsOfInterest = Set.of(TypeValues.KIND_CONSTRUCTOR, TypeValues.KIND_FIELD, TypeValues.KIND_METHOD);
+        Set<ElementKind> kindsOfInterest = Set.of(ElementKind.CONSTRUCTOR, ElementKind.FIELD, ElementKind.METHOD);
         if (Stream.concat(superTypeInfo.elementInfo().stream(), superTypeInfo.otherElementInfo().stream())
                 .filter(it -> kindsOfInterest.contains(it.elementTypeKind()))
                 .anyMatch(it -> it.hasAnnotation(TypeNames.JAKARTA_INJECT_TYPE)
@@ -741,7 +734,7 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                     filterModuleName(typeInfo.moduleNameOf(jakartaProviderTypeName)).ifPresent(externalModuleNamesRequired::add);
                 }
             } else {
-                boolean isTypeAnInterface = typeInfo.typeKind().equals(TypeValues.KIND_INTERFACE);
+                boolean isTypeAnInterface = typeInfo.typeKind() == ElementKind.INTERFACE;
                 boolean isTypeAContract = autoAddInterfaces
                         || !isTypeAnInterface
                         || Annotations.findFirst(Contract.class, typeInfo.annotations()).isPresent();
@@ -827,7 +820,7 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
                 .filter(it -> service.typeName().equals(it.enclosingType().orElseThrow()))
                 .toList();
         injectableElementsForThisService
-                .forEach(elem -> gatherInjectionPoints(builder, elem, service, toModifierNames(elem.modifiers())));
+                .forEach(elem -> gatherInjectionPoints(builder, elem, service, elem.modifiers(), elem.accessModifier()));
 
         //        // We expect activators at every level for abstract bases - we will therefore NOT recursive up the hierarchy
         //        service.superTypeInfo().ifPresent(it -> gatherInjectionPoints(builder, it, allElementsOfInterest, false));

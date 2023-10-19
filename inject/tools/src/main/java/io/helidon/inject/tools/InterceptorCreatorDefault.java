@@ -958,7 +958,7 @@ public class InterceptorCreatorDefault extends AbstractCreator implements Interc
             IdAndToString methodTypedElement = toDecl(element);
             result.add(methodTypedElement);
 
-            if (element.elementInfo().elementKind() == io.helidon.inject.api.ElementKind.CONSTRUCTOR) {
+            if (element.elementInfo().elementKind() == io.helidon.common.types.ElementKind.CONSTRUCTOR) {
                 continue;
             }
 
@@ -980,7 +980,7 @@ public class InterceptorCreatorDefault extends AbstractCreator implements Interc
 
     private static IdAndToString toDecl(InterceptedElement method) {
         MethodElementInfo mi = method.elementInfo();
-        boolean constructor = mi.elementKind() == io.helidon.inject.api.ElementKind.CONSTRUCTOR;
+        boolean constructor = mi.elementKind() == io.helidon.common.types.ElementKind.CONSTRUCTOR;
         String name = constructor ? CTOR_ALIAS : mi.elementName();
         String builder = typeNameElementNameAnnotations(mi, constructor);
         return new IdAndToString(name, builder);
@@ -1054,7 +1054,7 @@ public class InterceptorCreatorDefault extends AbstractCreator implements Interc
     @SuppressWarnings("checkstyle:OperatorWrap")
     private static InterceptedMethodCodeGen toBody(InterceptedElement method) {
         MethodElementInfo mi = method.elementInfo();
-        String name = (mi.elementKind() == io.helidon.inject.api.ElementKind.CONSTRUCTOR) ? CTOR_ALIAS : mi.elementName();
+        String name = (mi.elementKind() == io.helidon.common.types.ElementKind.CONSTRUCTOR) ? CTOR_ALIAS : mi.elementName();
         StringBuilder builder = new StringBuilder();
         builder.append("public ").append(mi.elementTypeName()).append(" ").append(mi.elementName()).append("(");
         String args = mi.parameterInfo().stream()
@@ -1064,7 +1064,7 @@ public class InterceptorCreatorDefault extends AbstractCreator implements Interc
         String objArrayArgs = "";
         String typedElementArgs = "";
         String untypedElementArgs = "";
-        boolean hasArgs = (args.length() > 0);
+        boolean hasArgs = !args.isEmpty();
         if (hasArgs) {
             argDecls = mi.parameterInfo().stream()
                     .map(InterceptorCreatorDefault::toDecl)

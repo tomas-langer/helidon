@@ -19,9 +19,9 @@ package io.helidon.inject.configdriven.processor;
 import java.util.Optional;
 
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Modifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
-import io.helidon.common.types.TypeValues;
 
 record ConfigBean(TypeName typeName,
                   String configPrefix,
@@ -51,7 +51,7 @@ record ConfigBean(TypeName typeName,
             // this type must have a "static Type create(Config config)"
             boolean hasConfigFactoryMethod = configBeanTypeInfo.elementInfo()
                     .stream()
-                    .filter(it -> it.modifiers().contains(TypeValues.MODIFIER_STATIC))
+                    .filter(it -> it.modifiers().contains(Modifier.STATIC))
                     .filter(it -> it.elementName().equals("create"))
                     .filter(it -> it.typeName().equals(configBeanTypeInfo.typeName()))
                     .filter(it -> it.parameterArguments().size() == 1)

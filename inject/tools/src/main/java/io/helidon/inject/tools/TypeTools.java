@@ -54,7 +54,6 @@ import io.helidon.common.processor.TypeFactory;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
-import io.helidon.common.types.TypeValues;
 import io.helidon.inject.api.ElementInfo;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionPointProvider;
@@ -768,7 +767,8 @@ public final class TypeTools {
                 .serviceTypeName(serviceTypeName)
                 .elementName(elemName)
                 .elementKind(elemInfo.isConstructor()
-                                     ? io.helidon.inject.api.ElementKind.CONSTRUCTOR : io.helidon.inject.api.ElementKind.METHOD)
+                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+                                     : io.helidon.common.types.ElementKind.METHOD)
                 .elementTypeName(elemType)
                 .elementArgs(elemArgs)
                 .elementOffset(elemOffset)
@@ -807,7 +807,8 @@ public final class TypeTools {
                 .elementName(methodInfo.isConstructor()
                                      ? InjectionPointInfo.CONSTRUCTOR : methodInfo.getName())
                 .elementKind(methodInfo.isConstructor()
-                                     ? io.helidon.inject.api.ElementKind.CONSTRUCTOR : io.helidon.inject.api.ElementKind.METHOD)
+                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+                                     : io.helidon.common.types.ElementKind.METHOD)
                 .elementTypeName(elemType)
                 .elementArgs(methodInfo.getParameterInfo().length)
                 .access(toAccess(methodInfo.getModifiers()))
@@ -845,7 +846,8 @@ public final class TypeTools {
                 .elementName((ee.getKind() == ElementKind.CONSTRUCTOR)
                                      ? InjectionPointInfo.CONSTRUCTOR : ee.getSimpleName().toString())
                 .elementKind((ee.getKind() == ElementKind.CONSTRUCTOR)
-                                     ? io.helidon.inject.api.ElementKind.CONSTRUCTOR : io.helidon.inject.api.ElementKind.METHOD)
+                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+                                     : io.helidon.common.types.ElementKind.METHOD)
                 .elementTypeName(elemType)
                 .elementArgs(ee.getParameters().size())
                 .access(toAccess(ee))
@@ -875,7 +877,8 @@ public final class TypeTools {
                 .serviceTypeName(serviceTypeName)
                 .elementName("p" + elemOffset)
                 .elementKind(elemInfo.isConstructor()
-                                     ? io.helidon.inject.api.ElementKind.CONSTRUCTOR : io.helidon.inject.api.ElementKind.METHOD)
+                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+                                     : io.helidon.common.types.ElementKind.METHOD)
                 .elementTypeName(elemType)
                 .elementArgs(elemInfo.getParameterInfo().length)
                 .elementOffset(elemOffset)
@@ -906,7 +909,8 @@ public final class TypeTools {
                 .serviceTypeName(serviceTypeName)
                 .elementName("p" + elemOffset)
                 .elementKind(elemInfo.getKind() == ElementKind.CONSTRUCTOR
-                                     ? io.helidon.inject.api.ElementKind.CONSTRUCTOR : io.helidon.inject.api.ElementKind.METHOD)
+                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+                                     : io.helidon.common.types.ElementKind.METHOD)
                 .elementTypeName(elemTypeName)
                 .elementArgs(elemInfo.getParameters().size())
                 .elementOffset(elemOffset)
@@ -941,7 +945,7 @@ public final class TypeTools {
                 .dependencyToServiceInfo(serviceInfo)
                 .serviceTypeName(serviceTypeName)
                 .elementName(elemInfo.getName())
-                .elementKind(io.helidon.inject.api.ElementKind.FIELD)
+                .elementKind(io.helidon.common.types.ElementKind.FIELD)
                 .elementTypeName(elemType)
                 .access(toAccess(elemInfo.getModifiers()))
                 .staticDeclaration(isStatic(elemInfo.getModifiers()))
@@ -1333,23 +1337,6 @@ public final class TypeTools {
         } else {
             return AccessModifier.PACKAGE_PRIVATE;
         }
-    }
-
-    /**
-     * Converts the modifiers to an {@link AccessModifier} type.
-     *
-     * @param modifiers the modifiers
-     * @return the access
-     */
-    public static AccessModifier toAccess(Set<String> modifiers) {
-        if (modifiers.contains(TypeValues.MODIFIER_PROTECTED)) {
-            return AccessModifier.PROTECTED;
-        } else if (modifiers.contains(TypeValues.MODIFIER_PRIVATE)) {
-            return AccessModifier.PRIVATE;
-        } else if (modifiers.contains(TypeValues.MODIFIER_PUBLIC)) {
-            return AccessModifier.PUBLIC;
-        }
-        return AccessModifier.PACKAGE_PRIVATE;
     }
 
     /**

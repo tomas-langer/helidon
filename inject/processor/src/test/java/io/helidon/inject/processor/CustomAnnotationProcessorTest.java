@@ -19,13 +19,11 @@ package io.helidon.inject.processor;
 import java.util.List;
 import java.util.Set;
 
-import javax.lang.model.element.ElementKind;
-
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
-import io.helidon.common.types.TypeValues;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoBasics;
@@ -62,19 +60,19 @@ class CustomAnnotationProcessorTest {
 
         List<Annotation> annotations = createAnnotationListFromAnnotations(BasicEndpoint.class.getAnnotations());
         TypeInfo enclosingTypeInfo = TypeInfo.builder()
-                .typeKind(TypeValues.KIND_CLASS)
+                .typeKind(io.helidon.common.types.ElementKind.CLASS)
                 .typeName(create(BasicEndpoint.class))
                 .annotations(annotations)
                 .build();
         TypedElementInfo target = TypedElementInfo.builder()
                 .typeName(create(String.class))
-                .elementTypeKind(ElementKind.METHOD.name())
+                .elementTypeKind(ElementKind.METHOD)
                 .elementName("itWorks")
                 .build();
         TypedElementInfo arg1 = TypedElementInfo.builder()
                 .typeName(create(String.class))
                 .elementName("header")
-                .elementTypeKind(TypeValues.KIND_PARAMETER)
+                .elementTypeKind(ElementKind.PARAMETER)
                 .build();
         ServiceInfoBasics serviceInfo = ServiceInfo.builder()
                 .serviceTypeName(BasicEndpoint.class)

@@ -16,8 +16,8 @@
 
 package io.helidon.inject.tools;
 
+import io.helidon.common.types.ElementKind;
 import io.helidon.inject.api.ElementInfo;
-import io.helidon.inject.api.ElementKind;
 import io.helidon.inject.api.InjectionPointInfo;
 
 /**

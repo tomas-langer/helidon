@@ -33,5 +33,8 @@ module io.helidon.common.processor {
 
     uses io.helidon.common.processor.spi.CopyrightProvider;
     uses io.helidon.common.processor.spi.GeneratedAnnotationProvider;
+    uses io.helidon.common.processor.spi.AnnotationMapperProvider;
+    uses io.helidon.common.processor.spi.ElementMapperProvider;
+    uses io.helidon.common.processor.spi.TypeMapperProvider;
 
 }

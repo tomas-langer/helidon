@@ -22,11 +22,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.DependencyInfo;
-import io.helidon.inject.api.ElementKind;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;

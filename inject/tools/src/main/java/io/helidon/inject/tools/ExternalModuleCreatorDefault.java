@@ -29,9 +29,9 @@ import java.util.Set;
 
 import io.helidon.common.LazyValue;
 import io.helidon.common.Weight;
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.DependenciesInfo;
-import io.helidon.inject.api.ElementKind;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.runtime.Dependencies;

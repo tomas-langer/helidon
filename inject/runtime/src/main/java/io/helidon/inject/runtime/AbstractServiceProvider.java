@@ -32,6 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationLog;
 import io.helidon.inject.api.ActivationLogEntry;
@@ -44,7 +45,6 @@ import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.DeActivationRequest;
 import io.helidon.inject.api.DeActivator;
 import io.helidon.inject.api.DependenciesInfo;
-import io.helidon.inject.api.ElementKind;
 import io.helidon.inject.api.Event;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionPointProvider;

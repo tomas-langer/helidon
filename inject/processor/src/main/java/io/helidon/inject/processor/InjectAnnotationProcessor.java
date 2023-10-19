@@ -11,6 +11,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 
 import io.helidon.common.HelidonServiceLoader;
+import io.helidon.common.types.TypeName;
 import io.helidon.inject.processor.spi.InjectProcessorExtensionProvider;
 
 /**
@@ -18,13 +19,30 @@ import io.helidon.inject.processor.spi.InjectProcessorExtensionProvider;
  */
 public class InjectAnnotationProcessor extends AbstractProcessor {
     private static final List<InjectProcessorExtensionProvider> EXTENSIONS =
-            HelidonServiceLoader.create(ServiceLoader.load(InjectProcessorExtensionProvider.class))
+            HelidonServiceLoader.create(ServiceLoader.load(InjectProcessorExtensionProvider.class,
+                                                           InjectAnnotationProcessor.class.getClassLoader()))
                     .asList();
     @Override
     public Set<String> getSupportedAnnotationTypes() {
         Set<String> result = new HashSet<>();
 
+        for (InjectProcessorExtensionProvider extension : EXTENSIONS) {
+            extension.supportedTypes()
+                    .stream()
+                    .map(TypeName::fqName)
+                    .forEach(result::add);
+        }
 
+        return result;
+    }
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        Set<String> result = new HashSet<>();
+
+        for (InjectProcessorExtensionProvider extension : EXTENSIONS) {
+            result.addAll(extension.supportedOptions());
+        }
 
         return result;
     }
