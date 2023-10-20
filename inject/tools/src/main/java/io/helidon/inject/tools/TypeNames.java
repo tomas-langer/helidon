@@ -52,6 +52,10 @@ public final class TypeNames {
      */
     public static final String INTERCEPTED = "io.helidon.inject.api.Intercepted";
     /**
+     * Injection {@value #INTERCEPTED} annotation type.
+     */
+    public static final TypeName INTERCEPTED_TYPE = TypeName.create(INTERCEPTED);
+    /**
      * Injection {@value} type.
      */
     public static final String INJECT_MODULE = "io.helidon.inject.api.ModuleComponent";
@@ -290,6 +294,9 @@ public final class TypeNames {
      * Jakarta legacy {@value} annotation.
      */
     public static final String JAVAX_SINGLETON = "javax.inject.Singleton";
+    public static final TypeName SERVICE_DESCRIPTOR_TYPE = TypeName.create("io.helidon.inject.api.ServiceDescriptor");
+    public static final TypeName INJECTION_CONTEXT = TypeName.create("io.helidon.inject.api.InjectionContext");
+    public static final TypeName INJECTION_PARAMETER_ID = TypeName.create("io.helidon.inject.api.InjectionContext.InjectionParameterId");
 
     private TypeNames() {
     }

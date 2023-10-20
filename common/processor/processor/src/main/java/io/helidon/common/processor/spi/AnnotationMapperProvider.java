@@ -1,4 +1,9 @@
 package io.helidon.common.processor.spi;
 
-public interface AnnotationMapperProvider extends ProcessingProvider<AnnotationMapper> {
+import javax.annotation.processing.ProcessingEnvironment;
+
+import io.helidon.common.processor.AptOptions;
+
+public interface AnnotationMapperProvider extends ProcessingProvider {
+    AnnotationMapper create(ProcessingEnvironment aptEnv, AptOptions options);
 }

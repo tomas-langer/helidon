@@ -104,7 +104,7 @@ class ProcessingContextImpl implements ProcessingContext {
         return supportedOptions;
     }
 
-    private static void addSupported(ProcessingProvider<?> provider,
+    private static void addSupported(ProcessingProvider provider,
                                      Set<String> supportedOptions,
                                      Set<String> supportedPackages,
                                      Set<TypeName> supportedAnnotations) {

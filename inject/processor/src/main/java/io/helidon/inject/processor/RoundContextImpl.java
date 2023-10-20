@@ -1,11 +1,12 @@
 package io.helidon.inject.processor;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.TypeElement;
 
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -13,18 +14,18 @@ import io.helidon.common.types.TypedElementInfo;
 
 class RoundContextImpl implements RoundContext {
     private final RoundEnvironment env;
-    private final Collection<TypeInfo> types;
+    private final Map<TypeName, List<TypeInfo>> annotationToTypes;
+    private final List<TypeInfo> types;
     private final Collection<TypeName> annotations;
-    private final Map<TypeName, TypeElement> typesToElements;
 
     RoundContextImpl(RoundEnvironment env,
-                     Collection<TypeInfo> types,
                      Collection<TypeName> annotations,
-                     Map<TypeName, TypeElement> typesToElements) {
+                     Map<TypeName, List<TypeInfo>> annotationToTypes,
+                     List<TypeInfo> types) {
         this.env = env;
-        this.types = types;
         this.annotations = annotations;
-        this.typesToElements = typesToElements;
+        this.annotationToTypes = annotationToTypes;
+        this.types = types;
     }
 
     @Override
@@ -39,12 +40,39 @@ class RoundContextImpl implements RoundContext {
 
     @Override
     public Collection<TypedElementInfo> annotatedElements(TypeName annotationType) {
-        return Set.of();
+        List<TypeInfo> typeInfos = annotationToTypes.get(annotationType);
+        if (typeInfos == null) {
+            return Set.of();
+        }
+
+        List<TypedElementInfo> result = new ArrayList<>();
+
+        for (TypeInfo typeInfo : typeInfos) {
+            typeInfo.elementInfo()
+                    .stream()
+                    .filter(it -> it.hasAnnotation(annotationType))
+                    .forEach(result::add);
+        }
+
+        return result;
     }
 
     @Override
     public Collection<TypeInfo> annotatedTypes(TypeName annotationType) {
-        return Set.of();
+        List<TypeInfo> typeInfos = annotationToTypes.get(annotationType);
+        if (typeInfos == null) {
+            return Set.of();
+        }
+
+        List<TypeInfo> result = new ArrayList<>();
+
+        for (TypeInfo typeInfo : typeInfos) {
+            if (typeInfo.hasAnnotation(annotationType)) {
+                result.add(typeInfo);
+            }
+        }
+
+        return result;
     }
 
     @Override

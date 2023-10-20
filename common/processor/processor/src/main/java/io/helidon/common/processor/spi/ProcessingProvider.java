@@ -3,12 +3,9 @@ package io.helidon.common.processor.spi;
 import java.util.Collection;
 import java.util.Set;
 
-import javax.annotation.processing.ProcessingEnvironment;
-
-import io.helidon.common.processor.AptOptions;
 import io.helidon.common.types.TypeName;
 
-public interface ProcessingProvider<T> {
+public interface ProcessingProvider {
     default Collection<String> supportedOptions() {
         return Set.of();
     }
@@ -25,6 +22,4 @@ public interface ProcessingProvider<T> {
     default Collection<String> supportedAnnotationPackages() {
         return Set.of();
     }
-
-    T create(ProcessingEnvironment aptEnv, AptOptions options);
 }

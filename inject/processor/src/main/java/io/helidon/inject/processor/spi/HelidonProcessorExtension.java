@@ -4,7 +4,7 @@ import javax.annotation.processing.RoundEnvironment;
 
 import io.helidon.inject.processor.RoundContext;
 
-public interface InjectProcessorExtension {
+public interface HelidonProcessorExtension {
     boolean process(RoundContext context);
 
     default void process(RoundEnvironment roundEnvironment) {
