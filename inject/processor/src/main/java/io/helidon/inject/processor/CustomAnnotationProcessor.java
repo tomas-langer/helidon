@@ -244,7 +244,7 @@ public class CustomAnnotationProcessor extends BaseAnnotationProcessor {
                 .isFilerEnabled(true)
                 .annoTypeName(annoTypeName)
                 .serviceInfo(siInfo)
-                .targetElement(TypeInfoFactory.createTypedElementInfoFromElement(processingEnv, typeToProcess, elements)
+                .targetElement(TypeInfoFactory.createTypedElementInfoFromElement(ctx(), typeToProcess, elements)
                                        .orElseThrow())
                 .enclosingTypeInfo(enclosingClassTypeInfo)
                 // the following are duplicates that should be removed - get them from the enclosingTypeInfo instead
@@ -262,7 +262,7 @@ public class CustomAnnotationProcessor extends BaseAnnotationProcessor {
         Elements elements = processingEnv.getElementUtils();
         List<TypedElementInfo> result = new ArrayList<>();
         executableElement.getParameters().forEach(v -> result.add(
-                TypeInfoFactory.createTypedElementInfoFromElement(processingEnv, v, elements).orElseThrow()));
+                TypeInfoFactory.createTypedElementInfoFromElement(ctx(), v, elements).orElseThrow()));
         return result;
     }
 

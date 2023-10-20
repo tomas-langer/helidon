@@ -1,10 +1,7 @@
 package io.helidon.inject.processor.spi;
 
-import java.util.Set;
+import io.helidon.common.processor.spi.ProcessingProvider;
 
-import io.helidon.common.types.TypeName;
+public interface InjectProcessorExtensionProvider extends ProcessingProvider<InjectProcessorExtension> {
 
-public interface InjectProcessorExtensionProvider {
-    Set<TypeName> supportedTypes();
-    Set<String> supportedOptions();
 }

@@ -34,6 +34,12 @@ module io.helidon.inject.processor {
     uses io.helidon.inject.tools.spi.InterceptorCreator;
     uses io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
     uses io.helidon.inject.processor.spi.InjectProcessorExtensionProvider;
+    uses io.helidon.common.processor.spi.AnnotationMapperProvider;
+    uses io.helidon.common.processor.spi.ElementMapperProvider;
+    uses io.helidon.common.processor.spi.TypeMapperProvider;
+
+    provides io.helidon.common.processor.spi.AnnotationMapperProvider
+            with io.helidon.inject.processor.JavaxAnnotationMapperProvider;
 
     provides javax.annotation.processing.Processor with
             io.helidon.inject.processor.InjectAnnotationProcessor,

@@ -22,7 +22,7 @@ public interface AnnotationMapper {
      * The original annotation is not retained, unless part of the result of this method.
      *
      * @param ctx processing context
-     * @param original original annotation that matches {@link #supportsAnnotation()}
+     * @param original original annotation that matches {@link #supportsAnnotation(io.helidon.common.types.Annotation)}
      * @param elementKind kind of element the annotation is on
      * @return list of annotations to add instead of the provided annotation (may be empty to remove it),
      *          this result is used to process other mappers (except for this one)

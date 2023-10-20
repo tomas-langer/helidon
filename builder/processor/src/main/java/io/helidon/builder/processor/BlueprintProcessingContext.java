@@ -19,34 +19,34 @@ package io.helidon.builder.processor;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
+import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 
-interface ProcessingContext {
-    static ProcessingContext create(ProcessingEnvironment processingEnv) {
-        return new ProcessingContextProcessor(processingEnv);
+interface BlueprintProcessingContext {
+    static BlueprintProcessingContext create(ProcessingContext ctx) {
+        return new ProcessingContextProcessor(ctx);
     }
 
     Optional<TypeInfo> toTypeInfo(TypeName returnType);
 
     Optional<String> javadoc(Element typeName);
 
-    class ProcessingContextProcessor implements ProcessingContext {
-        private final ProcessingEnvironment processingEnv;
+    class ProcessingContextProcessor implements BlueprintProcessingContext {
+        private final ProcessingContext ctx;
 
-        ProcessingContextProcessor(ProcessingEnvironment processingEnv) {
-            this.processingEnv = processingEnv;
+        ProcessingContextProcessor(ProcessingContext ctx) {
+            this.ctx = ctx;
         }
 
         @Override
         public Optional<String> javadoc(Element element) {
-            Elements elementUtils = processingEnv.getElementUtils();
+            Elements elementUtils = ctx.aptEnv().getElementUtils();
 
             String javadoc = elementUtils.getDocComment(element);
             return Optional.ofNullable(javadoc).filter(Predicate.not(String::isBlank));
@@ -54,11 +54,11 @@ interface ProcessingContext {
 
         @Override
         public Optional<TypeInfo> toTypeInfo(TypeName returnType) {
-            TypeElement typeElement = processingEnv.getElementUtils().getTypeElement(returnType.boxed().fqName());
+            TypeElement typeElement = ctx.aptEnv().getElementUtils().getTypeElement(returnType.boxed().fqName());
             if (typeElement == null) {
                 return Optional.empty();
             }
-            return TypeInfoFactory.create(processingEnv, typeElement);
+            return TypeInfoFactory.create(ctx, typeElement);
         }
     }
 }

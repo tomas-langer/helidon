@@ -67,7 +67,7 @@ record TypeContext(
     );
 
     @SuppressWarnings("checkstyle:MethodLength") // use a lot of lines for parameter formatting
-    static TypeContext create(ProcessingContext processingContext,
+    static TypeContext create(BlueprintProcessingContext processingContext,
                               Elements elementUtils,
                               TypeElement blueprintElement,
                               TypeInfo blueprint) {
@@ -315,7 +315,7 @@ record TypeContext(
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber") // we need all of them
-    private static void gatherBuilderProperties(ProcessingContext processingContext,
+    private static void gatherBuilderProperties(BlueprintProcessingContext processingContext,
                                                 TypeInfo typeInfo,
                                                 Errors.Collector errors,
                                                 List<PrototypeProperty> properties,

@@ -23,11 +23,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 import io.helidon.common.processor.ElementInfoPredicates;
+import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.types.Modifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -48,8 +48,8 @@ class TypeHandlerMetaApi extends TypeHandlerMetaApiBase implements TypeHandler {
     private final TypeInfo typeInfo;
     private final TypeName typeName;
 
-    TypeHandlerMetaApi(ProcessingEnvironment aptEnv, TypeInfo typeInfo) {
-        super(aptEnv);
+    TypeHandlerMetaApi(ProcessingContext ctx, TypeInfo typeInfo) {
+        super(ctx);
 
         this.typeInfo = typeInfo;
         this.typeName = typeInfo.typeName();

@@ -835,7 +835,7 @@ public class InjectionAnnotationProcessor extends BaseAnnotationProcessor {
             TypeElement annoTypeElement = elementUtils.getTypeElement(annoType);
             if (annoTypeElement != null) {
                 Set<? extends Element> typesToProcess = utils().roundEnv().getElementsAnnotatedWith(annoTypeElement);
-                typesToProcess.forEach(it -> result.add(createTypedElementInfoFromElement(processingEnv, it, elementUtils)
+                typesToProcess.forEach(it -> result.add(createTypedElementInfoFromElement(ctx(), it, elementUtils)
                                                                 .orElseThrow()));
             }
         }

@@ -50,7 +50,7 @@ import static io.helidon.common.types.TypeNames.OBJECT;
 record FactoryMethods(Optional<FactoryMethod> createTargetType,
                       Optional<FactoryMethod> createFromConfig,
                       Optional<FactoryMethod> builder) {
-    static FactoryMethods create(ProcessingContext processingContext,
+    static FactoryMethods create(BlueprintProcessingContext processingContext,
                                  TypeInfo blueprint,
                                  TypeHandler typeHandler) {
 
@@ -80,7 +80,7 @@ record FactoryMethods(Optional<FactoryMethod> createTargetType,
                                   builder(processingContext, typeHandler, configObjectCandidates));
     }
 
-    private static Optional<FactoryMethod> builder(ProcessingContext processingContext,
+    private static Optional<FactoryMethod> builder(BlueprintProcessingContext processingContext,
                                                    TypeHandler typeHandler,
                                                    Set<TypeName> builderCandidates) {
         if (typeHandler.actualType().equals(OBJECT)) {
@@ -132,7 +132,7 @@ record FactoryMethods(Optional<FactoryMethod> createTargetType,
         return Optional.ofNullable(found).or(() -> Optional.ofNullable(secondaryMethod));
     }
 
-    private static Optional<FactoryMethod> createFromConfigMethod(ProcessingContext processingContext,
+    private static Optional<FactoryMethod> createFromConfigMethod(BlueprintProcessingContext processingContext,
                                                                   TypeInfo blueprint,
                                                                   TypeHandler typeHandler,
                                                                   Set<TypeName> configObjectCandidates) {
@@ -233,7 +233,7 @@ record FactoryMethods(Optional<FactoryMethod> createTargetType,
 
     }
 
-    private static Optional<FactoryMethod> targetTypeMethod(ProcessingContext processingContext,
+    private static Optional<FactoryMethod> targetTypeMethod(BlueprintProcessingContext processingContext,
                                                             TypeInfo blueprint,
                                                             TypeHandler typeHandler) {
         // let's look for a method on definition that takes the type

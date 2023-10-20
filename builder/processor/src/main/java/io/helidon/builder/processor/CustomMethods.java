@@ -43,7 +43,7 @@ record CustomMethods(List<CustomMethod> factoryMethods,
         this(List.of(), List.of(), List.of());
     }
 
-    static CustomMethods create(ProcessingContext ctx, TypeContext.TypeInformation typeInformation) {
+    static CustomMethods create(BlueprintProcessingContext ctx, TypeContext.TypeInformation typeInformation) {
         Optional<Annotation> annotation = typeInformation.blueprintType().findAnnotation(CUSTOM_METHODS_TYPE);
         if (annotation.isEmpty()) {
             return new CustomMethods();

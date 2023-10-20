@@ -58,7 +58,7 @@ record PrototypeProperty(MethodSignature signature,
             "while", "true", "false", "null"
     );
 
-    static PrototypeProperty create(ProcessingContext processingContext,
+    static PrototypeProperty create(BlueprintProcessingContext processingContext,
                                     TypeInfo blueprint,
                                     TypedElementInfo element,
                                     boolean beanStyleAccessors) {

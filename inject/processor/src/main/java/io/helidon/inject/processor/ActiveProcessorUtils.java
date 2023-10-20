@@ -26,13 +26,13 @@ import java.util.function.Predicate;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 import javax.tools.StandardLocation;
 
+import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypedElementInfo;
@@ -57,15 +57,15 @@ final class ActiveProcessorUtils implements Messager {
     static final String SRC_MAIN_JAVA_DIR = "/src/main/java";
 
     private final System.Logger logger;
-    private final ProcessingEnvironment processingEnv;
+    private final ProcessingContext ctx;
     private RoundEnvironment roundEnv;
 
     ActiveProcessorUtils(AbstractProcessor processor,
-                         ProcessingEnvironment processingEnv) {
+                         ProcessingContext ctx) {
         this.logger = System.getLogger(processor.getClass().getName());
-        this.processingEnv = Objects.requireNonNull(processingEnv);
+        this.ctx = Objects.requireNonNull(ctx);
 
-        Options.init(processingEnv);
+        Options.init(this.ctx.aptEnv());
         debug("*** Processing " + processor.getClass().getSimpleName() + " ***");
     }
 
@@ -116,8 +116,8 @@ final class ActiveProcessorUtils implements Messager {
             logger.log(level, getClass().getSimpleName() + ": " + message, t);
         }
 
-        if (processingEnv != null && processingEnv.getMessager() != null) {
-            processingEnv.getMessager().printMessage(kind, message);
+        if (ctx != null && ctx.aptEnv().getMessager() != null) {
+            ctx.aptEnv().getMessager().printMessage(kind, message);
         }
     }
 
@@ -180,7 +180,7 @@ final class ActiveProcessorUtils implements Messager {
      */
     Optional<TypeInfo> toTypeInfo(TypeElement element,
                                   Predicate<TypedElementInfo> isOneWeCareAbout) {
-        return TypeInfoFactory.create(processingEnv, element, isOneWeCareAbout);
+        return TypeInfoFactory.create(ctx, element, isOneWeCareAbout);
     }
 
     System.Logger.Level loggerLevel() {
@@ -228,7 +228,7 @@ final class ActiveProcessorUtils implements Messager {
                                                                                AtomicReference<String> typeSuffix,
                                                                                AtomicReference<File> moduleInfoFile,
                                                                                AtomicReference<File> srcPath) {
-        Filer filer = processingEnv.getFiler();
+        Filer filer = ctx.aptEnv().getFiler();
         try {
             FileObject f = filer.getResource(location, "", REAL_MODULE_INFO_JAVA_NAME);
             URI uri = f.toUri();

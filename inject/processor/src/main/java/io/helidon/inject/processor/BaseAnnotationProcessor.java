@@ -27,6 +27,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
+import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.tools.Options;
 
@@ -38,6 +39,7 @@ abstract class BaseAnnotationProcessor extends AbstractProcessor {
     private final System.Logger logger = System.getLogger(getClass().getName());
 
     private ActiveProcessorUtils utils;
+    private ProcessingContext ctx;
 
     /**
      * Service loader based constructor.
@@ -55,7 +57,8 @@ abstract class BaseAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public void init(ProcessingEnvironment processingEnv) {
-        this.utils = new ActiveProcessorUtils(this, processingEnv);
+        this.ctx = ProcessingContext.create(processingEnv);
+        this.utils = new ActiveProcessorUtils(this, ctx());
         super.init(processingEnv);
 
         if (!Options.isOptionEnabled(Options.TAG_ACCEPT_PREVIEW)
@@ -83,4 +86,7 @@ abstract class BaseAnnotationProcessor extends AbstractProcessor {
         return Optional.ofNullable(processingEnv.getElementUtils().getTypeElement(typeName.resolvedName()));
     }
 
+    ProcessingContext ctx() {
+        return ctx;
+    }
 }

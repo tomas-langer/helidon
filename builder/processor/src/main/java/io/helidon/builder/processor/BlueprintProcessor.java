@@ -75,8 +75,8 @@ public class BlueprintProcessor extends AbstractProcessor {
     private TypeElement runtimePrototypeAnnotationType;
     private Messager messager;
     private Filer filer;
-    private ProcessingEnvironment env;
     private Elements elementUtils;
+    private io.helidon.common.processor.ProcessingContext ctx;
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -99,7 +99,7 @@ public class BlueprintProcessor extends AbstractProcessor {
         this.blueprintAnnotationType = elementUtils.getTypeElement(PROTOTYPE_BLUEPRINT);
         this.runtimePrototypeAnnotationType = elementUtils.getTypeElement(RUNTIME_PROTOTYPE);
         this.filer = processingEnv.getFiler();
-        this.env = processingEnv;
+        this.ctx = io.helidon.common.processor.ProcessingContext.create(processingEnv);
 
         if (blueprintAnnotationType == null || runtimePrototypeAnnotationType == null) {
             throw new IllegalStateException("Bug in BlueprintProcessor code, cannot find required types, probably wrong"
@@ -120,7 +120,7 @@ public class BlueprintProcessor extends AbstractProcessor {
 
         // collect interfaces annotated with supported annotations
         List<TypeElement> blueprintInterfaces = collectInterfaces(blueprints);
-        ProcessingContext processingContext = ProcessingContext.create(processingEnv);
+        BlueprintProcessingContext processingContext = BlueprintProcessingContext.create(ctx);
 
         // now process the interfaces
         for (TypeElement blueprint : blueprintInterfaces) {
@@ -158,8 +158,8 @@ public class BlueprintProcessor extends AbstractProcessor {
         return annotations.size() == 1;
     }
 
-    private void process(TypeElement definitionTypeElement, ProcessingContext processingContext) throws IOException {
-        TypeInfo typeInfo = TypeInfoFactory.create(env, definitionTypeElement)
+    private void process(TypeElement definitionTypeElement, BlueprintProcessingContext processingContext) throws IOException {
+        TypeInfo typeInfo = TypeInfoFactory.create(ctx, definitionTypeElement)
                 .orElseThrow(() -> new IllegalArgumentException("Could not process " + definitionTypeElement
                                                                         + ", no type info generated"));
 
@@ -172,10 +172,10 @@ public class BlueprintProcessor extends AbstractProcessor {
                                      typeContext);
     }
 
-    private void addBlueprintsForValidation(ProcessingContext processingContext, Set<Element> blueprintElements) {
+    private void addBlueprintsForValidation(BlueprintProcessingContext processingContext, Set<Element> blueprintElements) {
         for (Element element : blueprintElements) {
             TypeElement typeElement = (TypeElement) element;
-            TypeInfo typeInfo = TypeInfoFactory.create(processingEnv, typeElement)
+            TypeInfo typeInfo = TypeInfoFactory.create(ctx, typeElement)
                     .orElse(null);
             if (typeInfo == null) {
                 continue;
@@ -201,7 +201,7 @@ public class BlueprintProcessor extends AbstractProcessor {
     private void addRuntimeTypesForValidation(Set<? extends Element> runtimeTypes) {
         runtimeTypes.stream()
                 .map(TypeElement.class::cast)
-                .map(it -> TypeInfoFactory.create(processingEnv, it))
+                .map(it -> TypeInfoFactory.create(ctx, it))
                 .flatMap(Optional::stream)
                 .forEach(it -> {
                     validationTasks.add(new ValidateConfiguredType(it,
@@ -219,7 +219,7 @@ public class BlueprintProcessor extends AbstractProcessor {
 
     private TypeInfo toTypeInfo(TypeInfo typeInfo, TypeName typeName) {
         TypeElement element = elementUtils.getTypeElement(typeName.genericTypeName().fqName());
-        return TypeInfoFactory.create(processingEnv, element)
+        return TypeInfoFactory.create(ctx, element)
                 .orElseThrow(() -> new IllegalArgumentException("Type " + typeName.fqName() + " is not a valid type for Factory"
                                                                         + " declared on type " + typeInfo.typeName()
                         .fqName()));
