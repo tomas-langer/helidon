@@ -53,6 +53,9 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
     private final System.Logger logger = System.getLogger(getClass().getName());
     private final Map<TypeName, List<HelidonProcessorExtension>> typeToExtensions = new HashMap<>();
     private final Map<HelidonProcessorExtension, Predicate<TypeName>> extensionPredicates = new IdentityHashMap<>();
+    private final Set<TypeName> generatedServiceDescriptors = new HashSet<>();
+
+    private String module;
     private ProcessingContext ctx;
     private List<HelidonProcessorExtension> extensions;
     private InjectionProcessingContextImpl iCtx;
@@ -171,6 +174,19 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
 
         if (roundEnv.processingOver()) {
             extensions.forEach(it -> it.processingOver(roundEnv));
+
+            if (!generatedServiceDescriptors.isEmpty()) {
+                // generate module
+                String moduleName = this.module;
+                String packageName = topLevelPackage(generatedServiceDescriptors);
+                if (moduleName == null) {
+                    moduleName = "unknown/" + packageName;
+                }
+                ClassModel moduleComponent = ModuleComponentHandler.createClassModle(generatedServiceDescriptors,
+                                                                                     moduleName,
+                                                                                     packageName);
+                ctx.aptEnv().getFiler().createSourceFile()
+            }
             return true;
         }
 
@@ -204,9 +220,14 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
         List<TypeInfoAndAnnotations> annotatedTypes = new ArrayList<>();
         types.forEach((type, element) -> {
             Optional<TypeInfo> typeInfo = TypeInfoFactory.create(ctx, element);
+
             if (typeInfo.isPresent()) {
                 TypeInfo theTypeInfo = typeInfo.get();
                 annotatedTypes.add(new TypeInfoAndAnnotations(theTypeInfo, annotations(theTypeInfo)));
+
+                if (this.module == null) {
+                    this.module = theTypeInfo.module().orElse(null);
+                }
             } else {
                 processingEnv.getMessager().printMessage(Diagnostic.Kind.MANDATORY_WARNING,
                                                          "Could not create TypeInfo for annotated type.",
@@ -232,7 +253,6 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
 
         // generate all code
         var builders = iCtx.classModels();
-        List<TypeName> generatedServiceDescriptors = new ArrayList<>();
 
         Filer filer = ctx.aptEnv().getFiler();
 
@@ -252,9 +272,20 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
 
         builders.clear();
 
-        // and now generate the Module__DescriptorProvider
-
         return response;
+    }
+
+    private String topLevelPackage(Set<TypeName> typeNames) {
+        String thePackage = typeNames.iterator().next().packageName();
+
+        for (TypeName typeName : typeNames) {
+            String nextPackage = typeName.packageName();
+            if (nextPackage.length() < thePackage.length()) {
+                thePackage = nextPackage;
+            }
+        }
+
+        return thePackage;
     }
 
     private Element[] toElement(TypeName typeName) {
