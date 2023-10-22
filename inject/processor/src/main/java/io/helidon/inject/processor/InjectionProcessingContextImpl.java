@@ -19,7 +19,7 @@ class InjectionProcessingContextImpl implements InjectionProcessingContext {
     public void addServiceDescriptor(TypeName serviceClassType,
                                      TypeName serviceDescriptorType,
                                      ClassModel.Builder descriptorBuilder) {
-        classModels.add(new ClassCode(serviceDescriptorType, serviceClassType, descriptorBuilder));
+        classModels.add(new ClassCode(serviceDescriptorType, descriptorBuilder, serviceClassType));
     }
 
     @Override
@@ -56,6 +56,4 @@ class InjectionProcessingContextImpl implements InjectionProcessingContext {
                 + "__ServiceDescriptor";
     }
 
-    record ClassCode(TypeName newType, TypeName originatingType, ClassModel.Builder classModel) {
-    }
 }

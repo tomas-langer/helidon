@@ -1,7 +1,7 @@
 package io.helidon.inject.processor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -10,10 +10,10 @@ import java.util.stream.Collectors;
 
 import io.helidon.common.GenericType;
 import io.helidon.common.processor.CopyrightHandler;
+import io.helidon.common.processor.ElementInfoPredicates;
 import io.helidon.common.processor.GeneratedAnnotationHandler;
 import io.helidon.common.processor.classmodel.Annotation;
 import io.helidon.common.processor.classmodel.ClassModel;
-import io.helidon.common.processor.classmodel.Javadoc;
 import io.helidon.common.processor.classmodel.Method;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.ElementKind;
@@ -56,21 +56,16 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                     .copyright(CopyrightHandler.copyright(GENERATOR,
                                                           serviceType,
                                                           descriptorType))
-                    .addAnnotation(annot -> {
-                        var generated = GeneratedAnnotationHandler.create(GENERATOR,
-                                                                          serviceType,
-                                                                          descriptorType,
-                                                                          "1",
-                                                                          "");
-                        annot.type(generated.typeName());
-                        generated.values()
-                                .forEach(annot::addParameter);
-                    })
-                    .javadoc(Javadoc.builder()
-                                     .add("Service descriptor for {@link " + serviceType.fqName() + "}.")
-                                     .build())
+                    .addAnnotation(GeneratedAnnotationHandler.create(GENERATOR,
+                                                                     serviceType,
+                                                                     descriptorType,
+                                                                     "1",
+                                                                     ""))
+                    .description("Service descriptor for {@link " + serviceType.fqName() + "}.")
                     .type(descriptorType)
-                    .addInterface(serviceDescriptorImplementsType(serviceType));
+                    .addInterface(serviceDescriptorImplementsType(serviceType))
+                    // we need to keep insertion order, as constants may depend on each other
+                    .sortStaticFields(false);
 
             // singleton instance of the descriptor
             classModel.addField(instance -> instance.description("Global singleton instance for this descriptor.")
@@ -81,7 +76,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                     .name("INSTANCE")
                     .defaultValueContent("new " + descriptorType.className() + "();"));
 
-            // constants for injection point parameter types
+            // constants for injection point parameter types (used by next section)
             genericTypes.forEach((typeName, generic) -> {
                 classModel.addField(field -> field.accessModifier(AccessModifier.PRIVATE)
                         .isStatic(true)
@@ -91,15 +86,15 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                         .defaultValueContent("new @io.helidon.common.GenericType@<" + typeName.resolvedName() + ">() {}"));
             });
 
-            // constants for methods
+            // constants for methods (used by next section)
             for (MethodDefinition method : methods) {
                 classModel.addField(field -> field.accessModifier(AccessModifier.PRIVATE)
                         .isStatic(true)
                         .isFinal(true)
                         .type(TypeName.create("io.helidon.inject.api.InjectionContext.MethodId"))
                         .name(method.constantName())
-                        .defaultValueContent("new @io.helidon.inject.api.InjectionContext.MethodId@("
-                                                     + method.name()
+                        .defaultValueContent("new @io.helidon.inject.api.InjectionContext.MethodId@(\""
+                                                     + method.name() + "\", "
                                                      + method.types()
                                 .stream()
                                 .map(it -> genericTypes.get(it).constantName())
@@ -109,17 +104,30 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
             // constant for injection points
             for (ParamDefinition param : params) {
-                classModel.addField(field -> field.accessModifier(AccessModifier.PRIVATE)
-                        .isStatic(true)
-                        .isFinal(true)
-                        .type(ipId(param.type()))
-                        .name(param.constantName())
-                        .defaultValueContent("new @io.helidon.inject.api.InjectionContext.InjectionParameterId@("
-                                                     + "@io.helidon.common.types.ElementKind@." + param.kind.name() + ", "
-                                                     + "\"" + param.ipName() + "\", "
-                                                     + "\"" + param.ipParamName() + "\", "
-                                                     + genericTypes.get(param.type()).constantName() + ", "
-                                                     + param.methodConstantName() + ")"));
+                if (param.methodConstantName() == null) {
+                    classModel.addField(field -> field.accessModifier(AccessModifier.PRIVATE)
+                            .isStatic(true)
+                            .isFinal(true)
+                            .type(ipId(param.type()))
+                            .name(param.constantName())
+                            .defaultValueContent("new @io.helidon.inject.api.InjectionContext.InjectionParameterId@("
+                                                         + "@io.helidon.common.types.ElementKind@." + param.kind.name() + ", "
+                                                         + "\"" + param.ipName() + "\", "
+                                                         + "\"" + param.ipParamName() + "\", "
+                                                         + genericTypes.get(param.type()).constantName() + ")"));
+                } else {
+                    classModel.addField(field -> field.accessModifier(AccessModifier.PRIVATE)
+                            .isStatic(true)
+                            .isFinal(true)
+                            .type(ipId(param.type()))
+                            .name(param.constantName())
+                            .defaultValueContent("new @io.helidon.inject.api.InjectionContext.InjectionParameterId@("
+                                                         + "@io.helidon.common.types.ElementKind@." + param.kind.name() + ", "
+                                                         + "\"" + param.ipName() + "\", "
+                                                         + "\"" + param.ipParamName() + "\", "
+                                                         + genericTypes.get(param.type()).constantName() + ", "
+                                                         + param.methodConstantName() + ")"));
+                }
             }
 
             // add protected constructor
@@ -151,13 +159,58 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                     .update(it -> createMethodBody(serviceType, it, params)));
 
             // postConstruct()
+            lifecycleMethod(typeInfo, TypeNames.JAKARTA_POST_CONSTRUCT_TYPE).ifPresent(method -> {
+                classModel.addMethod(postConstruct -> postConstruct.name("postConstruct")
+                        .addAnnotation(OVERRIDE)
+                        .addParameter(instance -> instance.type(serviceType)
+                                .name("instance"))
+                        .addLine("instance." + method.elementName() + "();"));
+            });
             // preDestroy
+            lifecycleMethod(typeInfo, TypeNames.JAKARTA_PRE_DESTROY_TYPE).ifPresent(method -> {
+                classModel.addMethod(preDestroy -> preDestroy.name("preDestroy")
+                        .addAnnotation(OVERRIDE)
+                        .addParameter(instance -> instance.type(serviceType)
+                                .name("instance"))
+                        .addLine("instance." + method.elementName() + "();"));
+            });
 
             ctx.addServiceDescriptor(serviceType,
                                      descriptorType,
                                      classModel);
         }
         return false;
+    }
+
+    private Optional<TypedElementInfo> lifecycleMethod(TypeInfo typeInfo, TypeName annotationType) {
+        List<TypedElementInfo> list = typeInfo.elementInfo()
+                .stream()
+                .filter(ElementInfoPredicates.hasAnnotation(annotationType))
+                .toList();
+        if (list.isEmpty()) {
+            return Optional.empty();
+        }
+        if (list.size() > 1) {
+            throw new IllegalStateException("There is more than one method annotated with " + annotationType.fqName()
+                                                    + ", which is not allowed on type " + typeInfo.typeName().fqName());
+        }
+        TypedElementInfo method = list.getFirst();
+        if (method.accessModifier() == AccessModifier.PRIVATE) {
+            throw new IllegalStateException("Method annotated with " + annotationType.fqName()
+                                                    + ", is private, which is not supported: " + typeInfo.typeName().fqName()
+                                                    + "#" + method.elementName());
+        }
+        if (!method.parameterArguments().isEmpty()) {
+            throw new IllegalStateException("Method annotated with " + annotationType.fqName()
+                                                    + ", has parameters, which is not supported: " + typeInfo.typeName().fqName()
+                                                    + "#" + method.elementName());
+        }
+        if (!method.typeName().equals(io.helidon.common.types.TypeNames.PRIMITIVE_VOID)) {
+            throw new IllegalStateException("Method annotated with " + annotationType.fqName()
+                                                    + ", is not void, which is not supported: " + typeInfo.typeName().fqName()
+                                                    + "#" + method.elementName());
+        }
+        return Optional.of(method);
     }
 
     private void createDependenciesBody(Method.Builder method, List<ParamDefinition> params) {
@@ -168,7 +221,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
     }
 
     private Map<TypeName, GenericTypeDeclaration> genericTypes(List<ParamDefinition> params, List<MethodDefinition> methods) {
-        Map<TypeName, GenericTypeDeclaration> result = new HashMap<>();
+        Map<TypeName, GenericTypeDeclaration> result = new LinkedHashMap<>();
         AtomicInteger counter = new AtomicInteger();
 
         for (ParamDefinition param : params) {
@@ -196,7 +249,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             result.field = ...;
          */
         List<ParamDefinition> constructorParams = new ArrayList<>();
-        Map<String, List<ParamDefinition>> methodCalls = new HashMap<>();
+        Map<String, List<ParamDefinition>> methodCalls = new LinkedHashMap<>();
         List<ParamDefinition> fields = new ArrayList<>();
 
         for (ParamDefinition param : params) {

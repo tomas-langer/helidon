@@ -44,12 +44,12 @@ public interface ServiceDescriptor<T> {
     /**
      * Invoke {@link jakarta.annotation.PostConstruct} annotated method(s).
      */
-    default void postConstruct() {
+    default void postConstruct(T instance) {
     }
 
     /**
      * Invoke {@link jakarta.annotation.PreDestroy} annotated method(s).
      */
-    default void preDestroy() {
+    default void preDestroy(T instance) {
     }
 }

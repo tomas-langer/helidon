@@ -31,8 +31,9 @@ module io.helidon.config {
     requires io.helidon.inject.api;
 
     requires static io.helidon.common.features.api;
-    requires static io.helidon.inject.runtime;
+
     requires static jakarta.inject;
+    requires static jakarta.annotation;
 
     requires transitive io.helidon.common.config;
     requires transitive io.helidon.common.media.type;

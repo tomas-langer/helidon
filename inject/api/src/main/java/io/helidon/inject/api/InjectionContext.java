@@ -35,6 +35,20 @@ public interface InjectionContext {
                                    String paramName,
                                    GenericType<T> type,
                                    MethodId methodId) {
+        /**
+         * Constructor to use for non-method injection parameters (constructor, field).
+         *
+         * @param kind kind of injection point (field, constructor, method)
+         * @param elementName name of the element we inject into
+         * @param paramName name of the parameter (if multiple, otherwise same as element name)
+         * @param type type of the parameter
+         */
+        public InjectionParameterId(ElementKind kind,
+                                    String elementName,
+                                    String paramName,
+                                    GenericType<T> type) {
+            this(kind, elementName, paramName, type, null);
+        }
     }
 
     /**

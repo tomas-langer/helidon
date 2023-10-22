@@ -182,10 +182,23 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
                 if (moduleName == null) {
                     moduleName = "unknown/" + packageName;
                 }
-                ClassModel moduleComponent = ModuleComponentHandler.createClassModle(generatedServiceDescriptors,
-                                                                                     moduleName,
-                                                                                     packageName);
-                ctx.aptEnv().getFiler().createSourceFile()
+                ClassCode moduleComponent = ModuleComponentHandler.createClassModel(generatedServiceDescriptors,
+                                                                                    moduleName,
+                                                                                    packageName);
+
+                ClassModel classModel = moduleComponent.classModel().build();
+                try {
+                    generatedServiceDescriptors.add(moduleComponent.newType());
+                    JavaFileObject sourceFile = ctx.aptEnv()
+                            .getFiler()
+                            .createSourceFile(moduleComponent.newType().declaredName(),
+                                              toElements(moduleComponent.originatingTypes()));
+                    try (PrintWriter pw = new PrintWriter(sourceFile.openWriter())) {
+                        classModel.write(pw, "    ");
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             return true;
         }
@@ -261,7 +274,7 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
             try {
                 generatedServiceDescriptors.add(classCode.newType());
                 JavaFileObject sourceFile = filer.createSourceFile(classCode.newType().declaredName(),
-                                                                   toElement(classCode.originatingType()));
+                                                                   toElements(classCode.originatingTypes()));
                 try (PrintWriter pw = new PrintWriter(sourceFile.openWriter())) {
                     classModel.write(pw, "    ");
                 }
@@ -288,12 +301,20 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
         return thePackage;
     }
 
-    private Element[] toElement(TypeName typeName) {
-        TypeElement typeElement = ctx.aptEnv().getElementUtils().getTypeElement(typeName.declaredName());
-        if (typeElement == null) {
+    private Element[] toElements(TypeName[] typeNames) {
+        if (typeNames.length == 0) {
             return new Element[0];
         }
-        return new Element[] {typeElement};
+        List<Element> elements = new ArrayList<>();
+
+        for (TypeName type : typeNames) {
+            TypeElement typeElement = ctx.aptEnv().getElementUtils().getTypeElement(type.declaredName());
+            if (typeElement != null) {
+                elements.add(typeElement);
+            }
+        }
+
+        return elements.toArray(new Element[0]);
     }
 
     private RoundContext createRoundContext(RoundEnvironment roundEnv,
