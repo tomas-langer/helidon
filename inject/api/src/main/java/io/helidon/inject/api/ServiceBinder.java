@@ -28,7 +28,7 @@ public interface ServiceBinder {
      * @deprecated new annotation processor generates {@link io.helidon.inject.api.ServiceDescriptor} instead,
      *         use {@link #bind(ServiceDescriptor)}
      */
-    @Deprecated(forRemoval = true, since = "4.5")
+    @Deprecated(forRemoval = true, since = "4.1.0")
     void bind(ServiceProvider<?> serviceProvider);
 
     /**

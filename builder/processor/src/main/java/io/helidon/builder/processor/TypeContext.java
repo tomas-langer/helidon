@@ -326,7 +326,8 @@ record TypeContext(
 
         // we are only interested in getter methods
         TypeName typeName = typeInfo.typeName();
-        properties.addAll(typeInfo.elementInfo().stream()
+        properties.addAll(typeInfo.elementInfo()
+                                  .stream()
                                   .filter(ElementInfoPredicates::isMethod)
                                   .filter(Predicate.not(ElementInfoPredicates::isStatic))
                                   .filter(Predicate.not(ElementInfoPredicates::isPrivate))

@@ -38,6 +38,7 @@ module io.helidon.inject.runtime {
     provides io.helidon.spi.HelidonStartupProvider
             with io.helidon.inject.runtime.HelidonInjectionStartupProvider;
 
+    uses io.helidon.inject.spi.ActivatorProvider;
     uses io.helidon.inject.api.ModuleComponent;
     uses io.helidon.inject.api.Application;
 

@@ -16,20 +16,39 @@
 
 package io.helidon.inject.runtime;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ServiceLoader;
 
+import io.helidon.common.HelidonServiceLoader;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceBinder;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.spi.ActivatorProvider;
 
 /**
  * The default implementation for {@link ServiceBinder}.
  */
 public class ServiceBinderDefault implements ServiceBinder {
+    static final Map<String, ActivatorProvider> ACTIVATOR_PROVIDERS;
+
+    static {
+        Map<String, ActivatorProvider> activators = new HashMap<>();
+
+        HelidonServiceLoader.builder(ServiceLoader.load(ActivatorProvider.class))
+                .addService(new InjectActivatorProvider())
+                .build()
+                .asList()
+                .forEach(it -> activators.putIfAbsent(it.id(), it));
+        ACTIVATOR_PROVIDERS = Map.copyOf(activators);
+    }
+
     private final InjectionServices injectionServices;
     private final ServiceBinder serviceRegistry;
     private final String moduleName;
@@ -58,6 +77,16 @@ public class ServiceBinderDefault implements ServiceBinder {
         Objects.requireNonNull(injectionServices);
         Objects.requireNonNull(moduleName);
         return new ServiceBinderDefault(injectionServices, moduleName, trusted);
+    }
+
+    @Override
+    public void bind(ServiceDescriptor<?> serviceDescriptor) {
+        ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceDescriptor.runtimeId());
+        if (activatorProvider == null) {
+            throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceDescriptor.runtimeId()
+                                                    + ", available activator providers: " + ACTIVATOR_PROVIDERS.keySet());
+        }
+        bind(activatorProvider.activator(injectionServices, serviceDescriptor));
     }
 
     @Override

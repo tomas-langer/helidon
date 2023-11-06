@@ -29,7 +29,7 @@ interface MethodElementInfoBlueprint extends ElementInfo {
 
     /**
      * The list of "throws" that the method throws. Applies only to
-     * {@link io.helidon.inject.api.ElementKind#METHOD} element types.
+     * {@link io.helidon.common.types.ElementKind#METHOD} element types.
      *
      * @return the list of throwable types this method may throw
      */

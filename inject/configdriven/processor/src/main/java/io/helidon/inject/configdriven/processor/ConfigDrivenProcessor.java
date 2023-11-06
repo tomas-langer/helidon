@@ -24,6 +24,7 @@ import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 
+import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -70,7 +71,8 @@ public class ConfigDrivenProcessor extends InjectionAnnotationProcessor {
             throw new ToolsException("The config bean type must be set to the Blueprint type if they are within the same "
                                              + "module! Failed on: " + service.typeName().resolvedName());
         }
-        TypeInfo configBeanTypeInfo = TypeInfoFactory.create(processingEnv, asElement(configDriven.configBeanType()))
+        ProcessingContext pc = ProcessingContext.create(processingEnv);
+        TypeInfo configBeanTypeInfo = TypeInfoFactory.create(pc, asElement(configDriven.configBeanType()))
                 .orElseThrow();
 
         ConfigBean configBean = ConfigBean.create(configBeanTypeInfo);

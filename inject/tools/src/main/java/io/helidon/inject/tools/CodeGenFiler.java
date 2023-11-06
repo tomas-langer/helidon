@@ -43,7 +43,6 @@ import java.util.function.Function;
 import javax.annotation.processing.Filer;
 import javax.annotation.processing.FilerException;
 import javax.tools.FileObject;
-import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 import io.helidon.common.types.TypeName;
@@ -319,7 +318,7 @@ public class CodeGenFiler {
 
         Filer filer = filer();
         try {
-            JavaFileObject javaSrc = filer.createSourceFile(typeName.name());
+            FileObject javaSrc = filer.createResource(StandardLocation.SOURCE_OUTPUT, typeName.packageName(), typeName.className() + ".old.txt");
             try (Writer os = javaSrc.openWriter()) {
                 os.write(body);
             }

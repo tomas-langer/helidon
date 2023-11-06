@@ -31,7 +31,7 @@ public interface ServiceDescriptor<T> {
      *
      * @return required dependencies
      */
-    List<InjectionContext.InjectionParameterId<?>> dependencies();
+    List<IpInfo<?>> dependencies();
 
     /**
      * Create a new service instance.
@@ -39,7 +39,25 @@ public interface ServiceDescriptor<T> {
      * @param ctx injection context with all injection points data
      * @return a new instance
      */
-    T create(InjectionContext ctx);
+    T instantiate(InjectionContext ctx);
+
+    /**
+     * Inject methods.
+     *
+     * @param ctx      injection context
+     * @param instance instance to update
+     */
+
+    void injectMethods(InjectionContext ctx, T instance);
+
+    /**
+     * Inject fields.
+     *
+     * @param ctx      injection context
+     * @param instance instance to update
+     */
+
+    void injectFields(InjectionContext ctx, T instance);
 
     /**
      * Invoke {@link jakarta.annotation.PostConstruct} annotated method(s).

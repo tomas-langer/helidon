@@ -145,6 +145,10 @@ public final class TypeNames {
     /**
      * Jakarta {@value} annotation.
      */
+    public static final TypeName JAKARTA_QUALIFIER_TYPE = TypeName.create(JAKARTA_QUALIFIER);
+    /**
+     * Jakarta {@value} annotation.
+     */
     public static final String JAKARTA_RESOURCE = "jakarta.annotation.Resource";
     /**
      * Jakarta {@value} annotation.
@@ -296,7 +300,8 @@ public final class TypeNames {
     public static final String JAVAX_SINGLETON = "javax.inject.Singleton";
     public static final TypeName SERVICE_DESCRIPTOR_TYPE = TypeName.create("io.helidon.inject.api.ServiceDescriptor");
     public static final TypeName INJECTION_CONTEXT = TypeName.create("io.helidon.inject.api.InjectionContext");
-    public static final TypeName INJECTION_PARAMETER_ID = TypeName.create("io.helidon.inject.api.InjectionContext.InjectionParameterId");
+    public static final TypeName INJECTION_PARAMETER_ID = TypeName.create("io.helidon.inject.api.IpId");
+    public static final TypeName INJECTION_PARAMETER_INFO = TypeName.create("io.helidon.inject.api.IpInfo");
 
     private TypeNames() {
     }

@@ -246,7 +246,6 @@ public class BlueprintProcessor extends AbstractProcessor {
         return result;
     }
 
-    @SuppressWarnings("checkstyle:MethodLength") // will be fixed when we switch to model
     private void generatePrototypeWithBuilder(TypeElement builderInterface,
                                               TypeContext typeContext) throws IOException {
 
@@ -261,8 +260,6 @@ public class BlueprintProcessor extends AbstractProcessor {
         String ifaceName = prototype.className();
         List<TypeName> typeGenericArguments = blueprintDef.typeArguments();
         String typeArgumentString = createTypeArgumentString(typeGenericArguments);
-
-        JavaFileObject generatedIface = filer.createSourceFile(prototype.name(), builderInterface);
 
         // prototype interface (with inner class Builder)
         ClassModel.Builder classModel = ClassModel.builder()
@@ -417,6 +414,7 @@ public class BlueprintProcessor extends AbstractProcessor {
                                  typeContext.blueprintData().isFactory(),
                                  typeContext);
 
+        JavaFileObject generatedIface = filer.createSourceFile(prototype.name(), builderInterface);
         try (PrintWriter pw = new PrintWriter(generatedIface.openWriter())) {
             classModel.build()
                     .write(pw, SOURCE_SPACING);

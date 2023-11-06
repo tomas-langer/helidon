@@ -221,7 +221,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
                 moduleList.set(null);
                 applicationList.set(null);
                 if (prev != null) {
-                    services.set(new DefaultServices(cfg));
+                    services.set(new DefaultServices(this, cfg));
                 }
                 state.reset(true);
                 initializingServicesStarted.set(false);
@@ -322,7 +322,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
         initializationCallingContext = CallingContextFactory.create(false).orElse(null);
 
         if (services.get() == null) {
-            services.set(new DefaultServices(cfg));
+            services.set(new DefaultServices(this, cfg));
         }
 
         DefaultServices thisServices = services.get();

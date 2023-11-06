@@ -56,7 +56,7 @@ module io.helidon.config {
     provides io.helidon.common.config.spi.ConfigProvider
             with io.helidon.config.HelidonConfigProvider;
     provides io.helidon.inject.api.ModuleComponent
-            with io.helidon.config.Injection$$Module;
+            with io.helidon.config.HelidonInjection__ModuleComponent;
 
     // needed when running with modules - to make private methods accessible
     opens io.helidon.config to weld.core.impl, io.helidon.microprofile.cdi;

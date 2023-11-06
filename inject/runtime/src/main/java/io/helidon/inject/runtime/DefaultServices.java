@@ -43,6 +43,7 @@ import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.Resettable;
 import io.helidon.inject.api.ServiceBinder;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
@@ -50,8 +51,11 @@ import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.spi.ActivatorProvider;
 
 import jakarta.inject.Provider;
+
+import static io.helidon.inject.runtime.ServiceBinderDefault.ACTIVATOR_PROVIDERS;
 
 /**
  * The default reference implementation of {@link Services}.
@@ -62,6 +66,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     private final ConcurrentHashMap<TypeName, ServiceProvider<?>> servicesByTypeName = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<TypeName, Set<ServiceProvider<?>>> servicesByContract = new ConcurrentHashMap<>();
     private final Map<ServiceInfoCriteria, List<ServiceProvider<?>>> cache = new ConcurrentHashMap<>();
+    private final InjectionServices injectionServices;
     private final InjectionServicesConfig cfg;
     private final AtomicInteger lookupCount = new AtomicInteger();
     private final AtomicInteger cacheLookupCount = new AtomicInteger();
@@ -71,9 +76,11 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     /**
      * The constructor taking a configuration.
      *
-     * @param cfg the config
+     * @param injectionServices injection services
+     * @param cfg                      the config
      */
-    DefaultServices(InjectionServicesConfig cfg) {
+    DefaultServices(InjectionServices injectionServices, InjectionServicesConfig cfg) {
+        this.injectionServices = injectionServices;
         this.cfg = Objects.requireNonNull(cfg);
     }
 
@@ -255,6 +262,16 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         List<ServiceProvider<?>> result = lookup(criteria, expected, Integer.MAX_VALUE);
         assert (!expected || !result.isEmpty());
         return result;
+    }
+
+    @Override
+    public void bind(ServiceDescriptor<?> serviceDescriptor) {
+        ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceDescriptor.runtimeId());
+        if (activatorProvider == null) {
+            throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceDescriptor.runtimeId()
+                                                    + ", available activator providers: " + ACTIVATOR_PROVIDERS.keySet());
+        }
+        bind(activatorProvider.activator(this.injectionServices, serviceDescriptor));
     }
 
     @Override

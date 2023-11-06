@@ -23,8 +23,8 @@ import io.helidon.common.types.TypeName;
 
 /**
  * Used in the interception model described by {@link InterceptionPlan}. An intercepted
- * element typically refers to a {@link io.helidon.inject.api.ElementKind#CONSTRUCTOR} or
- * {@link io.helidon.inject.api.ElementKind#METHOD} that qualifies for interception. If, however,
+ * element typically refers to a {@link io.helidon.common.types.ElementKind#CONSTRUCTOR} or
+ * {@link io.helidon.common.types.ElementKind#METHOD} that qualifies for interception. If, however,
  * the {@link io.helidon.inject.api.InterceptedTrigger} is applied on the enclosing service type then all public methods.
  * Note that only public methods on Helidon injection-activated services can be intercepted.
  */

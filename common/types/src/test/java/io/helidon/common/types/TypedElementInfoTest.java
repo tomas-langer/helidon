@@ -30,7 +30,8 @@ class TypedElementInfoTest {
                            .elementName("arg")
                            .elementTypeKind(ElementKind.PARAMETER)
                            .typeName(create(boolean.class))
-                           .build().toString(),
+                           .build()
+                           .toString(),
                    is("boolean arg"));
         assertThat(TypedElementInfo.builder()
                            .elementName("arg")
