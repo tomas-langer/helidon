@@ -16,17 +16,16 @@
 
 package io.helidon.inject.processor.spi;
 
-import io.helidon.inject.processor.InjectionAnnotationProcessor;
 import io.helidon.inject.processor.ProcessingEvent;
 
 /**
- * Implementations of these are service-loaded by the {@link InjectionAnnotationProcessor}, and will be
+ * Implementations of these are service-loaded by the , and will be
  * called to be able to observe processing events.
  */
 public interface InjectionAnnotationProcessorObserver {
 
     /**
-     * Called after a processing event that occurred in the {@link InjectionAnnotationProcessor}.
+     * Called after a processing event that occurred in the.
      *
      * @param event the event
      */

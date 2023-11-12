@@ -333,6 +333,9 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
     @SuppressWarnings("unchecked")
     List<String> toInjectionPlanBindings(ServiceProvider<?> sp) {
+        if (1 == 1) {
+            return List.of();
+        }
         AbstractServiceProvider<?> asp = AbstractServiceProvider
                 .toAbstractServiceProvider(ServiceBinderDefault.toRootProvider(sp), true).orElseThrow();
         DependenciesInfo deps = asp.dependencies();

@@ -1,6 +1,7 @@
 package io.helidon.inject.processor;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -23,9 +24,12 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
+import javax.tools.FileObject;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardLocation;
 
 import io.helidon.common.HelidonServiceLoader;
+import io.helidon.common.processor.GeneratedAnnotationHandler;
 import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeFactory;
 import io.helidon.common.processor.TypeInfoFactory;
@@ -36,6 +40,8 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.processor.spi.HelidonProcessorExtension;
 import io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider;
+import io.helidon.inject.tools.ModuleInfoDescriptor;
+import io.helidon.inject.tools.ModuleInfoItem;
 
 import static java.lang.System.Logger.Level.TRACE;
 
@@ -49,6 +55,7 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
             HelidonServiceLoader.create(ServiceLoader.load(HelidonProcessorExtensionProvider.class,
                                                            HelidonAnnotationProcessor.class.getClassLoader()))
                     .asList();
+    private static final TypeName GENERATOR = TypeName.create(HelidonAnnotationProcessor.class);
 
     private final System.Logger logger = System.getLogger(getClass().getName());
     private final Map<TypeName, List<HelidonProcessorExtension>> typeToExtensions = new HashMap<>();
@@ -176,25 +183,78 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
             extensions.forEach(it -> it.processingOver(roundEnv));
 
             if (!generatedServiceDescriptors.isEmpty()) {
+                Filer filer = ctx.aptEnv().getFiler();
+                Optional<ModuleInfoDescriptor> moduleDescriptor = findModule(filer);
                 // generate module
-                String moduleName = this.module;
+                String moduleName = moduleDescriptor.map(ModuleInfoDescriptor::name).orElse(this.module);
                 String packageName = topLevelPackage(generatedServiceDescriptors);
-                if (moduleName == null) {
+                boolean hasModule = moduleName != null && !"unnamed module".equals(moduleName);
+                if (!hasModule) {
                     moduleName = "unknown/" + packageName;
                 }
                 ClassCode moduleComponent = ModuleComponentHandler.createClassModel(generatedServiceDescriptors,
                                                                                     moduleName,
                                                                                     packageName);
 
+                if (hasModule && moduleDescriptor.isPresent()) {
+                    // check if we have `providers ModuleComponent with OurModuleComponent`
+                    if (moduleDescriptor.get()
+                            .items()
+                            .stream()
+                            .filter(ModuleInfoItem::provides)
+                            .noneMatch(it -> {
+                                if (it.withOrTo().contains(moduleComponent.newType().fqName())
+                                        || it.withOrTo().contains(moduleComponent.newType().className())) {
+                                    return it.target().equals("io.helidon.inject.api.ModuleComponent")
+                                            || it.target().equals("ModuleComponent");
+                                }
+                                return false;
+                            })) {
+                        throw new IllegalStateException("Please add \"provides io.helidon.inject.api.ModuleComponent"
+                                                                + " with " + moduleComponent.newType().fqName() + ";\" "
+                                                                + "to your mdoule-info.java");
+                    }
+                }
+
                 ClassModel classModel = moduleComponent.classModel().build();
                 try {
-                    generatedServiceDescriptors.add(moduleComponent.newType());
-                    JavaFileObject sourceFile = ctx.aptEnv()
-                            .getFiler()
-                            .createSourceFile(moduleComponent.newType().declaredName(),
-                                              toElements(moduleComponent.originatingTypes()));
+
+                    TypeName moduleType = moduleComponent.newType();
+                    Element[] originatingElements = toElements(moduleComponent.originatingTypes());
+
+                    generatedServiceDescriptors.add(moduleType);
+                    JavaFileObject sourceFile = filer
+                            .createSourceFile(  moduleType.declaredName(),
+                                              originatingElements);
                     try (PrintWriter pw = new PrintWriter(sourceFile.openWriter())) {
                         classModel.write(pw, "    ");
+                    }
+
+                    if (!hasModule) {
+                        // only create meta-inf/services if we are not a JPMS module
+                        try {
+                            // if the user creates this file on their own, we do not generate the output
+                            FileObject resource = filer.getResource(StandardLocation.CLASS_OUTPUT,
+                                                                    "",
+                                                                    "META-INF/services/io.helidon.inject.api.ModuleComponent");
+                            try (InputStream ignored = resource.openInputStream()) {
+                            }
+                        } catch (IOException ignored) {
+                            FileObject resource = filer
+                                    .createResource(StandardLocation.CLASS_OUTPUT,
+                                                    "",
+                                                    "META-INF/services/io.helidon.inject.api.ModuleComponent",
+                                                    originatingElements);
+                            try (PrintWriter pw = new PrintWriter(resource.openWriter())) {
+                                pw.print("# ");
+                                pw.println(GeneratedAnnotationHandler.create(GENERATOR,
+                                                                             GENERATOR,
+                                                                             TypeName.create("MetaInfServicesModuleComponent"),
+                                                                             "1",
+                                                                             ""));
+                                pw.println(moduleType.declaredName());
+                            }
+                        }
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -264,11 +324,11 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
             }
         }
 
-        // generate all code
-        var builders = iCtx.classModels();
-
         Filer filer = ctx.aptEnv().getFiler();
 
+
+        // generate all code
+        var builders = iCtx.descriptorClassModels();
         for (var classCode : builders) {
             ClassModel classModel = classCode.classModel().build();
             try {
@@ -282,10 +342,43 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
                 throw new RuntimeException(e);
             }
         }
+        builders.clear();
 
+        builders = iCtx.otherClassModels();
+        for (var classCode : builders) {
+            ClassModel classModel = classCode.classModel().build();
+            try {
+                JavaFileObject sourceFile = filer.createSourceFile(classCode.newType().declaredName(),
+                                                                   toElements(classCode.originatingTypes()));
+                try (PrintWriter pw = new PrintWriter(sourceFile.openWriter())) {
+                    classModel.write(pw, "    ");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
         builders.clear();
 
         return response;
+    }
+
+    private Optional<ModuleInfoDescriptor> findModule(Filer filer) {
+        // expected is source location
+        try {
+            FileObject resource = filer.getResource(StandardLocation.SOURCE_PATH, "", "module-info.java");
+            return Optional.of(ModuleInfoDescriptor.create(resource.openInputStream()));
+        } catch (IOException ignored) {
+            // it is not in sources, let's see if it got generated
+        }
+        // generated
+        try {
+            FileObject resource = filer.getResource(StandardLocation.SOURCE_OUTPUT, "", "module-info.java");
+            return Optional.of(ModuleInfoDescriptor.create(resource.openInputStream()));
+        } catch (IOException ignored) {
+            // not in generated source either
+        }
+        // we do not see a module info
+        return Optional.empty();
     }
 
     private String topLevelPackage(Set<TypeName> typeNames) {

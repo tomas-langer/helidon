@@ -60,8 +60,8 @@ interface ServiceInfoCriteriaBlueprint {
     /**
      * The managed services advertised types (i.e., typically its interfaces).
      *
-     * @see ExternalContracts
      * @return the service contracts implemented
+     * @see ExternalContracts
      */
     @Option.Singular("contractImplemented")
     Set<TypeName> contractsImplemented();

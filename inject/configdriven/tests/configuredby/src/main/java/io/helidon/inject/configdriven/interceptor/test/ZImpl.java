@@ -34,6 +34,7 @@ import jakarta.inject.Inject;
 //@ConfiguredBy(ZImplConfig.class)
 @SuppressWarnings("ALL")
 public class ZImpl implements IZ {
+    public static final String HELIDON_INJECT__METHOD_0_ELEMENT = "";
     private final AtomicInteger postConstructCallCount = new AtomicInteger();
 
 //    @Inject

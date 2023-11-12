@@ -2,9 +2,11 @@ package io.helidon.inject.api;
 
 import java.util.Optional;
 
+import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.GenericType;
 import io.helidon.common.types.ElementKind;
+import io.helidon.common.types.TypeName;
 
 /**
  * Unique identification of an injection point within a type.
@@ -26,11 +28,19 @@ interface IpIdBlueprint<T> {
     String name();
 
     /**
-     * Type of the injection point (exact parameter type).
+     * Type of the injection point (exact parameter type with all generics).
      *
-     * @return type of the injection point
+     * @return type of the injection point as {@link io.helidon.common.GenericType}
      */
     GenericType<T> type();
+
+    /**
+     * Type of the injection point (exact parameter type with all generics).
+     *
+     * @return type of the injection point as {@link io.helidon.common.types.TypeName}
+     */
+    @Option.Redundant
+    TypeName typeName();
 
     /**
      * Unique method identification within a type (name and parameter types).

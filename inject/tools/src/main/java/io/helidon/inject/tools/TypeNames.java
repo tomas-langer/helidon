@@ -41,12 +41,23 @@ public final class TypeNames {
 
     /**
      * Injection {@value} annotation.
+     *
+     * @deprecated use {@link #CONTRACT_TYPE} instead
      */
+    @Deprecated(forRemoval = true, since = "4.1.0")
     public static final String CONTRACT = "io.helidon.inject.api.Contract";
+    /**
+     * Injection contract annotation.
+     */
+    public static final TypeName CONTRACT_TYPE = TypeName.create(CONTRACT);
     /**
      * Injection {@value} annotation.
      */
     public static final String EXTERNAL_CONTRACTS = "io.helidon.inject.api.ExternalContracts";
+    /**
+     * Injection external contract annotation.
+     */
+    public static final TypeName EXTERNAL_CONTRACTS_TYPE = TypeName.create(EXTERNAL_CONTRACTS);
     /**
      * Injection {@value} annotation.
      */
@@ -302,6 +313,11 @@ public final class TypeNames {
     public static final TypeName INJECTION_CONTEXT = TypeName.create("io.helidon.inject.api.InjectionContext");
     public static final TypeName INJECTION_PARAMETER_ID = TypeName.create("io.helidon.inject.api.IpId");
     public static final TypeName INJECTION_PARAMETER_INFO = TypeName.create("io.helidon.inject.api.IpInfo");
+    public static final TypeName RUN_LEVEL_TYPE = TypeName.create("io.helidon.inject.api.RunLevel");
+    public static final TypeName HELIDON_QUALIFIER = TypeName.create("io.helidon.inject.api.Qualifier");
+    public static final TypeName INTERCEPTED_TRIGGER = TypeName.create("io.helidon.inject.api.InterceptedTrigger");
+    public static final TypeName ANNOTATION_RETENTION = TypeName.create("java.lang.annotation.Retention");
+    public static final TypeName INTERCEPTION_METADATA = TypeName.create("io.helidon.inject.api.InterceptionMetadata");
 
     private TypeNames() {
     }

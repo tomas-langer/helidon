@@ -21,7 +21,6 @@ import java.util.Map;
 
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.Annotation;
-import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 
 import jakarta.inject.Provider;
@@ -33,18 +32,11 @@ import jakarta.inject.Provider;
 interface InvocationContextBlueprint {
 
     /**
-     * The service provider being intercepted.
+     * The service being intercepted.
      *
-     * @return the service provider being intercepted
+     * @return the service being intercepted
      */
-    ServiceProvider<?> serviceProvider();
-
-    /**
-     * The service type name for the root service provider.
-     *
-     * @return the service type name for the root service provider
-     */
-    TypeName serviceTypeName();
+    ServiceDescriptor<?> serviceDescriptor();
 
     /**
      * The annotations on the enclosing type.
@@ -54,18 +46,11 @@ interface InvocationContextBlueprint {
     List<Annotation> classAnnotations();
 
     /**
-     * The element info represents the method (or the constructor) being invoked.
+     * The element info represents the method, field, or the constructor being invoked.
      *
-     * @return the element info represents the method (or the constructor) being invoked
+     * @return the element info of element being intercepted
      */
     TypedElementInfo elementInfo();
-
-    /**
-     * The method/element argument info.
-     *
-     * @return the method/element argument info
-     */
-    List<TypedElementInfo> elementArgInfo();
 
     /**
      * The interceptor chain.

@@ -46,6 +46,10 @@ public class Options {
      */
     public static final String TAG_AUTO_ADD_NON_CONTRACT_INTERFACES = "inject.autoAddNonContractInterfaces";
     /**
+     * Which {@link io.helidon.inject.api.InterceptionStrategy} to use.
+     */
+    public static final String TAG_INTERCEPTION_STRATEGY = "inject.interceptionStrategy";
+    /**
      * Pre-creates a placeholder for an {@link Application}.
      */
     public static final String TAG_APPLICATION_PRE_CREATE = "inject.application.pre.create";

@@ -51,15 +51,6 @@
         </dependency>
         <dependency>
             <!--
-            must be in compile dependencies, as it is used by generated classes
-            optional for runtime - if injection is used, it will be loaded
-            -->
-            <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-runtime</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
-            <!--
             Generating config driven beans with builders
             -->
             <groupId>io.helidon.builder</groupId>

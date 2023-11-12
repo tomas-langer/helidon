@@ -29,7 +29,7 @@ import io.helidon.common.types.TypeName;
 /**
  * Abstractly describes method or field elements of a managed service type (i.e., fields, constructors, injectable methods, etc.).
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = ElementInfoSupport.BuilderDecorator.class)
 interface ElementInfoBlueprint {
 
     /**

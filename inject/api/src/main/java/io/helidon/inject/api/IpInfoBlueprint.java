@@ -6,6 +6,7 @@ import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.TypeName;
 
 /**
  * Injection point information.
@@ -16,20 +17,22 @@ import io.helidon.common.types.Annotation;
  * </nl>
  */
 @Prototype.Blueprint
-interface IpInfoBlueprint<T> {
+interface IpInfoBlueprint {
     /**
      * Identification of this injection point (unique id of the field, method parameter, constructor parameter).
      *
      * @return identification
      */
-    @Option.Type("IpId<T>")
-    IpId<T> id();
+    @Option.Type("IpId<?>")
+    IpId<?> id();
 
     /**
      * The access modifier on the injection point/receiver.
+     * Defaults to {@link io.helidon.common.types.AccessModifier#PACKAGE_PRIVATE}.
      *
      * @return the access
      */
+    @Option.Default("PACKAGE_PRIVATE")
     AccessModifier access();
 
     /**
@@ -39,13 +42,6 @@ interface IpInfoBlueprint<T> {
      */
     @Option.DefaultBoolean(false)
     boolean isStatic();
-
-    /**
-     * The enclosing class name for the element.
-     *
-     * @return service type name
-     */
-    Class<?> serviceType();
 
     /**
      * The annotations on this element.
@@ -62,4 +58,12 @@ interface IpInfoBlueprint<T> {
      */
     @Option.Singular
     Set<Qualifier> qualifiers();
+
+    /**
+     * Each injection point expects a specific contract to be injected.
+     * For example for {@code List<MyService>}, the contract is {@code MyService}.
+     *
+     * @return contract of the injected service(s)
+     */
+    TypeName contract();
 }

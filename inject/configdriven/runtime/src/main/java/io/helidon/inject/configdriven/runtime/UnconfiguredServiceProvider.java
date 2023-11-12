@@ -125,7 +125,7 @@ class UnconfiguredServiceProvider<T, CB> extends ConfigDrivenServiceProviderBase
     }
 
     @Override
-    protected boolean drivesActivation() {
+    public boolean drivesActivation() {
         return delegate.drivesActivation();
     }
 

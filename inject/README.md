@@ -1,5 +1,7 @@
 # helidon-inject
 
+TODO: rewrite
+
 <b>Helidon Injection</b> is an optional feature in Helidon. At its core it provides these main features:
 
 1. A service registry. The service registry holds service providers and are (or otherwise can produce) services. Each service provider in the registry advertises its meta-information for what each service provides, and what it requires in the way of dependencies.

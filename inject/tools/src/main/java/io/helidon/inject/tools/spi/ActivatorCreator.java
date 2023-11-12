@@ -25,8 +25,6 @@ import io.helidon.inject.api.Services;
 import io.helidon.inject.tools.ActivatorCreatorProvider;
 import io.helidon.inject.tools.ActivatorCreatorRequest;
 import io.helidon.inject.tools.ActivatorCreatorResponse;
-import io.helidon.inject.tools.CodeGenInterceptorRequest;
-import io.helidon.inject.tools.InterceptorCreatorResponse;
 
 /**
  * Implementors of this contract are responsible for code-generating the
@@ -55,14 +53,6 @@ public interface ActivatorCreator {
      * @return the response result for the create operation
      */
     ActivatorCreatorResponse createModuleActivators(ActivatorCreatorRequest request);
-
-    /**
-     * Generates just the interceptors.
-     *
-     * @param request the request for what to generate
-     * @return the response result for the create operation
-     */
-    InterceptorCreatorResponse codegenInterceptors(CodeGenInterceptorRequest request);
 
     /**
      * Generates the would-be implementation type name that will be generated if

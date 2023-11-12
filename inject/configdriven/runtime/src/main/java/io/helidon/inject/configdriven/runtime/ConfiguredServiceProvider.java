@@ -34,7 +34,9 @@ public interface ConfiguredServiceProvider<T, CB> extends ServiceProvider<T>, Co
      * @return the config bean associated with this managed service provider
      * @throws java.lang.NullPointerException if this is the root provider
      */
-    CB configBean();
+    default CB configBean() {
+        throw new NullPointerException("Requesting a config bean from a root provider: " + serviceType().getName());
+    }
 
     /**
      * Register a named config bean as a child of this root provider.

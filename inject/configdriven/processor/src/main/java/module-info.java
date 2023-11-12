@@ -22,12 +22,16 @@ module io.helidon.inject.configdriven.processor {
     requires io.helidon.common.processor;
     requires io.helidon.common.types;
     requires io.helidon.common;
+    requires io.helidon.common.processor.classmodel;
     requires io.helidon.inject.processor;
     requires java.compiler;
 
     exports io.helidon.inject.configdriven.processor;
 
-    provides javax.annotation.processing.Processor with
-            io.helidon.inject.configdriven.processor.ConfigDrivenProcessor;
+    provides io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider
+            with io.helidon.inject.configdriven.processor.ConfigDrivenProcessorExtensionProvider;
+
+    provides io.helidon.common.processor.spi.AnnotationMapperProvider
+            with io.helidon.inject.configdriven.processor.ConfigDrivenAnnotationMapperProvider;
 
 }

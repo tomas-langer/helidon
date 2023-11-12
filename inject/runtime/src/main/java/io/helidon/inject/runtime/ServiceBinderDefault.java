@@ -96,9 +96,6 @@ public class ServiceBinderDefault implements ServiceBinder {
         }
 
         Optional<ServiceProviderBindable<?>> bindableSp = toBindableProvider(sp);
-        if (bindableSp.isPresent() && alreadyBoundToThisInjectionServices(bindableSp.get(), injectionServices)) {
-            return;
-        }
 
         if (moduleName != null) {
             bindableSp.ifPresent(it -> it.moduleName(moduleName));

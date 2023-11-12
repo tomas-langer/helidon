@@ -18,7 +18,9 @@ package io.helidon.inject.tools;
 
 import java.io.File;
 import java.util.List;
+import java.util.Optional;
 
+import io.helidon.common.testing.junit5.OptionalMatcher;
 import io.helidon.inject.api.Contract;
 import io.helidon.inject.api.ExternalContracts;
 
@@ -163,39 +165,6 @@ class ModuleInfoDescriptorTest {
                    equalTo("Unable to load or parse module-info: module test {\nprovides /* inner comment */ cn;\n}"));
     }
 
-    // filed https://github.com/helidon-io/helidon/issues/5697
-    @Test
-    void annotationsNotSupported() {
-        String moduleInfo = "import io.helidon.common.features.api.Feature;\n"
-                + "import io.helidon.common.features.api.HelidonFlavor;\n"
-                + "\n"
-                + "/**\n"
-                + " * Helidon SE Config module.\n"
-                + " *\n"
-                + " * @see io.helidon.config\n"
-                + " */\n"
-                + "@Feature(value = \"Config\",\n"
-                + "        description = \"Configuration module\",\n"
-                + "        in = {HelidonFlavor.SE}\n"
-                + ")\n"
-                + "module io.helidon.config {\n}\n";
-        ToolsException te = assertThrows(ToolsException.class,
-                                         () -> ModuleInfoDescriptor
-                                                 .create(moduleInfo, ModuleInfoOrdering.NATURAL_PRESERVE_COMMENTS, true));
-        assertThat(te.getCause().getMessage(),
-                   equalTo("Failed to parse line: @Feature(value = \"Config\", description = \"Configuration module\", "
-                                   + "in = {HelidonFlavor.SE}"));
-
-        ModuleInfoDescriptor descriptor = ModuleInfoDescriptor.create(moduleInfo);
-        assertThat(descriptor.handled(),
-                   is(false));
-        assertThat(descriptor.unhandledLines(),
-                   contains("@Feature(value = \"Config\", description = \"Configuration module\", in = {HelidonFlavor.SE}"));
-        assertThat(descriptor.error().orElseThrow().getCause().getMessage(),
-                   equalTo("Failed to parse line: @Feature(value = \"Config\", description = \"Configuration module\", "
-                                   + "in = {HelidonFlavor.SE}"));
-    }
-
     @Test
     void loadCreateAndSave() throws Exception {
         ModuleInfoDescriptor descriptor = ModuleInfoDescriptor
@@ -307,4 +276,64 @@ class ModuleInfoDescriptorTest {
                                    + "}"));
     }
 
+    @Test
+    void testConfigModule() {
+        ModuleInfoDescriptor module = ModuleInfoDescriptor.create(ModuleInfoDescriptorTest.class.getResourceAsStream(
+                "/testsubjects/config-module.txt"));
+
+        assertThat(module.name(), is("io.helidon.config"));
+        assertThat(module.open(), is(true));
+        // all requires
+        assertThat(module.items()
+                           .stream()
+                           .filter(ModuleInfoItem::requires)
+                           .map(ModuleInfoItem::target)
+                           .toList()
+                , contains("io.helidon.inject.api",
+                           "io.helidon.inject.runtime",
+                           "io.helidon.common.features.api",
+                           "jakarta.inject",
+                           "jakarta.annotation",
+                           "io.helidon.common.config",
+                           "io.helidon.common.media.type",
+                           "io.helidon.common"));
+        // all exports
+        assertThat(module.items()
+                           .stream()
+                           .filter(ModuleInfoItem::exports)
+                           .map(ModuleInfoItem::target)
+                           .toList()
+                , contains("io.helidon.config",
+                           "io.helidon.config.spi"));
+        // all uses
+        assertThat(module.items()
+                           .stream()
+                           .filter(ModuleInfoItem::uses)
+                           .map(ModuleInfoItem::target)
+                           .toList()
+                , contains("io.helidon.config.spi.ConfigMapperProvider",
+                           "io.helidon.config.spi.ConfigParser"));
+
+        // provides (just checking one, to make it easier)
+        Optional<ModuleInfoItem> provides = module.items()
+                .stream()
+                .filter(ModuleInfoItem::provides)
+                .findFirst();
+        assertThat(provides, OptionalMatcher.optionalPresent());
+        ModuleInfoItem providesItem = provides.get();
+        assertThat(providesItem.target(), is("io.helidon.config.spi.ConfigParser"));
+        assertThat(providesItem.withOrTo(), contains("io.helidon.config.PropertiesConfigParser",
+                                                     "io.helidon.config.RandomConfigParser"));
+        // opens (just one again)
+        Optional<ModuleInfoItem> opens = module.items()
+                .stream()
+                .filter(ModuleInfoItem::opens)
+                .findFirst();
+        assertThat(opens, OptionalMatcher.optionalPresent());
+        ModuleInfoItem opensItem = opens.get();
+        assertThat(opensItem.target(), is("io.helidon.config"));
+        assertThat(opensItem.withOrTo(), contains("weld.core.impl",
+                                            "io.helidon.microprofile.cdi"));
+
+    }
 }

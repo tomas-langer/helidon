@@ -18,7 +18,6 @@
  * The Injection Tools module.
  */
 module io.helidon.inject.tools {
-
     exports io.helidon.inject.tools.spi;
     exports io.helidon.inject.tools;
     requires handlebars;
@@ -33,20 +32,13 @@ module io.helidon.inject.tools {
     requires transitive io.helidon.common.types;
     requires transitive io.helidon.inject.runtime;
 
-    uses io.helidon.inject.tools.spi.InterceptorCreator;
     uses io.helidon.inject.tools.spi.ApplicationCreator;
     uses io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
     uses io.helidon.inject.tools.spi.ExternalModuleCreator;
     uses io.helidon.inject.tools.spi.ActivatorCreator;
     uses io.helidon.inject.tools.spi.ModuleComponentNamer;
 
-    provides io.helidon.inject.tools.spi.ActivatorCreator
-            with io.helidon.inject.tools.ActivatorCreatorDefault;
     provides io.helidon.inject.tools.spi.ApplicationCreator
             with io.helidon.inject.tools.ApplicationCreatorDefault;
-    provides io.helidon.inject.tools.spi.ExternalModuleCreator
-            with io.helidon.inject.tools.ExternalModuleCreatorDefault;
-    provides io.helidon.inject.tools.spi.InterceptorCreator
-            with io.helidon.inject.tools.InterceptorCreatorDefault;
 	
 }

@@ -39,6 +39,8 @@ import io.helidon.config.spi.ConfigSource;
 import io.helidon.config.spi.MergingStrategy;
 import io.helidon.config.spi.OverrideSource;
 
+import jakarta.inject.Singleton;
+
 /**
  * <h2>Configuration</h2>
  * Immutable tree-structured configuration.
@@ -240,6 +242,7 @@ import io.helidon.config.spi.OverrideSource;
  * config system merges these together so that values from config sources with higher {@link io.helidon.common.Weight weight}
  * have priority over values from config sources with lower weight.
  */
+@Singleton
 public interface Config extends io.helidon.common.config.Config {
     /**
      * Generic type of configuration.

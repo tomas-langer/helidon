@@ -30,6 +30,10 @@
     <name>Helidon Injection Config-Driven ConfiguredBy Svcs Tests</name>
     <description>tests the fuller config-driven services (i.e., full config not just common and with config-driven services)</description>
 
+    <properties>
+        <helidon.services.skip>true</helidon.services.skip>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.helidon.inject.configdriven.tests</groupId>

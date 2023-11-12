@@ -19,25 +19,18 @@ package io.helidon.inject.runtime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.Activator;
-import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.DeActivator;
-import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.InvocationContext;
 import io.helidon.inject.api.InvocationException;
-import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.PostConstructMethod;
-import io.helidon.inject.api.PreDestroyMethod;
-import io.helidon.inject.api.ServiceInfo;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.ServiceProviderBindable;
+import io.helidon.inject.api.ServiceDependencies;
+import io.helidon.inject.api.ServiceDescriptor;
 
 import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,8 +54,7 @@ class InvocationTest {
         first = new TestInterceptor("first");
         second = new TestInterceptor("second");
         dummyCtx = InvocationContext.builder()
-                .serviceProvider(new DummyServiceProvider())
-                .serviceTypeName(TypeName.create(DummyServiceProvider.class))
+                .serviceDescriptor(new DummyServiceDescriptor())
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
                                      .elementTypeKind(ElementKind.METHOD)
@@ -71,6 +63,7 @@ class InvocationTest {
                 .build();
         calls.clear();
     }
+
     @Test
     void normalCaseWithInterceptors() {
         Object[] args = new Object[] {};
@@ -88,8 +81,7 @@ class InvocationTest {
     @Test
     void normalCaseWithNoInterceptors() {
         InvocationContext dummyCtx = InvocationContext.builder()
-                .serviceProvider(new DummyServiceProvider())
-                .serviceTypeName(TypeName.create(DummyServiceProvider.class))
+                .serviceDescriptor(new DummyServiceDescriptor())
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
                                      .elementTypeKind(ElementKind.METHOD)
@@ -359,71 +351,21 @@ class InvocationTest {
         }
     }
 
-    private static class DummyServiceProvider implements ServiceProvider<DummyServiceProvider> {
+    private static class DummyServiceDescriptor implements ServiceDescriptor<DummyServiceDescriptor> {
 
         @Override
-        public Optional<DummyServiceProvider> first(ContextualServiceQuery query) {
-            return Optional.empty();
+        public Set<Class<?>> contracts() {
+            return Set.of();
         }
 
         @Override
-        public String id() {
-            return null;
-        }
-
-        @Override
-        public String description() {
-            return null;
-        }
-
-        @Override
-        public boolean isProvider() {
-            return false;
-        }
-
-        @Override
-        public ServiceInfo serviceInfo() {
-            return null;
-        }
-
-        @Override
-        public DependenciesInfo dependencies() {
-            return null;
-        }
-
-        @Override
-        public Phase currentActivationPhase() {
-            return null;
-        }
-
-        @Override
-        public Optional<Activator> activator() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<DeActivator> deActivator() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<PostConstructMethod> postConstructMethod() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<PreDestroyMethod> preDestroyMethod() {
-            return Optional.empty();
-        }
-
-        @Override
-        public Optional<ServiceProviderBindable<DummyServiceProvider>> serviceProviderBindable() {
-            return Optional.empty();
+        public List<ServiceDependencies> dependencies() {
+            return List.of();
         }
 
         @Override
         public Class<?> serviceType() {
-            return null;
+            return DummyServiceDescriptor.class;
         }
     }
 }

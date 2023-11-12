@@ -19,6 +19,7 @@ package io.helidon.inject.tools;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import io.helidon.common.processor.GeneratorTools;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceInfoCriteria;
@@ -35,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 
 /**
- * Tests for {@link ActivatorCreatorDefault}.
+ * Tests for {@link io.helidon.inject.tools.ApplicationCreatorDefault}.
  */
 class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
 
@@ -77,7 +78,7 @@ class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
         String[] ignoredClasspath = classpath.split(separator);
         ApplicationCreatorRequest req = ApplicationCreatorRequest.builder()
                 .codeGen(ApplicationCreatorCodeGen.builder()
-                                 .className(ActivatorCreatorDefault.applicationClassName("test"))
+                                 .className(applicationClassName("test"))
                                  .classPrefixName("test")
                                  .build())
                 .codeGenPaths(codeGenPaths)
@@ -99,4 +100,8 @@ class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
         assertThat(res.moduleName(), optionalEmpty());
     }
 
+    static String applicationClassName(String modulePrefix) {
+        modulePrefix = (modulePrefix == null) ? ActivatorCreatorCodeGen.DEFAULT_CLASS_PREFIX_NAME : modulePrefix;
+        return AbstractCreator.NAME_PREFIX + GeneratorTools.capitalize(modulePrefix) + "Application";
+    }
 }

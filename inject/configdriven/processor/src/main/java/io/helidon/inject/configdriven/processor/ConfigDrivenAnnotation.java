@@ -27,12 +27,11 @@ record ConfigDrivenAnnotation(TypeName configBeanType,
 
     static ConfigDrivenAnnotation create(TypeInfo typeInfo) {
         // this must be available, as it drives our annotation processor
-        Annotation annotation = typeInfo.findAnnotation(TYPE)
-                .orElseThrow();
+        Annotation annotation = typeInfo.annotation(TYPE);
+
         // value is mandatory on the annotation
-        return new ConfigDrivenAnnotation(annotation.value().map(TypeName::create).orElseThrow(),
-                                          annotation.getValue("activateByDefault")
-                                                  .map(Boolean::parseBoolean)
+        return new ConfigDrivenAnnotation(annotation.typeValue().orElseThrow(),
+                                          annotation.booleanValue("activateByDefault")
                                                   .orElse(false));
     }
 }

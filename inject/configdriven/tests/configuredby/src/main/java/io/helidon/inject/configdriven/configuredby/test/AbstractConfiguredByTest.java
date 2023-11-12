@@ -24,9 +24,9 @@ import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.MapConfigSource;
-import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
@@ -133,9 +133,10 @@ public abstract class AbstractConfiguredByTest {
         List<String> desc = list.stream()
                 .filter(it -> !it.serviceInfo().serviceTypeName().resolvedName().contains(".yaml."))
                 .map(ServiceProvider::description)
-                .collect(Collectors.toList());
+                .toList();
         // order matters here since it should be based upon weight
-        assertThat("root providers are config-driven, auto-started services unless overridden to not be driven", desc,
+        assertThat("root providers are config-driven, auto-started services unless overridden to not be driven",
+                   desc,
                    containsInAnyOrder("ASingletonService{root}:ACTIVE",
                             "FakeTlsWSNotDrivenByCB{root}:PENDING",
                             "FakeWebServer{root}:ACTIVE",
@@ -171,7 +172,8 @@ public abstract class AbstractConfiguredByTest {
 
         ServiceProvider<?> fakeTlsProvider = list.get(0);
         InjectionServiceProviderException e = assertThrows(InjectionServiceProviderException.class, fakeTlsProvider::get);
-        assertThat("There is no configuration, so cannot activate this service", e.getMessage(),
+        assertThat("There is no configuration, so cannot activate this service",
+                   e.getMessage(),
                    equalTo("Expected to find a match: service provider: FakeTlsWSNotDrivenByCB{root}:PENDING"));
 
         criteria = ServiceInfoCriteria.builder()

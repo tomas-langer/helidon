@@ -1,0 +1,47 @@
+/*
+ * Copyright (c) 2017, 2023 Oracle and/or its affiliates.
+ */
+
+import io.helidon.common.features.api.Feature;
+import io.helidon.common.features.api.HelidonFlavor;
+import io.helidon.config.spi.ConfigMapperProvider;
+
+/**
+ * Helidon SE Config module.
+ *
+ * @see io.helidon.config
+ */
+@Feature
+(value = "Config",
+        description = "Configuration module",
+        in =
+        {
+        HelidonFlavor.SE, HelidonFlavor.MP
+        }
+)
+open module
+io.helidon.config
+{
+
+    requires io.helidon.inject.api; /* inlined comment */
+    requires io.helidon.inject.runtime; // line comment
+
+    requires static io.helidon.common.features.api;
+
+    requires static jakarta.inject;
+    requires static jakarta.annotation;
+
+    requires transitive io.helidon.common.config;
+    requires transitive io.helidon.common.media.type;
+    requires transitive io.helidon.common;
+
+    exports io.helidon.config;exports io.helidon.config.spi;
+
+    uses ConfigMapperProvider;
+    uses io.helidon.config.spi.ConfigParser;
+
+    provides io.helidon.config.spi.ConfigParser
+            with io.helidon.config.PropertiesConfigParser, io.helidon.config.RandomConfigParser;
+
+    // needed when running with modules - to make private methods accessible
+    opens io.helidon.config to weld.core.impl, io.helidon.microprofile.cdi;}

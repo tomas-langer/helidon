@@ -63,6 +63,14 @@ interface ModuleInfoDescriptorBlueprint {
     String name();
 
     /**
+     * Whether this module is declared as open module.
+     *
+     * @return whether this module is open
+     */
+    @ConfiguredOption("false")
+    boolean open();
+
+    /**
      * The template name to apply. The default is {@link TemplateHelper#DEFAULT_TEMPLATE_NAME}.
      *
      * @return the template name

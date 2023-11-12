@@ -20,6 +20,12 @@ public final class AptOptions {
         return Optional.ofNullable(aptEnv.getOptions().get(option));
     }
 
+    public <T extends Enum<T>> T option(String option, T defaultValue, Class<T> enumType) {
+        return option(option)
+                .map(it -> Enum.valueOf(enumType, it))
+                .orElse(defaultValue);
+    }
+
     public String option(String option, String defaultValue) {
         return option(option).orElse(defaultValue);
     }

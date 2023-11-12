@@ -16,16 +16,47 @@
 
 package io.helidon.inject.configdriven.api;
 
+import java.util.Comparator;
+
 /**
  * Instance, that can be (possibly) named.
  *
  * @param instance instance of config bean
- * @param name the instance may have a name, if this is the default (not named), the name is set to {@value #DEFAULT_NAME}
- * @param <T> type of the instance
+ * @param name     the instance may have a name, if this is the default (not named), the name is set to {@value #DEFAULT_NAME}
+ * @param <T>      type of the instance
  */
 public record NamedInstance<T>(T instance, String name) {
     /**
      * Default name of an instance that is not named for the purpose of injection, for example.
      */
     public static final String DEFAULT_NAME = "@default";
+    private static final NameComparator COMPARATOR_INSTANCE = new NameComparator();
+
+    /**
+     * Comparator of names, {@link #DEFAULT_NAME} name is always first.
+     *
+     * @return name comparator
+     */
+    public static Comparator<String> nameComparator() {
+        return COMPARATOR_INSTANCE;
+    }
+
+    private static class NameComparator implements Comparator<String> {
+        @Override
+        public int compare(String str1, String str2) {
+            int result = str1.compareTo(str2);
+
+            if (result == 0) {
+                return result;
+            }
+            // @default is desired to be first in the list
+            if (NamedInstance.DEFAULT_NAME.equals(str1)) {
+                return -1;
+            } else if (NamedInstance.DEFAULT_NAME.equals(str2)) {
+                return 1;
+            }
+
+            return result;
+        }
+    }
 }

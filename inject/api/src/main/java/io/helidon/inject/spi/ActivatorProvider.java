@@ -6,5 +6,6 @@ import io.helidon.inject.api.ServiceProvider;
 
 public interface ActivatorProvider {
     String id();
+
     <T> ServiceProvider<T> activator(InjectionServices injectionServices, ServiceDescriptor<T> descriptor);
 }

@@ -57,6 +57,10 @@ import static java.util.function.Predicate.not;
 @Singleton
 @Weight(DEFAULT_INJECT_WEIGHT)
 public class ExternalModuleCreatorDefault extends AbstractCreator implements ExternalModuleCreator {
+    /**
+     * The suffix for activator class name.
+     */
+    public static final String INNER_ACTIVATOR_CLASS_NAME = "$$" + NAME_PREFIX + "Activator";
     private static final Set<String> SERVICE_DEFINING_ANNOTATIONS = Set.of(TypeNames.JAKARTA_SINGLETON,
                                                                            TypeNames.JAKARTA_APPLICATION_SCOPED);
     private final LazyValue<ScanResult> scan = LazyValue.create(ReflectionHandler.INSTANCE.scan());
@@ -113,6 +117,7 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
                     .filter(classInfo -> !classInfo.isInnerClass() || req.innerClassesProcessed())
                     .forEach(this::processServiceType);
 
+            /*
             ActivatorCreatorCodeGen activatorCreatorCodeGen = ActivatorCreatorDefault
                     .createActivatorCreatorCodeGen(services).orElseThrow();
             ActivatorCreatorRequest activatorCreatorRequest = ActivatorCreatorDefault
@@ -127,6 +132,8 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
                     .moduleName(services.moduleName())
                     .packageName(activatorCreatorRequest.packageName())
                     .build();
+             */
+            return responseBuilder.build();
         } catch (Throwable t) {
             return handleError(req, new ToolsException("failed to analyze / prepare external module", t), responseBuilder);
         } finally {
@@ -188,7 +195,8 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
         if (superclass != null) {
             handleSuperClass(serviceTypeName, superclass);
         }
-        List<TypeName> hierarchy = ActivatorCreatorDefault.serviceTypeHierarchy(serviceTypeName, scan);
+        // List<TypeName> hierarchy = ActivatorCreatorDefault.serviceTypeHierarchy(serviceTypeName, scan);
+        List<TypeName> hierarchy = List.of();
         services.addServiceTypeHierarchy(serviceTypeName, hierarchy);
         if (hierarchy != null) {
             hierarchy.stream()
@@ -224,7 +232,7 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
         findActivatedInHierarchy(superclass, new HashSet<>())
                 .ifPresent(it -> services.addParentServiceType(serviceTypeName, TypeName.builder(it.genericTypeName())
                         .className(it.classNameWithEnclosingNames()
-                                           .replace('.', '$') + ActivatorCreatorDefault.INNER_ACTIVATOR_CLASS_NAME)
+                                           .replace('.', '$') + INNER_ACTIVATOR_CLASS_NAME)
                         .build()));
     }
 

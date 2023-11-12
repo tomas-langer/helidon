@@ -29,12 +29,12 @@ module io.helidon.inject.processor {
     requires io.helidon.builder.api;
     requires io.helidon.common.processor;
     requires io.helidon.common;
+    requires io.helidon.common.codegen;
 
     requires transitive io.helidon.inject.tools;
     requires transitive java.compiler;
 
     uses io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
-    uses io.helidon.inject.tools.spi.InterceptorCreator;
     uses io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
     uses HelidonProcessorExtensionProvider;
     uses io.helidon.common.processor.spi.AnnotationMapperProvider;
@@ -50,7 +50,6 @@ module io.helidon.inject.processor {
     provides javax.annotation.processing.Processor with
             HelidonAnnotationProcessor,
             io.helidon.inject.processor.CustomAnnotationProcessor,
-            io.helidon.inject.processor.UnsupportedConstructsProcessor,
-            io.helidon.inject.processor.InjectionAnnotationProcessor;
+            io.helidon.inject.processor.UnsupportedConstructsProcessor;
 
 }

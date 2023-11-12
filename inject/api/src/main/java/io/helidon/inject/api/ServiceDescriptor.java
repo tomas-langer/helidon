@@ -1,8 +1,14 @@
 package io.helidon.inject.api;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
-public interface ServiceDescriptor<T> {
+import io.helidon.common.Weighted;
+import io.helidon.common.types.ElementKind;
+import io.helidon.common.types.TypeName;
+
+public interface ServiceDescriptor<T> extends Weighted {
     /**
      * Id used by the basic Helidon injection.
      */
@@ -23,7 +29,14 @@ public interface ServiceDescriptor<T> {
      *
      * @return service type
      */
-    Class<T> serviceType();
+    Class<?> serviceType();
+
+    /**
+     * Set of contracts the described service implements.
+     *
+     * @return set of contracts
+     */
+    Set<Class<?>> contracts();
 
     /**
      * List of dependencies required by this service. Each dependency is a point of injection of one instance into
@@ -31,7 +44,7 @@ public interface ServiceDescriptor<T> {
      *
      * @return required dependencies
      */
-    List<IpInfo<?>> dependencies();
+    List<ServiceDependencies> dependencies();
 
     /**
      * Create a new service instance.
@@ -39,7 +52,10 @@ public interface ServiceDescriptor<T> {
      * @param ctx injection context with all injection points data
      * @return a new instance
      */
-    T instantiate(InjectionContext ctx);
+    default T instantiate(InjectionContext ctx, InterceptionMetadata interceptionMetadata) {
+        throw new IllegalStateException("Cannot instantiate type " + serviceType().getName() + ", as it is either abstract,"
+                                                + " or an interface.");
+    }
 
     /**
      * Inject methods.
@@ -48,7 +64,8 @@ public interface ServiceDescriptor<T> {
      * @param instance instance to update
      */
 
-    void injectMethods(InjectionContext ctx, T instance);
+    default void injectMethods(InjectionContext ctx, T instance) {
+    }
 
     /**
      * Inject fields.
@@ -57,7 +74,8 @@ public interface ServiceDescriptor<T> {
      * @param instance instance to update
      */
 
-    void injectFields(InjectionContext ctx, T instance);
+    default void injectFields(InjectionContext ctx, InterceptionMetadata interceptionMetadata, T instance) {
+    }
 
     /**
      * Invoke {@link jakarta.annotation.PostConstruct} annotated method(s).
@@ -69,5 +87,57 @@ public interface ServiceDescriptor<T> {
      * Invoke {@link jakarta.annotation.PreDestroy} annotated method(s).
      */
     default void preDestroy(T instance) {
+    }
+
+    /**
+     * Service qualifiers.
+     *
+     * @return qualifiers
+     */
+    default Set<Qualifier> qualifiers() {
+        return Set.of();
+    }
+
+    /**
+     * Run level of this service.
+     *
+     * @return run level
+     */
+    default int runLevel() {
+        return 100;
+    }
+
+    /**
+     * Set of scopes of this service.
+     *
+     * @return scopes
+     */
+    default Set<TypeName> scopes() {
+        return Set.of();
+    }
+
+    /**
+     * Combine dependencies from this type with dependencies from supertype.
+     *
+     * @param myType this type's dependencies
+     * @param superType super type's dependencies
+     * @return a new list without constructor dependencies from super type
+     */
+    default List<ServiceDependencies> combineDependencies(ServiceDependencies myType, List<ServiceDependencies> superType) {
+        List<ServiceDependencies> result = new ArrayList<>();
+        result.add(myType);
+
+        for (ServiceDependencies superDeps : superType) {
+            List<IpInfo> list = superDeps.dependencies()
+                    .stream()
+                    .filter(it -> it.id().elementKind() != ElementKind.CONSTRUCTOR)
+                    .toList();
+
+            if (!list.isEmpty()) {
+                result.add(new ServiceDependencies(superDeps.serviceType(), List.copyOf(list)));
+            }
+        }
+
+        return List.copyOf(result);
     }
 }

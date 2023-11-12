@@ -62,11 +62,4 @@
         <Class name="io.helidon.inject.tools.TypeTools"/>
         <Bug pattern="PATH_TRAVERSAL_IN"/>
     </Match>
-
-    <Match>
-        <!-- package private/internal class IdAndToString does not need to implement equals() -->
-        <Class name="io.helidon.inject.tools.InterceptorCreatorDefault$InterceptedMethodCodeGen"/>
-        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
-    </Match>
-
 </FindBugsFilter>

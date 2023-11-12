@@ -19,6 +19,7 @@ package io.helidon.inject.tools;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -173,7 +174,9 @@ final class ModuleInfoDescriptorSupport {
                 } else if (line.equals("}")) {
                     break;
                 } else {
-                    throw new ToolsException("Unable to process module-info's use of: " + line);
+                    // a line we do not understand, let's just add it to the list
+                    descriptor.addUnhandledLine(line);
+//                    throw new ToolsException("Unable to process module-info's use of: " + line);
                 }
 
                 if (comments != null) {
@@ -219,12 +222,7 @@ final class ModuleInfoDescriptorSupport {
     @Prototype.FactoryMethod
     static ModuleInfoDescriptor create(InputStream is,
                                        ModuleInfoOrdering ordering) {
-        try {
-            String moduleInfo = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            return create(moduleInfo, ordering, false);
-        } catch (IOException e) {
-            throw new ToolsException("Unable to load from stream", e);
-        }
+        return ModuleInfoSourceParser.parse(new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8)));
     }
 
     /**

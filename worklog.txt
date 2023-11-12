@@ -1,6 +1,6 @@
 InjectServiceActivator - gather dependencies
 InjectServiceProvider - requires implementation
-InjectionPorcessorExtension - annoation processor exension for injection
+InjectionProcessorExtension - annotation processor extension for injection
     - requires similar for config driven
 IpIdBlueprint - maybe need to refactor to use indexed parameters
     - when we use maven plugin to create application, we need to use correct ids (using parameter names as created in the service descriptor)

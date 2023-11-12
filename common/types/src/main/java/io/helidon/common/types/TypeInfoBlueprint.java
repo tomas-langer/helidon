@@ -157,6 +157,21 @@ interface TypeInfoBlueprint extends Annotated {
     }
 
     /**
+     * Find a meta annotation.
+     *
+     * @param annotation annotation to check meta annotation for
+     * @param metaAnnotation meta annotation type
+     * @return meta annotation, or empty if not defined
+     */
+    default Optional<Annotation> metaAnnotation(TypeName annotation, TypeName metaAnnotation) {
+        List<Annotation> annotations = referencedTypeNamesToAnnotations().get(annotation);
+        if (annotations == null) {
+            return Optional.empty();
+        }
+        return Annotations.findFirst(metaAnnotation, annotations);
+    }
+
+    /**
      * Populated if the (external) module name containing the type is known.
      *
      * @return type names to its associated defining module name

@@ -19,7 +19,6 @@ package io.helidon.inject.processor;
 import java.util.List;
 import java.util.Set;
 
-import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeInfo;
@@ -36,6 +35,7 @@ import io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 
+import static io.helidon.common.types.AccessModifier.PUBLIC;
 import static io.helidon.common.types.TypeName.create;
 import static io.helidon.inject.tools.TypeTools.createAnnotationListFromAnnotations;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -61,6 +61,7 @@ class CustomAnnotationProcessorTest {
         List<Annotation> annotations = createAnnotationListFromAnnotations(BasicEndpoint.class.getAnnotations());
         TypeInfo enclosingTypeInfo = TypeInfo.builder()
                 .typeKind(io.helidon.common.types.ElementKind.CLASS)
+                .accessModifier(PUBLIC)
                 .typeName(create(BasicEndpoint.class))
                 .annotations(annotations)
                 .build();
@@ -84,7 +85,7 @@ class CustomAnnotationProcessorTest {
                 .serviceInfo(serviceInfo)
                 .targetElement(target)
                 .targetElementArgs(List.of(arg1))
-                .targetElementAccess(AccessModifier.PUBLIC)
+                .targetElementAccess(PUBLIC)
                 .enclosingTypeInfo(enclosingTypeInfo)
                 .genericTemplateCreator(genericTemplateCreator)
                 .build();

@@ -388,7 +388,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                     result = subsetOfMatches.stream().parallel()
                             .filter(sp -> sp.serviceInfo().matches(criteria))
                             .limit(limit)
-                            .collect(Collectors.toList());
+                            .toList();
                     if (!result.isEmpty()) {
                         return explodeFilterAndSort(result, criteria, expected);
                     }

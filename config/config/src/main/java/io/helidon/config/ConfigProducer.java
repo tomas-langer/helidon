@@ -57,7 +57,12 @@ class ConfigProducer implements Config {
     }
 
     @Inject
-    void injectMethod(ConfigSource cs) {
+    void injectMethod(ConfigSource cs, ConfigSource second) {
+
+    }
+
+    @Inject
+    void injectMethod(ConfigSource cs, String second) {
 
     }
 

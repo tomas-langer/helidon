@@ -46,11 +46,11 @@ class DefaultInjector implements Injector {
             return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
         }
 
-        if (!(serviceOrServiceProvider instanceof AbstractServiceProvider)) {
+        if (!(serviceOrServiceProvider instanceof ServiceProvider<?>)) {
             return handleError(resultBuilder, opts, "unsupported service type: " + serviceOrServiceProvider, null);
         }
 
-        AbstractServiceProvider<T> instance = (AbstractServiceProvider<T>) serviceOrServiceProvider;
+        ServiceProvider<T> instance = (ServiceProvider<T>) serviceOrServiceProvider;
         resultBuilder.serviceProvider(instance);
 
         Activator activator = instance.activator().orElse(null);
@@ -74,11 +74,11 @@ class DefaultInjector implements Injector {
             return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
         }
 
-        if (!(serviceOrServiceProvider instanceof AbstractServiceProvider)) {
+        if (!(serviceOrServiceProvider instanceof ServiceProvider<?>)) {
             return handleError(resultBuilder, opts, "unsupported service type: " + serviceOrServiceProvider, null);
         }
 
-        AbstractServiceProvider<T> instance = (AbstractServiceProvider<T>) serviceOrServiceProvider;
+        ServiceProvider<T> instance = (ServiceProvider<T>) serviceOrServiceProvider;
         resultBuilder.serviceProvider(instance);
 
         DeActivator deactivator = instance.deActivator().orElse(null);

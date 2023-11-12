@@ -26,10 +26,8 @@ import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import io.helidon.common.config.Config;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
@@ -523,14 +521,6 @@ public abstract class ConfigDrivenServiceProviderBase<T, CB> extends AbstractSer
     }
 
     /**
-     * Return true if this service is driven to activation during startup (and provided it has some config).
-     * See {@link ConfigDriven#activateByDefault()}.
-     *
-     * @return true if this service is driven to activation during startup
-     */
-    protected abstract boolean drivesActivation();
-
-    /**
      * Transition into an initialized state.
      */
     void assertInitialized() {
@@ -581,28 +571,6 @@ public abstract class ConfigDrivenServiceProviderBase<T, CB> extends AbstractSer
                 csp.onFailedFinish(logEntryAndResult, t, true);
             }
         });
-    }
-
-    protected final List<NamedInstance<CB>> createRepeatableBeans(Config config,
-                                                                  boolean wantDefault,
-                                                                  Function<Config, CB> factory) {
-        Map<String, NamedInstance<CB>> instances = new TreeMap<>(NameComparator.instance());
-
-        List<Config> childNodes = config.asNodeList().orElseGet(List::of);
-        boolean isList = config.isList();
-
-        for (Config childNode : childNodes) {
-            String name = childNode.name(); // by default use the current node name - for lists, this would be the index
-            name = isList ? childNode.get("name").asString().orElse(name) : name; // use "name" node if list and present
-            instances.put(name, new NamedInstance<>(factory.apply(childNode), name));
-        }
-
-        if (wantDefault && !instances.containsKey(NamedInstance.DEFAULT_NAME)) {
-            instances.put(NamedInstance.DEFAULT_NAME,
-                          new NamedInstance<>(factory.apply(Config.empty()), NamedInstance.DEFAULT_NAME));
-        }
-
-        return List.copyOf(instances.values());
     }
 
     private void activateConfigDrivenServices() {

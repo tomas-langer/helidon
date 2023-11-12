@@ -25,7 +25,7 @@ import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 
-@ConfigDriven(value = FakeWebServerTlsConfigBlueprint.class, activateByDefault = true)
+@ConfigDriven(value = FakeWebServerTlsConfigBlueprint.class)
 @Named("jimmy")
 public class FakeTlsWSNotDrivenByCB {
 

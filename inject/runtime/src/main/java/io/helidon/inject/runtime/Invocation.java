@@ -22,9 +22,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.InvocationContext;
 import io.helidon.inject.api.InvocationException;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 
 import jakarta.inject.Provider;
@@ -69,6 +72,42 @@ public class Invocation<V> implements Interceptor.Chain<V> {
     public static <V> V createInvokeAndSupply(InvocationContext ctx,
                                               Function<Object[], V> call,
                                               Object[] args) {
+        if (ctx.interceptors().isEmpty()) {
+            try {
+                return call.apply(args);
+            } catch (Throwable t) {
+                throw new InvocationException("Error in interceptor chain processing", t, true);
+            }
+        } else {
+            return (V) new Invocation(ctx, call).proceed(args);
+        }
+    }
+
+    /**
+     * Creates an instance of {@link Invocation} and invokes it in this context.
+     *
+     * @param descriptor      service descriptor
+     * @param typeAnnotations type level annotations
+     * @param element         element being invoked
+     * @param call            the call to the base service provider's method
+     * @param args            the call arguments
+     * @param <V>             the type returned from the method element
+     * @return the invocation instance
+     * @throws InvocationException if there are errors during invocation chain processing
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public static <V> V createInvokeAndSupply(ServiceDescriptor descriptor,
+                                              List<Annotation> typeAnnotations,
+                                              TypedElementInfo element,
+                                              List<Provider<Interceptor>> interceptors,
+                                              Function<Object[], V> call,
+                                              Object... args) {
+        InvocationContext ctx = InvocationContext.builder()
+                .serviceDescriptor(descriptor)
+                .classAnnotations(typeAnnotations)
+                .elementInfo(element)
+                .interceptors(interceptors)
+                .build();
         if (ctx.interceptors().isEmpty()) {
             try {
                 return call.apply(args);

@@ -26,8 +26,6 @@ import io.helidon.inject.tools.ActivatorCreatorProvider;
 import io.helidon.inject.tools.ActivatorCreatorRequest;
 import io.helidon.inject.tools.ActivatorCreatorResponse;
 import io.helidon.inject.tools.CodeGenFiler;
-import io.helidon.inject.tools.CodeGenInterceptorRequest;
-import io.helidon.inject.tools.InterceptorCreatorResponse;
 import io.helidon.inject.tools.Messager;
 import io.helidon.inject.tools.spi.ActivatorCreator;
 
@@ -52,13 +50,6 @@ class CreatorHandler implements ActivatorCreator {
     public ActivatorCreatorResponse createModuleActivators(ActivatorCreatorRequest request) {
         messager.debug(name + ": createModuleActivators: " + request);
         return ActivatorCreatorProvider.instance().createModuleActivators(request);
-    }
-
-    // note: overrides ActivatorCreator
-    @Override
-    public InterceptorCreatorResponse codegenInterceptors(CodeGenInterceptorRequest request) {
-        messager.debug(name + ": codegenInterceptors(): " + request);
-        return ActivatorCreatorProvider.instance().codegenInterceptors(request);
     }
 
     // note: overrides ActivatorCreator

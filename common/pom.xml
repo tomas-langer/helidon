@@ -32,6 +32,7 @@
 
     <modules>
         <module>buffers</module>
+        <module>codegen</module>
         <module>common</module>
         <module>config</module>
         <module>configurable</module>

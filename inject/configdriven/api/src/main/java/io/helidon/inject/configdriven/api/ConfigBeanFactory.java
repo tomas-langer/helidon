@@ -17,6 +17,10 @@
 package io.helidon.inject.configdriven.api;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.TreeMap;
+import java.util.function.Function;
 
 import io.helidon.common.config.Config;
 
@@ -43,4 +47,44 @@ public interface ConfigBeanFactory<T> {
      */
     Class<T> configBeanType();
 
+    /**
+     * Whether the discovered config beans drive activation of their associated service.
+     *
+     * @return whether the config beans drive activation
+     */
+    boolean drivesActivation();
+
+    /**
+     * Creates a list of named instances from the provided configuration instance (must exist).
+     *
+     * @param config      configuration to analyze and use to create beans
+     * @param wantDefault whether a default instance is wanted (will be created only based on default values)
+     * @param factory     factory to create an instance from a config node
+     * @return list of created named instances
+     */
+    default List<NamedInstance<T>> createRepeatableBeans(Config config,
+                                                         boolean wantDefault,
+                                                         Function<Config, T> factory) {
+
+        Objects.requireNonNull(config, "Config must not be null");
+        Objects.requireNonNull(factory, "Config bean factory must not be null");
+
+        Map<String, NamedInstance<T>> instances = new TreeMap<>(NamedInstance.nameComparator());
+
+        List<Config> childNodes = config.asNodeList().orElseGet(List::of);
+        boolean isList = config.isList();
+
+        for (Config childNode : childNodes) {
+            String name = childNode.name(); // by default use the current node name - for lists, this would be the index
+            name = isList ? childNode.get("name").asString().orElse(name) : name; // use "name" node if list and present
+            instances.put(name, new NamedInstance<>(factory.apply(childNode), name));
+        }
+
+        if (wantDefault && !instances.containsKey(NamedInstance.DEFAULT_NAME)) {
+            instances.put(NamedInstance.DEFAULT_NAME,
+                          new NamedInstance<>(factory.apply(Config.empty()), NamedInstance.DEFAULT_NAME));
+        }
+
+        return List.copyOf(instances.values());
+    }
 }
