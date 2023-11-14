@@ -34,7 +34,7 @@ public interface Interceptor {
      * @return the return value to the caller
      * @throws InvocationException if there are errors during invocation chain processing
      */
-    <V> V proceed(InvocationContext ctx, Chain<V> chain, Object... args);
+    <V> V proceed(InvocationContext ctx, Chain<V> chain, Object... args) throws Exception;
 
 
     /**
@@ -52,8 +52,9 @@ public interface Interceptor {
          * @param args the arguments passed
          * @return the result of the call
          * @throws InvocationException if there are errors during invocation chain processing
+         * @throws java.lang.Exception may throw any checked exceptions thrown by the underlying method
          */
-        V proceed(Object[] args);
+        V proceed(Object[] args) throws Exception;
     }
 
 }

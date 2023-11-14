@@ -43,6 +43,7 @@ import io.helidon.builder.processor.ValidationTask.ValidateConfiguredType;
 import io.helidon.common.Errors;
 import io.helidon.common.processor.CopyrightHandler;
 import io.helidon.common.processor.GeneratedAnnotationHandler;
+import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.processor.classmodel.Annotation;
 import io.helidon.common.processor.classmodel.ClassModel;
@@ -76,7 +77,7 @@ public class BlueprintProcessor extends AbstractProcessor {
     private Messager messager;
     private Filer filer;
     private Elements elementUtils;
-    private io.helidon.common.processor.ProcessingContext ctx;
+    private ProcessingContext ctx;
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -99,7 +100,7 @@ public class BlueprintProcessor extends AbstractProcessor {
         this.blueprintAnnotationType = elementUtils.getTypeElement(PROTOTYPE_BLUEPRINT);
         this.runtimePrototypeAnnotationType = elementUtils.getTypeElement(RUNTIME_PROTOTYPE);
         this.filer = processingEnv.getFiler();
-        this.ctx = io.helidon.common.processor.ProcessingContext.create(processingEnv);
+        this.ctx = ProcessingContext.create(processingEnv);
 
         if (blueprintAnnotationType == null || runtimePrototypeAnnotationType == null) {
             throw new IllegalStateException("Bug in BlueprintProcessor code, cannot find required types, probably wrong"

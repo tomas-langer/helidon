@@ -21,7 +21,6 @@ import java.util.Comparator;
 
 import io.helidon.common.Weights;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceProvider;
 
 import jakarta.inject.Provider;
@@ -57,21 +56,15 @@ public class ServiceProviderComparator implements Comparator<Provider<?>>, Seria
             ServiceProvider<?> sp1 = (ServiceProvider<?>) p1;
             ServiceProvider<?> sp2 = (ServiceProvider<?>) p2;
 
-            ServiceInfo info1 = sp1.serviceInfo();
-            ServiceInfo info2 = sp2.serviceInfo();
-            if (info1 == info2) {
-                return 0;
-            }
-
-            double w1 = info1.realizedWeight();
-            double w2 = info2.realizedWeight();
+            double w1 = sp1.weight();
+            double w2 = sp2.weight();
             int comp = Double.compare(w1, w2);
             if (0 != comp) {
                 return -1 * comp;
             }
             // secondary ordering based upon its name...
-            TypeName name1 = info1.serviceTypeName();
-            TypeName name2 = info2.serviceTypeName();
+            TypeName name1 = sp1.serviceType();
+            TypeName name2 = sp2.serviceType();
             comp = name2.compareTo(name1);
             return -1 * comp;
         } else {

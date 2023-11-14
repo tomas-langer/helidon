@@ -30,11 +30,11 @@ import io.helidon.config.ConfigSources;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Interceptor;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.testing.ReflectionBasedSingletonServiceProvider;
+import io.helidon.inject.testing.ReflectionBasedSingletonServiceDescriptor;
+import io.helidon.inject.testing.ServiceInfo;
 import io.helidon.inject.tests.inject.ClassNamedY;
 import io.helidon.inject.tests.plain.interceptor.IB;
 import io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno;
@@ -85,7 +85,7 @@ class InterceptorRuntimeTest {
 
     @Test
     void createNoArgBasedInterceptorSource() throws Exception {
-        TypeName interceptorTypeName = TypeName.create(XImpl$$Injection$$Interceptor.class);
+        TypeName interceptorTypeName = TypeName.create(XImpl__Intercepted.class);
         String path = toFilePath(interceptorTypeName);
         File file = new File("./target/generated-sources/annotations", path);
         assertThat(file.exists(), is(true));
@@ -98,7 +98,7 @@ class InterceptorRuntimeTest {
 
     @Test
     void createInterfaceBasedInterceptorSource() throws Exception {
-        TypeName interceptorTypeName = TypeName.create(YImpl$$Injection$$Interceptor.class);
+        TypeName interceptorTypeName = TypeName.create(YImpl__Intercepted.class);
         String path = toFilePath(interceptorTypeName);
         File file = new File("./target/generated-sources/annotations", path);
         assertThat(file.exists(), is(true));
@@ -111,7 +111,6 @@ class InterceptorRuntimeTest {
     void runtimeWithNoInterception() throws Exception {
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
                 .addContractImplemented(Closeable.class)
-                .includeIntercepted(true)
                 .build();
         List<ServiceProvider<?>> closeableProviders = services.lookupAll(criteria);
         assertThat("the interceptors should always be weighted higher than the non-interceptors",
@@ -121,7 +120,6 @@ class InterceptorRuntimeTest {
 
         criteria = ServiceInfoCriteria.builder()
                 .addContractImplemented(Closeable.class)
-                .includeIntercepted(false)
                 .build();
         closeableProviders = services.lookupAll(criteria);
         assertThat("the interceptors should always be weighted higher than the non-interceptors",
@@ -188,13 +186,13 @@ class InterceptorRuntimeTest {
                 .build();
         tearDown();
         setUp(config);
-        bind(injectionServices, ReflectionBasedSingletonServiceProvider
+        bind(injectionServices, ReflectionBasedSingletonServiceDescriptor
                 .create(TestNamedInterceptor.class,
-                        ServiceInfo.builder()
-                                .serviceTypeName(TestNamedInterceptor.class)
+                        ServiceInfo.<TestNamedInterceptor>builder()
+                                .serviceType(TypeName.create(TestNamedInterceptor.class))
                                 .addQualifier(createNamed(TestNamed.class.getName()))
                                 .addQualifier(createNamed(InterceptorBasedAnno.class.getName()))
-                                .addExternalContractImplemented(Interceptor.class)
+                                .addContract(TypeName.create(Interceptor.class))
                                 .build()));
         assertThat(TestNamedInterceptor.ctorCount.get(),
                    equalTo(0));

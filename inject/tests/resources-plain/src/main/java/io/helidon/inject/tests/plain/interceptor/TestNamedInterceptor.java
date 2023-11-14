@@ -36,7 +36,7 @@ public class TestNamedInterceptor implements Interceptor {
     @Override
     public <V> V proceed(InvocationContext ctx,
                          Chain<V> chain,
-                         Object... args) {
+                         Object... args) throws Exception {
         assert (ctx != null);
 
         TypedElementInfo methodInfo = ctx.elementInfo();

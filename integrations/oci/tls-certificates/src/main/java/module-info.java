@@ -47,5 +47,5 @@ module io.helidon.integrations.oci.tls.certificates {
     provides io.helidon.common.tls.spi.TlsManagerProvider
             with io.helidon.integrations.oci.tls.certificates.DefaultOciCertificatesTlsManagerProvider;
     provides io.helidon.inject.api.ModuleComponent
-            with io.helidon.integrations.oci.tls.certificates.Injection$$Module;
+            with io.helidon.integrations.oci.tls.certificates.HelidonInjection__ModuleComponent;
 }

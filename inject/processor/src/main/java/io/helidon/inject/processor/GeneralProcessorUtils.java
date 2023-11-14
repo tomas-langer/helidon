@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.common.Weight;
+import io.helidon.common.Weighted;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeInfo;
@@ -34,8 +35,8 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.RunLevel;
-import io.helidon.inject.api.ServiceInfo;
-import io.helidon.inject.api.ServiceInfoBasics;
+import io.helidon.inject.api.ServiceDependencies;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.tools.Options;
 import io.helidon.inject.tools.TypeNames;
 import io.helidon.inject.tools.TypeTools;
@@ -299,13 +300,55 @@ public final class GeneralProcessorUtils {
         return Annotations.findFirst(TypeTools.oppositeOf(annoType), annotations);
     }
 
-    static ServiceInfoBasics toBasicServiceInfo(TypeInfo service) {
-        return ServiceInfo.builder()
-                .serviceTypeName(service.typeName())
-                .update(it -> toWeight(service).ifPresent(it::declaredWeight))
-                .update(it -> toRunLevel(service).ifPresent(it::declaredRunLevel))
-                .scopeTypeNames(toScopeNames(service))
-                .build();
+    static ServiceDescriptor<?> toBasicServiceInfo(TypeInfo service) {
+        return new SimpleServiceDescriptor(service.typeName(),
+                                           toWeight(service).orElse(Weighted.DEFAULT_WEIGHT),
+                                           toRunLevel(service).orElse(100),
+                                           toScopeNames(service));
     }
 
+    private static class SimpleServiceDescriptor implements ServiceDescriptor<Object> {
+        private final TypeName serviceType;
+        private final double weight;
+        private final int runLevel;
+        private final Set<TypeName> scopes;
+
+        private SimpleServiceDescriptor(TypeName serviceType, double weight, int runLevel, Set<TypeName> scopes) {
+            this.serviceType = serviceType;
+            this.weight = weight;
+            this.runLevel = runLevel;
+            this.scopes = scopes;
+        }
+
+        @Override
+        public TypeName serviceType() {
+            return serviceType;
+        }
+
+        @Override
+        public Set<TypeName> contracts() {
+            throw new UnsupportedOperationException("Simple descriptor does not contain this information");
+        }
+
+        @Override
+        public List<ServiceDependencies> dependencies() {
+            throw new UnsupportedOperationException("Simple descriptor does not contain this information");
+        }
+
+        @Override
+        public Set<TypeName> scopes() {
+            return this.scopes;
+        }
+
+        @Override
+        public int runLevel() {
+            return runLevel;
+        }
+
+        @Override
+        public double weight() {
+            return weight;
+        }
+
+    }
 }

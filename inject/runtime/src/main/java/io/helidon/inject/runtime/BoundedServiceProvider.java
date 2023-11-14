@@ -19,17 +19,18 @@ package io.helidon.inject.runtime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 import io.helidon.common.LazyValue;
+import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.DeActivator;
-import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.PostConstructMethod;
-import io.helidon.inject.api.PreDestroyMethod;
-import io.helidon.inject.api.ServiceInfo;
+import io.helidon.inject.api.Qualifier;
+import io.helidon.inject.api.ServiceDependencies;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 
@@ -68,9 +69,8 @@ class BoundedServiceProvider<T> implements ServiceProvider<T> {
                                          InjectionPointInfo ipInfoCtx) {
         assert (binding != null);
         assert (!(binding instanceof BoundedServiceProvider));
-        if (binding instanceof AbstractServiceProvider) {
-            AbstractServiceProvider<?> sp = (AbstractServiceProvider<?>) binding;
-            if (!sp.isProvider()) {
+        if (binding instanceof ServiceProviderBase<?,?,?> base) {
+            if (!base.isProvider()) {
                 return binding;
             }
         }
@@ -126,13 +126,8 @@ class BoundedServiceProvider<T> implements ServiceProvider<T> {
     }
 
     @Override
-    public ServiceInfo serviceInfo() {
-        return binding.serviceInfo();
-    }
-
-    @Override
-    public DependenciesInfo dependencies() {
-        return binding.dependencies();
+    public ServiceDescriptor<T> descriptor() {
+        return binding.descriptor();
     }
 
     @Override
@@ -151,22 +146,42 @@ class BoundedServiceProvider<T> implements ServiceProvider<T> {
     }
 
     @Override
-    public Optional<PostConstructMethod> postConstructMethod() {
-        return binding.postConstructMethod();
-    }
-
-    @Override
-    public Optional<PreDestroyMethod> preDestroyMethod() {
-        return binding.preDestroyMethod();
-    }
-
-    @Override
     public Optional<ServiceProviderBindable<T>> serviceProviderBindable() {
         return Optional.of((ServiceProviderBindable<T>) binding);
     }
 
     @Override
-    public Class<?> serviceType() {
+    public String runtimeId() {
+        return binding.runtimeId();
+    }
+
+    @Override
+    public TypeName serviceType() {
         return binding.serviceType();
+    }
+
+    @Override
+    public Set<TypeName> contracts() {
+        return binding.contracts();
+    }
+
+    @Override
+    public List<ServiceDependencies> dependencies() {
+        return binding.dependencies();
+    }
+
+    @Override
+    public Set<Qualifier> qualifiers() {
+        return binding.qualifiers();
+    }
+
+    @Override
+    public int runLevel() {
+        return binding.runLevel();
+    }
+
+    @Override
+    public Set<TypeName> scopes() {
+        return binding.scopes();
     }
 }

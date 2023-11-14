@@ -22,6 +22,7 @@ import java.util.Set;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.api.ServiceDescriptor;
 
 /**
  * Once a service type qualifies for interception, the interception plan will be created describing how the service type
@@ -35,7 +36,7 @@ interface InterceptionPlanBlueprint {
      *
      * @return the intercepted service
      */
-    io.helidon.inject.api.ServiceInfoBasics interceptedService();
+    ServiceDescriptor<?> interceptedService();
 
     /**
      * Annotations at the service type level.
@@ -53,7 +54,7 @@ interface InterceptionPlanBlueprint {
 
     /**
      * The interfaces that this service implements (usually a superset of
-     * {@link io.helidon.inject.api.ServiceInfoBasics#contractsImplemented()}).
+     * {@link io.helidon.inject.api.ServiceDescriptor#contracts()}).
      *
      * @return the interfaces implemented
      */

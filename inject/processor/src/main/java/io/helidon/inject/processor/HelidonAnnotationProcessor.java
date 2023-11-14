@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -55,6 +56,9 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
             HelidonServiceLoader.create(ServiceLoader.load(HelidonProcessorExtensionProvider.class,
                                                            HelidonAnnotationProcessor.class.getClassLoader()))
                     .asList();
+    private static final Set<String> SUPPORTED_APT_OPTIONS = EXTENSIONS.stream()
+            .flatMap(it -> it.supportedOptions().stream())
+            .collect(Collectors.toSet());
     private static final TypeName GENERATOR = TypeName.create(HelidonAnnotationProcessor.class);
 
     private final System.Logger logger = System.getLogger(getClass().getName());
@@ -105,25 +109,14 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        Set<String> result = new HashSet<>();
-
-        for (HelidonProcessorExtensionProvider extension : EXTENSIONS) {
-            result.addAll(extension.supportedOptions());
-        }
-        result.addAll(ctx.mapperSupportedOptions());
-
-        if (logger.isLoggable(TRACE)) {
-            logger.log(TRACE, "Supported options: " + result);
-        }
-
-        return result;
+        return SUPPORTED_APT_OPTIONS;
     }
 
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
 
-        this.ctx = ProcessingContext.create(processingEnv);
+        this.ctx = ProcessingContext.create(processingEnv, SUPPORTED_APT_OPTIONS.toArray(new String[0]));
         this.iCtx = new InjectionProcessingContextImpl(ctx);
         this.extensions = EXTENSIONS.stream()
                 .map(it -> {

@@ -63,9 +63,9 @@ class JavaxTest {
         ServiceProvider<AnApplicationScopedService> sp = services.lookupFirst(AnApplicationScopedService.class);
         assertThat(sp.toString(),
                    equalTo("AnApplicationScopedService:INIT"));
-        assertThat(sp.serviceInfo().qualifiers(),
+        assertThat(sp.qualifiers(),
                    contains(Qualifier.create(Default.class)));
-        assertThat(sp.serviceInfo().scopeTypeNames(),
+        assertThat(sp.scopes(),
                    containsInAnyOrder(TypeNames.JAKARTA_SINGLETON_TYPE, TypeNames.JAKARTA_APPLICATION_SCOPED_TYPE));
     }
 

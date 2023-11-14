@@ -5,12 +5,10 @@ import java.util.Optional;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceDescriptor;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.runtime.ServiceProviderBase;
 import io.helidon.inject.spi.InjectionResolver;
 
@@ -23,7 +21,7 @@ class ConfigDrivenInstanceProvider<T, CB>
     private final ConfigDrivenServiceProvider<T, CB> root;
 
     ConfigDrivenInstanceProvider(InjectionServices injectionServices,
-                                 ServiceDescriptor<T> descriptor,
+                                 ServiceSource<T> descriptor,
                                  ConfigDrivenServiceProvider<T, CB> root,
                                  String name,
                                  CB instance) {
@@ -32,16 +30,8 @@ class ConfigDrivenInstanceProvider<T, CB>
               new ConfigDrivenInstanceActivator<>(injectionServices,
                                                   descriptor,
                                                   instance,
-                                                  TypeName.create(root.configBeanType())),
-              ServiceInfo.builder()
-                      .update(it -> descriptor.contracts().forEach(it::addContractImplemented))
-                      .scopeTypeNames(descriptor.scopes())
-                      .qualifiers(descriptor.qualifiers())
-                      .declaredRunLevel(descriptor.runLevel())
-                      .declaredWeight(descriptor.weight())
-                      .serviceTypeName(descriptor.serviceType())
-                      .addQualifier(Qualifier.createNamed(name))
-                      .build());
+                                                  TypeName.create(root.configBeanType())));
+
         this.beanInstance = instance;
         this.instanceId = name;
         this.root = root;
@@ -79,6 +69,7 @@ class ConfigDrivenInstanceProvider<T, CB>
 
         return Optional.of(beanInstance);
     }
+
     @Override
     protected String id(boolean fq) {
         return super.id(fq) + "{" + instanceId + "}";

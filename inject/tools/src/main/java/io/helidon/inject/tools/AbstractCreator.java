@@ -28,7 +28,6 @@ import java.util.Set;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.runtime.AbstractServiceProvider;
 import io.helidon.inject.runtime.ServiceBinderDefault;
 
 import static io.helidon.inject.tools.TypeTools.needToDeclareModuleUsage;
@@ -63,16 +62,12 @@ public abstract class AbstractCreator {
 
     /**
      * Generates the {@link Activator} source code for the provided service providers. Custom
-     * service providers (see {@link AbstractServiceProvider#isCustom()}) do not qualify to
-     * have activators code generated.
+     * service providers.
      *
      * @param sp the collection of service providers
      * @return the code generated string for the service provider given
      */
     static String toActivatorCodeGen(ServiceProvider<?> sp) {
-        if (sp instanceof AbstractServiceProvider && ((AbstractServiceProvider<?>) sp).isCustom()) {
-            return null;
-        }
         return ServiceBinderDefault.toRootProvider(sp).activator().orElseThrow().getClass().getName() + ".INSTANCE";
     }
 

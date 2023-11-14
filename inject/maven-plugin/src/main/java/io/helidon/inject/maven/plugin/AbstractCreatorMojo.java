@@ -279,7 +279,7 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
 
             ServiceProvider<ModuleComponent> moduleSp = optModuleSp.orElse(null);
             if (moduleSp != null) {
-                packageName = moduleSp.serviceInfo().serviceTypeName().packageName();
+                packageName = moduleSp.serviceType().packageName();
             } else {
                 if (descriptor == null) {
                     packageName = toSuggestedGeneratedPackageName(typeNames, "inject");

@@ -19,6 +19,7 @@ package io.helidon.inject.api;
 import java.util.Optional;
 
 import io.helidon.common.Weighted;
+import io.helidon.common.types.TypeName;
 
 import jakarta.inject.Singleton;
 
@@ -27,21 +28,25 @@ import jakarta.inject.Singleton;
  *
  * @param <T> the type that this service provider manages
  */
-public interface ServiceProvider<T> extends InjectionPointProvider<T>, Weighted {
+public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPointProvider<T>, Weighted {
 
     /**
      * Identifies the service provider physically and uniquely.
      *
      * @return the unique identity of the service provider
      */
-    String id();
+    default String id() {
+        return descriptor().serviceType().fqName();
+    }
 
     /**
      * Describe the service provider. This will change based upon activation state.
      *
      * @return the logical and immutable description
      */
-    String description();
+    default String description() {
+        return descriptor().serviceType().className() + "[" + currentActivationPhase() + "]";
+    }
 
     /**
      * Does the service provide singletons, does it always produce the same result for every call to {@link #get()}.
@@ -57,22 +62,18 @@ public interface ServiceProvider<T> extends InjectionPointProvider<T>, Weighted 
      *
      * @return true if the service provider provides per-request instances for each caller
      */
-    boolean isProvider();
+    default boolean isProvider() {
+        return false;
+    }
 
     /**
-     * The meta information that describes the service. Must remain immutable for the lifetime of the JVM post
-     * binding - ie., after {@link ServiceBinder#bind(ServiceProvider)} is called.
+     * Service descriptor. The type is expected to be generated at compile time, and contains only statically known information.
+     * As a result, methods on this type may provide different results than methods on the descriptor returned by this method,
+     * as this type honors runtime state.
      *
-     * @return the meta information describing the service
+     * @return descriptor of this service
      */
-    ServiceInfo serviceInfo();
-
-    /**
-     * Provides the dependencies for this service provider if known, or null if not known or not available.
-     *
-     * @return the dependencies this service provider has or null if unknown or unavailable
-     */
-    DependenciesInfo dependencies();
+    ServiceDescriptor<T> descriptor();
 
     /**
      * The current activation phase for this service provider.
@@ -87,7 +88,9 @@ public interface ServiceProvider<T> extends InjectionPointProvider<T>, Weighted 
      *
      * @return the activator
      */
-    Optional<Activator> activator();
+    default Optional<Activator> activator() {
+        return Optional.empty();
+    }
 
     /**
      * The agent responsible for deactivation - this will be non-null for build-time activators. If not present then
@@ -95,21 +98,9 @@ public interface ServiceProvider<T> extends InjectionPointProvider<T>, Weighted 
      *
      * @return the deactivator to use or null if the service is not interested in deactivation
      */
-    Optional<DeActivator> deActivator();
-
-    /**
-     * The optional method handling PreDestroy.
-     *
-     * @return the post-construct method or empty if there is none
-     */
-    Optional<PostConstructMethod> postConstructMethod();
-
-    /**
-     * The optional method handling PostConstruct.
-     *
-     * @return the pre-destroy method or empty if there is none
-     */
-    Optional<PreDestroyMethod> preDestroyMethod();
+    default Optional<DeActivator> deActivator() {
+        return Optional.empty();
+    }
 
     /**
      * The agent/instance to be used for binding this service provider to the injectable application that was code generated.
@@ -119,12 +110,17 @@ public interface ServiceProvider<T> extends InjectionPointProvider<T>, Weighted 
      * @see ServiceBinder
      * @see ServiceProviderBindable
      */
-    Optional<ServiceProviderBindable<T>> serviceProviderBindable();
+    default Optional<ServiceProviderBindable<T>> serviceProviderBindable() {
+        return Optional.empty();
+    }
 
-    /**
-     * The type of the service being managed.
-     *
-     * @return the service type being managed
-     */
-    Class<?> serviceType();
+    @Override
+    default TypeName serviceType() {
+        return descriptor().serviceType();
+    }
+
+    @Override
+    default T get() {
+        return InjectionPointProvider.super.get();
+    }
 }

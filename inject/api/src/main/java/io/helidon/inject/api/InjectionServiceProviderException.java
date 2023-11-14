@@ -27,7 +27,7 @@ public class InjectionServiceProviderException extends InjectionException {
     /**
      * The service provider this exception pertains.
      */
-    private final ServiceProvider<?> serviceProvider;
+    private final ServiceDescriptor<?> serviceProvider;
 
     /**
      * A general purpose exception from the Injection framework.
@@ -50,7 +50,7 @@ public class InjectionServiceProviderException extends InjectionException {
         super(msg, cause);
 
         if (cause instanceof InjectionServiceProviderException exc) {
-           this.serviceProvider = exc.serviceProvider().orElse(null);
+           this.serviceProvider = exc.serviceDescriptor().orElse(null);
         } else {
            this.serviceProvider = null;
         }
@@ -60,13 +60,13 @@ public class InjectionServiceProviderException extends InjectionException {
      * A general purpose exception from the Injection framework.
      *
      * @param msg               the message
-     * @param serviceProvider   the service provider
+     * @param serviceDescriptor   the service provider
      */
     public InjectionServiceProviderException(String msg,
-                                             ServiceProvider<?> serviceProvider) {
+                                             ServiceDescriptor<?> serviceDescriptor) {
         super(msg);
-        Objects.requireNonNull(serviceProvider);
-        this.serviceProvider = serviceProvider;
+        Objects.requireNonNull(serviceDescriptor);
+        this.serviceProvider = serviceDescriptor;
     }
 
     /**
@@ -78,7 +78,7 @@ public class InjectionServiceProviderException extends InjectionException {
      */
     public InjectionServiceProviderException(String msg,
                                              Throwable cause,
-                                             ServiceProvider<?> serviceProvider) {
+                                             ServiceDescriptor<?> serviceProvider) {
         super(msg, cause);
         Objects.requireNonNull(serviceProvider);
         this.serviceProvider = serviceProvider;
@@ -89,7 +89,7 @@ public class InjectionServiceProviderException extends InjectionException {
      *
      * @return the optional / contextual service provider
      */
-    public Optional<ServiceProvider<?>> serviceProvider() {
+    public Optional<ServiceDescriptor<?>> serviceDescriptor() {
         return Optional.ofNullable(serviceProvider);
     }
 

@@ -7,5 +7,5 @@ package io.helidon.inject.api;
  */
 @FunctionalInterface
 public interface Invoker<T> {
-    T invoke(Object... parameters);
+    T invoke(Object... parameters) throws Exception;
 }

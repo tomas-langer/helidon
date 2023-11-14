@@ -19,6 +19,7 @@ package io.helidon.inject.runtime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -60,6 +61,7 @@ import io.helidon.inject.api.Metrics;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Resettable;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 
@@ -123,7 +125,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
 
     @Override
     public Optional<Injector> injector() {
-        return Optional.of(new DefaultInjector());
+        return Optional.of(new DefaultInjector(this));
     }
 
     @Override
@@ -526,11 +528,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
             serviceProviders = serviceProviders.stream()
                     .filter(sp -> sp.currentActivationPhase().eligibleForDeactivation())
                     .collect(Collectors.toList());
-            serviceProviders.sort((o1, o2) -> {
-                int runLevel1 = o1.serviceInfo().realizedRunLevel();
-                int runLevel2 = o2.serviceInfo().realizedRunLevel();
-                return Integer.compare(runLevel1, runLevel2);
-            });
+            serviceProviders.sort(Comparator.comparingInt(ServiceDescriptor::runLevel));
             doFinalShutdown(serviceProviders);
 
             // finally, clear everything
@@ -556,7 +554,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
                             .error(t)
                             .build();
                 }
-                map.put(csp.serviceInfo().serviceTypeName(), result);
+                map.put(csp.serviceType(), result);
             }
         }
     }

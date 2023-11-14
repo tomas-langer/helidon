@@ -23,7 +23,7 @@ import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.inject.api.Bootstrap;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.runtime.testsubjects.HelloInjection$$Application;
+import io.helidon.inject.runtime.testsubjects.HelloInjection__Application;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +49,7 @@ class DefaultInjectionServicesTest {
 
     @AfterEach
     void tearDown() {
-        HelloInjection$$Application.ENABLED = true;
+        HelloInjection__Application.ENABLED = true;
         SimpleInjectionTestingSupport.resetAll();
     }
 

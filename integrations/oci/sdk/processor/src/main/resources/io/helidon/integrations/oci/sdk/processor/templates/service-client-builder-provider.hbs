@@ -36,18 +36,18 @@ import java.util.Optional;
 {{{generatedanno}}}
 @Singleton
 @Weight(ServiceInfoBasics.DEFAULT_INJECT_WEIGHT)
-class {{simpleclassname}}$$Oci$$ClientBuilder implements InjectionPointProvider<{{simpleclassname}}Client{{dot}}Builder> {
+class {{simpleclassname}}__Oci_ClientBuilder implements InjectionPointProvider<{{simpleclassname}}Client{{dot}}Builder> {
 {{#if usesRegion}}    private final InjectionPointProvider<Region> regionProvider;
 
     @Deprecated
     @Inject
-    {{simpleclassname}}$$Oci$$ClientBuilder(Provider<Region> regionProvider) {
+    {{simpleclassname}}__Oci_ClientBuilder(Provider<Region> regionProvider) {
         this.regionProvider = (InjectionPointProvider<Region>) regionProvider;
     }
 {{else}}
     @Deprecated
     @Inject
-    {{simpleclassname}}$$Oci$$ClientBuilder() {
+    {{simpleclassname}}__Oci_ClientBuilder() {
     }
 {{/if}}
     @Override

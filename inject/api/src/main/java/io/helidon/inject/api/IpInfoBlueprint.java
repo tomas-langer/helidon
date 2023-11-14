@@ -27,6 +27,13 @@ interface IpInfoBlueprint {
     IpId<?> id();
 
     /**
+     * Field name that declares the {@link #id()}, so code generation can directly reference it.
+     *
+     * @return field that has the id on the descriptor
+     */
+    String field();
+
+    /**
      * The access modifier on the injection point/receiver.
      * Defaults to {@link io.helidon.common.types.AccessModifier#PACKAGE_PRIVATE}.
      *

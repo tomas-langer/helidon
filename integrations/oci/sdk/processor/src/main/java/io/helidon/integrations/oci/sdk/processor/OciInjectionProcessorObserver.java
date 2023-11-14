@@ -40,11 +40,9 @@ import javax.tools.JavaFileObject;
 
 import io.helidon.common.LazyValue;
 import io.helidon.common.types.TypeName;
-import io.helidon.common.types.TypeValues;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.processor.InjectionAnnotationProcessor;
 import io.helidon.inject.processor.ProcessingEvent;
 import io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
 import io.helidon.inject.tools.TemplateHelper;
@@ -56,7 +54,7 @@ import static java.util.function.Predicate.not;
 
 /**
  * This processor is an implementation of {@link InjectionAnnotationProcessorObserver}. When on the APT classpath, it will monitor
- * {@link InjectionAnnotationProcessor} for all injection points that are
+ * injection processor for all injection points that are
  * using the {@code OCI SDK Services} and translate those injection points into code-generated
  * {@link Activator}s, {@link ModuleComponent}, etc. for those services / components.
  * This process will therefore make the {@code OCI SDK} set of services injectable by your (non-MP-based) Helidon application, and
@@ -94,7 +92,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
     static final String GENERATED_PREFIX = "io.helidon.integrations.generated.";
 
     // all generated sources will have this class name suffix
-    static final String GENERATED_CLIENT_SUFFIX = "$$Oci$$Client";
+    static final String GENERATED_CLIENT_SUFFIX = "__Oci_Client";
     static final String GENERATED_CLIENT_BUILDER_SUFFIX = GENERATED_CLIENT_SUFFIX + "Builder";
     static final String GENERATED_OCI_ROOT_PACKAGE_NAME_PREFIX = GENERATED_PREFIX + OCI_ROOT_PACKAGE_NAME_PREFIX;
 
@@ -132,13 +130,12 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
 
     private void process(TypedElementInfo element,
                          ProcessingEnvironment processingEnv) {
-        if (TypeValues.KIND_FIELD.equalsIgnoreCase(element.elementTypeKind())) {
-            process(element.typeName(), processingEnv);
-        } else if (TypeValues.KIND_METHOD.equalsIgnoreCase(element.elementTypeKind())
-                || TypeValues.KIND_CONSTRUCTOR.equalsIgnoreCase(element.elementTypeKind())) {
-            element.parameterArguments().stream()
-                    .filter(it -> shouldProcess(it.typeName(), processingEnv))
-                    .forEach(it -> process(it.typeName(), processingEnv));
+        switch(element.elementTypeKind()) {
+        case FIELD -> process(element.typeName(), processingEnv);
+        case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
+                .filter(it -> shouldProcess(it.typeName(), processingEnv))
+                .forEach(it -> process(it.typeName(), processingEnv));
+        default -> {}
         }
     }
 
@@ -295,15 +292,12 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
             return false;
         }
 
-        if (TypeValues.KIND_FIELD.equalsIgnoreCase(element.elementTypeKind())) {
-            return shouldProcess(element.typeName(), processingEnv);
-        } else if (TypeValues.KIND_METHOD.equalsIgnoreCase(element.elementTypeKind())
-                || TypeValues.KIND_CONSTRUCTOR.equalsIgnoreCase(element.elementTypeKind())) {
-            return element.parameterArguments().stream()
+        return switch (element.elementTypeKind()) {
+            case FIELD -> shouldProcess(element.typeName(), processingEnv);
+            case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
                     .anyMatch(it -> shouldProcess(it.typeName(), processingEnv));
-        }
-
-        return false;
+            default -> false;
+        };
     }
 
     static boolean shouldProcess(TypeName typeName,

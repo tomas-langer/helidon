@@ -1,7 +1,9 @@
 package io.helidon.common.codegen;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
@@ -43,9 +45,9 @@ public final class TypesCodeGen {
                 .forEach(propertyName -> {
                     result.append(".putValue(\"")
                             .append(propertyName)
-                            .append("\", \"")
-                            .append(annotation.stringValue().get())
-                            .append("\")");
+                            .append("\", ")
+                            .append(toAnnotationValue(annotation.objectValue(propertyName).get()))
+                            .append(")");
                 });
 
         return result.append(".build()")
@@ -108,5 +110,40 @@ public final class TypesCodeGen {
         }
 
         return result.append(".build()").toString();
+    }
+
+    private static String toAnnotationValue(Object objectValue) {
+        Annotation.builder()
+                .putValue("property", 49);
+        return switch (objectValue) {
+            case String value -> "\"" + value + "\"";
+            case Boolean value -> String.valueOf(value);
+            case Long value -> String.valueOf(value) + 'L';
+            case Double value -> String.valueOf(value) + 'D';
+            case Integer value -> String.valueOf(value);
+            case Byte value -> "(byte)" + value;
+            case Character value -> "'" + value + "'";
+            case Short value -> "(short)" + value;
+            case Float value -> String.valueOf(value) + 'F';
+            case Class<?> value -> toCreate(TypeName.create(value), false);
+            case TypeName value -> toCreate(value, false);
+            case Annotation value -> toCreate(value);
+            case Enum<?> value -> toEnumValue(value);
+            case List<?> values -> toListValues(values);
+            default -> throw new IllegalStateException("Unexpected value type " + objectValue.getClass()
+                    .getName() + ": " + objectValue);
+        };
+    }
+
+    private static String toListValues(List<?> values) {
+        return "@java.util.List@.of("
+                + values.stream()
+                .map(TypesCodeGen::toAnnotationValue)
+                .collect(Collectors.joining(","))
+                + ")";
+    }
+
+    private static String toEnumValue(Enum<?> value) {
+        return "@" + value.getDeclaringClass().getName() + "@." + value.name();
     }
 }

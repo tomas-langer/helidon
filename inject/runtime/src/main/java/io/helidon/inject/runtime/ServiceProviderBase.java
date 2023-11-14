@@ -5,14 +5,10 @@ import java.util.Optional;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.DeActivator;
-import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.PostConstructMethod;
-import io.helidon.inject.api.PreDestroyMethod;
 import io.helidon.inject.api.ServiceDescriptor;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.ServiceProviderInjectionException;
@@ -20,10 +16,9 @@ import io.helidon.inject.api.ServiceProviderInjectionException;
 import jakarta.inject.Provider;
 
 public abstract class ServiceProviderBase<T, S extends ServiceProviderBase<T, S, ?>, A extends ServiceActivatorBase<T, S>>
-        implements ServiceProviderBindable<T> {
+        extends DescribedServiceProvider<T>
+        implements ServiceProviderBindable<T>, ServiceDescriptor<T> {
     private final A activator;
-    private final ServiceInfo serviceInfo;
-    private final ServiceDescriptor<T> descriptor;
     private final InjectionServices injectionServices;
 
     private volatile ServiceProvider<?> interceptor;
@@ -31,12 +26,11 @@ public abstract class ServiceProviderBase<T, S extends ServiceProviderBase<T, S,
     @SuppressWarnings("unchecked")
     protected ServiceProviderBase(InjectionServices injectionServices,
                                   ServiceDescriptor<T> descriptor,
-                                  A activator,
-                                  ServiceInfo serviceInfo) {
+                                  A activator) {
+        super(descriptor);
+
         this.injectionServices = injectionServices;
-        this.descriptor = descriptor;
         this.activator = activator;
-        this.serviceInfo = serviceInfo;
         // must be done post construction of this instance
         this.activator.serviceProvider((S) this);
     }
@@ -78,25 +72,6 @@ public abstract class ServiceProviderBase<T, S extends ServiceProviderBase<T, S,
     }
 
     @Override
-    public boolean isProvider() {
-        return false;
-    }
-
-    @Override
-    public ServiceInfo serviceInfo() {
-        return serviceInfo;
-    }
-
-    @Override
-    public void moduleName(String moduleName) {
-    }
-
-    @Override
-    public Class<?> serviceType() {
-        return descriptor.serviceType();
-    }
-
-    @Override
     public Phase currentActivationPhase() {
         return activator.phase();
     }
@@ -118,21 +93,6 @@ public abstract class ServiceProviderBase<T, S extends ServiceProviderBase<T, S,
 
     @Override
     public void injectionServices(Optional<InjectionServices> injectionServices) {
-    }
-
-    @Override
-    public Optional<PostConstructMethod> postConstructMethod() {
-        return Optional.of(() -> descriptor.postConstruct(activator.get(true)));
-    }
-
-    @Override
-    public Optional<PreDestroyMethod> preDestroyMethod() {
-        return Optional.of(() -> descriptor.preDestroy(activator.get(true)));
-    }
-
-    @Override
-    public DependenciesInfo dependencies() {
-        return DependenciesInfo.create();
     }
 
     @Override
@@ -162,13 +122,9 @@ public abstract class ServiceProviderBase<T, S extends ServiceProviderBase<T, S,
 
     protected String id(boolean fq) {
         if (fq) {
-            return descriptor.serviceType().getName();
+            return descriptor().serviceType().fqName();
         }
-        return descriptor.serviceType().getSimpleName();
-    }
-
-    protected ServiceDescriptor<T> descriptor() {
-        return descriptor;
+        return descriptor().serviceType().className();
     }
 
     protected InjectionServices getInjectionServices() {

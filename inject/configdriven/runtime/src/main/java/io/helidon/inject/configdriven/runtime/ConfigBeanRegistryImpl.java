@@ -29,6 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import io.helidon.common.LazyValue;
 import io.helidon.common.config.Config;
 import io.helidon.common.config.ConfigException;
+import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Bootstrap;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServiceProviderException;
@@ -55,8 +56,8 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
     // map of config bean types to their factories (only for used config beans, that have a config driven service associated)
     private final Map<Class<?>, ConfigBeanFactory<?>> configBeanFactories = new ConcurrentHashMap<>();
     // map of config bean types to the config driven types
-    private final Map<Class<?>, Set<Class<?>>> configDrivenByConfigBean = new ConcurrentHashMap<>();
-    private final Map<Class<?>, ConfiguredServiceProvider<?, ?>> configDrivenFactories = new ConcurrentHashMap<>();
+    private final Map<Class<?>, Set<TypeName>> configDrivenByConfigBean = new ConcurrentHashMap<>();
+    private final Map<TypeName, ConfiguredServiceProvider<?, ?>> configDrivenFactories = new ConcurrentHashMap<>();
     // map of config bean types to instances (list may be empty if no instance exists)
     private final Map<Class<?>, List<NamedInstance<?>>> configBeanInstances = new ConcurrentHashMap<>();
 
@@ -110,7 +111,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
         }
 
         Class<?> configBeanType = configuredServiceProvider.configBeanType();
-        Class<?> configDrivenType = configuredServiceProvider.serviceType();
+        TypeName configDrivenType = configuredServiceProvider.serviceType();
 
         if (LOGGER.isLoggable(System.Logger.Level.DEBUG)) {
             LOGGER.log(System.Logger.Level.DEBUG, "Binding " + configDrivenType
@@ -180,7 +181,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
                         .add(configBean);
             }
 
-            Set<Class<?>> configDrivenTypes = configDrivenByConfigBean.get(configBeanType);
+            Set<TypeName> configDrivenTypes = configDrivenByConfigBean.get(configBeanType);
             if (configDrivenTypes == null) {
                 LOGGER.log(System.Logger.Level.WARNING, "Unexpected state of config bean registry, "
                         + "config bean does not have any config driven types. Config bean type: " + configBeanType);
@@ -188,7 +189,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
             }
 
             // for each config driven type, create new instances for each discovered config bean
-            for (Class<?> configDrivenType : configDrivenTypes) {
+            for (TypeName configDrivenType : configDrivenTypes) {
                 ConfiguredServiceProvider<?, ?> configuredServiceProvider = configDrivenFactories.get(configDrivenType);
                 if (configuredServiceProvider == null) {
                     LOGGER.log(System.Logger.Level.WARNING, "Unexpected state of config bean registry, "

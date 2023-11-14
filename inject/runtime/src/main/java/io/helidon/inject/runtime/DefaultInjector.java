@@ -24,20 +24,28 @@ import io.helidon.inject.api.DeActivationRequest;
 import io.helidon.inject.api.DeActivator;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServiceProviderException;
+import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.InjectorOptions;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.api.ServiceSource;
 
 /**
  * Default reference implementation for the {@link Injector}.
  */
 class DefaultInjector implements Injector {
 
+    private final InjectionServices injectionServices;
+
+    DefaultInjector(InjectionServices injectionServices) {
+        this.injectionServices = injectionServices;
+    }
+
     @Override
     @SuppressWarnings("unchecked")
-    public <T> ActivationResult activateInject(T serviceOrServiceProvider,
-                                               InjectorOptions opts) throws InjectionServiceProviderException {
-        Objects.requireNonNull(serviceOrServiceProvider);
+    public ActivationResult activateInject(ServiceSource<?> serviceSource,
+                                           InjectorOptions opts) throws InjectionServiceProviderException {
+        Objects.requireNonNull(serviceSource);
         Objects.requireNonNull(opts);
 
         ActivationResult.Builder resultBuilder = ActivationResult.builder();
@@ -46,16 +54,13 @@ class DefaultInjector implements Injector {
             return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
         }
 
-        if (!(serviceOrServiceProvider instanceof ServiceProvider<?>)) {
-            return handleError(resultBuilder, opts, "unsupported service type: " + serviceOrServiceProvider, null);
-        }
+        ServiceProvider<?> provider = ServiceBinderDefault.serviceProvider(injectionServices, serviceSource);
 
-        ServiceProvider<T> instance = (ServiceProvider<T>) serviceOrServiceProvider;
-        resultBuilder.serviceProvider(instance);
+        resultBuilder.serviceProvider(provider);
 
-        Activator activator = instance.activator().orElse(null);
+        Activator activator = provider.activator().orElse(null);
         if (activator == null) {
-            return handleError(resultBuilder, opts, "the service provider does not have an activator", instance);
+            return handleError(resultBuilder, opts, "the service provider does not have an activator", provider);
         }
 
         return activator.activate(opts.activationRequest());
@@ -63,9 +68,9 @@ class DefaultInjector implements Injector {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> ActivationResult deactivate(T serviceOrServiceProvider,
-                                           InjectorOptions opts) throws InjectionServiceProviderException {
-        Objects.requireNonNull(serviceOrServiceProvider);
+    public ActivationResult deactivate(ServiceProvider<?> serviceProvider,
+                                       InjectorOptions opts) throws InjectionServiceProviderException {
+        Objects.requireNonNull(serviceProvider);
         Objects.requireNonNull(opts);
 
         ActivationResult.Builder resultBuilder = ActivationResult.builder();
@@ -74,16 +79,11 @@ class DefaultInjector implements Injector {
             return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
         }
 
-        if (!(serviceOrServiceProvider instanceof ServiceProvider<?>)) {
-            return handleError(resultBuilder, opts, "unsupported service type: " + serviceOrServiceProvider, null);
-        }
+        resultBuilder.serviceProvider(serviceProvider);
 
-        ServiceProvider<T> instance = (ServiceProvider<T>) serviceOrServiceProvider;
-        resultBuilder.serviceProvider(instance);
-
-        DeActivator deactivator = instance.deActivator().orElse(null);
+        DeActivator deactivator = serviceProvider.deActivator().orElse(null);
         if (deactivator == null) {
-            return handleError(resultBuilder, opts, "the service provider does not have a deactivator", instance);
+            return handleError(resultBuilder, opts, "the service provider does not have a deactivator", serviceProvider);
         }
 
         DeActivationRequest request = DeActivationRequest.builder()

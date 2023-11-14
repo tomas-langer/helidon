@@ -24,7 +24,7 @@ import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.ServiceInfoBasics;
+import io.helidon.inject.api.ServiceDescriptor;
 
 /**
  * The request will be generated internally and then passed to the appropriate
@@ -71,11 +71,11 @@ interface CustomAnnotationTemplateRequestBlueprint {
     boolean isElementStatic();
 
     /**
-     * Projects the {@link #enclosingTypeInfo()} as a {@link io.helidon.inject.api.ServiceInfoBasics} type.
+     * Projects the {@link #enclosingTypeInfo()} as a {@link io.helidon.inject.api.ServiceDescriptor} type.
      *
      * @return the basic service info of the element being processed
      */
-    ServiceInfoBasics serviceInfo();
+    ServiceDescriptor<?> serviceInfo();
 
     /**
      * The enclosing class type info of the target element being processed.

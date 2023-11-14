@@ -19,9 +19,7 @@ package io.helidon.inject.runtime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
@@ -29,7 +27,7 @@ import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.InvocationContext;
 import io.helidon.inject.api.InvocationException;
-import io.helidon.inject.api.ServiceDependencies;
+import io.helidon.inject.api.Invoker;
 import io.helidon.inject.api.ServiceDescriptor;
 
 import jakarta.inject.Provider;
@@ -65,7 +63,7 @@ class InvocationTest {
     }
 
     @Test
-    void normalCaseWithInterceptors() {
+    void normalCaseWithInterceptors() throws Exception {
         Object[] args = new Object[] {};
         Boolean result = Invocation.createInvokeAndSupply(dummyCtx, (arguments) -> calls.add(arguments), args);
         assertThat(result, is(true));
@@ -79,7 +77,7 @@ class InvocationTest {
     }
 
     @Test
-    void normalCaseWithNoInterceptors() {
+    void normalCaseWithNoInterceptors() throws Exception {
         InvocationContext dummyCtx = InvocationContext.builder()
                 .serviceDescriptor(new DummyServiceDescriptor())
                 .elementInfo(TypedElementInfo.builder()
@@ -103,7 +101,7 @@ class InvocationTest {
 
         calls.clear();
         RuntimeException re = new RuntimeException("forced");
-        Function<Object[], Object> fnc = (arguments) -> {
+        Invoker<Object> fnc = (arguments) -> {
             throw re;
         };
         InvocationException e = assertThrows(InvocationException.class,
@@ -118,7 +116,7 @@ class InvocationTest {
     void illegalCallToInterceptorProceedTwice() {
         first.control.timesToCallProceed(2);
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
                                              () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
         assertThat(e.getMessage(),
@@ -137,7 +135,7 @@ class InvocationTest {
     void illegalCallToTargetProceedTwice() {
         second.control.timesToCallProceed(2);
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = arguments -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
                                              () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
         assertThat(e.getMessage(),
@@ -157,7 +155,7 @@ class InvocationTest {
         first.control.timesToCallProceed(2).timesToCatchException(1);
         second.control.exceptionAfterProceed(new RuntimeException("after"));
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
                                              () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
         assertThat(e.targetWasCalled(), is(true));
@@ -172,11 +170,11 @@ class InvocationTest {
 
     @Test
     @Disabled
-    void exceptionThrownInInterceptorPriorToReachingTarget() {
+    void exceptionThrownInInterceptorPriorToReachingTarget() throws Exception {
         first.control.timesToCatchException(1).timesToCallProceed(2);
         second.control.exceptionBeforeProceed(new RuntimeException("before"));
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
         assertThat(result, is(true));
         assertThat(first.callCount.get(), equalTo(1));
@@ -193,7 +191,7 @@ class InvocationTest {
         first.control.timesToCatchException(1).timesToCallProceed(2);
         second.control.exceptionAfterProceed(new RuntimeException("after"));
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
                                              () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
         assertThat(e.getMessage(),
@@ -210,12 +208,12 @@ class InvocationTest {
 
     @Test
     @Disabled
-    void exceptionThrownMultipleTimesInSecond() {
+    void exceptionThrownMultipleTimesInSecond() throws Exception {
         first.control.timesToCatchException(3).timesToCallProceed(3);
         second.control.exceptionBeforeProceed(new RuntimeException("before"));
         second.control.exceptionAfterProceed(new RuntimeException("after"));
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
         assertThat("because exception happened after we called proceed in second the value is lost", result, nullValue());
         assertThat(first.callCount.get(), equalTo(1));
@@ -228,10 +226,10 @@ class InvocationTest {
     }
 
     @Test
-    void shortCircuitInFirst() {
+    void shortCircuitInFirst() throws Exception {
         first.control.shortCircuitValue(false);
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
         assertThat(result, is(false));
         assertThat(first.callCount.get(), equalTo(1));
@@ -244,10 +242,10 @@ class InvocationTest {
     }
 
     @Test
-    void shortCircuitInSecond() {
+    void shortCircuitInSecond() throws Exception {
         second.control.shortCircuitValue(false);
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
         assertThat(result, is(false));
         assertThat(first.callCount.get(), equalTo(1));
@@ -260,11 +258,11 @@ class InvocationTest {
     }
 
     @Test
-    void firstDoingAllOfTheProceedCalls() {
+    void firstDoingAllOfTheProceedCalls() throws Exception {
         first.control.timesToCallProceed(2);
         second.control.timesToCallProceed(0);
         Object[] args = new Object[] {};
-        Function<Object[], Boolean> fnc = (arguments) -> calls.add(arguments);
+        Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
         assertThat(result, is(true));
         assertThat(first.callCount.get(), equalTo(1));
@@ -321,7 +319,13 @@ class InvocationTest {
                     proceedCount.incrementAndGet();
 
                     try {
-                        v = chain.proceed(args);
+                        try {
+                            v = chain.proceed(args);
+                        } catch (RuntimeException e) {
+                            throw e;
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
                     } catch (RuntimeException e) {
                         downstreamExceptionCount.incrementAndGet();
                         if (control.timesToCatchException() <= 0) {
@@ -352,20 +356,9 @@ class InvocationTest {
     }
 
     private static class DummyServiceDescriptor implements ServiceDescriptor<DummyServiceDescriptor> {
-
         @Override
-        public Set<Class<?>> contracts() {
-            return Set.of();
-        }
-
-        @Override
-        public List<ServiceDependencies> dependencies() {
-            return List.of();
-        }
-
-        @Override
-        public Class<?> serviceType() {
-            return DummyServiceDescriptor.class;
+        public TypeName serviceType() {
+            return TypeName.create(DummyServiceDescriptor.class);
         }
     }
 }

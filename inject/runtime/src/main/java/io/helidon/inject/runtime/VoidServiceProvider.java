@@ -17,12 +17,13 @@
 package io.helidon.inject.runtime;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.ServiceInfo;
+import io.helidon.inject.api.Phase;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 
 import jakarta.inject.Singleton;
@@ -30,27 +31,24 @@ import jakarta.inject.Singleton;
 /**
  * A proxy service provider created internally by the framework.
  */
-class VoidServiceProvider extends AbstractServiceProvider<Void> {
-    static final VoidServiceProvider INSTANCE = new VoidServiceProvider() {};
+class VoidServiceProvider extends DescribedServiceProvider<Void> {
+    static final TypeName TYPE_NAME = TypeName.create(Void.class);
+    static final VoidServiceProvider INSTANCE = new VoidServiceProvider() { };
     static final List<ServiceProvider<?>> LIST_INSTANCE = List.of(INSTANCE);
 
-    private VoidServiceProvider() {
-        serviceInfo(ServiceInfo.builder()
-                .serviceTypeName(Void.class)
-                .addContractImplemented(serviceTypeName())
-                .activatorTypeName(VoidServiceProvider.class)
-                .addScopeTypeName(Singleton.class)
-                .declaredWeight(DEFAULT_WEIGHT)
-                .build());
-    }
+    private static final ServiceDescriptor<Void> DESCRIPTOR = new VoidDescriptor();
 
-    public static TypeName serviceTypeName() {
-        return TypeName.create(Void.class);
+    private VoidServiceProvider() {
+        super(DESCRIPTOR);
     }
 
     @Override
-    protected Void createServiceProvider(Map<String, Object> resolvedDeps) {
-        // this must return null by definition
+    public Phase currentActivationPhase() {
+        return Phase.ACTIVE;
+    }
+
+    @Override
+    public Void get() {
         return null;
     }
 
@@ -59,8 +57,23 @@ class VoidServiceProvider extends AbstractServiceProvider<Void> {
         return Optional.empty();
     }
 
-    @Override
-    public Class<?> serviceType() {
-        return Void.class;
+    private static class VoidDescriptor implements ServiceDescriptor<Void> {
+        static final Set<TypeName> SCOPES = Set.of(TypeName.create(Singleton.class));
+        private static final Set<TypeName> CONTRACTS = Set.of(TYPE_NAME);
+
+        @Override
+        public TypeName serviceType() {
+            return TYPE_NAME;
+        }
+
+        @Override
+        public Set<TypeName> contracts() {
+            return CONTRACTS;
+        }
+
+        @Override
+        public Set<TypeName> scopes() {
+            return SCOPES;
+        }
     }
 }

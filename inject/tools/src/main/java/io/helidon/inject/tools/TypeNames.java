@@ -17,7 +17,6 @@
 package io.helidon.inject.tools;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.runtime.AbstractServiceProvider;
 
 /**
  * Type name constants.
@@ -92,15 +91,6 @@ public final class TypeNames {
      * Injection service provider type.
      */
     public static final TypeName SERVICE_PROVIDER_TYPE = TypeName.create("io.helidon.inject.api.ServiceProvider");
-    /**
-     * Injection abstract service provider type.
-     */
-    public static final TypeName ABSTRACT_SERVICE_PROVIDER_TYPE = TypeName.create(AbstractServiceProvider.class);
-    /**
-     * Injection class name {@value} for {@code ConfigDrivenServiceProviderBase}.
-     */
-    public static final String ABSTRACT_CONFIGURED_SERVICE_PROVIDER =
-            "io.helidon.inject.configdriven.runtime.ConfigDrivenServiceProviderBase";
     /**
      * Jakarta {@value} annotation.
      */
@@ -278,25 +268,9 @@ public final class TypeNames {
      */
     public static final String JAVAX_INJECT = "javax.inject.Inject";
     /**
-     * Jakarta legacy {@value #JAVAX_INJECT} annotation type.
-     */
-    public static final TypeName JAVAX_INJECT_TYPE = TypeName.create(JAVAX_INJECT);
-    /**
-     * Jakarta legacy {@value} annotation.
-     */
-    public static final String JAVAX_POST_CONSTRUCT = "javax.annotation.PostConstruct";
-    /**
-     * Jakarta legacy {@value} annotation.
-     */
-    public static final String JAVAX_PRE_DESTROY = "javax.annotation.PreDestroy";
-    /**
      * Jakarta legacy {@value} annotation.
      */
     public static final String JAVAX_QUALIFIER = "javax.inject.Qualifier";
-    /**
-     * Jakarta legacy {@value} annotation.
-     */
-    public static final String JAVAX_PRIORITY = "javax.annotation.Priority";
     /**
      * Jakarta legacy {@value} type.
      */
@@ -305,11 +279,8 @@ public final class TypeNames {
      * Jakarta legacy {@value JAVAX_PROVIDER} type.
      */
     public static final TypeName JAVAX_PROVIDER_TYPE = TypeName.create(JAVAX_PROVIDER);
-    /**
-     * Jakarta legacy {@value} annotation.
-     */
-    public static final String JAVAX_SINGLETON = "javax.inject.Singleton";
     public static final TypeName SERVICE_DESCRIPTOR_TYPE = TypeName.create("io.helidon.inject.api.ServiceDescriptor");
+    public static final TypeName SERVICE_SOURCE_TYPE = TypeName.create("io.helidon.inject.api.ServiceSource");
     public static final TypeName INJECTION_CONTEXT = TypeName.create("io.helidon.inject.api.InjectionContext");
     public static final TypeName INJECTION_PARAMETER_ID = TypeName.create("io.helidon.inject.api.IpId");
     public static final TypeName INJECTION_PARAMETER_INFO = TypeName.create("io.helidon.inject.api.IpInfo");

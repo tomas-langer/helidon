@@ -11,8 +11,8 @@ import io.helidon.common.processor.spi.TypeMapper;
 import io.helidon.common.types.TypeName;
 
 public interface ProcessingContext {
-    static ProcessingContext create(ProcessingEnvironment processingEnv) {
-        return new ProcessingContextImpl(processingEnv);
+    static ProcessingContext create(ProcessingEnvironment processingEnv, String... supportedOptions) {
+        return new ProcessingContextImpl(processingEnv, supportedOptions);
     }
 
     ProcessingEnvironment aptEnv();

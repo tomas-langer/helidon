@@ -33,6 +33,6 @@ module io.helidon.integrations.oci.sdk.runtime {
 
     uses io.helidon.inject.api.ModuleComponent;
 
-    provides io.helidon.inject.api.ModuleComponent with
-            io.helidon.integrations.oci.sdk.runtime.Injection$$Module;
+    provides io.helidon.inject.api.ModuleComponent
+            with io.helidon.integrations.oci.sdk.runtime.HelidonInjection__ModuleComponent;
 }

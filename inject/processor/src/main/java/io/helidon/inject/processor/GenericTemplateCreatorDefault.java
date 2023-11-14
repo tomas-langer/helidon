@@ -105,7 +105,7 @@ class GenericTemplateCreatorDefault implements GenericTemplateCreator {
         Map<String, Object> substitutions = new HashMap<>();
 
         TypeName generatorType = TypeName.create(generator);
-        TypeName serviceType = req.serviceInfo().serviceTypeName();
+        TypeName serviceType = req.serviceInfo().serviceType();
         substitutions.put("generatedSticker", templateHelper.generatedStickerFor(generatorType, serviceType, generatedTypeName));
         substitutions.put("annoTypeName", req.annoTypeName());
         substitutions.put("generatedTypeName", generatedTypeName);
@@ -114,8 +114,8 @@ class GenericTemplateCreatorDefault implements GenericTemplateCreator {
         substitutions.put("enclosingClassTypeName", req.enclosingTypeInfo().typeName());
         substitutions.put("enclosingAnnotations", req.enclosingTypeInfo().annotations());
         substitutions.put("basicServiceInfo", req.serviceInfo());
-        substitutions.put("weight", req.serviceInfo().realizedWeight());
-        substitutions.put("runLevel", req.serviceInfo().realizedRunLevel());
+        substitutions.put("weight", req.serviceInfo().weight());
+        substitutions.put("runLevel", req.serviceInfo().runLevel());
         substitutions.put("elementKind", req.targetElement().elementTypeKind());
         substitutions.put("elementName", req.targetElement().elementName());
         substitutions.put("elementAnnotations", req.targetElement().annotations());

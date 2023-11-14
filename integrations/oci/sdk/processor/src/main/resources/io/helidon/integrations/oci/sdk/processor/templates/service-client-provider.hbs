@@ -37,13 +37,13 @@ import java.util.Optional;
 @Singleton
 @Weight(ServiceInfoBasics.DEFAULT_INJECT_WEIGHT)
 @ExternalContracts({{classname}}.class)
-class {{simpleclassname}}$$Oci$$Client implements InjectionPointProvider<{{simpleclassname}}Client> {
+class {{simpleclassname}}__Oci_Client implements InjectionPointProvider<{{simpleclassname}}Client> {
     private final InjectionPointProvider<AbstractAuthenticationDetailsProvider> authProvider;
     private final InjectionPointProvider<{{simpleclassname}}Client{{dot}}Builder> builderProvider;
 
     @Deprecated
     @Inject
-    {{simpleclassname}}$$Oci$$Client(Provider<AbstractAuthenticationDetailsProvider> authProvider, Provider<{{simpleclassname}}Client{{dot}}Builder> builderProvider) {
+    {{simpleclassname}}__Oci_Client(Provider<AbstractAuthenticationDetailsProvider> authProvider, Provider<{{simpleclassname}}Client{{dot}}Builder> builderProvider) {
         this.authProvider = (InjectionPointProvider<AbstractAuthenticationDetailsProvider>) authProvider;
         this.builderProvider = (InjectionPointProvider<{{simpleclassname}}Client{{dot}}Builder>) builderProvider;
     }

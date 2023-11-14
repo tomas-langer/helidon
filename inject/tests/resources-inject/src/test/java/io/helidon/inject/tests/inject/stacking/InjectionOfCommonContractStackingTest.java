@@ -72,7 +72,7 @@ class InjectionOfCommonContractStackingTest {
         List<String> injections = allIntercepted.stream()
                 .map(sp -> {
                     CommonContract inner = sp.get().getInner();
-                    return sp.serviceInfo().serviceTypeName().classNameWithEnclosingNames() + " injected with "
+                    return sp.serviceType().classNameWithEnclosingNames() + " injected with "
                             + (inner == null ? null : inner.getClass().getSimpleName());
                 })
                 .toList();

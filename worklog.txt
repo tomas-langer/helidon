@@ -1,10 +1,8 @@
 InjectServiceActivator - gather dependencies
 InjectServiceProvider - requires implementation
-InjectionProcessorExtension - annotation processor extension for injection
-    - requires similar for config driven
-IpIdBlueprint - maybe need to refactor to use indexed parameters
-    - when we use maven plugin to create application, we need to use correct ids (using parameter names as created in the service descriptor)
 
+Maven plugin (AbstractApplicationCreatorMojo and others)
+Application
 
 io.helidon.inject.runtime.DefaultInjectionPlans.accumulate - next step, gather dependencies
 
@@ -13,3 +11,4 @@ io.helidon.inject.runtime.AbstractServiceProvider - the main culprit
 test subject:
 io.helidon.inject.tests.inject.tbox.impl.MainToolBox
 
+io.helidon.inject.runtime.HelloInjectionWorldSanityTest.injectionPlanResolved

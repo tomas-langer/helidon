@@ -164,6 +164,9 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
         try {
             Thread.currentThread().setContextClassLoader(loader);
 
+            if (1 == 1) {
+                return;
+            }
             ExternalModuleCreator externalModuleCreator = externalModuleCreator();
 
             ActivatorCreatorConfigOptions configOptions = ActivatorCreatorConfigOptions.builder()

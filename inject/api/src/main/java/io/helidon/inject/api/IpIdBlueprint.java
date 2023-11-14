@@ -1,10 +1,7 @@
 package io.helidon.inject.api;
 
-import java.util.Optional;
-
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
-import io.helidon.common.GenericType;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 
@@ -21,18 +18,11 @@ interface IpIdBlueprint<T> {
     ElementKind elementKind();
 
     /**
-     * Name of the field or parameter.
+     * Unique name within a kind within a single type.
      *
-     * @return name of the field or parameter
+     * @return unique name of the field or parameter
      */
     String name();
-
-    /**
-     * Type of the injection point (exact parameter type with all generics).
-     *
-     * @return type of the injection point as {@link io.helidon.common.GenericType}
-     */
-    GenericType<T> type();
 
     /**
      * Type of the injection point (exact parameter type with all generics).
@@ -41,11 +31,4 @@ interface IpIdBlueprint<T> {
      */
     @Option.Redundant
     TypeName typeName();
-
-    /**
-     * Unique method identification within a type (name and parameter types).
-     *
-     * @return method id
-     */
-    Optional<MethodId> method();
 }

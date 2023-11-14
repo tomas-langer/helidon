@@ -27,7 +27,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Application;
@@ -43,13 +42,12 @@ import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.Resettable;
 import io.helidon.inject.api.ServiceBinder;
-import io.helidon.inject.api.ServiceDescriptor;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.spi.ActivatorProvider;
 
@@ -108,32 +106,19 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
             exploded = (coll instanceof List) ? (List) coll : new ArrayList<>(coll);
         }
 
-        List result;
-        if (criteria.includeIntercepted()) {
-            result = exploded;
-        } else {
-            result = (List) exploded.stream()
-                    .filter(sp -> !(sp instanceof AbstractServiceProvider) || !((AbstractServiceProvider) sp).isIntercepted())
-                    .collect(Collectors.toList());
-        }
-
-        if (expected && result.isEmpty()) {
+        if (expected && exploded.isEmpty()) {
             throw resolutionBasedInjectionError(criteria);
         }
 
-        if (result.size() > 1) {
-            result.sort(serviceProviderComparator());
+        if (exploded.size() > 1) {
+            exploded.sort(serviceProviderComparator());
         }
 
-        return result;
+        return exploded;
     }
 
     static boolean hasContracts(ServiceInfoCriteria criteria) {
         return !criteria.contractsImplemented().isEmpty();
-    }
-
-    static boolean isIntercepted(ServiceProvider<?> sp) {
-        return (sp instanceof ServiceProviderBindable && ((ServiceProviderBindable<?>) sp).isIntercepted());
     }
 
     /**
@@ -155,12 +140,6 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                     .orElseGet(() -> InjectionExceptions.toErrorMessage(desc));
             throw new IllegalStateException(msg);
         }
-    }
-
-    static ServiceInfo toValidatedServiceInfo(ServiceProvider<?> serviceProvider) {
-        ServiceInfo info = serviceProvider.serviceInfo();
-        Objects.requireNonNull(info.serviceTypeName(), () -> "service type name is required for " + serviceProvider);
-        return info;
     }
 
     static ServiceProviderInjectionException serviceProviderAlreadyBoundInjectionError(ServiceProvider<?> previous,
@@ -265,7 +244,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     }
 
     @Override
-    public void bind(ServiceDescriptor<?> serviceDescriptor) {
+    public void bind(ServiceSource<?> serviceDescriptor) {
         ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceDescriptor.runtimeId());
         if (activatorProvider == null) {
             throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceDescriptor.runtimeId()
@@ -280,8 +259,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
             assertPermitsDynamic(cfg);
         }
 
-        ServiceInfo serviceInfo = toValidatedServiceInfo(serviceProvider);
-        TypeName serviceTypeName = serviceInfo.serviceTypeName();
+        TypeName serviceTypeName = serviceProvider.serviceType();
 
         ServiceProvider<?> previous = servicesByTypeName.putIfAbsent(serviceTypeName, serviceProvider);
         if (previous != null && previous != serviceProvider) {
@@ -295,7 +273,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         }
 
         // special handling in case we are an interceptor...
-        Set<Qualifier> qualifiers = serviceInfo.qualifiers();
+        Set<Qualifier> qualifiers = serviceProvider.qualifiers();
         Optional<Qualifier> interceptedQualifier = qualifiers.stream()
                 .filter(q -> q.typeName().name().equals(Intercepted.class.getName()))
                 .findFirst();
@@ -316,7 +294,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 .add(serviceProvider);
         assert (added) : "expected to have added: " + serviceProvider;
 
-        for (TypeName cn : serviceInfo.contractsImplemented()) {
+        for (TypeName cn : serviceProvider.contracts()) {
             servicesByContract.compute(cn, (contract, servicesSharingThisContract) -> {
                 if (servicesSharingThisContract == null) {
                     servicesSharingThisContract = new TreeSet<>(serviceProviderComparator());
@@ -378,7 +356,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
             }
             if (serviceTypeName != null) {
                 ServiceProvider exact = servicesByTypeName.get(serviceTypeName);
-                if (exact != null && !isIntercepted(exact)) {
+                if (exact != null) {
                     return explodeFilterAndSort(List.of(exact), criteria, expected);
                 }
             }
@@ -386,7 +364,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 Set<ServiceProvider<?>> subsetOfMatches = servicesByContract.get(theOnlyContractRequested);
                 if (subsetOfMatches != null) {
                     result = subsetOfMatches.stream().parallel()
-                            .filter(sp -> sp.serviceInfo().matches(criteria))
+                            .filter(criteria::matches)
                             .limit(limit)
                             .toList();
                     if (!result.isEmpty()) {
@@ -408,7 +386,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         // table scan :-(
         result = servicesByTypeName.values()
                 .stream().parallel()
-                .filter(sp -> sp.serviceInfo().matches(criteria))
+                .filter(criteria::matches)
                 .limit(limit)
                 .toList();
         if (expected && result.isEmpty()) {
@@ -488,12 +466,12 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     private ServiceProvider<?> createServiceProvider(ModuleComponent module,
                                                      String moduleName,
                                                      InjectionServices injectionServices) {
-        return new InjectionModuleServiceProvider(module, moduleName, injectionServices);
+        return InjectionModuleServiceProvider.create(injectionServices, module, moduleName);
     }
 
     private ServiceProvider<?> createServiceProvider(Application app,
                                                      InjectionServices injectionServices) {
-        return new InjectionApplicationServiceProvider(app, injectionServices);
+        return InjectionApplicationServiceProvider.create(injectionServices, app);
     }
 
 }

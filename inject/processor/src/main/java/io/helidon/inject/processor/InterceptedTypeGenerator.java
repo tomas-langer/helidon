@@ -3,6 +3,7 @@ package io.helidon.inject.processor;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.helidon.common.codegen.TypesCodeGen;
@@ -81,13 +82,38 @@ class InterceptedTypeGenerator {
                     .returnType(info.typeName())
                     .update(it -> info.parameterArguments().forEach(arg -> it.addParameter(param -> param.type(arg.typeName())
                             .name(arg.elementName()))))
-                    .update(it -> it.add(interceptedMethod.isVoid() ? "" : "return "))
-                    .addLine(invoker
-                                     + ".invoke("
-                                     + info.parameterArguments()
-                            .stream().map(TypedElementInfo::elementName)
-                            .collect(Collectors.joining(", "))
-                                     + ");"));
+                    .update(it -> {
+                        // add throws statements
+                        if (!interceptedMethod.exceptionTypes().isEmpty()) {
+                            for (TypeName exceptionType : interceptedMethod.exceptionTypes()) {
+                                it.addThrows(exceptionType, "thrown by intercepted method");
+                            }
+                        }
+                    })
+                    .update(it -> {
+                        String invokeLine = invoker
+                                + ".invoke("
+                                + info.parameterArguments()
+                                .stream().map(TypedElementInfo::elementName)
+                                .collect(Collectors.joining(", "))
+                                + ");";
+                        // body of the method
+                        it.addLine("try {")
+                                .add(interceptedMethod.isVoid() ? "" : "return ")
+                                .addLine(invokeLine)
+                                .add("}");
+                        for (TypeName exceptionType : interceptedMethod.exceptionTypes()) {
+                            it.addLine(" catch (@" + exceptionType.fqName() + "@ helidonInject__e) {")
+                                    .addLine(" throw helidonInject__e;")
+                                    .add("}");
+
+                        }
+                        it.addLine(" catch (@" + Exception.class.getName() + "@ helidonInject__e) {")
+                                .addLine("throw new @" + RuntimeException.class.getName() + "@(helidonInject__e);")
+                                .addLine("}");
+
+                    }));
+
         }
     }
 
@@ -140,6 +166,13 @@ class InterceptedTypeGenerator {
                 cModel.addLine("return null;");
                 cModel.add("}");
             }
+            if (!interceptedMethod.exceptionTypes().isEmpty()) {
+                cModel.addLine(",");
+                cModel.add(interceptedMethod.exceptionTypes()
+                                   .stream()
+                                   .map(it -> TypesCodeGen.toCreate(it, false))
+                                   .collect(Collectors.joining(", ")));
+            }
             cModel.addLine(");")
                     .decreasePadding();
         }
@@ -190,7 +223,8 @@ class InterceptedTypeGenerator {
     private record MethodDefinition(TypedElementInfo info,
                                     String constantName,
                                     String invokerName,
-                                    boolean isVoid) {
+                                    boolean isVoid,
+                                    Set<TypeName> exceptionTypes) {
 
         public static List<MethodDefinition> toDefinitions(List<TypedElementInfo> interceptedMethods) {
             List<MethodDefinition> result = new ArrayList<>();
@@ -204,7 +238,8 @@ class InterceptedTypeGenerator {
                 result.add(new MethodDefinition(typedElementInfo,
                                                 constantName,
                                                 invokerName,
-                                                TypeNames.PRIMITIVE_VOID.equals(typedElementInfo.typeName())));
+                                                TypeNames.PRIMITIVE_VOID.equals(typedElementInfo.typeName()),
+                                                typedElementInfo.throwsChecked()));
             }
             result.sort(Comparator.comparing(o -> o.invokerName));
             return result;

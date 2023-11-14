@@ -19,7 +19,7 @@ package io.helidon.inject.processor.spi;
 import io.helidon.inject.processor.ProcessingEvent;
 
 /**
- * Implementations of these are service-loaded by the , and will be
+ * Implementations of these are service-loaded by the {@link java.util.ServiceLoader}, and will be
  * called to be able to observe processing events.
  */
 public interface InjectionAnnotationProcessorObserver {

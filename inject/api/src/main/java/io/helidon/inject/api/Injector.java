@@ -26,6 +26,33 @@ package io.helidon.inject.api;
 public interface Injector {
 
     /**
+     * Called to activate and inject a manage service instance or service provider, putting it into
+     * {@link Phase#ACTIVE}.
+     *
+     * @param serviceOrServiceProvider the target instance or service provider being activated and injected
+     * @param opts                     the injector options
+     * @return the result of the activation
+     * @throws InjectionServiceProviderException if an injection or activation problem occurs
+     * @see Activator
+     */
+    ActivationResult activateInject(ServiceSource<?> serviceOrServiceProvider,
+                                    InjectorOptions opts) throws InjectionServiceProviderException;
+
+    /**
+     * Called to deactivate a managed service or service provider, putting it into {@link Phase#DESTROYED}.
+     * If a managed service has a {@link jakarta.annotation.PreDestroy} annotated method then it will be called during
+     * this lifecycle event.
+     *
+     * @param serviceOrServiceProvider the service provider or instance registered and being managed
+     * @param opts                     the injector options
+     * @return the result of the deactivation
+     * @throws InjectionServiceProviderException if a problem occurs
+     * @see DeActivator
+     */
+    ActivationResult deactivate(ServiceProvider<?> serviceOrServiceProvider,
+                                InjectorOptions opts) throws InjectionServiceProviderException;
+
+    /**
      * The strategy the injector should attempt to apply. The reference implementation for Injection provider only handles
      * {@link Injector.Strategy#ACTIVATOR} type.
      */
@@ -48,34 +75,5 @@ public interface Injector {
         ANY
 
     }
-
-    /**
-     * Called to activate and inject a manage service instance or service provider, putting it into
-     * {@link Phase#ACTIVE}.
-     *
-     * @param serviceOrServiceProvider the target instance or service provider being activated and injected
-     * @param opts                     the injector options
-     * @param <T>                      the managed service type
-     * @return the result of the activation
-     * @throws InjectionServiceProviderException if an injection or activation problem occurs
-     * @see Activator
-     */
-    <T> ActivationResult activateInject(T serviceOrServiceProvider,
-                                        InjectorOptions opts) throws InjectionServiceProviderException;
-
-    /**
-     * Called to deactivate a managed service or service provider, putting it into {@link Phase#DESTROYED}.
-     * If a managed service has a {@link jakarta.annotation.PreDestroy} annotated method then it will be called during
-     * this lifecycle event.
-     *
-     * @param serviceOrServiceProvider the service provider or instance registered and being managed
-     * @param opts                     the injector options
-     * @param <T>                      the managed service type
-     * @return the result of the deactivation
-     * @throws InjectionServiceProviderException if a problem occurs
-     * @see DeActivator
-     */
-    <T> ActivationResult deactivate(T serviceOrServiceProvider,
-                                    InjectorOptions opts) throws InjectionServiceProviderException;
 
 }

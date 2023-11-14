@@ -2,5 +2,7 @@ package io.helidon.inject.api;
 
 import java.util.List;
 
-public record ServiceDependencies(Class<?> serviceType, List<IpInfo> dependencies) {
+import io.helidon.common.types.TypeName;
+
+public record ServiceDependencies(TypeName serviceType, List<IpInfo> dependencies) {
 }

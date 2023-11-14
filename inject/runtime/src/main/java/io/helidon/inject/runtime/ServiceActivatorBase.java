@@ -27,6 +27,7 @@ import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 
 import jakarta.inject.Provider;
@@ -35,7 +36,7 @@ public abstract class ServiceActivatorBase<T, S extends ServiceProviderBase<T, S
     private static final TypeName PROVIDER_TYPE = TypeName.create(Provider.class);
     private static final TypeName SERVICE_PROVIDER_TYPE = TypeName.create(ServiceProvider.class);
 
-    private final ServiceDescriptor<T> descriptor;
+    private final ServiceSource<T> descriptor;
     private final InjectionServices injectionServices;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
     private final InterceptionMetadata interceptionMetadata;
@@ -46,7 +47,7 @@ public abstract class ServiceActivatorBase<T, S extends ServiceProviderBase<T, S
     private volatile InjectionContext injectionContext;
 
     protected ServiceActivatorBase(InjectionServices injectionServices,
-                                   ServiceDescriptor<T> descriptor) {
+                                   ServiceSource<T> descriptor) {
 
         this.injectionServices = injectionServices;
         this.descriptor = descriptor;
@@ -97,7 +98,7 @@ public abstract class ServiceActivatorBase<T, S extends ServiceProviderBase<T, S
 
     @Override
     public String toString() {
-        return "Service activator for: " + descriptor().serviceType().getName() + "[" + phase() + "]";
+        return "Service activator for: " + descriptor().serviceType().fqName() + "[" + phase() + "]";
     }
 
     protected ServiceDescriptor<T> descriptor() {
@@ -243,7 +244,8 @@ public abstract class ServiceActivatorBase<T, S extends ServiceProviderBase<T, S
             throw new ServiceProviderInjectionException("Expected to resolve a service matching "
                                                                 + criteria
                                                                 + " for dependency: " + dependency
-                                                                + ", for service: " + descriptor.serviceType().getName());
+                                                                + ", for service: " + descriptor.serviceType().fqName(),
+                                                        descriptor);
         }
 
         // we have a response
@@ -315,10 +317,22 @@ public abstract class ServiceActivatorBase<T, S extends ServiceProviderBase<T, S
         }
     }
 
+    @SuppressWarnings("unchecked") // we have unchecked here, so generated code can be checked
     protected void construct(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.CONSTRUCTING);
 
-        serviceInstance = descriptor.instantiate(injectionContext, interceptionMetadata);
+        // descendant may set an explicit instance, in such a case, we will not re-create it
+        if (serviceInstance == null) {
+            serviceInstance = (T) descriptor.instantiate(injectionContext, interceptionMetadata);
+        }
+    }
+
+    protected void phase(Phase phase) {
+        this.activationPhase = phase;
+    }
+
+    protected void instance(T instance) {
+        this.serviceInstance = instance;
     }
 
     private void setActive(ActivationRequest req, ActivationResult.Builder res) {
@@ -338,7 +352,7 @@ public abstract class ServiceActivatorBase<T, S extends ServiceProviderBase<T, S
 
         List<ServiceDependencies> servicesDeps = descriptor.dependencies();
 
-        Map<Class<?>, Map<IpId<?>, Supplier<?>>> injectionPlans = new HashMap<>();
+        Map<TypeName, Map<IpId<?>, Supplier<?>>> injectionPlans = new HashMap<>();
 
         for (ServiceDependencies service : servicesDeps) {
             List<IpInfo> dependencies = service.dependencies();

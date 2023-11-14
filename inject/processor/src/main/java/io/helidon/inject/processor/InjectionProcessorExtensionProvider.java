@@ -21,7 +21,8 @@ public class InjectionProcessorExtensionProvider implements HelidonProcessorExte
 
     @Override
     public Collection<String> supportedOptions() {
-        return Set.of(Options.TAG_AUTO_ADD_NON_CONTRACT_INTERFACES, Options.TAG_INTERCEPTION_STRATEGY);
+        return Set.of(Options.TAG_AUTO_ADD_NON_CONTRACT_INTERFACES,
+                      Options.TAG_INTERCEPTION_STRATEGY);
     }
 
     @Override

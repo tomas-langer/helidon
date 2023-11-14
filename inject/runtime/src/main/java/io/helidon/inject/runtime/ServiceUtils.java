@@ -22,16 +22,23 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.helidon.common.Weighted;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.api.ServiceInfo;
+import io.helidon.inject.api.ServiceDependencies;
 import io.helidon.inject.api.ServiceProvider;
 
 /**
  * Public helpers around shared services usages.
  */
 public final class ServiceUtils {
+    /**
+     * Default weight for any <i>internal</i> Injection service component. It is defined to be
+     * {@link io.helidon.common.Weighted#DEFAULT_WEIGHT} {@code - 1} in order to allow any other service implementation to
+     * naturally have a higher weight (since it will use the {@code DEFAULT_WEIGHT} unless explicitly overridden.
+     */
+    public static final double DEFAULT_INJECT_WEIGHT = Weighted.DEFAULT_WEIGHT - 1;
+
     private static final TypeName MODULE_COMPONENT = TypeName.create(ModuleComponent.class);
     private static final TypeName APPLICATION = TypeName.create(ModuleComponent.class);
 
@@ -45,10 +52,10 @@ public final class ServiceUtils {
      * @return true if the service provider can receive injection
      */
     public static boolean isQualifiedInjectionTarget(ServiceProvider<?> sp) {
-        ServiceInfo serviceInfo = sp.serviceInfo();
-        Set<TypeName> contractsImplemented = serviceInfo.contractsImplemented();
-        DependenciesInfo deps = sp.dependencies();
-        return (deps != AbstractServiceProvider.NO_DEPS)
+        Set<TypeName> contractsImplemented = sp.contracts();
+        List<ServiceDependencies> dependencies = sp.dependencies();
+
+        return (!dependencies.isEmpty())
                 || (!contractsImplemented.isEmpty()
                     && !contractsImplemented.contains(MODULE_COMPONENT)
                     && !contractsImplemented.contains(APPLICATION));

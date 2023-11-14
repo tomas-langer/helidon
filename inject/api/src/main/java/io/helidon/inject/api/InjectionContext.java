@@ -3,6 +3,8 @@ package io.helidon.inject.api;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import io.helidon.common.types.TypeName;
+
 /**
  * All data needed for creating an instance
  * of a service, or for invoking methods that use
@@ -10,7 +12,7 @@ import java.util.function.Supplier;
  * for the specific location.
  */
 public interface InjectionContext {
-    static InjectionContext create(Map<Class<?>, Map<IpId<?>, Supplier<?>>> injectionPlans) {
+    static InjectionContext create(Map<TypeName, Map<IpId<?>, Supplier<?>>> injectionPlans) {
         return new InjectionContextImpl(injectionPlans);
     }
 
@@ -23,5 +25,5 @@ public interface InjectionContext {
      * @param <T>         type of the parameter
      * @return value for the parameter, this may be null
      */
-    <T> T param(Class<?> serviceType, IpId<T> paramId);
+    <T> T param(TypeName serviceType, IpId<T> paramId);
 }

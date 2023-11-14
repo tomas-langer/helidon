@@ -50,7 +50,7 @@ public class ServiceProviderInjectionException extends InjectionServiceProviderE
      */
     public ServiceProviderInjectionException(String msg,
                                              Throwable cause,
-                                             ServiceProvider<?> serviceProvider) {
+                                             ServiceDescriptor<?> serviceProvider) {
         super(msg, cause, serviceProvider);
     }
 
@@ -61,7 +61,7 @@ public class ServiceProviderInjectionException extends InjectionServiceProviderE
      * @param serviceProvider   the service provider
      */
     public ServiceProviderInjectionException(String msg,
-                                             ServiceProvider<?> serviceProvider) {
+                                             ServiceDescriptor<?> serviceProvider) {
         super(msg, serviceProvider);
     }
 

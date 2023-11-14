@@ -18,6 +18,8 @@ package io.helidon.inject.runtime;
 
 import java.util.Optional;
 
+import io.helidon.inject.api.IpId;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
@@ -31,9 +33,9 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bindTo(ServiceProvider<?> untrustedSp) {
+    public Binder bindTo(ServiceDescriptor<?> untrustedSp) {
         // don't trust what we get, but instead lookup the service provider that we carry in our services registry
-        ServiceProvider<?> serviceProvider = services.serviceProviderFor(untrustedSp.serviceInfo().serviceTypeName());
+        ServiceProvider<?> serviceProvider = services.serviceProviderFor(untrustedSp.serviceType());
         Optional<ServiceProviderBindable<?>> bindable = ServiceBinderDefault.toBindableProvider(serviceProvider);
         Optional<Binder> binder = (bindable.isPresent()) ? bindable.get().injectionPlanBinder() : Optional.empty();
         if (binder.isEmpty()) {
@@ -51,27 +53,27 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bind(String id,
-                       ServiceProvider<?> serviceProvider) {
+    public Binder bind(IpId<?> id,
+                       ServiceDescriptor<?> serviceProvider) {
         // NOP
         return this;
     }
 
     @Override
-    public Binder bindMany(String id,
-                           ServiceProvider<?>... serviceProviders) {
+    public Binder bindMany(IpId<?> id,
+                           ServiceDescriptor<?>... serviceProviders) {
         // NOP
         return this;
     }
 
     @Override
-    public Binder bindVoid(String ipIdentity) {
+    public Binder bindVoid(IpId<?> ipIdentity) {
         // NOP
         return this;
     }
 
     @Override
-    public Binder resolvedBind(String ipIdentity,
+    public Binder runtimeBind(IpId<?> ipIdentity,
                                Class<?> serviceType) {
         // NOP
         return this;

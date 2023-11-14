@@ -32,7 +32,6 @@ import io.helidon.common.types.Annotation;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionPointProvider;
-import io.helidon.inject.api.ServiceInfoBasics;
 
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
@@ -47,6 +46,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 import static io.helidon.common.types.Annotations.findFirst;
+import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 
 /**
  * This (overridable) provider will provide the default implementation for {@link AbstractAuthenticationDetailsProvider}.
@@ -56,7 +56,7 @@ import static io.helidon.common.types.Annotations.findFirst;
  * @see OciConfig
  */
 @Singleton
-@Weight(ServiceInfoBasics.DEFAULT_INJECT_WEIGHT)
+@Weight(DEFAULT_INJECT_WEIGHT)
 class OciAuthenticationDetailsProvider implements InjectionPointProvider<AbstractAuthenticationDetailsProvider> {
     static final System.Logger LOGGER = System.getLogger(OciAuthenticationDetailsProvider.class.getName());
 

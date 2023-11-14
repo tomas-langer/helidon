@@ -37,7 +37,6 @@ import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.Interceptor;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
@@ -58,9 +57,9 @@ class DefaultInjectionPlans {
      * Converts the inputs to an injection plans for the given service provider.
      *
      * @param injectionServices injection services
-     * @param self         the reference to the service provider associated with this plan
-     * @param dependencies the dependencies
-     * @param resolveIps   flag indicating whether injection points should be resolved
+     * @param self              the reference to the service provider associated with this plan
+     * @param dependencies      the dependencies
+     * @param resolveIps        flag indicating whether injection points should be resolved
      * @param logger            the logger to use for any logging
      * @return the injection plan per element identity belonging to the service provider
      */
@@ -111,36 +110,32 @@ class DefaultInjectionPlans {
 
         List<ServiceProvider<?>> providers = services.lookupAll(modifiedDepTo);
         return providers.stream()
-                .filter(it -> it.serviceInfo().contractsImplemented().contains(IP_PROVIDER))
+                .filter(it -> it.contracts().contains(IP_PROVIDER))
                 .toList();
     }
 
     /**
      * Creates and maybe adjusts the criteria to match the context of who is doing the lookup.
      *
-     * @param dep       the dependency info to lookup
-     * @param self      the service doing the lookup
-     * @param selfInfo  the service info for the service doing the lookup
+     * @param dep  the dependency info to lookup
+     * @param self the service doing the lookup
      * @return the criteria
      */
     static ServiceInfoCriteria toCriteria(DependencyInfo dep,
-                                          ServiceProvider<?> self,
-                                          ServiceInfo selfInfo) {
+                                          ServiceProvider<?> self) {
         ServiceInfoCriteria criteria = dep.dependencyTo();
         ServiceInfoCriteria.Builder builder = null;
-        if (selfInfo.declaredWeight().isPresent()
-                && selfInfo.contractsImplemented().containsAll(criteria.contractsImplemented())) {
+        if (self.contracts().containsAll(criteria.contractsImplemented())) {
             // if we have a weight on ourselves, and we inject an interface that we actually offer, then
             // be sure to use it to get lower weighted injection points
             builder = ServiceInfoCriteria.builder(criteria)
-                    .weight(selfInfo.declaredWeight().get());
+                    .weight(self.weight());
         }
 
         if ((self instanceof ServiceProviderBindable) && ((ServiceProviderBindable<?>) self).isInterceptor()) {
             if (builder == null) {
                 builder = ServiceInfoCriteria.builder(criteria);
             }
-            builder = builder.includeIntercepted(true);
         }
 
         return (builder != null) ? builder.build() : criteria;
@@ -149,10 +144,10 @@ class DefaultInjectionPlans {
     /**
      * Resolution comes after the plan was loaded or created.
      *
-     * @param self              the reference to the service provider associated with this plan
-     * @param ipInfo            the injection point
-     * @param serviceProviders  the service providers that qualify in preferred weighted order
-     * @param logger            the logger to use for any logging
+     * @param self             the reference to the service provider associated with this plan
+     * @param ipInfo           the injection point
+     * @param serviceProviders the service providers that qualify in preferred weighted order
+     * @param logger           the logger to use for any logging
      * @return the resolution (and activation) of the qualified service provider(s) in the form acceptable to the injection point
      */
     @SuppressWarnings("unchecked")
@@ -175,16 +170,16 @@ class DefaultInjectionPlans {
             if (ipInfo.listWrapped()) {
                 if (ipInfo.optionalWrapped()) {
                     throw new ServiceProviderInjectionException("Optional + List injection is not supported for "
-                                                         + ipInfo.serviceTypeName() + "." + ipInfo.elementName());
+                                                                        + ipInfo.serviceTypeName() + "." + ipInfo.elementName());
                 }
 
                 if (serviceProviders.isEmpty()) {
                     if (!allowNullableInjectionPoint(ipInfo)) {
                         throw new ServiceProviderInjectionException("Expected to resolve a service appropriate for "
-                                                             + ipInfo.serviceTypeName() + "." + ipInfo.elementName(),
+                                                                            + ipInfo.serviceTypeName() + "." + ipInfo.elementName(),
                                                                     DefaultServices
-                                                             .resolutionBasedInjectionError(
-                                                                     ipInfo.dependencyToServiceInfo()),
+                                                                            .resolutionBasedInjectionError(
+                                                                                    ipInfo.dependencyToServiceInfo()),
                                                                     self);
                     } else {
                         return serviceProviders;
@@ -203,9 +198,9 @@ class DefaultInjectionPlans {
                     return Optional.empty();
                 } else {
                     throw new ServiceProviderInjectionException("Expected to resolve a service appropriate for "
-                                                         + ipInfo.serviceTypeName() + "." + ipInfo.elementName(),
-                                                DefaultServices.resolutionBasedInjectionError(ipInfo.dependencyToServiceInfo()),
-                                                self);
+                                                                        + ipInfo.serviceTypeName() + "." + ipInfo.elementName(),
+                                                                DefaultServices.resolutionBasedInjectionError(ipInfo.dependencyToServiceInfo()),
+                                                                self);
                 }
             } else {
                 // "standard" case
@@ -259,8 +254,7 @@ class DefaultInjectionPlans {
                                    ServiceProvider<?> self,
                                    boolean resolveIps,
                                    System.Logger logger) {
-        ServiceInfo selfInfo = self.serviceInfo();
-        ServiceInfoCriteria depTo = toCriteria(dep, self, selfInfo);
+        ServiceInfoCriteria depTo = toCriteria(dep, self);
         Services services = injectionServices.services();
         InjectionServicesConfig cfg = injectionServices.config();
         boolean isPrivateSupported = cfg.supportsJsr330Privates();
@@ -309,7 +303,7 @@ class DefaultInjectionPlans {
 
         List<ServiceProvider<?>> tmpServiceProviders = services.lookupAll(depTo, false);
         if (tmpServiceProviders.isEmpty()) {
-            if (VoidServiceProvider.INSTANCE.serviceInfo().matches(depTo)) {
+            if (depTo.matches(VoidServiceProvider.INSTANCE)) {
                 tmpServiceProviders = VoidServiceProvider.LIST_INSTANCE;
             } else {
                 tmpServiceProviders = injectionPointProvidersFor(services, depTo);
@@ -370,7 +364,7 @@ class DefaultInjectionPlans {
             return result;
         }
 
-        return (target instanceof AbstractServiceProvider)
+        return (target instanceof ServiceProviderBase<?, ?, ?>)
                 ? List.of((ServiceProvider<?>) target)
                 : List.of();
     }
@@ -384,7 +378,7 @@ class DefaultInjectionPlans {
             return result;
         }
 
-        return (target == null || target instanceof AbstractServiceProvider)
+        return (target == null || target instanceof ServiceProviderBase<?, ?, ?>)
                 ? List.of()
                 : List.of(target);
     }
@@ -446,8 +440,8 @@ class DefaultInjectionPlans {
                                                                                ServiceProvider<?> self) {
         String msg = (cause == null) ? "Expected" : "Failed";
         return new ServiceProviderInjectionException(msg + " to resolve a service instance appropriate for '"
-                                              + ipInfo.serviceTypeName() + "." + ipInfo.elementName()
-                                              + "' with criteria = '" + ipInfo.dependencyToServiceInfo(),
+                                                             + ipInfo.serviceTypeName() + "." + ipInfo.elementName()
+                                                             + "' with criteria = '" + ipInfo.dependencyToServiceInfo(),
                                                      cause, self);
     }
 

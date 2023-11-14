@@ -47,7 +47,6 @@ import javax.tools.JavaFileObject;
 import javax.tools.StandardLocation;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.ModuleComponent;
 
@@ -278,21 +277,6 @@ public class CodeGenFiler {
     void codegenApplicationFilerOut(TypeName applicationTypeName,
                                     String body) {
         codegenJavaFilerOut(applicationTypeName, body);
-    }
-
-    /**
-     * Code generates the {@link Activator} source.
-     *
-     * @param activatorDetail the activator details
-     */
-    void codegenActivatorFilerOut(ActivatorCodeGenDetail activatorDetail) {
-        if (activatorDetail.body().isEmpty()) {
-            return;
-        }
-
-        TypeName typeName = activatorDetail.serviceTypeName();
-        String body = activatorDetail.body().orElseThrow();
-        codegenJavaFilerOut(typeName, body);
     }
 
     /**

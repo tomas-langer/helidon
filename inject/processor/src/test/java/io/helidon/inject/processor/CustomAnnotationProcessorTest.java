@@ -24,8 +24,6 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.ServiceInfo;
-import io.helidon.inject.api.ServiceInfoBasics;
 import io.helidon.inject.processor.testsubjects.BasicEndpoint;
 import io.helidon.inject.processor.testsubjects.ExtensibleGET;
 import io.helidon.inject.tools.CustomAnnotationTemplateRequest;
@@ -75,14 +73,11 @@ class CustomAnnotationProcessorTest {
                 .elementName("header")
                 .elementTypeKind(ElementKind.PARAMETER)
                 .build();
-        ServiceInfoBasics serviceInfo = ServiceInfo.builder()
-                .serviceTypeName(BasicEndpoint.class)
-                .build();
         GenericTemplateCreatorDefault genericTemplateCreator =
                 new GenericTemplateCreatorDefault(ExtensibleGetTemplateProducer.class);
         CustomAnnotationTemplateRequest req = CustomAnnotationTemplateRequest.builder()
                 .annoTypeName(create(ExtensibleGET.class))
-                .serviceInfo(serviceInfo)
+                .serviceInfo(() -> TypeName.create(BasicEndpoint.class))
                 .targetElement(target)
                 .targetElementArgs(List.of(arg1))
                 .targetElementAccess(PUBLIC)

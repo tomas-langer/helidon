@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 
 import jakarta.inject.Provider;
@@ -26,8 +27,9 @@ public interface InterceptionMetadata {
                                              TypedElementInfo element);
 
     <T> Invoker<T> createInvoker(ServiceDescriptor<?> descriptor,
-                          Set<Qualifier> typeQualifiers,
-                          List<Annotation> typeAnnotations,
-                          TypedElementInfo element,
-                          Invoker<T> targetInvoker);
+                                 Set<Qualifier> typeQualifiers,
+                                 List<Annotation> typeAnnotations,
+                                 TypedElementInfo element,
+                                 Invoker<T> targetInvoker,
+                                 TypeName... checkedExceptions);
 }

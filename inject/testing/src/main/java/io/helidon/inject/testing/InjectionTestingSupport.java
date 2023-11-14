@@ -31,6 +31,7 @@ import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.InjectionServicesHolder;
 import io.helidon.inject.api.ServiceBinder;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.ServiceBinderDefault;
 
@@ -58,7 +59,7 @@ public class InjectionTestingSupport {
      * @see ServiceBinder
      */
     public static void bind(InjectionServices injectionServices,
-                            ServiceProvider<?> serviceProvider) {
+                            ServiceSource<?> serviceProvider) {
         ServiceBinderDefault binder = ServiceBinderDefault.create(injectionServices, InjectionTestingSupport.class.getSimpleName(), true);
         binder.bind(serviceProvider);
     }

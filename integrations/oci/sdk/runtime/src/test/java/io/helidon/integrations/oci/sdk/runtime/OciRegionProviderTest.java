@@ -17,13 +17,13 @@
 package io.helidon.integrations.oci.sdk.runtime;
 
 import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.ElementKind;
 import io.helidon.inject.api.InjectionPointInfo;
-import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServiceProviderException;
+import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;

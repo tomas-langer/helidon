@@ -28,7 +28,6 @@ import io.helidon.common.types.TypeName;
  * Criteria to discover services.
  *
  * @see Services
- * @see ServiceInfo
  */
 @Prototype.Blueprint
 @Prototype.CustomMethods(ServiceInfoCriteriaBlueprint.CustomMethods.class)
@@ -92,31 +91,6 @@ interface ServiceInfoCriteriaBlueprint {
     Set<TypeName> externalContractsImplemented();
 
     /**
-     * The management agent (i.e., the activator) that is responsible for creating and activating - typically build-time created.
-     *
-     * @return the activator type name
-     */
-    Optional<TypeName> activatorTypeName();
-
-    /**
-     * The name of the ascribed module, if known.
-     *
-     * @return the module name
-     */
-    Optional<String> moduleName();
-
-    /**
-     * Determines whether the non-proxied, {@link Intercepted} services should be returned in any lookup operation. If this
-     * option is disabled then only the {@link Interceptor}-generated service will be eligible to be returned and not the service
-     * being intercepted.
-     * The default value is {@code false}.
-     *
-     * @return true if the non-proxied type intercepted services should be eligible
-     */
-    @Option.DefaultBoolean(false)
-    boolean includeIntercepted();
-
-    /**
      * Determines whether this service info matches the criteria for injection.
      * Matches is a looser form of equality check than {@code equals()}. If a service matches criteria
      * it is generally assumed to be viable for assignability.
@@ -124,17 +98,37 @@ interface ServiceInfoCriteriaBlueprint {
      * @param criteria the criteria to compare against
      * @return true if the criteria provided matches this instance
      */
-    // internal note: it is unfortunate that we have a matches() here as well as in ServiceInfo. This is what happened
-    // when we split ServiceInfo into ServiceInfoCriteria.  Sometimes we need ServiceInfo.matches(criteria), and other times
-    // ServiceInfoCriteria.matches(criteria).
     default boolean matches(ServiceInfoCriteriaBlueprint criteria) {
         return matchesContracts(criteria)
                 && scopeTypeNames().containsAll(criteria.scopeTypeNames())
                 && Qualifiers.matchesQualifiers(qualifiers(), criteria.qualifiers())
-                && matches(activatorTypeName(), criteria.activatorTypeName())
-                && matches(runLevel(), criteria.runLevel())
+                && matches(runLevel(), criteria.runLevel());
                 //                && matchesWeight(this, criteria) -- intentionally not checking weight here!
-                && matches(moduleName(), criteria.moduleName());
+    }
+
+    /**
+     * Determines whether this service info criteria matches the service descriptor.
+     * Matches is a looser form of equality check than {@code equals()}. If a service matches criteria
+     * it is generally assumed to be viable for assignability.
+     *
+     * @param descriptor to compare with
+     * @return true if this criteria matches the service descriptor
+     */
+    default boolean matches(ServiceDescriptor<?> descriptor) {
+        if (this == InjectionServices.EMPTY_CRITERIA) {
+            return true;
+        }
+
+        boolean matches = matches(descriptor.serviceType(), this.serviceTypeName());
+        if (matches && this.serviceTypeName().isEmpty()) {
+            matches = descriptor.contracts().containsAll(this.contractsImplemented())
+                    || this.contractsImplemented().contains(descriptor.serviceType());
+        }
+        return matches
+                && descriptor.scopes().containsAll(this.scopeTypeNames())
+                && Qualifiers.matchesQualifiers(descriptor.qualifiers(), this.qualifiers())
+                && matchesWeight(descriptor, this)
+                && matches(descriptor.runLevel(), this.runLevel());
     }
 
     /**
@@ -154,6 +148,16 @@ interface ServiceInfoCriteriaBlueprint {
             matches = contractsImplemented().containsAll(criteria.contractsImplemented());
         }
         return matches;
+    }
+
+    private static boolean matchesWeight(ServiceDescriptor<?> src,
+                                         ServiceInfoCriteriaBlueprint criteria) {
+        if (criteria.weight().isEmpty()) {
+            return true;
+        }
+
+        Double srcWeight = src.weight();
+        return (srcWeight.compareTo(criteria.weight().get()) <= 0);
     }
 
     private static boolean matches(Object src,

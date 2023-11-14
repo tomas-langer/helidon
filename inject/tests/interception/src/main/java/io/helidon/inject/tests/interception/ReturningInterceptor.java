@@ -39,7 +39,7 @@ class ReturningInterceptor implements Interceptor {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <V> V proceed(InvocationContext ctx, Chain<V> chain, Object... args) {
+    public <V> V proceed(InvocationContext ctx, Chain<V> chain, Object... args) throws Exception {
         LAST_CALL.set(new Invocation(ctx.elementInfo().elementName(), Arrays.copyOf(args, args.length)));
         if (args.length < 4) {
             // safeguard

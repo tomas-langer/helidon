@@ -17,31 +17,31 @@
 package io.helidon.inject.testing;
 
 import java.lang.reflect.Constructor;
-import java.util.Map;
+import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.PostConstructMethod;
-import io.helidon.inject.api.PreDestroyMethod;
-import io.helidon.inject.api.ServiceInfo;
-import io.helidon.inject.api.ServiceInfoBasics;
-import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.api.InjectionContext;
+import io.helidon.inject.api.InterceptionMetadata;
+import io.helidon.inject.api.Qualifier;
+import io.helidon.inject.api.ServiceDependencies;
 import io.helidon.inject.api.ServiceProviderInjectionException;
-import io.helidon.inject.runtime.AbstractServiceProvider;
+import io.helidon.inject.api.ServiceSource;
 
 /**
  * Creates a simple reflection based service provider - for testing purposes only!
  *
  * @param <T> the service type
  */
-public class ReflectionBasedSingletonServiceProvider<T> extends AbstractServiceProvider<T> {
+public class ReflectionBasedSingletonServiceDescriptor<T> implements ServiceSource<T> {
     private final Class<T> serviceType;
+    private final ServiceInfo<T> serviceInfo;
 
-    private ReflectionBasedSingletonServiceProvider(Class<T> serviceType,
-                                                    ServiceInfo serviceInfo) {
+    private ReflectionBasedSingletonServiceDescriptor(Class<T> serviceType,
+                                                      ServiceInfo<T> serviceInfo) {
         this.serviceType = serviceType;
-        serviceInfo(serviceInfo);
+        this.serviceInfo = serviceInfo;
     }
 
     /**
@@ -51,39 +51,73 @@ public class ReflectionBasedSingletonServiceProvider<T> extends AbstractServiceP
      * <li>The service type will be created reflectively, and will expect to have an empty constructor</li>
      * <li>The service type will not be able to provide its dependencies, nor will it be able to accept injection</li>
      * <li>The service type will not be able to participate in lifecycle -
-     * {@link PostConstructMethod} or {@link PreDestroyMethod}</li>
+     * {@link io.helidon.inject.api.PostConstructMethod} or {@link io.helidon.inject.api.PreDestroyMethod}</li>
      * </ul>
      * Note: Generally it is encouraged for users to rely on the annotation processors and other built on compile-time
      * tooling to generate the appropriate service providers and modules. This method is an alternative to that
      * mechanism and therefore is discouraged from production use.  This method is not used in normal processing by
      * the reference injection provider implementation.
      *
-     * @param serviceType       the service type
-     * @param siBasics          the service info basic descriptor, or null to generate a default (empty) placeholder
-     * @param <T> the class of the service type
-     *
+     * @param serviceType the service type
+     * @param serviceInfo the service info basic descriptor, or null to generate a default (empty) placeholder
+     * @param <T>         the class of the service type
      * @return the service provider capable of being bound to the services registry
-     * @see InjectionTestingSupport#bind(InjectionServices, ServiceProvider)
+     * @see InjectionTestingSupport#bind(io.helidon.inject.api.InjectionServices, io.helidon.inject.api.ServiceSource)
      */
-    public static <T> ReflectionBasedSingletonServiceProvider<T> create(Class<T> serviceType,
-                                                                        ServiceInfoBasics siBasics) {
+    public static <T> ServiceSource<T> create(Class<T> serviceType,
+                                                  ServiceInfo<T> serviceInfo) {
         Objects.requireNonNull(serviceType);
-        Objects.requireNonNull(siBasics);
+        Objects.requireNonNull(serviceInfo);
 
-        if (!TypeName.create(serviceType).equals(siBasics.serviceTypeName())) {
+        if (!TypeName.create(serviceType).equals(serviceInfo.serviceType())) {
             throw new IllegalArgumentException("Mismatch in service types: " + serviceType.getName());
         }
 
-        return new ReflectionBasedSingletonServiceProvider<>(serviceType, ServiceInfo.builder(siBasics).build());
+        return new ReflectionBasedSingletonServiceDescriptor<>(serviceType, serviceInfo);
     }
 
     @Override
-    public boolean isCustom() {
-        return true;
+    public double weight() {
+        return serviceInfo.weight();
     }
 
     @Override
-    protected T createServiceProvider(Map<String, Object> deps) {
+    public String runtimeId() {
+        return serviceInfo.runtimeId();
+    }
+
+    @Override
+    public TypeName serviceType() {
+        return serviceInfo.serviceType();
+    }
+
+    @Override
+    public Set<TypeName> contracts() {
+        return serviceInfo.contracts();
+    }
+
+    @Override
+    public List<ServiceDependencies> dependencies() {
+        return serviceInfo.dependencies();
+    }
+
+    @Override
+    public Set<Qualifier> qualifiers() {
+        return serviceInfo.qualifiers();
+    }
+
+    @Override
+    public int runLevel() {
+        return serviceInfo.runLevel();
+    }
+
+    @Override
+    public Set<TypeName> scopes() {
+        return serviceInfo.scopes();
+    }
+
+    @Override
+    public T instantiate(InjectionContext ctx, InterceptionMetadata interceptionMetadata) {
         try {
             Constructor<T> ctor = serviceType.getDeclaredConstructor();
             ctor.setAccessible(true);
@@ -91,10 +125,5 @@ public class ReflectionBasedSingletonServiceProvider<T> extends AbstractServiceP
         } catch (Exception e) {
             throw new ServiceProviderInjectionException("Failed to fully create instance: " + this, e, this);
         }
-    }
-
-    @Override
-    public Class<T> serviceType() {
-        return serviceType;
     }
 }

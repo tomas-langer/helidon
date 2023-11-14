@@ -27,11 +27,11 @@ class ProcessingContextImpl implements ProcessingContext {
     private final Set<String> supportedPackages;
     private final Set<TypeName> supportedAnnotations;
 
-    ProcessingContextImpl(ProcessingEnvironment aptEnv) {
+    ProcessingContextImpl(ProcessingEnvironment aptEnv, String[] processorSupportedOptions) {
         this.aptEnv = aptEnv;
         this.aptOptions = AptOptions.create(aptEnv);
 
-        Set<String> supportedOptions = new HashSet<>();
+        Set<String> supportedOptions = new HashSet<>(Set.of(processorSupportedOptions));
         Set<String> supportedPackages = new HashSet<>();
         Set<TypeName> supportedAnnotations = new HashSet<>();
 
@@ -62,6 +62,8 @@ class ProcessingContextImpl implements ProcessingContext {
         this.supportedOptions = Set.copyOf(supportedOptions);
         this.supportedPackages = Set.copyOf(supportedPackages);
         this.supportedAnnotations = Set.copyOf(supportedAnnotations);
+
+        supportedOptions.forEach(aptOptions::option);
     }
 
     @Override

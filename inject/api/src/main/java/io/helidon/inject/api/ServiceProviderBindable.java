@@ -33,16 +33,6 @@ import java.util.Optional;
  * @see ServiceProvider#serviceProviderBindable()
  */
 public interface ServiceProviderBindable<T> extends ServiceProvider<T> {
-
-    /**
-     * Called to inform a service provider the module name it is bound to. Will only be called when there is a non-null
-     * module name associated for the given {@link ModuleComponent}. A service provider can be associated with
-     * 0..1 modules.
-     *
-     * @param moduleName the non-null module name
-     */
-    void moduleName(String moduleName);
-
     /**
      * Returns true if this service provider instance is an {@link Interceptor}.
      *

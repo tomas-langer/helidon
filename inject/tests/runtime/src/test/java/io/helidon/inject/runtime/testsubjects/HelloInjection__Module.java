@@ -27,12 +27,12 @@ import jakarta.inject.Singleton;
 
 @Generated(value = "example", comments = "API Version: n", trigger = "io.helidon.inject.tools.ActivatorCreatorDefault")
 @Singleton
-@Named(HelloInjection$$Module.NAME)
-public final class HelloInjection$$Module implements ModuleComponent {
+@Named(HelloInjection__Module.NAME)
+public final class HelloInjection__Module implements ModuleComponent {
 
     public static final String NAME = "example";
 
-    public HelloInjection$$Module() {
+    public HelloInjection__Module() {
     }
 
     @Override
@@ -42,8 +42,8 @@ public final class HelloInjection$$Module implements ModuleComponent {
 
     @Override
     public void configure(ServiceBinder binder) {
-        binder.bind(HelloInjectionImpl$$injectionActivator.INSTANCE);
-        binder.bind(InjectionWorldImpl$$injectionActivator.INSTANCE);
+        binder.bind(HelloInjectionImpl__ServiceDescriptor.INSTANCE);
+        binder.bind(InjectionWorldImpl__ServiceDescriptor.INSTANCE);
     }
 
 }

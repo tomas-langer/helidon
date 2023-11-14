@@ -19,7 +19,6 @@ package io.helidon.inject.tools;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,23 +32,18 @@ import io.helidon.common.processor.CopyrightHandler;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Application;
-import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.InjectionException;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.runtime.AbstractServiceProvider;
-import io.helidon.inject.runtime.HelidonInjectionPlan;
-import io.helidon.inject.runtime.ServiceBinderDefault;
 import io.helidon.inject.tools.spi.ApplicationCreator;
 
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
-import static io.helidon.inject.api.ServiceInfoBasics.DEFAULT_INJECT_WEIGHT;
+import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 import static io.helidon.inject.runtime.ServiceUtils.isQualifiedInjectionTarget;
 
 /**
@@ -71,7 +65,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
     /**
      * The FQN "Injection$$Application" name.
      */
-    public static final String APPLICATION_NAME = NAME_PREFIX + APPLICATION_NAME_SUFFIX;
+    public static final String APPLICATION_NAME = "HelidonInjection__Application";
 
     static final String SERVICE_PROVIDER_APPLICATION_SERVICETYPEBINDING_HBS
             = "service-provider-application-servicetypebinding.hbs";
@@ -106,7 +100,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
     static ServiceInfoCriteria toServiceInfoCriteria(TypeName typeName) {
         return ServiceInfoCriteria.builder()
                 .serviceTypeName(typeName)
-                .includeIntercepted(true)
                 .build();
     }
 
@@ -130,7 +123,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         }
 
         ServiceProvider<?> sp = toServiceProvider(typeName, services);
-        Set<TypeName> spQualifierTypeNames = sp.serviceInfo().qualifiers().stream()
+        Set<TypeName> spQualifierTypeNames = sp.qualifiers().stream()
                 .map(Annotation::typeName)
                 .collect(Collectors.toSet());
         spQualifierTypeNames.retainAll(permittedTypeNames);
@@ -176,7 +169,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         } catch (InjectionException e) {
             return Optional.empty();
         }
-        return Optional.of(serviceProvider.serviceInfo().serviceTypeName());
+        return Optional.of(serviceProvider.serviceType());
     }
 
     /**
@@ -322,7 +315,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         Map<String, Object> subst = new HashMap<>();
         subst.put("servicetypename", serviceTypeName.name());
         subst.put("activator", activator);
-        subst.put("modulename", sp.serviceInfo().moduleName().orElse(null));
         if (isQualifiedInjectionTarget(sp)) {
             subst.put("injectionplan", toInjectionPlanBindings(sp));
             return templateHelper().applySubstitutions(serviceTypeBindingTemplate, subst, true);
@@ -333,9 +325,8 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
     @SuppressWarnings("unchecked")
     List<String> toInjectionPlanBindings(ServiceProvider<?> sp) {
-        if (1 == 1) {
-            return List.of();
-        }
+        return List.of();
+        /*
         AbstractServiceProvider<?> asp = AbstractServiceProvider
                 .toAbstractServiceProvider(ServiceBinderDefault.toRootProvider(sp), true).orElseThrow();
         DependenciesInfo deps = asp.dependencies();
@@ -387,6 +378,8 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         }
 
         return plan;
+
+         */
     }
 
     /**

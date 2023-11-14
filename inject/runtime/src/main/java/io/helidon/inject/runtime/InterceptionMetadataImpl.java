@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Set;
 
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InterceptionMetadata;
@@ -34,7 +35,8 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
                                         Set<Qualifier> typeQualifiers,
                                         List<Annotation> typeAnnotations,
                                         TypedElementInfo element,
-                                        Invoker<T> targetInvoker) {
+                                        Invoker<T> targetInvoker,
+                                        TypeName... checkedExceptions) {
         var interceptors = interceptors(typeQualifiers,
                                         typeAnnotations,
                                         element);
@@ -47,7 +49,7 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
                                                                       .elementInfo(element)
                                                                       .interceptors(interceptors)
                                                                       .build(),
-                                                              targetInvoker::invoke,
+                                                              targetInvoker,
                                                               params);
         }
     }

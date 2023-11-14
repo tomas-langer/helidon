@@ -20,13 +20,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.Set;
 
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.InvocationContext;
 import io.helidon.inject.api.InvocationException;
+import io.helidon.inject.api.Invoker;
 import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 
@@ -43,14 +45,17 @@ import jakarta.inject.Provider;
 public class Invocation<V> implements Interceptor.Chain<V> {
     private final InvocationContext ctx;
     private final List<Provider<Interceptor>> interceptors;
+    private final Set<TypeName> checkedExceptions;
     private int interceptorPos;
-    private Function<Object[], V> call;
+    private Invoker<V> call;
 
     private Invocation(InvocationContext ctx,
-                       Function<Object[], V> call) {
+                      Invoker<V> call,
+                      Set<TypeName> checkedExceptions) {
         this.ctx = ctx;
-        this.call = Objects.requireNonNull(call);
+        this.call = call;
         this.interceptors = List.copyOf(ctx.interceptors());
+        this.checkedExceptions = checkedExceptions;
     }
 
     @Override
@@ -64,22 +69,34 @@ public class Invocation<V> implements Interceptor.Chain<V> {
      * @param ctx   the invocation context
      * @param call  the call to the base service provider's method
      * @param args  the call arguments
+     * @param checkedExceptions expected exception types
      * @param <V>   the type returned from the method element
      * @return the invocation instance
      * @throws InvocationException if there are errors during invocation chain processing
+     * @throws Exception any checked exception declared by the method itself
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <V> V createInvokeAndSupply(InvocationContext ctx,
-                                              Function<Object[], V> call,
-                                              Object[] args) {
+                                              Invoker<V> call,
+                                              Object[] args,
+                                              TypeName... checkedExceptions) throws Exception {
+        Objects.requireNonNull(ctx);
+        Objects.requireNonNull(call);
+        Objects.requireNonNull(args);
+        Objects.requireNonNull(checkedExceptions);
+
+        Set<TypeName> checked = Set.of(checkedExceptions);
         if (ctx.interceptors().isEmpty()) {
             try {
-                return call.apply(args);
+                return call.invoke(args);
             } catch (Throwable t) {
+                if (shouldThrow(checked, t.getClass())) {
+                    throw t;
+                }
                 throw new InvocationException("Error in interceptor chain processing", t, true);
             }
         } else {
-            return (V) new Invocation(ctx, call).proceed(args);
+            return (V) new Invocation(ctx, call, checked).proceed(args);
         }
     }
 
@@ -100,22 +117,34 @@ public class Invocation<V> implements Interceptor.Chain<V> {
                                               List<Annotation> typeAnnotations,
                                               TypedElementInfo element,
                                               List<Provider<Interceptor>> interceptors,
-                                              Function<Object[], V> call,
+                                              Invoker<V> call,
                                               Object... args) {
+        Objects.requireNonNull(descriptor);
+        Objects.requireNonNull(typeAnnotations);
+        Objects.requireNonNull(element);
+        Objects.requireNonNull(interceptors);
+        Objects.requireNonNull(call);
+        Objects.requireNonNull(args);
+
         InvocationContext ctx = InvocationContext.builder()
                 .serviceDescriptor(descriptor)
                 .classAnnotations(typeAnnotations)
                 .elementInfo(element)
                 .interceptors(interceptors)
                 .build();
-        if (ctx.interceptors().isEmpty()) {
-            try {
-                return call.apply(args);
-            } catch (Throwable t) {
-                throw new InvocationException("Error in interceptor chain processing", t, true);
+
+        try {
+            if (ctx.interceptors().isEmpty()) {
+                return call.invoke(args);
+            } else {
+                return (V) new Invocation(ctx, call, Set.of()).proceed(args);
             }
-        } else {
-            return (V) new Invocation(ctx, call).proceed(args);
+        } catch (InvocationException e) {
+            throw e;
+        } catch (Throwable t) {
+            // this method does not support checked exceptions
+            // (and as a result, we do not support checked exceptions in intercepted constructors)
+            throw new InvocationException("Error in interceptor chain processing", t, true);
         }
     }
 
@@ -154,9 +183,8 @@ public class Invocation<V> implements Interceptor.Chain<V> {
                     continue;
                 }
 
-                if (p instanceof ServiceProvider
-                        && VoidServiceProvider.serviceTypeName().equals(
-                                ((ServiceProvider<?>) p).serviceInfo().serviceTypeName())) {
+                if (p instanceof ServiceProvider<?> serviceProvider
+                        && VoidServiceProvider.TYPE_NAME.equals(serviceProvider.serviceType())) {
                     continue;
                 }
 
@@ -177,7 +205,7 @@ public class Invocation<V> implements Interceptor.Chain<V> {
     }
 
     @Override
-    public V proceed(Object... args) {
+    public V proceed(Object... args) throws Exception {
         if (this.call == null) {
             throw new InvocationException("Duplicate invocation, or unknown call type: " + this, true);
         }
@@ -206,11 +234,11 @@ public class Invocation<V> implements Interceptor.Chain<V> {
             }
         }
 
-        Function<Object[], V> call = this.call;
+        Invoker<V> call = this.call;
         this.call = null;
 
         try {
-            return call.apply(args);
+            return call.invoke(args);
         } catch (Throwable t) {
             if (t instanceof InvocationException) {
                 if (!((InvocationException) t).targetWasCalled()) {
@@ -222,8 +250,21 @@ public class Invocation<V> implements Interceptor.Chain<V> {
 
             // allow the call to happen again
             this.call = call;
+            if (shouldThrow(checkedExceptions, t.getClass())) {
+                throw t;
+            }
             throw new InvocationException("Error in interceptor chain processing", t, true);
         }
     }
 
+    private static boolean shouldThrow(Set<TypeName> checked, Class<?> t) {
+        if (checked.contains(TypeName.create(t))) {
+            return true;
+        }
+        Class<?> superclass = t.getSuperclass();
+        if (superclass == null || superclass.equals(Object.class)) {
+            return false;
+        }
+        return shouldThrow(checked, superclass);
+    }
 }

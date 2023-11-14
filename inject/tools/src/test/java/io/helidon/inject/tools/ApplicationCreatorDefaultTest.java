@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import io.helidon.common.processor.GeneratorTools;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
@@ -61,7 +62,7 @@ class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
         assertThat(serviceProviders.size(), is(0));
 
         List<TypeName> serviceTypeNames = serviceProviders.stream()
-                .map(sp -> sp.serviceInfo().serviceTypeName())
+                .map(ServiceDescriptor::serviceType)
                 .toList();
 
         // note: this test needs to align with target/inject/... for this to work/test properly

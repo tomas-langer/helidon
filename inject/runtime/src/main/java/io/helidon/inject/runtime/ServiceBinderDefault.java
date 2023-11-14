@@ -26,9 +26,9 @@ import io.helidon.common.HelidonServiceLoader;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceBinder;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.spi.ActivatorProvider;
 
@@ -51,15 +51,12 @@ public class ServiceBinderDefault implements ServiceBinder {
 
     private final InjectionServices injectionServices;
     private final ServiceBinder serviceRegistry;
-    private final String moduleName;
     private final boolean trusted;
 
     private ServiceBinderDefault(InjectionServices injectionServices,
-                                 String moduleName,
                                  boolean trusted) {
         this.injectionServices = injectionServices;
         this.serviceRegistry = (ServiceBinder) injectionServices.services();
-        this.moduleName = moduleName;
         this.trusted = trusted;
     }
 
@@ -76,17 +73,12 @@ public class ServiceBinderDefault implements ServiceBinder {
                                               boolean trusted) {
         Objects.requireNonNull(injectionServices);
         Objects.requireNonNull(moduleName);
-        return new ServiceBinderDefault(injectionServices, moduleName, trusted);
+        return new ServiceBinderDefault(injectionServices, trusted);
     }
 
     @Override
-    public void bind(ServiceDescriptor<?> serviceDescriptor) {
-        ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceDescriptor.runtimeId());
-        if (activatorProvider == null) {
-            throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceDescriptor.runtimeId()
-                                                    + ", available activator providers: " + ACTIVATOR_PROVIDERS.keySet());
-        }
-        bind(activatorProvider.activator(injectionServices, serviceDescriptor));
+    public void bind(ServiceSource<?> serviceDescriptor) {
+        bind(serviceProvider(injectionServices, serviceDescriptor));
     }
 
     @Override
@@ -96,10 +88,6 @@ public class ServiceBinderDefault implements ServiceBinder {
         }
 
         Optional<ServiceProviderBindable<?>> bindableSp = toBindableProvider(sp);
-
-        if (moduleName != null) {
-            bindableSp.ifPresent(it -> it.moduleName(moduleName));
-        }
 
         Services services = injectionServices.services();
         if (services instanceof DefaultServices && sp instanceof ServiceProviderBindable) {
@@ -112,6 +100,15 @@ public class ServiceBinderDefault implements ServiceBinder {
 
         serviceRegistry.bind(sp);
         bindableSp.ifPresent(it -> it.injectionServices(Optional.of(injectionServices)));
+    }
+
+    static ServiceProvider<?> serviceProvider(InjectionServices injectionServices, ServiceSource<?> serviceSource) {
+        ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceSource.runtimeId());
+        if (activatorProvider == null) {
+            throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceSource.runtimeId()
+                                                    + ", available activator providers: " + ACTIVATOR_PROVIDERS.keySet());
+        }
+        return activatorProvider.activator(injectionServices, serviceSource);
     }
 
     private boolean alreadyBoundToThisInjectionServices(ServiceProviderBindable<?> serviceProvider,

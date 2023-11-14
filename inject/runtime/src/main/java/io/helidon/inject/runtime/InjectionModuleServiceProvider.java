@@ -16,38 +16,77 @@
 
 package io.helidon.inject.runtime;
 
+import java.util.Set;
+
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ModuleComponent;
+import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceInfo;
+import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.api.ServiceSource;
 
 /**
  * Basic {@link ModuleComponent} implementation. A ModuleComponent is-a service provider also.
  */
-class InjectionModuleServiceProvider extends AbstractServiceProvider<ModuleComponent> {
+class InjectionModuleServiceProvider extends
+                                     ServiceProviderBase<ModuleComponent, InjectionModuleServiceProvider,
+                                             InjectionModuleServiceProvider.ModuleActivator> {
 
-    InjectionModuleServiceProvider(ModuleComponent module,
-                                   String moduleName,
-                                   InjectionServices injectionServices) {
-        super(module, InjectionServices.terminalActivationPhase(), createServiceInfo(module, moduleName), injectionServices);
-        serviceRef(module);
+    InjectionModuleServiceProvider(InjectionServices injectionServices,
+                                   ServiceSource<ModuleComponent> descriptor,
+                                   ModuleComponent module) {
+        super(injectionServices,
+              descriptor,
+              new ModuleActivator(injectionServices, descriptor, module));
     }
 
-    static ServiceInfo createServiceInfo(ModuleComponent module,
-                                         String moduleName) {
-        ServiceInfo.Builder builder = ServiceInfo.builder()
-                .serviceTypeName(TypeName.create(module.getClass()))
-                .addContractImplemented(TypeName.create(ModuleComponent.class));
-        if (moduleName != null) {
-            builder.moduleName(moduleName)
-                    .addQualifier(Qualifier.createNamed(moduleName));
+    static ServiceProvider<ModuleComponent> create(InjectionServices injectionServices,
+                                                   ModuleComponent module,
+                                                   String moduleName) {
+
+        Set<Qualifier> qualifiers = Set.of(Qualifier.createNamed(moduleName));
+        ServiceSource<ModuleComponent> descriptor = new ModuleServiceDescriptor(module.getClass(), qualifiers);
+        return new InjectionModuleServiceProvider(injectionServices,
+                                                  descriptor,
+                                                  module);
+    }
+
+    static final class ModuleActivator extends ServiceActivatorBase<ModuleComponent, InjectionModuleServiceProvider> {
+        ModuleActivator(InjectionServices injectionServices,
+                        ServiceSource<ModuleComponent> descriptor,
+                        ModuleComponent module) {
+            super(injectionServices, descriptor);
+
+            super.phase(Phase.ACTIVE);
+            super.instance(module);
         }
-        return builder.build();
     }
 
-    @Override
-    public Class<?> serviceType() {
-        return ModuleComponent.class;
+    private static class ModuleServiceDescriptor implements ServiceSource<ModuleComponent> {
+        private static final TypeName MODULE_TYPE = TypeName.create(ModuleComponent.class);
+
+        private final TypeName moduleType;
+        private final Set<Qualifier> qualifiers;
+
+        private ModuleServiceDescriptor(Class<?> moduleClass, Set<Qualifier> qualifiers) {
+            this.moduleType = TypeName.create(moduleClass);
+            this.qualifiers = qualifiers;
+        }
+
+        @Override
+        public TypeName serviceType() {
+            return moduleType;
+        }
+
+        @Override
+        public Set<TypeName> contracts() {
+            return Set.of(MODULE_TYPE);
+        }
+
+        @Override
+        public Set<Qualifier> qualifiers() {
+            return qualifiers;
+        }
     }
 }

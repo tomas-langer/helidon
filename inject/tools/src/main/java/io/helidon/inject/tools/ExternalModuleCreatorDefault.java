@@ -48,7 +48,7 @@ import io.github.classgraph.PackageInfo;
 import io.github.classgraph.ScanResult;
 import jakarta.inject.Singleton;
 
-import static io.helidon.inject.api.ServiceInfoBasics.DEFAULT_INJECT_WEIGHT;
+import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 import static java.util.function.Predicate.not;
 
 /**

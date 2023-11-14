@@ -41,7 +41,7 @@ import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.ServiceInfoBasics;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.tools.AbstractFilerMessager;
 import io.helidon.inject.tools.CodeGenFiler;
 import io.helidon.inject.tools.CustomAnnotationTemplateRequest;
@@ -234,10 +234,7 @@ public class CustomAnnotationProcessor extends BaseAnnotationProcessor {
         TypeInfo enclosingClassTypeInfo = utils()
                 .toTypeInfo(enclosingClassType, (typedElement) -> true)
                 .orElseThrow();
-        ServiceInfoBasics siInfo = GeneralProcessorUtils.toBasicServiceInfo(enclosingClassTypeInfo);
-        if (siInfo == null) {
-            return null;
-        }
+        ServiceDescriptor<?> siInfo = GeneralProcessorUtils.toBasicServiceInfo(enclosingClassTypeInfo);
 
         Elements elements = processingEnv.getElementUtils();
         return CustomAnnotationTemplateRequest.builder()

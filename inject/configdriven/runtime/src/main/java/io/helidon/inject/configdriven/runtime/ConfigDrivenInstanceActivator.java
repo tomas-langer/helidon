@@ -7,7 +7,7 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.IpInfo;
-import io.helidon.inject.api.ServiceDescriptor;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.ServiceActivatorBase;
 
@@ -16,7 +16,7 @@ class ConfigDrivenInstanceActivator<T, CB> extends ServiceActivatorBase<T, Confi
     private final TypeName cbType;
 
     ConfigDrivenInstanceActivator(InjectionServices injectionServices,
-                                  ServiceDescriptor<T> descriptor,
+                                  ServiceSource<T> descriptor,
                                   CB instance,
                                   TypeName cbType) {
         super(injectionServices, descriptor);
@@ -41,6 +41,6 @@ class ConfigDrivenInstanceActivator<T, CB> extends ServiceActivatorBase<T, Confi
 
     @Override
     public String toString() {
-        return "Config Driven Instance activator for: " + descriptor().serviceType().getName() + "[" + phase() + "]";
+        return "Config Driven Instance activator for: " + descriptor().serviceType().fqName() + "[" + phase() + "]";
     }
 }

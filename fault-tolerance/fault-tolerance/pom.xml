@@ -73,15 +73,6 @@
             <optional>true</optional>
         </dependency>
         <dependency>
-            <!--
-            must be in compile dependencies, as it is used by generated classes
-            optional for runtime - if injection is used, it will be loaded
-            -->
-            <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-runtime</artifactId>
-            <optional>true</optional>
-        </dependency>
-        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
             <scope>test</scope>

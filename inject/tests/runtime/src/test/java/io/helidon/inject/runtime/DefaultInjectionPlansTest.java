@@ -19,17 +19,19 @@ package io.helidon.inject.runtime;
 import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
-import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.Bootstrap;
+import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceBinder;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.api.ServiceSource;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,7 +78,7 @@ class DefaultInjectionPlansTest {
         List<String> result = DefaultInjectionPlans.injectionPointProvidersFor(services, criteria).stream()
                 .map(ServiceProvider::description).toList();
         assertThat(result,
-                   contains(sp1.description()));
+                   contains(sp1.toString()));
     }
 
     static class FakeModuleComponent implements ModuleComponent {
@@ -87,40 +89,39 @@ class DefaultInjectionPlansTest {
         }
     }
 
-    static class FakeInjectionPointProviderActivator extends AbstractServiceProvider<Closeable> {
-        private static final ServiceInfo serviceInfo =
-                ServiceInfo.builder()
-                        .serviceTypeName(FakeInjectionPointProviderActivator.class)
-                        .addContractImplemented(Closeable.class)
-                        .addExternalContractImplemented(InjectionPointProvider.class)
-                        .addExternalContractImplemented(jakarta.inject.Provider.class)
-                        .build();
+    static class FakeInjectionPointProviderActivator implements ServiceSource<Closeable> {
+        private static final TypeName CLOSEABLE = TypeName.create(Closeable.class);
+        private static final TypeName IP_PROVIDER = TypeName.create(InjectionPointProvider.class);
+        private static final TypeName PROVIDER = TypeName.create(jakarta.inject.Provider.class);
+        private static final Set<TypeName> CONTRACTS = Set.of(CLOSEABLE, IP_PROVIDER, PROVIDER);
 
-        public FakeInjectionPointProviderActivator() {
-            serviceInfo(serviceInfo);
+        FakeInjectionPointProviderActivator() {
         }
 
         @Override
-        public Class<Closeable> serviceType() {
-            return Closeable.class;
+        public TypeName serviceType() {
+            return CLOSEABLE;
+        }
+
+        @Override
+        public Set<TypeName> contracts() {
+            return CONTRACTS;
         }
     }
 
-    static class FakeRegularActivator extends AbstractServiceProvider<Closeable> {
-        private static final ServiceInfo serviceInfo =
-                ServiceInfo.builder()
-                        .serviceTypeName(FakeRegularActivator.class)
-                        .addContractImplemented(Closeable.class)
-                        .addExternalContractImplemented(jakarta.inject.Provider.class)
-                        .build();
+    static class FakeRegularActivator implements ServiceSource<Closeable> {
+        private static final TypeName CLOSEABLE = TypeName.create(Closeable.class);
+        private static final TypeName PROVIDER = TypeName.create(jakarta.inject.Provider.class);
+        private static final Set<TypeName> CONTRACTS = Set.of(CLOSEABLE, PROVIDER);
 
-        public FakeRegularActivator() {
-            serviceInfo(serviceInfo);
+        @Override
+        public TypeName serviceType() {
+            return CLOSEABLE;
         }
 
         @Override
-        public Class<Closeable> serviceType() {
-            return Closeable.class;
+        public Set<TypeName> contracts() {
+            return CONTRACTS;
         }
     }
 

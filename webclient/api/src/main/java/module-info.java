@@ -33,7 +33,7 @@ module io.helidon.webclient.api {
     requires static io.helidon.common.features.api; // @Feature
     requires static io.helidon.config.metadata; // @ConfiguredOption etc
     requires static io.helidon.inject.configdriven.api;
-    requires static io.helidon.inject.configdriven.runtime;
+    requires static io.helidon.inject.api;
     requires static jakarta.inject; // Injection support
 
     requires transitive io.helidon.common.config;
@@ -55,5 +55,6 @@ module io.helidon.webclient.api {
     uses io.helidon.webclient.spi.WebClientServiceProvider;
     uses io.helidon.webclient.spi.ProtocolConfigProvider;
     uses io.helidon.webclient.spi.HttpClientSpiProvider;
-	
+
+    provides io.helidon.inject.api.ModuleComponent with io.helidon.webclient.api.HelidonInjection__ModuleComponent;
 }

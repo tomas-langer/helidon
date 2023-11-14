@@ -1,6 +1,7 @@
 package io.helidon.inject.configdriven.runtime;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,19 +19,17 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationPhaseReceiver;
 import io.helidon.inject.api.ActivationRequest;
 import io.helidon.inject.api.ActivationResult;
-import io.helidon.inject.api.CommonQualifiers;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.Event;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceDescriptor;
-import io.helidon.inject.api.ServiceInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
+import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.configdriven.api.ConfigBeanFactory;
 import io.helidon.inject.configdriven.api.ConfigDriven;
 import io.helidon.inject.configdriven.api.NamedInstance;
@@ -57,25 +56,21 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
     private final Map<String, ConfigDrivenInstanceProvider<T, CB>> managedConfiguredServicesMap
             = new ConcurrentHashMap<>();
     private final List<ConfigBeanServiceProvider<CB>> managedConfigBeans = new ArrayList<>();
+    private final Set<Qualifier> qualifiers;
+    private final ServiceSource<T> descriptor;
 
-    ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceDescriptor<T> descriptor) {
+    ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceSource<T> descriptor) {
         super(injectionServices,
               descriptor,
-              new ConfigDrivenServiceActivator<>(injectionServices, descriptor),
-              ServiceInfo.builder()
-                      .update(it -> descriptor.contracts().forEach(it::addContractImplemented))
-                      .addContractImplemented(descriptor.serviceType())
-                      .scopeTypeNames(descriptor.scopes())
-                      .qualifiers(descriptor.qualifiers())
-                      .declaredRunLevel(descriptor.runLevel())
-                      .declaredWeight(descriptor.weight())
-                      .serviceTypeName(descriptor.serviceType())
-                      .addQualifier(CommonQualifiers.WILDCARD_NAMED)
-                      .build());
+              new ConfigDrivenServiceActivator<>(injectionServices, descriptor));
+
+        this.qualifiers = new LinkedHashSet<>(descriptor.qualifiers());
+        this.descriptor = descriptor;
+        this.qualifiers.add(WILDCARD_NAMED);
     }
 
-    public static <T> ServiceProvider<T> create(InjectionServices injectionServices, ServiceDescriptor<T> descriptor) {
-        return new ConfigDrivenServiceProvider<T, Object>(injectionServices, descriptor);
+    public static <T> ServiceProvider<T> create(InjectionServices injectionServices, ServiceSource<T> descriptor) {
+        return new ConfigDrivenServiceProvider<>(injectionServices, descriptor);
     }
 
     @Override
@@ -126,7 +121,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
         managedConfigBeans.add(configBeanProvider);
         Object prev = managedConfiguredServicesMap.put(configBean.name(),
                                                        new ConfigDrivenInstanceProvider<>(getInjectionServices(),
-                                                                                          descriptor(),
+                                                                                          descriptor,
                                                                                           this,
                                                                                           configBean.name(),
                                                                                           configBean.instance()));
@@ -162,13 +157,13 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
                                         || qualifiers.contains(WILDCARD_NAMED))
                                 || (!hasValue && configuredByQualifier.isPresent())));
 
-        boolean serviceTypeMatch = serviceInfo().matches(criteria);
+        boolean serviceTypeMatch = criteria.matches(this);
         if (managedQualify) {
             List<ServiceProvider<?>> result = new ArrayList<>();
 
             if (criteria.contractsImplemented().contains(TypeName.create(configBeanType()))) {
                 for (ConfigBeanServiceProvider<CB> managedConfigBean : managedConfigBeans) {
-                    if (managedConfigBean.serviceInfo().matches(criteria)) {
+                    if (criteria.matches(managedConfigBean)) {
                         result.add(managedConfigBean);
                     }
                 }
@@ -179,7 +174,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
             }
 
             if (rootQualifies && serviceTypeMatch) {
-                if (thisAlreadyMatches || serviceInfo().matches(criteria)) {
+                if (thisAlreadyMatches || criteria.matches(this)) {
                     result.add(this);
                 }
                 // no need to sort using the comparator here since we should already be in the proper order...
@@ -187,8 +182,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
             } else {
                 return result;
             }
-        } else if (rootQualifies
-                && (thisAlreadyMatches || serviceInfo().matches(criteria))) {
+        } else if (rootQualifies && (thisAlreadyMatches || criteria.matches(this))) {
             if (!hasValue && managedConfiguredServicesMap.isEmpty()) {
                 // TODO: this used UnconfiguredServiceProvider - is it needed? First should still return nothing if this has no
                 //  beans
@@ -204,7 +198,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
     public Map<String, ConfigDrivenInstanceProvider<?, CB>> managedServiceProviders(ServiceInfoCriteria criteria) {
         Map<String, ConfigDrivenInstanceProvider<?, CB>> map = managedConfiguredServicesMap.entrySet()
                 .stream()
-                .filter(e -> e.getValue().serviceInfo().matches(criteria))
+                .filter(e -> criteria.matches(e.getValue()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (map.size() <= 1) {
             return map;
