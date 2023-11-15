@@ -24,16 +24,8 @@ import io.helidon.builder.api.Prototype;
 /**
  * Request to activate a service.
  */
-@Prototype.Blueprint
+@Prototype.Blueprint(decorator = BlueprintsSupport.ActivationRequestDecorator.class)
 interface ActivationRequestBlueprint {
-
-    /**
-     * Optionally, the injection point context information.
-     *
-     * @return injection point info
-     */
-    Optional<InjectionPointInfo> injectionPoint();
-
     /**
      * The phase to start activation. Typically, this should be left as the default (i.e., PENDING).
      *
@@ -43,10 +35,11 @@ interface ActivationRequestBlueprint {
 
     /**
      * Ultimate target phase for activation.
+     * <p>
+     * Defaults to {@link InjectionServices#terminalActivationPhase()}.
      *
      * @return phase to target
      */
-    @Option.Default("ACTIVE")
     Phase targetPhase();
 
     /**

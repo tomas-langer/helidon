@@ -60,7 +60,7 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
     /**
      * The suffix for activator class name.
      */
-    public static final String INNER_ACTIVATOR_CLASS_NAME = "$$" + NAME_PREFIX + "Activator";
+    public static final String INNER_ACTIVATOR_CLASS_NAME = "__ServiceDescriptor";
     private static final Set<String> SERVICE_DEFINING_ANNOTATIONS = Set.of(TypeNames.JAKARTA_SINGLETON,
                                                                            TypeNames.JAKARTA_APPLICATION_SCOPED);
     private final LazyValue<ScanResult> scan = LazyValue.create(ReflectionHandler.INSTANCE.scan());
@@ -73,7 +73,7 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
      */
     @Deprecated
     public ExternalModuleCreatorDefault() {
-        super(TemplateHelper.DEFAULT_TEMPLATE_NAME);
+        super();
     }
 
     static boolean isInjectionSupported(TypeName serviceTypeName,

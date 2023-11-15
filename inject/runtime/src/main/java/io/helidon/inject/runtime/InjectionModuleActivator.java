@@ -23,44 +23,30 @@ import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceSource;
 
 /**
  * Basic {@link ModuleComponent} implementation. A ModuleComponent is-a service provider also.
  */
-class InjectionModuleServiceProvider extends
-                                     ServiceProviderBase<ModuleComponent, InjectionModuleServiceProvider,
-                                             InjectionModuleServiceProvider.ModuleActivator> {
+class InjectionModuleActivator extends ServiceProviderBase<ModuleComponent> {
 
-    InjectionModuleServiceProvider(InjectionServices injectionServices,
-                                   ServiceSource<ModuleComponent> descriptor,
-                                   ModuleComponent module) {
-        super(injectionServices,
-              descriptor,
-              new ModuleActivator(injectionServices, descriptor, module));
+    InjectionModuleActivator(InjectionServices injectionServices,
+                             ServiceSource<ModuleComponent> descriptor) {
+        super(injectionServices, descriptor);
     }
 
-    static ServiceProvider<ModuleComponent> create(InjectionServices injectionServices,
-                                                   ModuleComponent module,
-                                                   String moduleName) {
+    static InjectionModuleActivator create(InjectionServices injectionServices,
+                                           ModuleComponent module,
+                                           String moduleName) {
 
         Set<Qualifier> qualifiers = Set.of(Qualifier.createNamed(moduleName));
         ServiceSource<ModuleComponent> descriptor = new ModuleServiceDescriptor(module.getClass(), qualifiers);
-        return new InjectionModuleServiceProvider(injectionServices,
-                                                  descriptor,
-                                                  module);
-    }
+        InjectionModuleActivator activator = new InjectionModuleActivator(injectionServices,
+                                                                          descriptor);
 
-    static final class ModuleActivator extends ServiceActivatorBase<ModuleComponent, InjectionModuleServiceProvider> {
-        ModuleActivator(InjectionServices injectionServices,
-                        ServiceSource<ModuleComponent> descriptor,
-                        ModuleComponent module) {
-            super(injectionServices, descriptor);
+        activator.state(Phase.ACTIVE, module);
 
-            super.phase(Phase.ACTIVE);
-            super.instance(module);
-        }
+        return activator;
     }
 
     private static class ModuleServiceDescriptor implements ServiceSource<ModuleComponent> {

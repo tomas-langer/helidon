@@ -31,10 +31,10 @@ import jakarta.inject.Singleton;
 /**
  * A proxy service provider created internally by the framework.
  */
-class VoidServiceProvider extends DescribedServiceProvider<Void> {
+public class VoidServiceProvider extends DescribedServiceProvider<Void> {
     static final TypeName TYPE_NAME = TypeName.create(Void.class);
-    static final VoidServiceProvider INSTANCE = new VoidServiceProvider() { };
-    static final List<ServiceProvider<?>> LIST_INSTANCE = List.of(INSTANCE);
+    public static final VoidServiceProvider INSTANCE = new VoidServiceProvider() { };
+    public static final List<ServiceProvider<?>> LIST_INSTANCE = List.of(INSTANCE);
 
     private static final ServiceDescriptor<Void> DESCRIPTOR = new VoidDescriptor();
 

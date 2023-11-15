@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-import io.helidon.inject.processor.HelidonAnnotationProcessor;
-import io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider;
-
 /**
  * Injection Annotation Processor module.
  */
@@ -35,8 +32,7 @@ module io.helidon.inject.processor {
     requires transitive java.compiler;
 
     uses io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
-    uses io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
-    uses HelidonProcessorExtensionProvider;
+    uses io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider;
     uses io.helidon.common.processor.spi.AnnotationMapperProvider;
     uses io.helidon.common.processor.spi.ElementMapperProvider;
     uses io.helidon.common.processor.spi.TypeMapperProvider;
@@ -48,8 +44,7 @@ module io.helidon.inject.processor {
             with io.helidon.inject.processor.InjectionProcessorExtensionProvider;
 
     provides javax.annotation.processing.Processor with
-            HelidonAnnotationProcessor,
-            io.helidon.inject.processor.CustomAnnotationProcessor,
+            io.helidon.inject.processor.HelidonAnnotationProcessor,
             io.helidon.inject.processor.UnsupportedConstructsProcessor;
 
 }

@@ -31,6 +31,7 @@ import io.helidon.common.processor.classmodel.TypeArgument;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotated;
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.Modifier;
 import io.helidon.common.types.TypeInfo;
@@ -63,7 +64,6 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             .addTypeArgument(TypeName.create("T"))
             .build();
     private static final TypeName GENERATOR = TypeName.create(InjectionProcessorExtension.class);
-    private static final Annotation OVERRIDE = Annotation.create(Override.class);
     private static final Annotation RUNTIME_RETENTION = Annotation.create(Retention.class, RetentionPolicy.RUNTIME.name());
     private static final Annotation CLASS_RETENTION = Annotation.create(Retention.class, RetentionPolicy.CLASS.name());
     private static final TypedElementInfo DEFAULT_CONSTRUCTOR = TypedElementInfo.builder()
@@ -108,8 +108,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
     }
 
     @Override
-    public boolean process(RoundContext context) {
-        Collection<TypeInfo> descriptorsRequired = context.types();
+    public boolean process(RoundContext roundContext) {
+        Collection<TypeInfo> descriptorsRequired = roundContext.types();
 
         for (TypeInfo typeInfo : descriptorsRequired) {
             if (typeInfo.typeKind() == ElementKind.INTERFACE) {
@@ -182,7 +182,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             typeFields(classModel, genericTypes);
             injectionPointIdFields(classModel, genericTypes, params);
             injectionPointInfoFields(classModel, genericTypes, params);
-            serviceTypeField(classModel, serviceType);
+            serviceTypeFields(classModel, serviceType, descriptorType);
             contractsField(classModel, contracts);
             dependenciesField(classModel, params);
             qualifiersField(classModel, qualifiers);
@@ -211,6 +211,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             Methods
              */
             serviceTypeMethod(classModel);
+            descriptorTypeMethod(classModel);
             contractsMethod(classModel, contracts);
             dependenciesMethod(classModel, params, hasSuperType);
             instantiateMethod(classModel, serviceType, params, isAbstractClass, constructorIntercepted, methodsIntercepted);
@@ -248,6 +249,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         return false;
     }
 
+
     private void notifyObservers(Collection<TypeInfo> descriptorsRequired) {
         // we have correct classloader set in current thread context
         List<InjectionAnnotationProcessorObserver> observers = HelidonServiceLoader.create(ServiceLoader.load(
@@ -268,7 +270,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         // int runLevel()
         Optional<Integer> runLevel = runLevel(typeInfo);
         runLevel.ifPresent(integer -> classModel.addMethod(runLevelMethod -> runLevelMethod.name("runLevel")
-                .addAnnotation(OVERRIDE)
+                .addAnnotation(Annotations.OVERRIDE)
                 .returnType(io.helidon.common.types.TypeNames.PRIMITIVE_INT)
                 .addLine("return " + integer + ";")));
     }
@@ -277,7 +279,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         // double weight()
         Optional<Double> weight = weight(typeInfo);
         weight.ifPresent(aDouble -> classModel.addMethod(weightMethod -> weightMethod.name("weight")
-                .addAnnotation(OVERRIDE)
+                .addAnnotation(Annotations.OVERRIDE)
                 .returnType(io.helidon.common.types.TypeNames.PRIMITIVE_DOUBLE)
                 .addLine("return " + aDouble + ";")));
     }
@@ -288,7 +290,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         }
         // List<Qualifier> qualifiers()
         classModel.addMethod(qualifiersMethod -> qualifiersMethod.name("qualifiers")
-                .addAnnotation(OVERRIDE)
+                .addAnnotation(Annotations.OVERRIDE)
                 .returnType(SET_OF_QUALIFIERS_TYPE)
                 .addLine("return QUALIFIERS;"));
     }
@@ -297,7 +299,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         // preDestroy
         lifecycleMethod(typeInfo, TypeNames.JAKARTA_PRE_DESTROY_TYPE).ifPresent(method -> {
             classModel.addMethod(preDestroy -> preDestroy.name("preDestroy")
-                    .addAnnotation(OVERRIDE)
+                    .addAnnotation(Annotations.OVERRIDE)
                     .addParameter(instance -> instance.type(serviceType)
                             .name("instance"))
                     .addLine("instance." + method.elementName() + "();"));
@@ -308,7 +310,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         // postConstruct()
         lifecycleMethod(typeInfo, TypeNames.JAKARTA_POST_CONSTRUCT_TYPE).ifPresent(method -> {
             classModel.addMethod(postConstruct -> postConstruct.name("postConstruct")
-                    .addAnnotation(OVERRIDE)
+                    .addAnnotation(Annotations.OVERRIDE)
                     .addParameter(instance -> instance.type(serviceType)
                             .name("instance"))
                     .addLine("instance." + method.elementName() + "();"));
@@ -329,7 +331,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .forEach(param -> methodCalls.computeIfAbsent(param.methodId(), it -> new ArrayList<>())
                         .add(param));
         if (!methodCalls.isEmpty()) {
-            classModel.addMethod(method -> method.addAnnotation(OVERRIDE)
+            classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
                     .name("injectMethods")
                     .addParameter(ctxParam -> ctxParam.type(TypeNames.INJECTION_CONTEXT)
                             .name("ctx"))
@@ -350,7 +352,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .filter(it -> it.kind == ElementKind.FIELD)
                 .toList();
         if (!fields.isEmpty()) {
-            classModel.addMethod(method -> method.addAnnotation(OVERRIDE)
+            classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
                     .name("injectFields")
                     .addParameter(ctxParam -> ctxParam.type(TypeNames.INJECTION_CONTEXT)
                             .name("ctx"))
@@ -377,7 +379,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 ? TypeName.builder(serviceType).className(serviceType.className() + "__Intercepted").build()
                 : serviceType;
 
-        classModel.addMethod(method -> method.addAnnotation(OVERRIDE)
+        classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
                 .returnType(serviceType)
                 .name("instantiate")
                 .addParameter(ctxParam -> ctxParam.type(TypeNames.INJECTION_CONTEXT)
@@ -408,7 +410,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         // List<InjectionParameterId> dependencies()
 
         if (hasSuperType || !params.isEmpty()) {
-            classModel.addMethod(method -> method.addAnnotation(OVERRIDE)
+            classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
                     .returnType(DEPENDENCIES_RETURN_TYPE)
                     .name("dependencies")
                     .update(it -> {
@@ -426,15 +428,23 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             return;
         }
         // Set<Class<?>> contracts()
-        classModel.addMethod(method -> method.addAnnotation(OVERRIDE)
+        classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
                 .name("contracts")
                 .returnType(CONTRACTS_RETURN_TYPE)
                 .addLine("return CONTRACTS;"));
     }
 
+    private void descriptorTypeMethod(ClassModel.Builder classModel) {
+        // TypeName descriptorType()
+        classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
+                .returnType(io.helidon.common.types.TypeNames.TYPE_NAME)
+                .name("descriptorType")
+                .addLine("return DESCRIPTOR_TYPE;"));
+    }
+
     private void serviceTypeMethod(ClassModel.Builder classModel) {
         // TypeName serviceType()
-        classModel.addMethod(method -> method.addAnnotation(OVERRIDE)
+        classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
                 .returnType(io.helidon.common.types.TypeNames.TYPE_NAME)
                 .name("serviceType")
                 .addLine("return TYPE_NAME;"));
@@ -620,8 +630,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 })));
     }
 
-    private void serviceTypeField(ClassModel.Builder classModel, TypeName serviceType) {
-        classModel.addField(clazz -> clazz
+    private void serviceTypeFields(ClassModel.Builder classModel, TypeName serviceType, TypeName descriptorType) {
+        classModel.addField(field -> field
                 .isStatic(true)
                 .isFinal(true)
                 .accessModifier(AccessModifier.PRIVATE)
@@ -629,6 +639,15 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .name("TYPE_NAME")
                 .defaultValueContent("@" + TypeName.class.getName() + "@.create("
                                              + serviceType.classNameWithEnclosingNames() + ".class)"));
+
+        classModel.addField(field -> field
+                .isStatic(true)
+                .isFinal(true)
+                .accessModifier(AccessModifier.PRIVATE)
+                .type(io.helidon.common.types.TypeNames.TYPE_NAME)
+                .name("DESCRIPTOR_TYPE")
+                .defaultValueContent("@" + TypeName.class.getName() + "@.create("
+                                             + descriptorType.classNameWithEnclosingNames() + ".class)"));
     }
 
     private void singletonInstanceField(ClassModel.Builder classModel, TypeName descriptorType) {

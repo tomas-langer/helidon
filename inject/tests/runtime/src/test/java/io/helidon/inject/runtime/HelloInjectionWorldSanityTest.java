@@ -25,6 +25,7 @@ import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.inject.api.ActivationResult;
+import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.Bootstrap;
 import io.helidon.inject.api.DeActivationRequest;
@@ -164,10 +165,7 @@ class HelloInjectionWorldSanityTest {
                                  equalTo(0));
 
         // deactivate just the Hello service
-        ActivationResult result = helloProvider1.deActivator().orElseThrow()
-                .deactivate(DeActivationRequest.create());
-        assertThat(result.finished(),
-                   is(true));
+        ActivationResult result = ((Activator) helloProvider1).deactivate(DeActivationRequest.create());
         assertThat(result.success(),
                    is(true));
         assertThat(result.serviceProvider(),
@@ -195,7 +193,6 @@ class HelloInjectionWorldSanityTest {
         HelloInjectionImpl__ServiceDescriptor subversiveDescriptor = new HelloInjectionImpl__ServiceDescriptor();
 
         ActivationResult result = injector.activateInject(subversiveDescriptor, InjectorOptions.builder().build());
-        assertThat(result.finished(), is(true));
         assertThat(result.success(), is(true));
 
         ServiceProvider<HelloInjectionWorldImpl> subversiveProvider =

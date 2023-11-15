@@ -16,9 +16,7 @@
 
 package io.helidon.inject.api;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.Future;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
@@ -27,7 +25,6 @@ import io.helidon.builder.api.Prototype;
  * Represents the result of a service activation or deactivation.
  *
  * @see Activator
- * @see DeActivator
  **/
 @Prototype.Blueprint
 interface ActivationResultBlueprint {
@@ -38,14 +35,6 @@ interface ActivationResultBlueprint {
      * @return the service provider generating the result
      */
     ServiceProvider<?> serviceProvider();
-
-    /**
-     * Optionally, given by the implementation provider to indicate the future completion when the provider's
-     * {@link ActivationStatus} is {@link ActivationStatus#WARNING_SUCCESS_BUT_NOT_READY}.
-     *
-     * @return the future result, assuming how activation can be async in nature
-     */
-    Optional<Future<ActivationResultBlueprint>> finishedActivationResult();
 
     /**
      * The activation phase that was found at onset of the phase transition.
@@ -72,34 +61,10 @@ interface ActivationResultBlueprint {
 
     /**
      * How did the activation finish.
-     * Will only be populated if the lifecycle event has completed - see {@link #finishedActivationResult()}.
      *
      * @return the finishing status
      */
-    Optional<ActivationStatus> finishingStatus();
-
-    /**
-     * The injection plan that was found or determined, key'ed by each element's {@link ServiceProvider#id()}.
-     *
-     * @return the resolved injection plan map
-     */
-    Map<String, io.helidon.inject.spi.InjectionPlan> injectionPlans();
-
-    /**
-     * The dependencies that were resolved or loaded, key'ed by each element's {@link ServiceProvider#id()}.
-     *
-     * @return the resolved dependency map
-     */
-    Map<String, Object> resolvedDependencies();
-
-    /**
-     * Set to true if the injection plan in {@link #resolvedDependencies()} has been resolved and can be "trusted" as being
-     * complete and accurate.
-     *
-     * @return true if was resolved
-     */
-    @Option.DefaultBoolean(false)
-    boolean wasResolved();
+    ActivationStatus finishingStatus();
 
     /**
      * Any throwable/exceptions that were observed during activation.
@@ -109,22 +74,12 @@ interface ActivationResultBlueprint {
     Optional<Throwable> error();
 
     /**
-     * Returns true if this result is finished.
-     *
-     * @return true if finished
-     */
-    default boolean finished() {
-        Future<ActivationResultBlueprint> f = finishedActivationResult().orElse(null);
-        return (f == null || f.isDone());
-    }
-
-    /**
      * Returns true if this result was successful.
      *
      * @return true if successful
      */
     default boolean success() {
-        return finishingStatus().orElse(null) != ActivationStatus.FAILURE;
+        return finishingStatus() != ActivationStatus.FAILURE;
     }
 
     /**

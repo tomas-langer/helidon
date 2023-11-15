@@ -46,8 +46,8 @@ public class BladeProvider implements InjectionPointProvider<AbstractBlade> {
     public Optional<AbstractBlade> first(ContextualServiceQuery query) {
         Objects.requireNonNull(query);
         ServiceInfoCriteria criteria = query.serviceInfoCriteria();
-        assert (criteria.contractsImplemented().size() == 1) : criteria;
-        assert (criteria.contractsImplemented().contains(TypeName.create(AbstractBlade.class))) : criteria;
+        assert (criteria.contracts().size() == 1) : criteria;
+        assert (criteria.contracts().contains(TypeName.create(AbstractBlade.class))) : criteria;
 
         AbstractBlade blade;
         if (criteria.qualifiers().contains(all) || criteria.qualifiers().contains(coarse)) {

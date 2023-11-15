@@ -26,15 +26,6 @@ import io.helidon.builder.api.Prototype;
  */
 @Prototype.Blueprint
 interface GeneralCodeGenNamesBlueprint {
-
-    /**
-     * Optionally, the name of the template to apply, defaulting to "default".
-     *
-     * @return the template name that should be used
-     */
-    @Option.Default("default")
-    String templateName();
-
     /**
      * The module name.
      * This name is used primarily to serve as the codegen name for the {@link io.helidon.inject.api.ModuleComponent} that is

@@ -19,6 +19,7 @@ package io.helidon.inject.runtime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,13 +30,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.api.ActivationRequest;
+import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.CallingContext;
 import io.helidon.inject.api.CallingContextFactory;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
-import io.helidon.inject.api.Intercepted;
 import io.helidon.inject.api.Metrics;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
@@ -44,16 +46,12 @@ import io.helidon.inject.api.Resettable;
 import io.helidon.inject.api.ServiceBinder;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
 import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.spi.ActivatorProvider;
 
 import jakarta.inject.Provider;
-
-import static io.helidon.inject.runtime.ServiceBinderDefault.ACTIVATOR_PROVIDERS;
 
 /**
  * The default reference implementation of {@link Services}.
@@ -69,6 +67,8 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     private final AtomicInteger lookupCount = new AtomicInteger();
     private final AtomicInteger cacheLookupCount = new AtomicInteger();
     private final AtomicInteger cacheHitCount = new AtomicInteger();
+    // a ma of service provider instances to their activators, so we can correctly handle activation requests
+    private final Map<ServiceProvider<?>, Activator<?>> providersToActivators = new IdentityHashMap<>();
     private volatile State stateWatchOnly; // we are watching and not mutating this state - owned by DefaultInjectionServices
 
     /**
@@ -118,7 +118,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     }
 
     static boolean hasContracts(ServiceInfoCriteria criteria) {
-        return !criteria.contractsImplemented().isEmpty();
+        return !criteria.contracts().isEmpty();
     }
 
     /**
@@ -201,7 +201,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     public <T> Optional<ServiceProvider<T>> lookupFirst(Class<T> type,
                                                         boolean expected) {
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(TypeName.create(type))
+                .addContract(TypeName.create(type))
                 .build();
         return (Optional) lookupFirst(criteria, expected);
     }
@@ -212,7 +212,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                                                         String name,
                                                         boolean expected) {
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(TypeName.create(type))
+                .addContract(TypeName.create(type))
                 .addQualifier(Qualifier.createNamed(name))
                 .build();
         return (Optional) lookupFirst(criteria, expected);
@@ -230,7 +230,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> List<ServiceProvider<T>> lookupAll(Class<T> type) {
         ServiceInfoCriteria serviceInfo = ServiceInfoCriteria.builder()
-                .addContractImplemented(TypeName.create(type))
+                .addContract(TypeName.create(type))
                 .build();
         return (List) lookup(serviceInfo, false, Integer.MAX_VALUE);
     }
@@ -245,19 +245,22 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
     @Override
     public void bind(ServiceSource<?> serviceDescriptor) {
-        ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceDescriptor.runtimeId());
-        if (activatorProvider == null) {
-            throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceDescriptor.runtimeId()
-                                                    + ", available activator providers: " + ACTIVATOR_PROVIDERS.keySet());
-        }
-        bind(activatorProvider.activator(this.injectionServices, serviceDescriptor));
+        bind(ServiceBinderDefault.serviceActivator(this.injectionServices, serviceDescriptor));
     }
 
     @Override
-    public void bind(ServiceProvider<?> serviceProvider) {
+    public void bind(Activator<?> serviceActivator) {
         if (currentPhase().ordinal() > Phase.GATHERING_DEPENDENCIES.ordinal()) {
             assertPermitsDynamic(cfg);
         }
+
+        // make sure the activator has a chance to do something, such as create the initial service provider instance
+        serviceActivator.activate(ActivationRequest.builder()
+                                          .targetPhase(Phase.PENDING)
+                                          .throwIfError(false)
+                                          .build());
+        ServiceProvider<?> serviceProvider = serviceActivator.serviceProvider();
+        this.providersToActivators.put(serviceProvider, serviceActivator);
 
         TypeName serviceTypeName = serviceProvider.serviceType();
 
@@ -267,26 +270,10 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 DefaultInjectionServices.LOGGER.log(System.Logger.Level.WARNING,
                                                     "overwriting " + previous + " with " + serviceProvider);
                 servicesByTypeName.put(serviceTypeName, serviceProvider);
+                providersToActivators.remove(previous);
             } else {
+                providersToActivators.remove(previous);
                 throw serviceProviderAlreadyBoundInjectionError(previous, serviceProvider);
-            }
-        }
-
-        // special handling in case we are an interceptor...
-        Set<Qualifier> qualifiers = serviceProvider.qualifiers();
-        Optional<Qualifier> interceptedQualifier = qualifiers.stream()
-                .filter(q -> q.typeName().name().equals(Intercepted.class.getName()))
-                .findFirst();
-        if (interceptedQualifier.isPresent()) {
-            // assumption: expected that the root service provider is registered prior to any interceptors
-            TypeName interceptedServiceTypeName = Objects.requireNonNull(interceptedQualifier.get().value()
-                                                                                 .map(TypeName::create)
-                                                                                 .orElseThrow());
-            ServiceProvider<?> interceptedSp = lookupFirst(ServiceInfoCriteria.builder()
-                                                                   .serviceTypeName(interceptedServiceTypeName)
-                                                                   .build(), true).orElse(null);
-            if (interceptedSp instanceof ServiceProviderBindable) {
-                ((ServiceProviderBindable<?>) interceptedSp).interceptor(serviceProvider);
             }
         }
 
@@ -346,9 +333,9 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
         if (hasContracts(criteria)) {
             TypeName serviceTypeName = criteria.serviceTypeName().orElse(null);
-            boolean hasOneContractInCriteria = (1 == criteria.contractsImplemented().size());
+            boolean hasOneContractInCriteria = (1 == criteria.contracts().size());
             TypeName theOnlyContractRequested = (hasOneContractInCriteria)
-                    ? criteria.contractsImplemented().iterator().next() : null;
+                    ? criteria.contracts().iterator().next() : null;
             if (serviceTypeName == null
                     && hasOneContractInCriteria
                     && criteria.qualifiers().isEmpty()) {
@@ -431,14 +418,14 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     void bind(InjectionServices injectionServices,
               DefaultInjectionPlanBinder binder,
               Application app) {
-        String appName = app.named().orElse(app.getClass().getName());
+        String appName = app.name();
         boolean isLoggable = DefaultInjectionServices.LOGGER.isLoggable(System.Logger.Level.DEBUG);
         if (isLoggable) {
             DefaultInjectionServices.LOGGER.log(System.Logger.Level.DEBUG, "Starting binding application: " + appName);
         }
         try {
             app.configure(binder);
-            bind(createServiceProvider(app, injectionServices));
+            bind(createServiceActivator(app, injectionServices));
             if (isLoggable) {
                 DefaultInjectionServices.LOGGER.log(System.Logger.Level.DEBUG, "Finished binding application: " + appName);
             }
@@ -457,21 +444,21 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         }
         ServiceBinder moduleServiceBinder = createServiceBinder(injectionServices, this, moduleName, initializing);
         module.configure(moduleServiceBinder);
-        bind(createServiceProvider(module, moduleName, injectionServices));
+        bind(createServiceActivator(module, moduleName, injectionServices));
         if (isLoggable) {
             DefaultInjectionServices.LOGGER.log(System.Logger.Level.TRACE, "finished binding module: " + moduleName);
         }
     }
 
-    private ServiceProvider<?> createServiceProvider(ModuleComponent module,
-                                                     String moduleName,
-                                                     InjectionServices injectionServices) {
-        return InjectionModuleServiceProvider.create(injectionServices, module, moduleName);
+    private Activator<?> createServiceActivator(ModuleComponent module,
+                                                      String moduleName,
+                                                      InjectionServices injectionServices) {
+        return InjectionModuleActivator.create(injectionServices, module, moduleName);
     }
 
-    private ServiceProvider<?> createServiceProvider(Application app,
-                                                     InjectionServices injectionServices) {
-        return InjectionApplicationServiceProvider.create(injectionServices, app);
+    private Activator<?> createServiceActivator(Application app,
+                                                      InjectionServices injectionServices) {
+        return InjectionApplicationActivator.create(injectionServices, app);
     }
 
 }

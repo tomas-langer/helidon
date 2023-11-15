@@ -40,8 +40,7 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import static io.helidon.inject.maven.plugin.MavenPluginUtils.injectionServices;
-import static io.helidon.inject.tools.ApplicationCreatorDefault.APPLICATION_NAME_SUFFIX;
-import static io.helidon.inject.tools.ApplicationCreatorDefault.NAME_PREFIX;
+import static io.helidon.inject.tools.ApplicationCreatorDefault.APPLICATION_NAME;
 import static io.helidon.inject.tools.ApplicationCreatorDefault.upperFirstChar;
 import static io.helidon.inject.tools.ModuleUtils.toBasePath;
 import static io.helidon.inject.tools.ModuleUtils.toSuggestedModuleName;
@@ -125,7 +124,7 @@ public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
 
     @Override
     String getGeneratedClassName() {
-        return (className == null) ? NAME_PREFIX + "Test" + APPLICATION_NAME_SUFFIX : className;
+        return (className == null) ? "Test" + APPLICATION_NAME : className;
     }
 
     @Override

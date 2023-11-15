@@ -21,7 +21,6 @@ import java.util.Objects;
 import io.helidon.inject.api.ActivationResult;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.DeActivationRequest;
-import io.helidon.inject.api.DeActivator;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
@@ -42,32 +41,23 @@ class DefaultInjector implements Injector {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public ActivationResult activateInject(ServiceSource<?> serviceSource,
                                            InjectorOptions opts) throws InjectionServiceProviderException {
         Objects.requireNonNull(serviceSource);
         Objects.requireNonNull(opts);
 
-        ActivationResult.Builder resultBuilder = ActivationResult.builder();
-
         if (opts.strategy() != Strategy.ANY && opts.strategy() != Strategy.ACTIVATOR) {
-            return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
+            return handleError(ActivationResult.builder(), opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
         }
 
-        ServiceProvider<?> provider = ServiceBinderDefault.serviceProvider(injectionServices, serviceSource);
+        Activator<?> activator = ServiceBinderDefault.serviceActivator(injectionServices, serviceSource);
 
-        resultBuilder.serviceProvider(provider);
-
-        Activator activator = provider.activator().orElse(null);
-        if (activator == null) {
-            return handleError(resultBuilder, opts, "the service provider does not have an activator", provider);
-        }
+        activator.serviceProvider();
 
         return activator.activate(opts.activationRequest());
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public ActivationResult deactivate(ServiceProvider<?> serviceProvider,
                                        InjectorOptions opts) throws InjectionServiceProviderException {
         Objects.requireNonNull(serviceProvider);
@@ -76,20 +66,18 @@ class DefaultInjector implements Injector {
         ActivationResult.Builder resultBuilder = ActivationResult.builder();
 
         if (opts.strategy() != Strategy.ANY && opts.strategy() != Strategy.ACTIVATOR) {
-            return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", null);
+            return handleError(resultBuilder, opts, "only " + Strategy.ACTIVATOR + " strategy is supported", serviceProvider);
         }
 
         resultBuilder.serviceProvider(serviceProvider);
 
-        DeActivator deactivator = serviceProvider.deActivator().orElse(null);
-        if (deactivator == null) {
-            return handleError(resultBuilder, opts, "the service provider does not have a deactivator", serviceProvider);
+        if (serviceProvider instanceof Activator<?> activator) {
+            return activator.deactivate(DeActivationRequest.builder()
+                                                .throwIfError(opts.activationRequest().throwIfError())
+                                                .build());
         }
 
-        DeActivationRequest request = DeActivationRequest.builder()
-                .throwIfError(opts.activationRequest().throwIfError())
-                .build();
-        return deactivator.deactivate(request);
+        return handleError(resultBuilder, opts, "the service provider does not have a deactivator", serviceProvider);
     }
 
     private ActivationResult handleError(ActivationResult.Builder resultBuilder,

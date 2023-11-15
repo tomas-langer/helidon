@@ -99,23 +99,6 @@ public interface ServiceProviderBindable<T> extends ServiceProvider<T> {
     }
 
     /**
-     * Returns the previously assigned {@link InjectionServices} instance.
-     *
-     * @return the previously assigned injection services instance, or empty if never assigned
-     *
-     * @see #injectionServices(Optional)
-     */
-    Optional<InjectionServices> injectionServices();
-
-    /**
-     * Assigns the services instance this provider is bound to. A service provider can be associated with 0..1 services instance.
-     * If not set, the service provider should use {@link InjectionServices#injectionServices()} to ascertain the instance.
-     *
-     * @param injectionServices the injection services instance, or empty to clear any active binding
-     */
-    void injectionServices(Optional<InjectionServices> injectionServices);
-
-    /**
      * The binder can be provided by the service provider to deterministically set the injection plan at compile-time, and
      * subsequently loaded at early startup initialization.
      *

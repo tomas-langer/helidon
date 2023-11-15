@@ -24,12 +24,9 @@ public interface ServiceBinder {
     /**
      * Bind a service provider instance into the backing {@link Services} service registry.
      *
-     * @param serviceProvider the service provider to bind into the service registry
-     * @deprecated new annotation processor generates {@link io.helidon.inject.api.ServiceDescriptor} instead,
-     *         use {@link #bind(io.helidon.inject.api.ServiceSource)}
+     * @param serviceActivator the service activator for a service provider to bind into the service registry
      */
-    @Deprecated(forRemoval = true, since = "4.1.0")
-    void bind(ServiceProvider<?> serviceProvider);
+    void bind(Activator<?> serviceActivator);
 
     /**
      * Bind a service descriptor instance into the registry.

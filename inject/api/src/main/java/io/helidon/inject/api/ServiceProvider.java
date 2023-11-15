@@ -16,9 +16,10 @@
 
 package io.helidon.inject.api;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
-import io.helidon.common.Weighted;
 import io.helidon.common.types.TypeName;
 
 import jakarta.inject.Singleton;
@@ -28,7 +29,7 @@ import jakarta.inject.Singleton;
  *
  * @param <T> the type that this service provider manages
  */
-public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPointProvider<T>, Weighted {
+public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPointProvider<T> {
 
     /**
      * Identifies the service provider physically and uniquely.
@@ -83,26 +84,6 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
     Phase currentActivationPhase();
 
     /**
-     * The agent responsible for activation - this will be non-null for build-time activators. If not present then
-     * an {@link Injector} must be used to reflectively activate.
-     *
-     * @return the activator
-     */
-    default Optional<Activator> activator() {
-        return Optional.empty();
-    }
-
-    /**
-     * The agent responsible for deactivation - this will be non-null for build-time activators. If not present then
-     * an {@link Injector} must be used to reflectively deactivate.
-     *
-     * @return the deactivator to use or null if the service is not interested in deactivation
-     */
-    default Optional<DeActivator> deActivator() {
-        return Optional.empty();
-    }
-
-    /**
      * The agent/instance to be used for binding this service provider to the injectable application that was code generated.
      *
      * @return the service provider that should be used for binding, or empty if this provider does not support binding
@@ -120,7 +101,37 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
     }
 
     @Override
-    default T get() {
-        return InjectionPointProvider.super.get();
+    default double weight() {
+        return descriptor().weight();
+    }
+
+    @Override
+    default String runtimeId() {
+        return descriptor().runtimeId();
+    }
+
+    @Override
+    default Set<TypeName> contracts() {
+        return descriptor().contracts();
+    }
+
+    @Override
+    default List<ServiceDependencies> dependencies() {
+        return descriptor().dependencies();
+    }
+
+    @Override
+    default Set<Qualifier> qualifiers() {
+        return descriptor().qualifiers();
+    }
+
+    @Override
+    default int runLevel() {
+        return descriptor().runLevel();
+    }
+
+    @Override
+    default Set<TypeName> scopes() {
+        return descriptor().scopes();
     }
 }

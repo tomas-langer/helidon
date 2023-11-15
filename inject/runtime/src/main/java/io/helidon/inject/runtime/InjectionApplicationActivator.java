@@ -16,7 +16,6 @@
 
 package io.helidon.inject.runtime;
 
-import java.util.List;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
@@ -24,40 +23,28 @@ import io.helidon.inject.api.Application;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceDependencies;
-import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceSource;
 
 /**
  * Basic {@link Application} implementation. An application is-a service provider also.
  */
-class InjectionApplicationServiceProvider extends
-                                          ServiceProviderBase<Application, InjectionApplicationServiceProvider,
-                                                  InjectionApplicationServiceProvider.AppActivator> {
+class InjectionApplicationActivator extends ServiceProviderBase<Application> {
 
-    private InjectionApplicationServiceProvider(InjectionServices injectionServices,
-                                                ServiceSource<Application> descriptor,
+    private InjectionApplicationActivator(InjectionServices injectionServices,
+                                          ServiceSource<Application> descriptor) {
+        super(injectionServices, descriptor);
+    }
+
+    static InjectionApplicationActivator create(InjectionServices injectionServices,
                                                 Application app) {
-        super(injectionServices,
-              descriptor,
-              new AppActivator(injectionServices, descriptor, app));
-    }
 
-    static ServiceProvider<Application> create(InjectionServices injectionServices,
-                                               Application app) {
-
-        Set<Qualifier> qualifiers = app.named().map(Qualifier::createNamed).map(Set::of).orElseGet(Set::of);
+        Set<Qualifier> qualifiers = Set.of(Qualifier.createNamed(app.name()));
         ServiceSource<Application> descriptor = new AppServiceDescriptor(app.getClass(), qualifiers);
-        return new InjectionApplicationServiceProvider(injectionServices, descriptor, app);
-    }
+        InjectionApplicationActivator activator = new InjectionApplicationActivator(injectionServices,
+                                                                                    descriptor);
 
-    static final class AppActivator extends ServiceActivatorBase<Application, InjectionApplicationServiceProvider> {
-        AppActivator(InjectionServices injectionServices, ServiceSource<Application> descriptor, Application app) {
-            super(injectionServices, descriptor);
-
-            super.phase(Phase.ACTIVE);
-            super.instance(app);
-        }
+        activator.state(Phase.ACTIVE, app);
+        return activator;
     }
 
     private static class AppServiceDescriptor implements ServiceSource<Application> {
@@ -78,11 +65,6 @@ class InjectionApplicationServiceProvider extends
         @Override
         public Set<TypeName> contracts() {
             return Set.of(APP_TYPE);
-        }
-
-        @Override
-        public List<ServiceDependencies> dependencies() {
-            return List.of();
         }
 
         @Override

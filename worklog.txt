@@ -12,3 +12,27 @@ test subject:
 io.helidon.inject.tests.inject.tbox.impl.MainToolBox
 
 io.helidon.inject.runtime.HelloInjectionWorldSanityTest.injectionPlanResolved
+
+
+User APIs:
+- ServiceDescriptor<T>
+- ServiceProvider<T> extends Provider<T>, ServiceDescriptor<T>
+
+Internal APIs (code generated)
+- ServiceSource<T> extends ServiceDescriptor<T>
+
+
+- Activator - manages the state of the ServiceProvider
+
+In the end, we should bind an Activator, that creates a ServiceProvider and manages its state
+
+
+what do we want to bind to the service binder?
+
+ActivationResult Activator.activate(ActivationRequest)
+    - result contains ServiceProvider
+
+ActivationResult DeActivator.deactivate(DeActivationRequest)
+    -
+
+ServiceProvider

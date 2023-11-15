@@ -524,7 +524,7 @@ public class Dependencies {
                     ipInfoBuilder.baseIdentity(toBaseIdentity(ipInfoBuilder));
                     ipInfoBuilder.id(id);
                     ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                            .addContractImplemented(ipInfoBuilder.elementTypeName().orElseThrow())
+                            .addContract(ipInfoBuilder.elementTypeName().orElseThrow())
                             .qualifiers(ipInfoBuilder.qualifiers())
                             .build();
 

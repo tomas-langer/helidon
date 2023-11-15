@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.helidon.common.config.Config;
@@ -19,10 +20,13 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationPhaseReceiver;
 import io.helidon.inject.api.ActivationRequest;
 import io.helidon.inject.api.ActivationResult;
+import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.Event;
 import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.IpId;
+import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
@@ -30,6 +34,7 @@ import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
 import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.api.Services;
 import io.helidon.inject.configdriven.api.ConfigBeanFactory;
 import io.helidon.inject.configdriven.api.ConfigDriven;
 import io.helidon.inject.configdriven.api.NamedInstance;
@@ -37,17 +42,14 @@ import io.helidon.inject.runtime.ServiceProviderBase;
 import io.helidon.inject.spi.InjectionResolver;
 
 import static io.helidon.inject.api.CommonQualifiers.WILDCARD_NAMED;
-import static io.helidon.inject.configdriven.runtime.ConfigDrivenUtils.hasValue;
-import static io.helidon.inject.configdriven.runtime.ConfigDrivenUtils.isBlank;
 import static java.lang.System.Logger.Level.DEBUG;
 
-class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
-        ConfigDrivenServiceProvider<T, CB>,
-        ConfigDrivenServiceActivator<T, CB>>
+class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         implements ConfiguredServiceProvider<T, CB>,
                    InjectionResolver,
                    ServiceProviderProvider,
-                   ActivationPhaseReceiver {
+                   ActivationPhaseReceiver,
+                   Activator<T> {
     private static final System.Logger LOGGER = System.getLogger(ConfigDrivenServiceProvider.class.getName());
     private static final Qualifier EMPTY_CONFIGURED_BY = Qualifier.create(ConfigDriven.class);
 
@@ -60,16 +62,14 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
     private final ServiceSource<T> descriptor;
 
     ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceSource<T> descriptor) {
-        super(injectionServices,
-              descriptor,
-              new ConfigDrivenServiceActivator<>(injectionServices, descriptor));
+        super(injectionServices, descriptor);
 
         this.qualifiers = new LinkedHashSet<>(descriptor.qualifiers());
         this.descriptor = descriptor;
         this.qualifiers.add(WILDCARD_NAMED);
     }
 
-    public static <T> ServiceProvider<T> create(InjectionServices injectionServices, ServiceSource<T> descriptor) {
+    static <T> Activator<T> create(InjectionServices injectionServices, ServiceSource<T> descriptor) {
         return new ConfigDrivenServiceProvider<>(injectionServices, descriptor);
     }
 
@@ -92,7 +92,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
 
         ServiceInfoCriteria dep = ipInfo.dependencyToServiceInfo();
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(configBeanType())
+                .addContract(configBeanType())
                 .build();
         if (!dep.matchesContracts(criteria)) {
             return Optional.empty();    // we are being injected with neither a config bean nor a service that matches ourselves
@@ -120,7 +120,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
                                                                                            configBean.name());
         managedConfigBeans.add(configBeanProvider);
         Object prev = managedConfiguredServicesMap.put(configBean.name(),
-                                                       new ConfigDrivenInstanceProvider<>(getInjectionServices(),
+                                                       new ConfigDrivenInstanceProvider<>(injectionServices(),
                                                                                           descriptor,
                                                                                           this,
                                                                                           configBean.name(),
@@ -143,8 +143,11 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
         Optional<? extends Annotation> configuredByQualifier = Annotations
                 .findFirst(EMPTY_CONFIGURED_BY.typeName(), qualifiers);
         boolean hasValue = configuredByQualifier.isPresent()
-                && hasValue(configuredByQualifier.get().value().orElse(null));
-        boolean blankCriteria = qualifiers.isEmpty() && isBlank(criteria);
+                && !(configuredByQualifier.get().value().orElse("").isBlank());
+        boolean blankCriteria = qualifiers.isEmpty()
+                && criteria.qualifiers().isEmpty()
+                && criteria.serviceTypeName().isEmpty()
+                && criteria.contracts().isEmpty();
         boolean managedQualify = !managedConfiguredServicesMap.isEmpty()
                 && (blankCriteria || hasValue || configuredByQualifier.isEmpty());
         boolean rootQualifies = wantThis
@@ -161,7 +164,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
         if (managedQualify) {
             List<ServiceProvider<?>> result = new ArrayList<>();
 
-            if (criteria.contractsImplemented().contains(TypeName.create(configBeanType()))) {
+            if (criteria.contracts().contains(TypeName.create(configBeanType()))) {
                 for (ConfigBeanServiceProvider<CB> managedConfigBean : managedConfigBeans) {
                     if (criteria.matches(managedConfigBean)) {
                         result.add(managedConfigBean);
@@ -215,9 +218,8 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
         // we are root provider
         if (currentActivationPhase() != Phase.ACTIVE) {
             // we know the activator is present, as we send it through constructor...
-            ActivationResult res = super.activator()
-                    .get()
-                    .activate(ActivationRequest.builder().targetPhase(InjectionServices.terminalActivationPhase()).build());
+            ActivationResult res = super.activate(ActivationRequest.builder()
+                                                          .targetPhase(InjectionServices.terminalActivationPhase()).build());
             if (res.failure()) {
                 if (ctx.expected()) {
                     throw new ServiceProviderInjectionException("Activation failed: " + res, this);
@@ -270,20 +272,40 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
     @Override
     public void onPhaseEvent(Event event,
                              Phase phase) {
-        getActivator().onPhaseEvent(event, phase);
-    }
+        if (phase == Phase.PENDING) {
+            if (registeredWithCbr.compareAndSet(false, true)) {
+                ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
+                if (cbr != null) {
+                    Optional<Qualifier> configuredByQualifier = descriptor().qualifiers().stream()
+                            .filter(q -> q.typeName().name().equals(ConfigDriven.class.getName()))
+                            .findFirst();
+                    assert (configuredByQualifier.isPresent());
+                    cbr.bind(this, configuredByQualifier.get());
+                }
+            }
+        }
 
-    @Override
-    public void injectionServices(Optional<InjectionServices> injectionServices) {
-        if (registeredWithCbr.compareAndSet(false, true)) {
+        if (phase == Phase.POST_BIND_ALL_MODULES) {
+            ActivationResult.Builder res = ActivationResult.builder();
+
+            if (Phase.INIT == currentActivationPhase()) {
+                stateTransitionStart(res, Phase.PENDING);
+            }
+
+            // one of the configured services need to "tickle" the bean registry to initialize
             ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
             if (cbr != null) {
-                Optional<Qualifier> configuredByQualifier = descriptor().qualifiers().stream()
-                        .filter(q -> q.typeName().name().equals(ConfigDriven.class.getName()))
-                        .findFirst();
-                assert (configuredByQualifier.isPresent());
-                cbr.bind(this, configuredByQualifier.get());
+                cbr.initialize();
             }
+        } else if (phase == Phase.FINAL_RESOLVE) {
+            // post-initialize ourselves
+            if (drivesActivation()) {
+                activate(InjectionServices.createActivationRequestDefault());
+            }
+
+            resolveConfigDrivenServices();
+        } else if (phase == Phase.SERVICES_READY) {
+            activateConfigDrivenServices();
         }
     }
 
@@ -309,6 +331,12 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
         return factory.configBeanType();
     }
 
+    @Override
+    public String toString() {
+        return "Config Driven Service for: " + descriptor().serviceType()
+                .fqName() + "[" + currentActivationPhase() + "]";
+    }
+
     boolean hasManagedServices() {
         return !managedConfigBeans.isEmpty();
     }
@@ -316,6 +344,23 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
     @Override
     protected String id(boolean fq) {
         return super.id(fq) + "{root}";
+    }
+
+    @Override
+    protected void prepareDependency(Services services, Map<IpId<?>, Supplier<?>> injectionPlan, IpInfo dependency) {
+        // do nothing, config driven root service CANNOT be instantiated, as it does not have
+        // a config bean to inject
+    }
+
+    @Override
+    protected void construct(ActivationRequest req, ActivationResult.Builder res) {
+        // do nothing, config driven root service CANNOT be instantiated, as it does not have a config bean
+
+        if (!(hasManagedServices() && drivesActivation())) {
+            stateTransitionStart(res, Phase.PENDING);
+        } else {
+            stateTransitionStart(res, Phase.CONSTRUCTING);
+        }
     }
 
     void resolveConfigDrivenServices() {
@@ -332,10 +377,9 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T,
                 LOGGER.log(DEBUG, "Resolving config for " + csp);
             }
 
-            csp.activator()
-                    .ifPresent(it -> it.activate(ActivationRequest.builder()
-                                                         .targetPhase(Phase.PENDING)
-                                                         .build()));
+            csp.activate(ActivationRequest.builder()
+                                 .targetPhase(Phase.PENDING)
+                                 .build());
         });
 
     }

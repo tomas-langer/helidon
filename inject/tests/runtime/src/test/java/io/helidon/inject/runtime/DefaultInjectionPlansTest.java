@@ -73,7 +73,7 @@ class DefaultInjectionPlansTest {
 
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
                 .addQualifier(createNamed("whatever"))
-                .addContractImplemented(Closeable.class)
+                .addContract(Closeable.class)
                 .build();
         List<String> result = DefaultInjectionPlans.injectionPointProvidersFor(services, criteria).stream()
                 .map(ServiceProvider::description).toList();

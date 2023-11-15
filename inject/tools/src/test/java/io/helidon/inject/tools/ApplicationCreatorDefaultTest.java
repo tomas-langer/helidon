@@ -19,7 +19,6 @@ package io.helidon.inject.tools;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import io.helidon.common.processor.GeneratorTools;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceDescriptor;
@@ -79,7 +78,7 @@ class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
         String[] ignoredClasspath = classpath.split(separator);
         ApplicationCreatorRequest req = ApplicationCreatorRequest.builder()
                 .codeGen(ApplicationCreatorCodeGen.builder()
-                                 .className(applicationClassName("test"))
+                                 .className(applicationClassName("Test"))
                                  .classPrefixName("test")
                                  .build())
                 .codeGenPaths(codeGenPaths)
@@ -96,13 +95,11 @@ class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
         assertThat(res.error(), optionalEmpty());
         assertThat(res.success(), is(true));
         assertThat(res.serviceTypeNames().stream().map(TypeName::name).collect(Collectors.toList()),
-                   contains("inject.Injection$$TestApplication"));
-        assertThat(res.templateName(), equalTo("default"));
+                   contains("inject.TestHelidonInjection__Application"));
         assertThat(res.moduleName(), optionalEmpty());
     }
 
     static String applicationClassName(String modulePrefix) {
-        modulePrefix = (modulePrefix == null) ? ActivatorCreatorCodeGen.DEFAULT_CLASS_PREFIX_NAME : modulePrefix;
-        return AbstractCreator.NAME_PREFIX + GeneratorTools.capitalize(modulePrefix) + "Application";
+        return modulePrefix == null ? "" : modulePrefix + "HelidonInjection__Application";
     }
 }

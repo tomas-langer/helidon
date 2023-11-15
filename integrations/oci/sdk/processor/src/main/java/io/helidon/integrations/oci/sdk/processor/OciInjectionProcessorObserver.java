@@ -26,7 +26,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -39,17 +38,25 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.JavaFileObject;
 
 import io.helidon.common.LazyValue;
+import io.helidon.common.Weight;
+import io.helidon.common.processor.CopyrightHandler;
+import io.helidon.common.processor.GeneratedAnnotationHandler;
+import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Activator;
+import io.helidon.inject.api.ContextualServiceQuery;
+import io.helidon.inject.api.ExternalContracts;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.processor.ProcessingEvent;
 import io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
-import io.helidon.inject.tools.TemplateHelper;
 import io.helidon.inject.tools.ToolsException;
 import io.helidon.inject.tools.TypeNames;
 
 import static io.helidon.inject.processor.GeneralProcessorUtils.isProviderType;
+import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 import static java.util.function.Predicate.not;
 
 /**
@@ -119,65 +126,6 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
     public OciInjectionProcessorObserver() {
     }
 
-    @Override
-    public void onProcessingEvent(ProcessingEvent event) {
-        ProcessingEnvironment processingEnv = event.processingEnvironment().orElseThrow();
-        layerInManualOptions(processingEnv);
-        event.elementsOfInterest().stream()
-                .filter(it -> shouldProcess(it, processingEnv))
-                .forEach(it -> process(it, processingEnv));
-    }
-
-    private void process(TypedElementInfo element,
-                         ProcessingEnvironment processingEnv) {
-        switch(element.elementTypeKind()) {
-        case FIELD -> process(element.typeName(), processingEnv);
-        case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
-                .filter(it -> shouldProcess(it.typeName(), processingEnv))
-                .forEach(it -> process(it.typeName(), processingEnv));
-        default -> {}
-        }
-    }
-
-    private void process(TypeName ociServiceTypeName,
-                         ProcessingEnvironment processingEnv) {
-        if (isProviderType(ociServiceTypeName)
-                || ociServiceTypeName.isOptional()) {
-            ociServiceTypeName = ociServiceTypeName.typeArguments().get(0);
-        }
-        assert (!ociServiceTypeName.generic()) : ociServiceTypeName.name();
-        assert (ociServiceTypeName.name().startsWith(OCI_ROOT_PACKAGE_NAME_PREFIX)) : ociServiceTypeName.name();
-
-        TypeName generatedOciServiceClientTypeName = toGeneratedServiceClientTypeName(ociServiceTypeName);
-        String serviceClientBody = toBody(TAG_TEMPLATE_SERVICE_CLIENT_PROVIDER_NAME,
-                                          ociServiceTypeName,
-                                          generatedOciServiceClientTypeName);
-        codegen(generatedOciServiceClientTypeName, serviceClientBody, processingEnv);
-
-        TypeName generatedOciServiceClientBuilderTypeName = toGeneratedServiceClientBuilderTypeName(ociServiceTypeName);
-        String serviceClientBuilderBody = toBody(TAG_TEMPLATE_SERVICE_CLIENT_BUILDER_PROVIDER_NAME,
-                                          ociServiceTypeName,
-                                          generatedOciServiceClientTypeName);
-        codegen(generatedOciServiceClientBuilderTypeName, serviceClientBuilderBody, processingEnv);
-    }
-
-    private void codegen(TypeName typeName,
-                         String body,
-                         ProcessingEnvironment processingEnv) {
-        Filer filer = processingEnv.getFiler();
-        try {
-            JavaFileObject javaSrc = filer.createSourceFile(typeName.name());
-            try (Writer os = javaSrc.openWriter()) {
-                os.write(body);
-            }
-        } catch (FilerException x) {
-            processingEnv.getMessager().printWarning("Failed to write java file: " + x);
-        } catch (Exception x) {
-            System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "Failed to write java file: " + x, x);
-            processingEnv.getMessager().printError("Failed to write java file: " + x);
-        }
-    }
-
     static TypeName toGeneratedServiceClientTypeName(TypeName typeName) {
         return TypeName.builder()
                 .packageName(GENERATED_PREFIX + typeName.packageName())
@@ -192,21 +140,139 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                 .build();
     }
 
-    static String toBody(String templateName,
-                         TypeName ociServiceTypeName,
-                         TypeName generatedOciActivatorTypeName) {
-        TemplateHelper templateHelper = TemplateHelper.create();
-        String template = loadTemplate(templateName);
-        Map<String, Object> subst = new HashMap<>();
-        subst.put("classname", ociServiceTypeName.resolvedName());
-        subst.put("simpleclassname", ociServiceTypeName.className());
-        subst.put("packagename", generatedOciActivatorTypeName.packageName());
-        subst.put("generatedanno", templateHelper.generatedStickerFor(PROCESSOR_TYPE,
-                                                                      ociServiceTypeName,
-                                                                      generatedOciActivatorTypeName));
-        subst.put("dot", maybeDot(ociServiceTypeName));
-        subst.put("usesRegion", usesRegion(ociServiceTypeName));
-        return templateHelper.applySubstitutions(template, subst, true).trim();
+    static ClassModel toBuilderBody(TypeName ociServiceTypeName,
+                                    TypeName generatedOciService,
+                                    TypeName generatedOciServiceBuilderTypeName) {
+        boolean usesRegion = usesRegion(ociServiceTypeName);
+
+        String maybeDot = maybeDot(ociServiceTypeName);
+        String builderSuffix = "Client" + maybeDot + "Builder";
+
+        ClassModel.Builder classModel = ClassModel.builder()
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                .copyright(CopyrightHandler.copyright(PROCESSOR_TYPE,
+                                                      ociServiceTypeName,
+                                                      generatedOciService))
+                .addAnnotation(GeneratedAnnotationHandler.create(PROCESSOR_TYPE,
+                                                                 ociServiceTypeName,
+                                                                 generatedOciService,
+                                                                 "1",
+                                                                 ""))
+                .type(generatedOciServiceBuilderTypeName)
+                .addInterface(ipProvider(ociServiceTypeName, builderSuffix))
+                .addAnnotation(Annotation.create(TypeNames.JAKARTA_SINGLETON_TYPE))
+                .addAnnotation(Annotation.builder()
+                                       .typeName(TypeName.create(Weight.class))
+                                       .putValue("value", DEFAULT_INJECT_WEIGHT)
+                                       .build());
+
+        // fields
+        if (usesRegion) {
+            TypeName regionProviderType = ipProvider(TypeName.create("com.oracle.bmc.Region"), "");
+            classModel.addField(regionProvider -> regionProvider
+                    .isFinal(true)
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .name("regionProvider")
+                    .type(regionProviderType));
+            // constructor
+            classModel.addConstructor(ctor -> ctor
+                    .addAnnotation(Annotation.create(TypeNames.JAKARTA_INJECT_TYPE))
+                    .addAnnotation(Annotation.create(Deprecated.class))
+                    .addParameter(regionProvider -> regionProvider.name("regionProvider")
+                            .type(regionProviderType))
+                    .addLine("this.regionProvider = regionProvider;"));
+        } else {
+            // constructor
+            classModel.addConstructor(ctor -> ctor
+                    .addAnnotation(Annotation.create(TypeNames.JAKARTA_INJECT_TYPE))
+                    .addAnnotation(Annotation.create(Deprecated.class)));
+        }
+
+        String clientType = "@" + ociServiceTypeName.fqName() + "Client@";
+
+        // method(s)
+        classModel.addMethod(first -> first
+                .name("first")
+                .addAnnotation(Annotation.create(Override.class))
+                .returnType(optional(ociServiceTypeName, builderSuffix))
+                .addParameter(query -> query.name("query")
+                        .type(TypeName.create(ContextualServiceQuery.class)))
+                .update(it -> {
+                    if (usesRegion) {
+                        it.addLine("var builder = " + clientType + ".builder();")
+                                .addLine("regionProvider.first(query).ifPresent(builder::region);")
+                                .addLine("return Optional.of(builder);");
+                    } else {
+                        it.addLine("return @java.util.Optional@.of(" + clientType + ".builder());");
+                    }
+                }));
+
+        return classModel.build();
+    }
+
+    static ClassModel toBody(TypeName ociServiceTypeName,
+                             TypeName generatedOciService) {
+        ClassModel.Builder classModel = ClassModel.builder()
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                .copyright(CopyrightHandler.copyright(PROCESSOR_TYPE,
+                                                      ociServiceTypeName,
+                                                      generatedOciService))
+                .addAnnotation(GeneratedAnnotationHandler.create(PROCESSOR_TYPE,
+                                                                 ociServiceTypeName,
+                                                                 generatedOciService,
+                                                                 "1",
+                                                                 ""))
+                .type(generatedOciService)
+                .addInterface(ipProvider(ociServiceTypeName, "Client"))
+                .addAnnotation(Annotation.create(TypeNames.JAKARTA_SINGLETON_TYPE))
+                .addAnnotation(Annotation.builder()
+                                       .typeName(TypeName.create(Weight.class))
+                                       .putValue("value", DEFAULT_INJECT_WEIGHT)
+                                       .build())
+                .addAnnotation(Annotation.builder()
+                                       .typeName(TypeName.create(ExternalContracts.class))
+                                       .putValue("value", ociServiceTypeName)
+                                       .build());
+
+        TypeName authProviderType = ipProvider(TypeName.create("com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider"), "");
+        TypeName builderProviderType = ipProvider(ociServiceTypeName, "Client" + maybeDot(ociServiceTypeName) + "Builder");
+
+        // fields
+        classModel.addField(authProvider -> authProvider
+                .isFinal(true)
+                .accessModifier(AccessModifier.PRIVATE)
+                .name("authProvider")
+                .type(authProviderType));
+
+        classModel.addField(builderProvider -> builderProvider
+                .isFinal(true)
+                .accessModifier(AccessModifier.PRIVATE)
+                .name("builderProvider")
+                .type(builderProviderType));
+
+        // constructor
+        classModel.addConstructor(ctor -> ctor
+                .addAnnotation(Annotation.create(TypeNames.JAKARTA_INJECT_TYPE))
+                .addAnnotation(Annotation.create(Deprecated.class))
+                .addParameter(authProvider -> authProvider.name("authProvider")
+                        .type(authProviderType))
+                .addParameter(builderProvider -> builderProvider.name("builderProvider")
+                        .type(builderProviderType))
+                .addLine("this.authProvider = authProvider;")
+                .addLine("this.builderProvider = builderProvider;"));
+
+        // method(s)
+        classModel.addMethod(first -> first
+                .name("first")
+                .addAnnotation(Annotation.create(Override.class))
+                .returnType(optional(ociServiceTypeName, "Client"))
+                .addParameter(query -> query.name("query")
+                        .type(TypeName.create(ContextualServiceQuery.class)))
+                .addLine(
+                        "return @java.util.Optional@.of(builderProvider.first(query).orElseThrow().build(authProvider.first"
+                                + "(query).orElseThrow()));"));
+
+        return classModel.build();
     }
 
     static String maybeDot(TypeName ociServiceTypeName) {
@@ -325,6 +391,77 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
         }
 
         return true;
+    }
+
+    @Override
+    public void onProcessingEvent(ProcessingEvent event) {
+        ProcessingEnvironment processingEnv = event.processingEnvironment().orElseThrow();
+        layerInManualOptions(processingEnv);
+        event.elementsOfInterest().stream()
+                .filter(it -> shouldProcess(it, processingEnv))
+                .forEach(it -> process(it, processingEnv));
+    }
+
+    private static TypeName optional(TypeName typeName, String suffix) {
+        return TypeName.builder(io.helidon.common.types.TypeNames.OPTIONAL)
+                .addTypeArgument(TypeName.create(typeName.fqName() + suffix))
+                .build();
+    }
+
+    private static TypeName ipProvider(TypeName provided, String suffix) {
+        return TypeName.builder(TypeNames.INJECTION_POINT_PROVIDER_TYPE)
+                .addTypeArgument(TypeName.create(provided.fqName() + suffix))
+                .build();
+    }
+
+    private void process(TypedElementInfo element,
+                         ProcessingEnvironment processingEnv) {
+        switch (element.elementTypeKind()) {
+        case FIELD -> process(element.typeName(), processingEnv);
+        case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
+                .filter(it -> shouldProcess(it.typeName(), processingEnv))
+                .forEach(it -> process(it.typeName(), processingEnv));
+        default -> {
+        }
+        }
+    }
+
+    private void process(TypeName ociServiceTypeName,
+                         ProcessingEnvironment processingEnv) {
+        if (isProviderType(ociServiceTypeName)
+                || ociServiceTypeName.isOptional()) {
+            ociServiceTypeName = ociServiceTypeName.typeArguments().get(0);
+        }
+        assert (!ociServiceTypeName.generic()) : ociServiceTypeName.name();
+        assert (ociServiceTypeName.name().startsWith(OCI_ROOT_PACKAGE_NAME_PREFIX)) : ociServiceTypeName.name();
+
+        TypeName generatedOciServiceClientTypeName = toGeneratedServiceClientTypeName(ociServiceTypeName);
+        ClassModel serviceClient = toBody(ociServiceTypeName,
+                                          generatedOciServiceClientTypeName);
+        codegen(generatedOciServiceClientTypeName, serviceClient, processingEnv);
+
+        TypeName generatedOciServiceClientBuilderTypeName = toGeneratedServiceClientBuilderTypeName(ociServiceTypeName);
+        ClassModel serviceClientBuilder = toBuilderBody(ociServiceTypeName,
+                                                        generatedOciServiceClientTypeName,
+                                                        generatedOciServiceClientBuilderTypeName);
+        codegen(generatedOciServiceClientBuilderTypeName, serviceClientBuilder, processingEnv);
+    }
+
+    private void codegen(TypeName typeName,
+                         ClassModel classModel,
+                         ProcessingEnvironment processingEnv) {
+        Filer filer = processingEnv.getFiler();
+        try {
+            JavaFileObject javaSrc = filer.createSourceFile(typeName.name());
+            try (Writer os = javaSrc.openWriter()) {
+                classModel.write(os, "    ");
+            }
+        } catch (FilerException x) {
+            processingEnv.getMessager().printWarning("Failed to write java file: " + x);
+        } catch (Exception x) {
+            System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "Failed to write java file: " + x, x);
+            processingEnv.getMessager().printError("Failed to write java file: " + x);
+        }
     }
 
 }

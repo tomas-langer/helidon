@@ -110,7 +110,7 @@ class InterceptorRuntimeTest {
     @Test
     void runtimeWithNoInterception() throws Exception {
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(Closeable.class)
+                .addContract(Closeable.class)
                 .build();
         List<ServiceProvider<?>> closeableProviders = services.lookupAll(criteria);
         assertThat("the interceptors should always be weighted higher than the non-interceptors",
@@ -119,7 +119,7 @@ class InterceptorRuntimeTest {
                             "XImpl:INIT", "YImpl:INIT"));
 
         criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(Closeable.class)
+                .addContract(Closeable.class)
                 .build();
         closeableProviders = services.lookupAll(criteria);
         assertThat("the interceptors should always be weighted higher than the non-interceptors",
@@ -161,7 +161,7 @@ class InterceptorRuntimeTest {
         ServiceProvider<?> yimplProvider = services
                 .lookupFirst(
                         ServiceInfoCriteria.builder()
-                                .addContractImplemented(Closeable.class)
+                                .addContract(Closeable.class)
                                 .qualifiers(Set.of(create(Named.class, ClassNamedY.class.getName())))
                                 .build());
         assertThat(toDescription(yimplProvider),
@@ -243,7 +243,7 @@ class InterceptorRuntimeTest {
         ServiceProvider<?> yimplProvider = services
                 .lookupFirst(
                         ServiceInfoCriteria.builder()
-                                .addContractImplemented(Closeable.class)
+                                .addContract(Closeable.class)
                                 .qualifiers(Set.of(create(Named.class, ClassNamedY.class.getName())))
                                 .build());
         assertThat(toDescription(yimplProvider),

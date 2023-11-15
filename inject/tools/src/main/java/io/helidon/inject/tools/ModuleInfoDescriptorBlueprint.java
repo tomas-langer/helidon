@@ -16,14 +16,7 @@
 
 package io.helidon.inject.tools;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import io.helidon.builder.api.Option;
@@ -69,14 +62,6 @@ interface ModuleInfoDescriptorBlueprint {
      */
     @ConfiguredOption("false")
     boolean open();
-
-    /**
-     * The template name to apply. The default is {@link TemplateHelper#DEFAULT_TEMPLATE_NAME}.
-     *
-     * @return the template name
-     */
-    @Option.Default(TemplateHelper.DEFAULT_TEMPLATE_NAME)
-    String templateName();
 
     /**
      * The header (i.e., copyright) comment - will appear at the very start of the output.
@@ -172,20 +157,6 @@ interface ModuleInfoDescriptorBlueprint {
     }
 
     /**
-     * Saves the descriptor source to the provided path.
-     *
-     * @param path the target path
-     * @throws ToolsException if there is any exception encountered
-     */
-    default void save(Path path) {
-        try {
-            Files.writeString(path, contents());
-        } catch (IOException e) {
-            throw new ToolsException("Unable to save: " + path, e);
-        }
-    }
-
-    /**
      * Retrieves the first item matching the target requested.
      *
      * @param item the item to find
@@ -213,55 +184,4 @@ interface ModuleInfoDescriptorBlueprint {
                 .map(ModuleInfoItem::target)
                 .findFirst();
     }
-
-    /**
-     * Provides the content of the description appropriate to write out.
-     *
-     * @return the contents (source code body) for this descriptor
-     */
-    default String contents() {
-        return contents(true);
-    }
-
-    /**
-     * Provides the content of the description appropriate to write out.
-     *
-     * @param wantAnnotation flag determining whether the Generated annotation comment should be present
-     * @return the contents (source code body) for this descriptor
-     */
-    default String contents(boolean wantAnnotation) {
-        TemplateHelper helper = TemplateHelper.create();
-
-        Map<String, Object> subst = new HashMap<>();
-        subst.put("name", name());
-        List<ModuleInfoItem> items = items();
-        if (!items.isEmpty()) {
-            if (ModuleInfoOrdering.SORTED == ordering()) {
-                ArrayList<ModuleInfoItem> newItems = new ArrayList<>();
-                items.forEach(i -> newItems.add(ModuleInfoItem.builder(i).ordering(ModuleInfoOrdering.SORTED).build()));
-                items = newItems;
-                items.sort(Comparator.comparing(ModuleInfoItem::target));
-            }
-            subst.put("items", items);
-        }
-        if (wantAnnotation) {
-            TypeName generator = TypeName.create(ModuleInfoDescriptor.class);
-            subst.put("generatedanno",
-                      (ModuleInfoOrdering.NATURAL_PRESERVE_COMMENTS == ordering() || headerComment().isPresent())
-                              ? null : helper.generatedStickerFor(generator,
-                                                                  generator,
-                                                                  TypeName.create("module-info")));
-        }
-        headerComment().ifPresent(it -> subst.put("header", it));
-        descriptionComment().ifPresent(it -> subst.put("description", it));
-        subst.put("hasdescription", descriptionComment().isPresent());
-        String template = helper.safeLoadTemplate(templateName(), ModuleUtils.SERVICE_PROVIDER_MODULE_INFO_HBS);
-        String contents = helper.applySubstitutions(template, subst, true);
-        contents = CommonUtils.trimLines(contents);
-        if (!wantAnnotation) {
-            contents = contents.replace("\t", "    ");
-        }
-        return contents;
-    }
-
 }

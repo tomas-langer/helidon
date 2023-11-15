@@ -146,7 +146,7 @@ public interface Services {
     @SuppressWarnings({"unchecked", "rawtypes"})
     default <T> Optional<ServiceProvider<T>> lookupFirst(Class<T> contract, ServiceInfoCriteria criteria, boolean expected) {
         return (Optional) lookupFirst(ServiceInfoCriteria.builder(criteria)
-                                              .addContractImplemented(TypeName.create(contract))
+                                              .addContract(TypeName.create(contract))
                                               .build(),
                                       expected);
     }
@@ -214,7 +214,7 @@ public interface Services {
     @SuppressWarnings({"unchecked", "rawtypes"})
     default <T> List<ServiceProvider<T>> lookupAll(Class<T> type, ServiceInfoCriteria criteria) {
         return (List) lookupAll(ServiceInfoCriteria.builder(criteria)
-                                        .addContractImplemented(TypeName.create(type))
+                                        .addContract(TypeName.create(type))
                                         .build());
     }
 

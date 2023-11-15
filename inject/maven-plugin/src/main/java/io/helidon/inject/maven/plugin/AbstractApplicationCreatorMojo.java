@@ -253,14 +253,11 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
             Services services = injectionServices.services();
 
             // get the application creator only after services are initialized (we need to ignore any existing apps)
-            if (1 == 1) {
-                return;
-            }
             ApplicationCreator creator = MavenPluginUtils.applicationCreator();
 
             List<ServiceProvider<?>> allModules = services
                     .lookupAll(ServiceInfoCriteria.builder()
-                                       .addContractImplemented(ModuleComponent.class)
+                                       .addContract(ModuleComponent.class)
                                        .build());
             if (InjectionServices.isDebugEnabled()) {
                 getLog().info("processing modules: " + MavenPluginUtils.toDescriptions(allModules));
@@ -330,8 +327,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                     .codeGenPaths(codeGenPaths)
                     .compilerOptions(compilerOptions)
                     .throwIfError(isFailOnError())
-                    .generator(getClass().getName())
-                    .templateName(getTemplateName());
+                    .generator(getClass().getName());
             if (MavenPluginUtils.hasValue(moduleName)) {
                 reqBuilder.moduleName(moduleName);
             } else if (!isUnnamedModuleName(moduleInfoModuleName)) {

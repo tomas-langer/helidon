@@ -19,8 +19,10 @@
  */
 module io.helidon.integrations.oci.sdk.processor {
 
-    requires handlebars;
     requires java.compiler;
+    requires io.helidon.common.processor.classmodel;
+    requires io.helidon.common.processor;
+    requires io.helidon.common.processor.helidon.copyright;
 
     requires static jakarta.inject;
     requires static jdk.jfr;

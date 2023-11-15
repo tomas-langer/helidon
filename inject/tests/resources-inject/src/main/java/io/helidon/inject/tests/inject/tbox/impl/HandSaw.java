@@ -129,7 +129,7 @@ public class HandSaw extends AbstractSaw {
         List<AbstractBlade> blades = setterInjectedAllProviderListInSubClass.get(0)
                 .list(ContextualServiceQuery.builder()
                               .serviceInfoCriteria(ServiceInfoCriteria.builder()
-                                                           .addContractImplemented(AbstractBlade.class)
+                                                           .addContract(AbstractBlade.class)
                                                            .build())
                               .build());
         Verification.verifyInjected(blades, getClass() +

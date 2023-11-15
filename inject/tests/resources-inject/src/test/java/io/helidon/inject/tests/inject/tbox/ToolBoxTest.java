@@ -333,7 +333,7 @@ class ToolBoxTest {
     @Test
     void knownProviders() {
         List<ServiceProvider<?>> providers = services.lookupAll(
-                ServiceInfoCriteria.builder().addContractImplemented(Provider.class).build());
+                ServiceInfoCriteria.builder().addContract(Provider.class).build());
         List<String> desc = providers.stream().map(ServiceProvider::description).collect(Collectors.toList());
         // note that order matters here (weight ranked)
         assertThat(desc,

@@ -4,16 +4,15 @@ import java.util.Set;
 
 import io.helidon.common.processor.CopyrightHandler;
 import io.helidon.common.processor.GeneratedAnnotationHandler;
-import io.helidon.common.processor.classmodel.Annotation;
 import io.helidon.common.processor.classmodel.ClassModel;
 import io.helidon.common.processor.classmodel.Javadoc;
 import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 
 class ModuleComponentHandler {
     private static final String MODULE_NAME = "HelidonInjection__ModuleComponent";
-    private static final Annotation OVERRIDE = Annotation.create(Override.class);
     private static final TypeName MODULE_COMPONENT_TYPE = TypeName.create("io.helidon.inject.api.ModuleComponent");
     private static final TypeName SERVICE_BINDER_TYPE = TypeName.create("io.helidon.inject.api.ServiceBinder");
     private static final TypeName GENERATOR = TypeName.create(ModuleComponentHandler.class);
@@ -65,20 +64,20 @@ class ModuleComponentHandler {
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .defaultValue("\"" + moduleName + "\""));
         builder.addMethod(named -> named.name("named")
-                .addAnnotation(OVERRIDE)
+                .addAnnotation(Annotations.OVERRIDE)
                 .returnType(OPTIONAL_STRING)
                 .addLine("return @java.util.Optional@.of(NAME);"));
 
         // to String
         builder.addMethod(named -> named.name("toString")
-                .addAnnotation(OVERRIDE)
+                .addAnnotation(Annotations.OVERRIDE)
                 .returnType(TypeNames.STRING)
                 .addLine("return NAME + \":\" + getClass().getName();"));
 
 
         // configure
         builder.addMethod(configure -> configure.name("configure")
-                .addAnnotation(OVERRIDE)
+                .addAnnotation(Annotations.OVERRIDE)
                 .addParameter(binder -> binder.name("binder")
                         .type(SERVICE_BINDER_TYPE))
                 .update(methodBody -> {

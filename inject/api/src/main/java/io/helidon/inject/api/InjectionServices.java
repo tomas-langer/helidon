@@ -239,12 +239,8 @@ public interface InjectionServices {
      * @return the terminal phase for activation
      */
     static Phase terminalActivationPhase() {
-        Optional<Bootstrap> globalBootstrap = InjectionServices.globalBootstrap();
-        if (globalBootstrap.isPresent()) {
-            Optional<Phase> limitPhase = globalBootstrap.get().limitRuntimePhase();
-            return limitPhase.orElse(Phase.ACTIVE);
-        }
-        return Phase.ACTIVE;
+        return InjectionServices.globalBootstrap()
+                .flatMap(BootstrapBlueprint::limitRuntimePhase)
+                .orElse(Phase.ACTIVE);
     }
-
 }

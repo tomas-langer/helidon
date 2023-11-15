@@ -17,9 +17,12 @@
 package io.helidon.inject.tools;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,15 +32,26 @@ import java.util.stream.Collectors;
 
 import io.helidon.common.Weight;
 import io.helidon.common.processor.CopyrightHandler;
+import io.helidon.common.processor.GeneratedAnnotationHandler;
+import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.common.processor.classmodel.Method;
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.InjectionException;
+import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.IpId;
+import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.ModuleComponent;
+import io.helidon.inject.api.ServiceDependencies;
 import io.helidon.inject.api.ServiceInfoCriteria;
+import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.runtime.VoidServiceProvider;
 import io.helidon.inject.tools.spi.ApplicationCreator;
 
 import jakarta.inject.Provider;
@@ -53,27 +67,12 @@ import static io.helidon.inject.runtime.ServiceUtils.isQualifiedInjectionTarget;
 @Weight(DEFAULT_INJECT_WEIGHT)
 public class ApplicationCreatorDefault extends AbstractCreator implements ApplicationCreator {
     /**
-     * The prefix to add before the generated "Application" class name (i.e., "Injection$$" in the "Injection$$Application").
-     */
-    public static final String NAME_PREFIX = AbstractCreator.NAME_PREFIX;
-
-    /**
-     * The "Application" part of the name.
-     */
-    public static final String APPLICATION_NAME_SUFFIX = "Application";
-
-    /**
-     * The FQN "Injection$$Application" name.
+     * The application class name.
      */
     public static final String APPLICATION_NAME = "HelidonInjection__Application";
-
-    static final String SERVICE_PROVIDER_APPLICATION_SERVICETYPEBINDING_HBS
-            = "service-provider-application-servicetypebinding.hbs";
-    static final String SERVICE_PROVIDER_APPLICATION_EMPTY_SERVICETYPEBINDING_HBS
-            = "service-provider-application-empty-servicetypebinding.hbs";
-    static final String SERVICE_PROVIDER_APPLICATION_HBS
-            = "service-provider-application.hbs";
+    public static final TypeName IP_PROVIDER_TYPE = TypeName.create(InjectionPointProvider.class);
     private static final TypeName CREATOR = TypeName.create(ApplicationCreatorDefault.class);
+    private static final TypeName BINDER_TYPE = TypeName.create(ServiceInjectionPlanBinder.class);
 
     /**
      * Service loader based constructor.
@@ -82,7 +81,19 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
      */
     @Deprecated
     public ApplicationCreatorDefault() {
-        super(TemplateHelper.DEFAULT_TEMPLATE_NAME);
+    }
+
+    /**
+     * Will uppercase the first letter of the provided name.
+     *
+     * @param name the name
+     * @return the mame with the first letter capitalized
+     */
+    public static String upperFirstChar(String name) {
+        if (name.isEmpty()) {
+            return name;
+        }
+        return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     static boolean isAllowListedProviderName(ApplicationCreatorConfigOptions configOptions,
@@ -128,19 +139,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 .collect(Collectors.toSet());
         spQualifierTypeNames.retainAll(permittedTypeNames);
         return !spQualifierTypeNames.isEmpty();
-    }
-
-    /**
-     * Will uppercase the first letter of the provided name.
-     *
-     * @param name the name
-     * @return the mame with the first letter capitalized
-     */
-    public static String upperFirstChar(String name) {
-        if (name.isEmpty()) {
-            return name;
-        }
-        return name.substring(0, 1).toUpperCase() + name.substring(1);
     }
 
     static TypeName toApplicationTypeName(ApplicationCreatorRequest req) {
@@ -233,153 +231,162 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
     ApplicationCreatorResponse codegen(ApplicationCreatorRequest req,
                                        ApplicationCreatorResponse.Builder builder) {
-        InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
 
-        String serviceTypeBindingTemplate = templateHelper()
-                .safeLoadTemplate(req.templateName(), SERVICE_PROVIDER_APPLICATION_SERVICETYPEBINDING_HBS);
-        String serviceTypeBindingEmptyTemplate = templateHelper()
-                .safeLoadTemplate(req.templateName(), SERVICE_PROVIDER_APPLICATION_EMPTY_SERVICETYPEBINDING_HBS);
+        // TODO the maven plugin should analyze all applications on classpath, and assign a higher weight
+        // to this one, so we always load the last one
 
-        List<TypeName> serviceTypeNames = new ArrayList<>();
-        List<String> serviceTypeBindings = new ArrayList<>();
-        for (TypeName serviceTypeName : req.serviceTypeNames()) {
-            try {
-                String injectionPlan = toServiceTypeInjectionPlan(injectionServices, serviceTypeName,
-                                                                  serviceTypeBindingTemplate, serviceTypeBindingEmptyTemplate);
-                if (injectionPlan == null) {
-                    continue;
-                }
-                serviceTypeNames.add(serviceTypeName);
-                serviceTypeBindings.add(injectionPlan);
-            } catch (Exception e) {
-                throw new ToolsException("Error during injection plan generation for: " + serviceTypeName, e);
-            }
+        TypeName applicationType = toApplicationTypeName(req);
+        ClassModel.Builder classModel = ClassModel.builder()
+                .copyright(CopyrightHandler.copyright(CREATOR,
+                                                      CREATOR,
+                                                      applicationType))
+                .description("Generated Application to provide explicit bindings for known services.")
+                .type(applicationType)
+                .addAnnotation(GeneratedAnnotationHandler.create(CREATOR,
+                                                                 CREATOR,
+                                                                 applicationType,
+                                                                 "1",
+                                                                 ""))
+                .addAnnotation(Annotation.builder()
+                                       .type(Weight.class)
+                                       // .putValue("value", req.weight())
+                                       .build())
+                .addInterface(TypeNames.APPLICATION);
+
+        // deprecated default constructor - application should always be service loaded
+        classModel.addConstructor(ctr -> ctr.javadoc(Javadoc.builder()
+                                                             .addLine(
+                                                                     "Constructor only for use by {@link java.util"
+                                                                             + ".ServiceLoader}.")
+                                                             .addTag("deprecated", "to be used by Java Service Loader only")
+                                                             .build())
+                .addAnnotation(Annotation.create(Deprecated.class)));
+
+        // public String name()
+        String applicationName = toModuleName(req);
+        classModel.addMethod(nameMethod -> nameMethod
+                .addAnnotation(Annotations.OVERRIDE)
+                .typeName(io.helidon.common.types.TypeNames.STRING)
+                .name("name")
+                .addLine("return \"" + applicationName + "\";"));
+
+        // public void configure(ServiceInjectionPlanBinder binder)
+        classModel.addMethod(configureMethod -> configureMethod
+                .addAnnotation(Annotations.OVERRIDE)
+                .name("configure")
+                .addParameter(binderParam -> binderParam
+                        .name("binder")
+                        .type(BINDER_TYPE))
+                .update(it -> createConfigureMethodBody(it, req.serviceTypeNames())));
+
+        StringWriter sw = new StringWriter();
+        try {
+            classModel.build().write(sw, "    ");
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create class model for Application class", e);
         }
-
-        TypeName application = toApplicationTypeName(req);
-        serviceTypeNames.add(application);
-
-        String moduleName = toModuleName(req);
-
-        Map<String, Object> subst = new HashMap<>();
-        subst.put("classname", application.className());
-        subst.put("packagename", application.packageName());
-        subst.put("description", application + " - Generated Application.");
-        subst.put("header", CopyrightHandler.copyright(CREATOR,
-                                                       CREATOR,
-                                                       application));
-        subst.put("generatedanno", toGeneratedSticker(CREATOR,
-                                                      CREATOR, // there is no specific type trigger for application
-                                                      application));
-        subst.put("modulename", moduleName);
-        subst.put("servicetypebindings", serviceTypeBindings);
-
-        String template = templateHelper().safeLoadTemplate(req.templateName(), SERVICE_PROVIDER_APPLICATION_HBS);
-        String body = templateHelper().applySubstitutions(template, subst, true).trim();
+        String body = sw.toString();
 
         if (req.codeGenPaths().isPresent()
                 && req.codeGenPaths().get().generatedSourcesPath().isPresent()) {
-            codegen(injectionServices, req, application, body);
+            codegen(null, req, applicationType, body);
         }
 
         GeneralCodeGenDetail codeGenDetail = GeneralCodeGenDetail.builder()
-                .serviceTypeName(application)
+                .serviceTypeName(applicationType)
                 .body(body)
                 .build();
         ApplicationCreatorCodeGen codeGenResponse = ApplicationCreatorCodeGen.builder()
-                .packageName(application.packageName())
-                .className(application.className())
+                .packageName(applicationType.packageName())
+                .className(applicationType.className())
                 .classPrefixName(req.codeGen().classPrefixName())
                 .build();
         return builder
                 .applicationCodeGen(codeGenResponse)
-                .serviceTypeNames(serviceTypeNames)
-                .putServiceTypeDetail(application, codeGenDetail)
-                .templateName(req.templateName())
+                .putServiceTypeDetail(applicationType, codeGenDetail)
                 .moduleName(req.moduleName())
                 .build();
     }
 
-    String toServiceTypeInjectionPlan(InjectionServices injectionServices,
-                                      TypeName serviceTypeName,
-                                      String serviceTypeBindingTemplate,
-                                      String serviceTypeBindingEmptyTemplate) {
-        Services services = injectionServices.services();
+    Map<TypeName, BindingPlan> toServiceTypeInjectionPlan(Services services,
+                                                          TypeName serviceTypeName) {
 
         ServiceInfoCriteria si = toServiceInfoCriteria(serviceTypeName);
         ServiceProvider<?> sp = services.lookupFirst(si);
-        String activator = toActivatorCodeGen(sp);
-        if (activator == null) {
-            return null;
-        }
-        Map<String, Object> subst = new HashMap<>();
-        subst.put("servicetypename", serviceTypeName.name());
-        subst.put("activator", activator);
-        if (isQualifiedInjectionTarget(sp)) {
-            subst.put("injectionplan", toInjectionPlanBindings(sp));
-            return templateHelper().applySubstitutions(serviceTypeBindingTemplate, subst, true);
-        } else {
-            return templateHelper().applySubstitutions(serviceTypeBindingEmptyTemplate, subst, true);
-        }
-    }
 
-    @SuppressWarnings("unchecked")
-    List<String> toInjectionPlanBindings(ServiceProvider<?> sp) {
-        return List.of();
-        /*
-        AbstractServiceProvider<?> asp = AbstractServiceProvider
-                .toAbstractServiceProvider(ServiceBinderDefault.toRootProvider(sp), true).orElseThrow();
-        DependenciesInfo deps = asp.dependencies();
-        if (deps.allDependencies().isEmpty()) {
-            return List.of();
+        if (!isQualifiedInjectionTarget(sp)) {
+            return Map.of();
         }
 
-        List<String> plan = new ArrayList<>(deps.allDependencies().size());
-        Map<String, HelidonInjectionPlan> injectionPlan = asp.getOrCreateInjectionPlan(false);
-        for (Map.Entry<String, HelidonInjectionPlan> e : injectionPlan.entrySet()) {
-            StringBuilder line = new StringBuilder();
-            InjectionPointInfo ipInfo = e.getValue().injectionPointInfo();
-            List<? extends ServiceProvider<?>> ipQualified = e.getValue().injectionPointQualifiedServiceProviders();
-            List<?> ipUnqualified = e.getValue().unqualifiedProviders();
-            boolean resolved = false;
-            try {
-                if (ipInfo.listWrapped()) {
-                    line.append(".bindMany(");
-                } else if (ipQualified.isEmpty()) {
-                    if (!ipUnqualified.isEmpty()) {
-                        resolved = true;
-                        line.append(".resolvedBind(");
-                    } else {
-                        line.append(".bindVoid(");
-                    }
+        List<ServiceDependencies> dependencies = sp.dependencies();
+        if (dependencies.isEmpty()) {
+            return Map.of();
+        }
+
+        Map<TypeName, BindingPlan> response = new LinkedHashMap<>();
+
+        for (ServiceDependencies dependency : dependencies) {
+            TypeName depServiceType = dependency.serviceType();
+            // service provider of the service receiving the injection point
+            ServiceProvider<?> depSp = services.lookupFirst(toServiceInfoCriteria(depServiceType));
+            TypeName descriptorTypeName = depSp.descriptorType();
+
+            Set<Binding> bindings = new LinkedHashSet<>();
+            List<IpInfo> ipoints = dependency.dependencies();
+
+            for (IpInfo ipoint : ipoints) {
+                IpId<?> id = ipoint.id();
+                ipoint.qualifiers();
+                ipoint.contract();
+                ipoint.access();
+                ipoint.annotations();
+
+                // type of the result that satisfies the injection point (full generic type)
+                TypeName ipType = id.typeName();
+                // contract of the service that satisfies this injection point
+                TypeName contractType = ipoint.contract();
+
+                InjectionPlan iPlan = injectionPlan(services, depSp, ipoint);
+                List<ServiceProvider<?>> qualified = iPlan.qualifiedProviders();
+                List<?> unqualified = iPlan.unqualifiedProviders();
+
+                BindingType type;
+                if (ipType.isList()) {
+                    type = BindingType.MANY;
                 } else {
-                    line.append(".bind(");
-                }
-
-                line.append("\"").append(e.getKey()).append("\"");
-
-                if (resolved) {
-                    Object target = ipUnqualified.get(0);
-                    if (!(target instanceof Class)) {
-                        target = target.getClass();
+                    if (qualified.isEmpty()) {
+                        if (unqualified.isEmpty()) {
+                            type = BindingType.VOID;
+                        } else {
+                            type = BindingType.RUNTIME;
+                        }
+                    } else {
+                        type = BindingType.BIND;
                     }
-                    line.append(", ").append(((Class<?>) target).getName()).append(".class");
-                } else if (ipInfo.listWrapped() && !ipQualified.isEmpty()) {
-                    line.append(", ").append(toActivatorCodeGen((Collection<ServiceProvider<?>>) ipQualified));
-                } else if (!ipQualified.isEmpty()) {
-                    line.append(", ").append(toActivatorCodeGen(ipQualified.get(0)));
                 }
-                line.append(")");
-
-                plan.add(line.toString());
-            } catch (Exception exc) {
-                throw new IllegalStateException("Failed to process: " + e.getKey() + " with " + e.getValue(), exc);
+                switch (type) {
+                case RUNTIME -> {
+                    Object target = unqualified.getFirst();
+                    Class<?> targetType;
+                    if (target instanceof Class<?> aClass) {
+                        targetType = aClass;
+                    } else {
+                        targetType = target.getClass();
+                    }
+                    bindings.add(new Binding(type, ipoint, List.of(TypeName.create(targetType))));
+                }
+                case BIND -> bindings.add(new Binding(type, ipoint, List.of(qualified.getFirst().descriptorType())));
+                case MANY -> bindings.add(new Binding(type, ipoint, qualified.stream()
+                        .map(ServiceProvider::descriptorType)
+                        .toList()));
+                case VOID -> bindings.add(new Binding(type, ipoint, List.of()));
+                }
             }
+
+            response.put(serviceTypeName, new BindingPlan(descriptorTypeName, bindings));
         }
 
-        return plan;
-
-         */
+        return response;
     }
 
     /**
@@ -407,9 +414,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                                    req.codeGenPaths().orElse(null),
                                    Map.of(TypeNames.INJECT_APPLICATION, List.of(applicationTypeName.name())));
 
-            // setup module-info
-            codegenModuleInfoDescriptor(filer, injectionServices, req, applicationTypeName);
-
             // compile, but only if we generated the source file
             if (applicationJavaFilePath != null) {
                 CompilerOptions opts = req.compilerOptions().orElse(null);
@@ -436,44 +440,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         }
     }
 
-    void codegenModuleInfoDescriptor(CodeGenFiler filer,
-                                     InjectionServices injectionServices,
-                                     ApplicationCreatorRequest req,
-                                     TypeName applicationTypeName) {
-        Optional<Path> injectionModuleInfoPath = filer.toResourceLocation(ModuleUtils.MODULE_INFO_JAVA_NAME);
-        ModuleInfoDescriptor descriptor = filer.readModuleInfo(ModuleUtils.MODULE_INFO_JAVA_NAME).orElse(null);
-        if (descriptor != null) {
-            Objects.requireNonNull(injectionModuleInfoPath.orElseThrow());
-            String moduleName = req.moduleName().orElse(null);
-            if (moduleName == null || ModuleInfoDescriptor.DEFAULT_MODULE_NAME.equals(moduleName)) {
-                moduleName = descriptor.name();
-            }
-
-            TypeName moduleTypeName = moduleServiceTypeOf(injectionServices, moduleName).orElse(null);
-            if (moduleTypeName != null) {
-                String typePrefix = req.codeGen().classPrefixName();
-                ModuleInfoCreatorRequest moduleBuilderRequest = ModuleInfoCreatorRequest.builder()
-                        .name(moduleName)
-                        .moduleTypeName(moduleTypeName)
-                        .applicationTypeName(applicationTypeName)
-                        .moduleInfoPath(injectionModuleInfoPath.get().toAbsolutePath().toString())
-                        .classPrefixName(typePrefix)
-                        .applicationCreated(true)
-                        .moduleCreated(false)
-                        .build();
-                descriptor = createModuleInfo(moduleBuilderRequest);
-                filer.codegenModuleInfoFilerOut(descriptor, true);
-                return;
-            }
-        }
-
-        Path realModuleInfoPath = filer.toSourceLocation(ModuleUtils.REAL_MODULE_INFO_JAVA_NAME).orElse(null);
-        if (realModuleInfoPath != null && !realModuleInfoPath.toFile().exists()) {
-            throw new ToolsException("Expected to find " + realModuleInfoPath
-                                             + ". Did the Injection APT run?");
-        }
-    }
-
     void codegenMetaInfServices(CodeGenFiler filer,
                                 CodeGenPaths paths,
                                 Map<String, List<String>> metaInfServices) {
@@ -490,4 +456,134 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         return builder.error(e).success(false).build();
     }
 
+    private InjectionPlan injectionPlan(Services services, ServiceProvider<?> self, IpInfo ipoint) {
+        ServiceInfoCriteria dependencyTo = toServiceInfoCriteria(ipoint);
+
+        List<ServiceProvider<?>> qualifiedProviders = services.lookupAll(dependencyTo, false);
+        List<ServiceProvider<?>> unqualifiedProviders = List.of();
+        if (qualifiedProviders.isEmpty()) {
+            if (ipoint.id().typeName().isOptional()) {
+                qualifiedProviders = VoidServiceProvider.LIST_INSTANCE;
+            } else {
+                unqualifiedProviders = injectionPointProvidersFor(services, ipoint);
+            }
+        }
+
+        // remove current service provider from matches
+        qualifiedProviders = qualifiedProviders.stream()
+                .filter(it -> !it.descriptor().equals(self.descriptor()))
+                .toList();
+
+        unqualifiedProviders = unqualifiedProviders.stream()
+                .filter(it -> !it.descriptor().equals(self.descriptor()))
+                .toList();
+
+        // the list now contains all providers that match the processed injection points
+        return new InjectionPlan(unqualifiedProviders, qualifiedProviders);
+    }
+
+    private List<ServiceProvider<?>> injectionPointProvidersFor(Services services, IpInfo ipoint) {
+        if (ipoint.qualifiers().isEmpty()) {
+            return List.of();
+        }
+        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(toServiceInfoCriteria(ipoint))
+                .qualifiers(Set.of())
+                .addContract(IP_PROVIDER_TYPE)
+                .build();
+        return services.lookupAll(criteria);
+    }
+
+    private ServiceInfoCriteria toServiceInfoCriteria(IpInfo ipoint) {
+        return ServiceInfoCriteria.builder()
+                .addContract(ipoint.contract())
+                .qualifiers(ipoint.qualifiers())
+                .build();
+    }
+
+    private void createConfigureMethodBody(Method.Builder method, List<TypeName> serviceTypes) {
+        InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
+        Services services = injectionServices.services();
+
+        Map<TypeName, BindingPlan> injectionPlans = new LinkedHashMap<>();
+
+        for (TypeName serviceType : serviceTypes) {
+            // we need to merge the plan - as we may have a constructor injection combined with
+            // field injection discovered in another service, registered later, and that would override the constructor binding
+            Map<TypeName, BindingPlan> plansByServices = toServiceTypeInjectionPlan(services, serviceType);
+
+            plansByServices.forEach((typeName, plan) -> {
+                if (injectionPlans.containsKey(typeName)) {
+                    injectionPlans.get(typeName).merge(plan);
+                } else {
+                    injectionPlans.put(typeName, plan);
+                }
+            });
+        }
+
+        injectionPlans.forEach((serviceType, plan) -> {
+            String descriptor = "@" + plan.descriptorType().fqName() + "@";
+
+            method.addLine("binder.bindTo(" + descriptor + ".INSTANCE)")
+                    .increasePadding()
+                    .update(it -> {
+                        for (Binding binding : plan.bindings()) {
+                            it.add(".")
+                                    .add(switch (binding.type()) {
+                                        case BIND -> "bind";
+                                        case MANY -> "bindMany";
+                                        case VOID -> "bindVoid";
+                                        case RUNTIME -> "runtimeBind";
+                                    })
+                                    .add("(")
+                                    .add(descriptor)
+                                    .add(".")
+                                    .add(binding.ipInfo().field());
+
+                            // we trust our own method to prepare the stuff correctly
+                            if (!binding.typeNames.isEmpty()) {
+                                if (binding.type() == BindingType.RUNTIME) {
+                                    it.add(", @" + binding.typeNames().getFirst().fqName() + "@.class");
+                                } else {
+                                    it.add((", "))
+                                            .add(binding.typeNames.stream()
+                                                         .map(targetDescriptor -> "@" + targetDescriptor.fqName()
+                                                                 + "@.INSTANCE")
+                                                         .collect(Collectors.joining(", ")));
+                                }
+                            }
+                            it.addLine(")");
+                        }
+                    })
+                    .addLine(".commit()")
+                    .decreasePadding()
+                    .addLine("");
+        });
+    }
+
+    enum BindingType {
+        BIND,
+        MANY,
+        VOID,
+        RUNTIME
+    }
+
+    record InjectionPlan(List<ServiceProvider<?>> unqualifiedProviders,
+                         List<ServiceProvider<?>> qualifiedProviders) {
+    }
+
+    record BindingPlan(TypeName descriptorType,
+                       Set<Binding> bindings) {
+        void merge(BindingPlan plan) {
+            if (!descriptorType.equals(plan.descriptorType)) {
+                throw new IllegalStateException("Descriptor type mis-match in injection plan. " + descriptorType
+                                                        + ", and " + plan.descriptorType);
+            }
+            bindings.addAll(plan.bindings);
+        }
+    }
+
+    record Binding(BindingType type,
+                   IpInfo ipInfo,
+                   List<TypeName> typeNames) {
+    }
 }

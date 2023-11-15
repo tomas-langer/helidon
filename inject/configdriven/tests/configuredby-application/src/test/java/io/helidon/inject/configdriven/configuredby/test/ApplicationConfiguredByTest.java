@@ -54,7 +54,7 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
         Metrics metrics = injectionServices.metrics().orElseThrow();
         Set<ServiceInfoCriteria> criteriaSearchLog = injectionServices.lookups().orElseThrow();
         Set<TypeName> contractSearchLog = criteriaSearchLog.stream()
-                .flatMap(it -> it.contractsImplemented().stream())
+                .flatMap(it -> it.contracts().stream())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Set<TypeName> servicesSearchLog = criteriaSearchLog.stream()
                 .flatMap(it -> it.serviceTypeName().stream())

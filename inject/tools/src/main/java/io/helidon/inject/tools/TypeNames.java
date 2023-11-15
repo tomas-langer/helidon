@@ -289,6 +289,8 @@ public final class TypeNames {
     public static final TypeName INTERCEPTED_TRIGGER = TypeName.create("io.helidon.inject.api.InterceptedTrigger");
     public static final TypeName ANNOTATION_RETENTION = TypeName.create("java.lang.annotation.Retention");
     public static final TypeName INTERCEPTION_METADATA = TypeName.create("io.helidon.inject.api.InterceptionMetadata");
+    public static final TypeName APPLICATION = TypeName.create("io.helidon.inject.api.Application");
+    public static final TypeName NAMED = TypeName.create("jakarta.inject.Named");
 
     private TypeNames() {
     }

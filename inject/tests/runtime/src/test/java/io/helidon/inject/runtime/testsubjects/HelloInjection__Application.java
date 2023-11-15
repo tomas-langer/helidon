@@ -16,8 +16,6 @@
 
 package io.helidon.inject.runtime.testsubjects;
 
-import java.util.Optional;
-
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 
@@ -27,14 +25,12 @@ import io.helidon.inject.api.ServiceInjectionPlanBinder;
 public class HelloInjection__Application implements Application {
     public static boolean ENABLED = true;
 
-    static final String NAME = "HelloInjectionApplication";
-
     public HelloInjection__Application() {
     }
 
     @Override
-    public Optional<String> named() {
-        return Optional.of(NAME);
+    public String name() {
+        return "HelloInjectionApplication";
     }
 
     @Override

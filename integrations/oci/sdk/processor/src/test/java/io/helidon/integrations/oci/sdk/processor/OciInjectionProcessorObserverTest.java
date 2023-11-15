@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
 
+import io.helidon.common.processor.classmodel.ClassModel;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.tools.ToolsException;
 
@@ -45,9 +46,8 @@ class OciInjectionProcessorObserverTest {
         assertThat(generatedOciServiceClientTypeName.name(),
                    equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "$$Oci$$Client"));
 
-        String serviceClientBody = OciInjectionProcessorObserver.toBody(OciInjectionProcessorObserver.TAG_TEMPLATE_SERVICE_CLIENT_PROVIDER_NAME,
-                                                                        ociServiceType,
-                                                                        generatedOciServiceClientTypeName);
+        ClassModel serviceClientBody = OciInjectionProcessorObserver.toBody(ociServiceType,
+                                                                            generatedOciServiceClientTypeName);
         assertThat(serviceClientBody,
                    equalTo(loadStringFromResource("expected/objectstorage$$Oci$$Client._java_")));
 
@@ -55,9 +55,9 @@ class OciInjectionProcessorObserverTest {
         assertThat(generatedOciServiceClientBuilderTypeName.name(),
                    equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "$$Oci$$ClientBuilder"));
 
-        String serviceClientBuilderBody = OciInjectionProcessorObserver.toBody(OciInjectionProcessorObserver.TAG_TEMPLATE_SERVICE_CLIENT_BUILDER_PROVIDER_NAME,
-                                                                               ociServiceType,
-                                                                               generatedOciServiceClientTypeName);
+        ClassModel serviceClientBuilderBody = OciInjectionProcessorObserver.toBuilderBody(ociServiceType,
+                                                                               generatedOciServiceClientTypeName,
+                                                                                          generatedOciServiceClientBuilderTypeName);
         assertThat(serviceClientBuilderBody,
                    equalTo(loadStringFromResource("expected/objectstorage$$Oci$$ClientBuilder._java_")));
     }

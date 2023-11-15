@@ -37,6 +37,15 @@ public interface ServiceDescriptor<T> extends Weighted {
     TypeName serviceType();
 
     /**
+     * Type of the descriptor (usually generated).
+     *
+     * @return descriptor type
+     */
+    default TypeName descriptorType() {
+        return TypeName.create(getClass());
+    }
+
+    /**
      * Set of contracts the described service implements.
      *
      * @return set of contracts

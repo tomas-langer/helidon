@@ -145,7 +145,7 @@ public abstract class AbstractConfiguredByTest {
                    ));
 
         criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(FakeWebServerContract.class)
+                .addContract(FakeWebServerContract.class)
                 .build();
         list = services.lookupAll(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
@@ -162,7 +162,7 @@ public abstract class AbstractConfiguredByTest {
                    contains("FakeTlsWSNotDrivenByCB{root}:PENDING"));
 
         criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(FakeTlsWSNotDrivenByCB.class)
+                .addContract(FakeTlsWSNotDrivenByCB.class)
                 .addQualifier(Qualifier.createNamed("*"))
                 .build();
         list = services.lookupAll(criteria);
@@ -177,7 +177,7 @@ public abstract class AbstractConfiguredByTest {
                    equalTo("Expected to find a match: service provider: FakeTlsWSNotDrivenByCB{root}:PENDING"));
 
         criteria = ServiceInfoCriteria.builder()
-                .addContractImplemented(ASingletonService.class)
+                .addContract(ASingletonService.class)
                 .addQualifier(Qualifier.createNamed("jane"))
                 .build();
         list = services.lookupAll(criteria);

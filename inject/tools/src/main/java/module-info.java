@@ -31,9 +31,9 @@ module io.helidon.inject.tools {
     requires static jakarta.annotation;
     requires transitive io.helidon.common.types;
     requires transitive io.helidon.inject.runtime;
+    requires io.helidon.common.processor.classmodel;
 
     uses io.helidon.inject.tools.spi.ApplicationCreator;
-    uses io.helidon.inject.tools.spi.CustomAnnotationTemplateCreator;
     uses io.helidon.inject.tools.spi.ExternalModuleCreator;
     uses io.helidon.inject.tools.spi.ActivatorCreator;
     uses io.helidon.inject.tools.spi.ModuleComponentNamer;

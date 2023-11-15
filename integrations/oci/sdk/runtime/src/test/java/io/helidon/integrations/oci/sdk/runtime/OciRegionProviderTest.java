@@ -83,7 +83,7 @@ class OciRegionProviderTest {
                         .access(AccessModifier.PUBLIC)
                         .addQualifier(Qualifier.createNamed("us-phoenix-1"))
                         .dependencyToServiceInfo(ServiceInfoCriteria.builder()
-                                                         .addContractImplemented(regionType)
+                                                         .addContract(regionType)
                                                          .addQualifier(Qualifier.createNamed("us-phoenix-1"))
                                                          .build())
                         .build(),

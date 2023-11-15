@@ -100,7 +100,7 @@ class DefaultInjectionPlans {
             return List.of();
         }
 
-        if (depTo.contractsImplemented().isEmpty()) {
+        if (depTo.contracts().isEmpty()) {
             return List.of();
         }
 
@@ -125,7 +125,7 @@ class DefaultInjectionPlans {
                                           ServiceProvider<?> self) {
         ServiceInfoCriteria criteria = dep.dependencyTo();
         ServiceInfoCriteria.Builder builder = null;
-        if (self.contracts().containsAll(criteria.contractsImplemented())) {
+        if (self.contracts().containsAll(criteria.contracts())) {
             // if we have a weight on ourselves, and we inject an interface that we actually offer, then
             // be sure to use it to get lower weighted injection points
             builder = ServiceInfoCriteria.builder(criteria)
@@ -205,8 +205,8 @@ class DefaultInjectionPlans {
             } else {
                 // "standard" case
                 ServiceProvider<?> serviceProvider = serviceProviders.get(0);
-                Optional<ServiceProviderBindable<?>> serviceProviderBindable =
-                        ServiceBinderDefault.toBindableProvider(ServiceBinderDefault.toRootProvider(serviceProvider));
+                Optional<? extends ServiceProviderBindable<?>> serviceProviderBindable =
+                        ServiceBinderDefault.toRootProvider(serviceProvider).serviceProviderBindable();
                 if (serviceProviderBindable.isPresent()
                         && serviceProviderBindable.get() != serviceProvider
                         && serviceProviderBindable.get() instanceof ServiceProviderProvider) {
@@ -364,7 +364,7 @@ class DefaultInjectionPlans {
             return result;
         }
 
-        return (target instanceof ServiceProviderBase<?, ?, ?>)
+        return (target instanceof ServiceProviderBase<?>)
                 ? List.of((ServiceProvider<?>) target)
                 : List.of();
     }
@@ -378,7 +378,7 @@ class DefaultInjectionPlans {
             return result;
         }
 
-        return (target == null || target instanceof ServiceProviderBase<?, ?, ?>)
+        return (target == null || target instanceof ServiceProviderBase<?>)
                 ? List.of()
                 : List.of(target);
     }
@@ -407,7 +407,7 @@ class DefaultInjectionPlans {
         }
 
         ServiceInfoCriteria missingServiceInfo = ipInfo.dependencyToServiceInfo();
-        Set<TypeName> contractsNeeded = missingServiceInfo.contractsImplemented();
+        Set<TypeName> contractsNeeded = missingServiceInfo.contracts();
         return (1 == contractsNeeded.size() && contractsNeeded.contains(INTERCEPTOR));
     }
 

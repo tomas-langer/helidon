@@ -32,7 +32,6 @@ import io.helidon.inject.tools.Messager;
 import io.helidon.inject.tools.ModuleInfoDescriptor;
 import io.helidon.inject.tools.ModuleUtils;
 import io.helidon.inject.tools.Options;
-import io.helidon.inject.tools.TemplateHelper;
 import io.helidon.inject.tools.ToolsException;
 
 import org.apache.maven.artifact.Artifact;
@@ -77,12 +76,6 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     // ----------------------------------------------------------------------
     // Configurables
     // ----------------------------------------------------------------------
-
-    /**
-     * The template name to use for codegen.
-     */
-    @Parameter(property = TemplateHelper.TAG_TEMPLATE_NAME, readonly = true, defaultValue = TemplateHelper.DEFAULT_TEMPLATE_NAME)
-    private String templateName;
 
     /**
      * The module name to apply. If not found the module name will be inferred.
@@ -206,10 +199,6 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
 
     System.Logger getLogger() {
         return logger;
-    }
-
-    String getTemplateName() {
-        return templateName;
     }
 
     String getModuleName() {

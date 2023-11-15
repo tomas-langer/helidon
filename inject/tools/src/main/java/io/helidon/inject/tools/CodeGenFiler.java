@@ -316,47 +316,6 @@ public class CodeGenFiler {
     }
 
     /**
-     * Code generate the {@code module-info.java.inject} file.
-     *
-     * @param newDeltaDescriptor      the descriptor
-     * @param overwriteTargetIfExists should the file be overwritten if it already exists
-     * @return the module-info coordinates, or empty if nothing was written
-     */
-    Optional<Path> codegenModuleInfoFilerOut(ModuleInfoDescriptor newDeltaDescriptor,
-                                             boolean overwriteTargetIfExists) {
-        Objects.requireNonNull(newDeltaDescriptor);
-
-        Messager messager = messager();
-        String typeName = ModuleUtils.MODULE_INFO_JAVA_NAME;
-        if (!filerWriterEnabled()) {
-            messager.log("(disabled) Writing " + typeName + " with:\n" + newDeltaDescriptor);
-            return Optional.empty();
-        }
-        messager.debug("Writing " + typeName);
-
-        Function<InputStream, String> moduleInfoUpdater = inputStream -> {
-            ModuleInfoDescriptor existingDescriptor = ModuleInfoDescriptor.create(inputStream);
-            ModuleInfoDescriptor newDescriptor = existingDescriptor.mergeCreate(newDeltaDescriptor);
-            return newDescriptor.contents();
-        };
-
-        Optional<Path> filePath
-                = codegenResourceFilerOut(typeName, newDeltaDescriptor.contents(), moduleInfoUpdater);
-        if (filePath.isPresent()) {
-            messager.debug("Wrote module-info: " + filePath.get());
-        } else if (overwriteTargetIfExists) {
-            messager.warn("Expected to have written module-info, but failed to write it");
-        }
-
-        if (!newDeltaDescriptor.isUnnamed()) {
-            ModuleUtils.saveAppPackageName(scratchBaseOutputPath,
-                                           ModuleUtils.normalizedBaseModuleName(newDeltaDescriptor.name()));
-        }
-
-        return filePath;
-    }
-
-    /**
      * Reads in the module-info if it exists, or returns null if it doesn't exist.
      *
      * @param name the name to the module-info file

@@ -28,7 +28,7 @@ package io.helidon.inject.api;
  * @see ModuleComponent
  */
 @Contract
-public interface Application extends OptionallyNamed {
+public interface Application {
 
     /**
      * Called by the provider implementation at bootstrapping time to bind all injection plans to each and every service provider.
@@ -37,4 +37,10 @@ public interface Application extends OptionallyNamed {
      */
     void configure(ServiceInjectionPlanBinder binder);
 
+    /**
+     * Name for this instance.
+     *
+     * @return the name associated with this instance
+     */
+    String name();
 }

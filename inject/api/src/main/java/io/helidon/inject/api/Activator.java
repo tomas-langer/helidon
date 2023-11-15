@@ -17,7 +17,8 @@
 package io.helidon.inject.api;
 
 /**
- * Activators are responsible for lifecycle creation and lazy activation of service providers. They are responsible for taking the
+ * Activators are responsible for lifecycle creation and lazy activation of service providers.
+ * They are responsible for taking the
  * {@link ServiceProvider}'s manage service instance from {@link Phase#PENDING}
  * through {@link Phase#POST_CONSTRUCTING} (i.e., including any
  * {@link PostConstructMethod} invocations, etc.), and finally into the
@@ -27,8 +28,6 @@ package io.helidon.inject.api;
  * <ol>
  *  <li>Each {@link ServiceProvider} managing its backing service will have an activator strategy conforming to the DI
  *  specification.</li>
- *  <li>Each services activation is expected to be non-blocking, but may in fact require deferred blocking activities to become
- *  fully ready for runtime operation.</li>
  * </ol>
  * Activation includes:
  * <ol>
@@ -39,9 +38,10 @@ package io.helidon.inject.api;
  *  <li>Responsible to logging to the {@link ActivationLog} - see {@link InjectionServices#activationLog()}.</li>
  * </ol>
  *
- * @see DeActivator
+ * The activator also supports the inverse process of deactivation, where any {@link jakarta.annotation.PreDestroy}
+ * methods may be called, and which moves the service to a terminal {@link io.helidon.inject.api.Phase#DESTROYED phase}.
  */
-public interface Activator {
+public interface Activator<T> {
 
     /**
      * Activate a managed service/provider.
@@ -51,4 +51,20 @@ public interface Activator {
      */
     ActivationResult activate(ActivationRequest activationRequest);
 
+    /**
+     * Deactivate a managed service. This will trigger any {@link jakarta.annotation.PreDestroy} method on the
+     * underlying service type instance. The service will read terminal {@link io.helidon.inject.api.Phase#DESTROYED}
+     * phase, regardless of its activation status.
+     *
+     * @param request deactivation request
+     * @return the result
+     */
+    ActivationResult deactivate(DeActivationRequest request);
+
+    /**
+     * Service provider managed by this activator.
+     *
+     * @return service provider
+     */
+    ServiceProvider<T> serviceProvider();
 }

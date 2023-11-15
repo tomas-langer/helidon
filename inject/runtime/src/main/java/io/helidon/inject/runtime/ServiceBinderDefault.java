@@ -23,20 +23,19 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 
 import io.helidon.common.HelidonServiceLoader;
+import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.ServiceSource;
-import io.helidon.inject.api.Services;
 import io.helidon.inject.spi.ActivatorProvider;
 
 /**
  * The default implementation for {@link ServiceBinder}.
  */
 public class ServiceBinderDefault implements ServiceBinder {
-    static final Map<String, ActivatorProvider> ACTIVATOR_PROVIDERS;
+    private static final Map<String, ActivatorProvider> ACTIVATOR_PROVIDERS;
 
     static {
         Map<String, ActivatorProvider> activators = new HashMap<>();
@@ -78,58 +77,25 @@ public class ServiceBinderDefault implements ServiceBinder {
 
     @Override
     public void bind(ServiceSource<?> serviceDescriptor) {
-        bind(serviceProvider(injectionServices, serviceDescriptor));
+        bind(serviceActivator(injectionServices, serviceDescriptor));
     }
 
     @Override
-    public void bind(ServiceProvider<?> sp) {
+    public void bind(Activator<?> serviceActivator) {
         if (!trusted) {
             DefaultServices.assertPermitsDynamic(injectionServices.config());
         }
 
-        Optional<ServiceProviderBindable<?>> bindableSp = toBindableProvider(sp);
-
-        Services services = injectionServices.services();
-        if (services instanceof DefaultServices && sp instanceof ServiceProviderBindable) {
-            Phase currentPhase = ((DefaultServices) services).currentPhase();
-            if (currentPhase.ordinal() >= Phase.SERVICES_READY.ordinal()) {
-                // deferred binding (e.g., to allow InjectionTestSupport to programmatically register/bind service providers
-                ((ServiceProviderBindable<?>) sp).injectionServices(Optional.of(injectionServices));
-            }
-        }
-
-        serviceRegistry.bind(sp);
-        bindableSp.ifPresent(it -> it.injectionServices(Optional.of(injectionServices)));
+        serviceRegistry.bind(serviceActivator);
     }
 
-    static ServiceProvider<?> serviceProvider(InjectionServices injectionServices, ServiceSource<?> serviceSource) {
+    static Activator<?> serviceActivator(InjectionServices injectionServices, ServiceSource<?> serviceSource) {
         ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceSource.runtimeId());
         if (activatorProvider == null) {
             throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceSource.runtimeId()
                                                     + ", available activator providers: " + ACTIVATOR_PROVIDERS.keySet());
         }
         return activatorProvider.activator(injectionServices, serviceSource);
-    }
-
-    private boolean alreadyBoundToThisInjectionServices(ServiceProviderBindable<?> serviceProvider,
-                                                        InjectionServices injectionServices) {
-        InjectionServices assigned = serviceProvider.injectionServices().orElse(null);
-        return (assigned == injectionServices);
-    }
-
-    /**
-     * Returns the bindable service provider for what is passed if available.
-     *
-     * @param sp the service provider
-     * @return the bindable service provider if available, otherwise empty
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static Optional<ServiceProviderBindable<?>> toBindableProvider(ServiceProvider<?> sp) {
-        Objects.requireNonNull(sp);
-        if (sp instanceof ServiceProviderBindable) {
-            return Optional.of((ServiceProviderBindable<?>) sp);
-        }
-        return (Optional) sp.serviceProviderBindable();
     }
 
     /**
@@ -139,13 +105,14 @@ public class ServiceBinderDefault implements ServiceBinder {
      * @return the root provider of the service provider, falling back to the service provider passed
      */
     public static ServiceProvider<?> toRootProvider(ServiceProvider<?> sp) {
-        Optional<ServiceProviderBindable<?>> bindable = toBindableProvider(sp);
+        Optional<? extends ServiceProviderBindable<?>> bindable = sp.serviceProviderBindable();
         if (bindable.isPresent()) {
-            sp = bindable.get();
+            sp = bindable.get().rootProvider().orElse(sp);
         }
-
-        ServiceProvider<?> rootProvider = ((ServiceProviderBindable<?>) sp).rootProvider().orElse(null);
-        return (rootProvider != null) ? rootProvider : sp;
+        if (sp instanceof ServiceProviderBindable<?> spb) {
+            return spb.rootProvider().orElse(sp);
+        }
+        return sp;
     }
 
 }

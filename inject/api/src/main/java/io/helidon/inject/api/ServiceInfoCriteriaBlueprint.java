@@ -57,13 +57,13 @@ interface ServiceInfoCriteriaBlueprint {
     Set<Qualifier> qualifiers();
 
     /**
-     * The managed services advertised types (i.e., typically its interfaces).
+     * The managed services advertised types (i.e., typically its interfaces, can be through
+     * {@link io.helidon.inject.api.ExternalContracts}).
      *
      * @return the service contracts implemented
-     * @see ExternalContracts
      */
-    @Option.Singular("contractImplemented")
-    Set<TypeName> contractsImplemented();
+    @Option.Singular
+    Set<TypeName> contracts();
 
     /**
      * The optional {@link RunLevel} ascribed to the service.
@@ -80,17 +80,6 @@ interface ServiceInfoCriteriaBlueprint {
     Optional<Double> weight();
 
     /**
-     * The managed services external contracts / interfaces. These should also be contained within
-     * {@link #contractsImplemented()}. External contracts are from other modules other than the module containing
-     * the implementation typically.
-     *
-     * @see ExternalContracts
-     * @return the service external contracts implemented
-     */
-    @Option.Singular("externalContractImplemented")
-    Set<TypeName> externalContractsImplemented();
-
-    /**
      * Determines whether this service info matches the criteria for injection.
      * Matches is a looser form of equality check than {@code equals()}. If a service matches criteria
      * it is generally assumed to be viable for assignability.
@@ -103,7 +92,7 @@ interface ServiceInfoCriteriaBlueprint {
                 && scopeTypeNames().containsAll(criteria.scopeTypeNames())
                 && Qualifiers.matchesQualifiers(qualifiers(), criteria.qualifiers())
                 && matches(runLevel(), criteria.runLevel());
-                //                && matchesWeight(this, criteria) -- intentionally not checking weight here!
+        //                && matchesWeight(this, criteria) -- intentionally not checking weight here!
     }
 
     /**
@@ -121,8 +110,8 @@ interface ServiceInfoCriteriaBlueprint {
 
         boolean matches = matches(descriptor.serviceType(), this.serviceTypeName());
         if (matches && this.serviceTypeName().isEmpty()) {
-            matches = descriptor.contracts().containsAll(this.contractsImplemented())
-                    || this.contractsImplemented().contains(descriptor.serviceType());
+            matches = descriptor.contracts().containsAll(this.contracts())
+                    || this.contracts().contains(descriptor.serviceType());
         }
         return matches
                 && descriptor.scopes().containsAll(this.scopeTypeNames())
@@ -145,7 +134,7 @@ interface ServiceInfoCriteriaBlueprint {
 
         boolean matches = matches(serviceTypeName(), criteria.serviceTypeName());
         if (matches && criteria.serviceTypeName().isEmpty()) {
-            matches = contractsImplemented().containsAll(criteria.contractsImplemented());
+            matches = contracts().containsAll(criteria.contracts());
         }
         return matches;
     }
@@ -174,13 +163,13 @@ interface ServiceInfoCriteriaBlueprint {
         /**
          * The managed services advertised types (i.e., typically its interfaces).
          *
-         * @param builder builder instance
+         * @param builder  builder instance
          * @param contract the service contracts implemented
-         * @see #contractsImplemented()
+         * @see #contracts()
          */
         @Prototype.BuilderMethod
-        static void addContractImplemented(ServiceInfoCriteria.BuilderBase<?, ?> builder, Class<?> contract) {
-            builder.addContractImplemented(TypeName.create(contract));
+        static void addContract(ServiceInfoCriteria.BuilderBase<?, ?> builder, Class<?> contract) {
+            builder.addContract(TypeName.create(contract));
         }
     }
 }
