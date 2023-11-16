@@ -21,11 +21,10 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 
@@ -71,23 +70,16 @@ class OciRegionProviderTest {
         TypeName regionType = TypeName.create(Region.class);
 
         ContextualServiceQuery query = ContextualServiceQuery.create(
-                InjectionPointInfo.builder()
-                        .ipType(regionType)
-                        .ipName("region")
-                        .serviceTypeName(TypeName.create("io.helidon.Whatever"))
-                        .elementKind(ElementKind.METHOD)
-                        .elementName("m")
-                        .elementTypeName(regionType)
-                        .baseIdentity("m")
-                        .id("m1")
+                IpInfo.builder()
+                        .contract(regionType)
+                        .typeName(regionType)
+                        .id(id -> id.serviceType(TypeName.create("io.helidon.Whatever"))
+                                .name("region")
+                                .elementKind(ElementKind.METHOD))
                         .access(AccessModifier.PUBLIC)
                         .addQualifier(Qualifier.createNamed("us-phoenix-1"))
-                        .dependencyToServiceInfo(ServiceInfoCriteria.builder()
-                                                         .addContract(regionType)
-                                                         .addQualifier(Qualifier.createNamed("us-phoenix-1"))
-                                                         .build())
                         .build(),
-                                         false);
+                false);
         assertThat(regionProvider.first(query),
                    optionalValue(equalTo(Region.US_PHOENIX_1)));
     }

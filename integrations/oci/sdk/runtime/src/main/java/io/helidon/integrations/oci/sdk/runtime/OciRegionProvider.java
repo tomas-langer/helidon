@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import io.helidon.common.Weight;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
 
@@ -28,10 +27,9 @@ import com.oracle.bmc.Region;
 import jakarta.inject.Singleton;
 
 import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
-import static io.helidon.integrations.oci.sdk.runtime.OciAuthenticationDetailsProvider.toNamedProfile;
 
 /**
- * Can optionally be used to return a {@link Region} appropriate for the {@link InjectionPointInfo} context.
+ * Can optionally be used to return a {@link Region} appropriate for the {@link io.helidon.inject.api.IpInfo} context.
  */
 @Singleton
 @Weight(DEFAULT_INJECT_WEIGHT)
@@ -51,7 +49,9 @@ class OciRegionProvider implements InjectionPointProvider<Region> {
 
     @Override
     public Optional<Region> first(ContextualServiceQuery query) {
-        String requestedNamedProfile = toNamedProfile(query.injectionPointInfo().orElse(null));
+        String requestedNamedProfile = query.injectionPointInfo()
+                .map(OciAuthenticationDetailsProvider::toNamedProfile)
+                .orElse(null);
         Region region = toRegionFromNamedProfile(requestedNamedProfile);
         if (region == null) {
             region = Region.getRegionFromImds();

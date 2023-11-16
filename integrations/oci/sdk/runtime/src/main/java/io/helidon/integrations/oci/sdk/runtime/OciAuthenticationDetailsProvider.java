@@ -30,8 +30,8 @@ import java.util.function.Supplier;
 import io.helidon.common.Weight;
 import io.helidon.common.types.Annotation;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionPointProvider;
+import io.helidon.inject.api.IpInfo;
 
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
@@ -125,7 +125,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
                                                  + OciConfig.CONFIG_KEY);
     }
 
-    static String toNamedProfile(InjectionPointInfo.Builder ipiBuilder) {
+    static String toNamedProfile(IpInfo.Builder ipiBuilder) {
         Optional<? extends Annotation> named = findFirst(Named.class, ipiBuilder.qualifiers());
         if (named.isEmpty()) {
             return null;
@@ -139,7 +139,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
         return nameProfile.trim();
     }
 
-    static String toNamedProfile(InjectionPointInfo ipi) {
+    static String toNamedProfile(IpInfo ipi) {
         if (ipi == null) {
             return null;
         }
