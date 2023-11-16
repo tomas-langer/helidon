@@ -17,11 +17,17 @@
 package io.helidon.inject.maven.plugin;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
@@ -248,15 +254,17 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     /**
      * Determines the primary package name (which also typically doubles as the application name).
      *
-     * @param optModuleSp the module service provider
-     * @param typeNames   the type names
-     * @param descriptor  the descriptor
-     * @param persistIt   pass true to write it to scratch, so that we can use it in the future for this module
+     * @param optModuleSp            the module service provider
+     * @param typeNames              the type names
+     * @param descriptor             the descriptor
+     * @param sourceRoots            source roots that contain current sources
+     * @param persistIt              pass true to write it to scratch, so that we can use it in the future for this module
      * @return the package name (which also typically doubles as the application name)
      */
     protected String determinePackageName(Optional<ServiceProvider<ModuleComponent>> optModuleSp,
                                           Collection<TypeName> typeNames,
                                           ModuleInfoDescriptor descriptor,
+                                          List<Path> sourceRoots,
                                           boolean persistIt) {
         String packageName = getPackageName();
         if (packageName == null) {
@@ -271,9 +279,19 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
                 packageName = moduleSp.serviceType().packageName();
             } else {
                 if (descriptor == null) {
-                    packageName = toSuggestedGeneratedPackageName(typeNames, "inject");
+                    if (!sourceRoots.isEmpty()) {
+                        packageName = packageFromSourceRoots(sourceRoots);
+                    }
+                    if (packageName == null) {
+                        packageName = toSuggestedGeneratedPackageName(typeNames, "inject");
+                    }
                 } else {
-                    packageName = toSuggestedGeneratedPackageName(typeNames, "inject", descriptor);
+                    if (!(sourceRoots.isEmpty() && descriptor.isUnnamed())) {
+                        packageName = packageFromSourceRoots(sourceRoots);
+                    }
+                    if (packageName == null) {
+                        packageName = toSuggestedGeneratedPackageName(typeNames, "inject", descriptor);
+                    }
                 }
             }
         }
@@ -289,6 +307,61 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
         }
 
         return packageName;
+    }
+
+    private String packageFromSourceRoots(List<Path> sourceRoots) {
+        // we are interested in the shortest path that contains a java file other than module-info.java
+        AtomicReference<String> foundPackage = new AtomicReference<>();
+
+        for (Path sourceRoot : sourceRoots) {
+            try {
+                if (!Files.exists(sourceRoot)) {
+                    continue;
+                }
+                Files.walkFileTree(sourceRoot, new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException {
+                        if (foundPackage.get() == null) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        String packageName = toPackageName(sourceRoot, dir);
+                        if (packageName.isBlank()) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        if (packageName.length() > foundPackage.get().length()) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+                        String fileName = String.valueOf(file.getFileName());
+                        if (fileName.equals("module-info.java")) {
+                            return FileVisitResult.CONTINUE;
+                        }
+                        if (fileName.endsWith(".java")) {
+                            String packageName = toPackageName(sourceRoot, file.getParent());
+                            String current = foundPackage.get();
+                            if (current == null || current.length() > packageName.length())  {
+                                foundPackage.set(packageName);
+                            }
+                            return FileVisitResult.SKIP_SIBLINGS;
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        return foundPackage.get();
+    }
+
+    private String toPackageName(Path root, Path resolved) {
+        Path relativize = root.relativize(resolved);
+        return relativize.toString().replace('\\', '/').replace('/', '.');
     }
 
     /**

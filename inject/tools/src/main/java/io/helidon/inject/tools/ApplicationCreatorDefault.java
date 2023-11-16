@@ -154,8 +154,12 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 .build();
     }
 
-    static String toModuleName(ApplicationCreatorRequest req) {
-        return req.moduleName().orElse(ModuleInfoDescriptor.DEFAULT_MODULE_NAME);
+    static String toApplicationName(ApplicationCreatorRequest req) {
+        if (req.moduleName().isPresent()) {
+            return req.moduleName().get();
+        }
+
+        return "unknown/" + req.codeGen().packageName().orElse("inject");
     }
 
     /**
@@ -254,7 +258,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 .addAnnotation(Annotation.create(Deprecated.class)));
 
         // public String name()
-        String applicationName = toModuleName(req);
+        String applicationName = toApplicationName(req);
         classModel.addMethod(nameMethod -> nameMethod
                 .addAnnotation(Annotations.OVERRIDE)
                 .returnType(io.helidon.common.types.TypeNames.STRING)
