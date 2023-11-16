@@ -54,12 +54,12 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
     private final AtomicBoolean initializing = new AtomicBoolean();
 
     // map of config bean types to their factories (only for used config beans, that have a config driven service associated)
-    private final Map<Class<?>, ConfigBeanFactory<?>> configBeanFactories = new ConcurrentHashMap<>();
+    private final Map<TypeName, ConfigBeanFactory<?>> configBeanFactories = new ConcurrentHashMap<>();
     // map of config bean types to the config driven types
-    private final Map<Class<?>, Set<TypeName>> configDrivenByConfigBean = new ConcurrentHashMap<>();
+    private final Map<TypeName, Set<TypeName>> configDrivenByConfigBean = new ConcurrentHashMap<>();
     private final Map<TypeName, ConfiguredServiceProvider<?, ?>> configDrivenFactories = new ConcurrentHashMap<>();
     // map of config bean types to instances (list may be empty if no instance exists)
-    private final Map<Class<?>, List<NamedInstance<?>>> configBeanInstances = new ConcurrentHashMap<>();
+    private final Map<TypeName, List<NamedInstance<?>>> configBeanInstances = new ConcurrentHashMap<>();
 
     private CountDownLatch initialized = new CountDownLatch(1);
 
@@ -67,7 +67,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
     }
 
     @Override
-    public Map<Class<?>, List<NamedInstance<?>>> allConfigBeans() {
+    public Map<TypeName, List<NamedInstance<?>>> allConfigBeans() {
         return Map.copyOf(configBeanInstances);
     }
 
@@ -110,7 +110,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
                                               + configuredServiceProvider.description());
         }
 
-        Class<?> configBeanType = configuredServiceProvider.configBeanType();
+        TypeName configBeanType = configuredServiceProvider.configBeanType();
         TypeName configDrivenType = configuredServiceProvider.serviceType();
 
         if (LOGGER.isLoggable(System.Logger.Level.DEBUG)) {
@@ -174,7 +174,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
         }
 
         for (ConfigBeanFactory<?> beanFactory : configBeanFactories.values()) {
-            Class<?> configBeanType = beanFactory.configBeanType();
+            TypeName configBeanType = beanFactory.configBeanType();
             List<? extends NamedInstance<?>> configBeans = beanFactory.createConfigBeans(rootConfiguration);
             for (NamedInstance<?> configBean : configBeans) {
                 configBeanInstances.computeIfAbsent(configBeanType, type -> new ArrayList<>())

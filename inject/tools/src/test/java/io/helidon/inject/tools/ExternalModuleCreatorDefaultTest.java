@@ -83,7 +83,7 @@ class ExternalModuleCreatorDefaultTest extends AbstractBaseCreator {
                 .build();
         ExternalModuleCreatorResponse res = externalModuleCreator.prepareToCreateExternalModule(req);
         assertThat(res.toString(), res.success(), is(true));
-        List<String> desc = res.serviceTypeNames().stream().map(TypeName::name).collect(Collectors.toList());
+        List<String> desc = res.serviceTypes().stream().map(TypeName::name).collect(Collectors.toList());
         assertThat(desc, containsInAnyOrder(
                 "org.atinject.tck.auto.Convertible",
                 "org.atinject.tck.auto.DriversSeat",

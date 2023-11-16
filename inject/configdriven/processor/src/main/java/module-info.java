@@ -24,6 +24,7 @@ module io.helidon.inject.configdriven.processor {
     requires io.helidon.common;
     requires io.helidon.common.processor.classmodel;
     requires io.helidon.inject.processor;
+    requires io.helidon.common.codegen;
     requires java.compiler;
 
     exports io.helidon.inject.configdriven.processor;

@@ -17,6 +17,7 @@
 package io.helidon.inject.tools;
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -165,7 +166,9 @@ class JavaC {
         @SuppressWarnings("unchecked")
         private Result(File applicationJavaFile) {
             JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-            StandardJavaFileManager fileManager = compiler.getStandardFileManager(this, null, null);
+            StandardJavaFileManager fileManager = compiler.getStandardFileManager(this,
+                                                                                  null,
+                                                                                  StandardCharsets.UTF_8);
 
             List<String> optionList = new ArrayList<>();
             if (!classpath.isEmpty()) {

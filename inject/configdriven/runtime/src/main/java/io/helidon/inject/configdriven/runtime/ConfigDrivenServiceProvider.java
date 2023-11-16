@@ -60,13 +60,20 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     private final List<ConfigBeanServiceProvider<CB>> managedConfigBeans = new ArrayList<>();
     private final Set<Qualifier> qualifiers;
     private final ServiceSource<T> descriptor;
+    private final Set<TypeName> contracts;
 
+    @SuppressWarnings("unchecked")
     ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceSource<T> descriptor) {
         super(injectionServices, descriptor);
 
-        this.qualifiers = new LinkedHashSet<>(descriptor.qualifiers());
         this.descriptor = descriptor;
-        this.qualifiers.add(WILDCARD_NAMED);
+        Set<Qualifier> qualifiers = new LinkedHashSet<>(descriptor.qualifiers());
+        qualifiers.add(WILDCARD_NAMED);
+        this.qualifiers = Set.copyOf(qualifiers);
+
+        Set<TypeName> contracts = new LinkedHashSet<>(descriptor.contracts());
+        contracts.add(((ConfigBeanFactory<CB>) descriptor).configBeanType());
+        this.contracts = Set.copyOf(contracts);
     }
 
     static <T> Activator<T> create(InjectionServices injectionServices, ServiceSource<T> descriptor) {
@@ -164,7 +171,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         if (managedQualify) {
             List<ServiceProvider<?>> result = new ArrayList<>();
 
-            if (criteria.contracts().contains(TypeName.create(configBeanType()))) {
+            if (criteria.contracts().contains(configBeanType())) {
                 for (ConfigBeanServiceProvider<CB> managedConfigBean : managedConfigBeans) {
                     if (criteria.matches(managedConfigBean)) {
                         result.add(managedConfigBean);
@@ -272,18 +279,6 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     @Override
     public void onPhaseEvent(Event event,
                              Phase phase) {
-        if (phase == Phase.PENDING) {
-            if (registeredWithCbr.compareAndSet(false, true)) {
-                ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
-                if (cbr != null) {
-                    Optional<Qualifier> configuredByQualifier = descriptor().qualifiers().stream()
-                            .filter(q -> q.typeName().name().equals(ConfigDriven.class.getName()))
-                            .findFirst();
-                    assert (configuredByQualifier.isPresent());
-                    cbr.bind(this, configuredByQualifier.get());
-                }
-            }
-        }
 
         if (phase == Phase.POST_BIND_ALL_MODULES) {
             ActivationResult.Builder res = ActivationResult.builder();
@@ -325,16 +320,20 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
 
     @SuppressWarnings("unchecked")
     @Override
-    public Class<CB> configBeanType() {
+    public TypeName configBeanType() {
         // we know this is the case, as otherwise the ID would be wrong
         ConfigBeanFactory<CB> factory = (ConfigBeanFactory<CB>) descriptor();
         return factory.configBeanType();
     }
 
     @Override
-    public String toString() {
-        return "Config Driven Service for: " + descriptor().serviceType()
-                .fqName() + "[" + currentActivationPhase() + "]";
+    public Set<Qualifier> qualifiers() {
+        return qualifiers;
+    }
+
+    @Override
+    public Set<TypeName> contracts() {
+        return contracts;
     }
 
     boolean hasManagedServices() {
@@ -360,6 +359,21 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             stateTransitionStart(res, Phase.PENDING);
         } else {
             stateTransitionStart(res, Phase.CONSTRUCTING);
+        }
+    }
+
+    @Override
+    protected void pending(ActivationRequest req, ActivationResult.Builder res) {
+        super.pending(req, res);
+        if (registeredWithCbr.compareAndSet(false, true)) {
+            ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
+            if (cbr != null) {
+                Optional<Qualifier> configuredByQualifier = descriptor().qualifiers().stream()
+                        .filter(q -> q.typeName().name().equals(ConfigDriven.class.getName()))
+                        .findFirst();
+                assert (configuredByQualifier.isPresent());
+                cbr.bind(this, configuredByQualifier.get());
+            }
         }
     }
 

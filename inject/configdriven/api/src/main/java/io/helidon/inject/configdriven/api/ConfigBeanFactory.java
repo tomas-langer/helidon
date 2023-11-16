@@ -23,6 +23,7 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 import io.helidon.common.config.Config;
+import io.helidon.common.types.TypeName;
 
 /**
  * Used from generated code.
@@ -45,7 +46,7 @@ public interface ConfigBeanFactory<T> {
      *
      * @return bean type
      */
-    Class<T> configBeanType();
+    TypeName configBeanType();
 
     /**
      * Whether the discovered config beans drive activation of their associated service.

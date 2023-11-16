@@ -51,7 +51,6 @@ import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.runtime.VoidServiceProvider;
 import io.helidon.inject.tools.spi.ApplicationCreator;
 
 import jakarta.inject.Provider;
@@ -236,6 +235,8 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         // to this one, so we always load the last one
 
         TypeName applicationType = toApplicationTypeName(req);
+        builder.addServiceType(applicationType);
+
         ClassModel.Builder classModel = ClassModel.builder()
                 .copyright(CopyrightHandler.copyright(CREATOR,
                                                       CREATOR,
@@ -250,6 +251,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 .addAnnotation(Annotation.builder()
                                        .type(Weight.class)
                                        // .putValue("value", req.weight())
+                                       .putValue("value", 100)
                                        .build())
                 .addInterface(TypeNames.APPLICATION);
 
@@ -266,9 +268,16 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         String applicationName = toModuleName(req);
         classModel.addMethod(nameMethod -> nameMethod
                 .addAnnotation(Annotations.OVERRIDE)
-                .typeName(io.helidon.common.types.TypeNames.STRING)
+                .returnType(io.helidon.common.types.TypeNames.STRING)
                 .name("name")
                 .addLine("return \"" + applicationName + "\";"));
+
+
+        Services services = req.services()
+                .orElseGet(() -> {
+                    InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
+                    return injectionServices.services();
+                });
 
         // public void configure(ServiceInjectionPlanBinder binder)
         classModel.addMethod(configureMethod -> configureMethod
@@ -277,7 +286,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 .addParameter(binderParam -> binderParam
                         .name("binder")
                         .type(BINDER_TYPE))
-                .update(it -> createConfigureMethodBody(it, req.serviceTypeNames())));
+                .update(it -> createConfigureMethodBody(services, req.serviceTypeNames(), it)));
 
         StringWriter sw = new StringWriter();
         try {
@@ -343,8 +352,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
                 // type of the result that satisfies the injection point (full generic type)
                 TypeName ipType = id.typeName();
-                // contract of the service that satisfies this injection point
-                TypeName contractType = ipoint.contract();
 
                 InjectionPlan iPlan = injectionPlan(services, depSp, ipoint);
                 List<ServiceProvider<?>> qualified = iPlan.qualifiedProviders();
@@ -463,7 +470,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         List<ServiceProvider<?>> unqualifiedProviders = List.of();
         if (qualifiedProviders.isEmpty()) {
             if (ipoint.id().typeName().isOptional()) {
-                qualifiedProviders = VoidServiceProvider.LIST_INSTANCE;
+                return new InjectionPlan(List.of(), List.of());
             } else {
                 unqualifiedProviders = injectionPointProvidersFor(services, ipoint);
             }
@@ -500,10 +507,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 .build();
     }
 
-    private void createConfigureMethodBody(Method.Builder method, List<TypeName> serviceTypes) {
-        InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
-        Services services = injectionServices.services();
-
+    private void createConfigureMethodBody(Services services, List<TypeName> serviceTypes, Method.Builder method) {
         Map<TypeName, BindingPlan> injectionPlans = new LinkedHashMap<>();
 
         for (TypeName serviceType : serviceTypes) {
@@ -554,7 +558,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                             it.addLine(")");
                         }
                     })
-                    .addLine(".commit()")
+                    .addLine(".commit();")
                     .decreasePadding()
                     .addLine("");
         });

@@ -47,6 +47,7 @@ import io.helidon.inject.tools.ActivatorCreatorCodeGen;
 import io.helidon.inject.tools.ApplicationCreatorCodeGen;
 import io.helidon.inject.tools.ApplicationCreatorConfigOptions;
 import io.helidon.inject.tools.ApplicationCreatorRequest;
+import io.helidon.inject.tools.ApplicationCreatorResponse;
 import io.helidon.inject.tools.CodeGenFiler;
 import io.helidon.inject.tools.CodeGenPaths;
 import io.helidon.inject.tools.CompilerOptions;
@@ -327,26 +328,24 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                     .codeGenPaths(codeGenPaths)
                     .compilerOptions(compilerOptions)
                     .throwIfError(isFailOnError())
-                    .generator(getClass().getName());
+                    .generator(getClass().getName())
+                    .services(services);
             if (MavenPluginUtils.hasValue(moduleName)) {
                 reqBuilder.moduleName(moduleName);
             } else if (!isUnnamedModuleName(moduleInfoModuleName)) {
                 reqBuilder.moduleName(moduleInfoModuleName);
             }
             ApplicationCreatorRequest req = reqBuilder.build();
-            // TODO: fix
-            getLog().warn("Application creation does not work right now");
-            /*
+
             ApplicationCreatorResponse res = creator.createApplication(req);
             if (res.success()) {
-                getLog().debug("processed service type names: " + res.serviceTypeNames());
+                getLog().debug("processed service type names: " + res.serviceTypes());
                 if (getLog().isDebugEnabled()) {
                     getLog().debug("response: " + res);
                 }
             } else {
                 getLog().error("failed to process", res.error().orElse(null));
             }
-             */
         } catch (Exception e) {
             throw new ToolsException("An error occurred creating the Application in " + getClass().getName(), e);
         } finally {

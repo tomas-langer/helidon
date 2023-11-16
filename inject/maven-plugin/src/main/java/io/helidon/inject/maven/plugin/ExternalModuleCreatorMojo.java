@@ -192,7 +192,7 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
                     .build();
             ExternalModuleCreatorResponse res = externalModuleCreator.prepareToCreateExternalModule(request);
             if (res.success()) {
-                getLog().debug("processed service type names: " + res.serviceTypeNames());
+                getLog().debug("processed service type names: " + res.serviceTypes());
                 if (getLog().isDebugEnabled()) {
                     getLog().debug("response: " + res);
                 }
@@ -204,7 +204,7 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
                         activatorCreator.createModuleActivators(activatorCreatorRequest);
                 if (activatorCreatorResponse.success()) {
                     getProject().addCompileSourceRoot(generatedSourceDir);
-                    getLog().info("successfully processed: " + activatorCreatorResponse.serviceTypeNames());
+                    getLog().info("successfully processed: " + activatorCreatorResponse.serviceTypes());
                 } else {
                     getLog().error("failed to process", activatorCreatorResponse.error().orElse(null));
                 }

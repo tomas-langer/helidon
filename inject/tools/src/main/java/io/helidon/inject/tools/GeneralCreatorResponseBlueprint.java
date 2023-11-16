@@ -52,7 +52,8 @@ interface GeneralCreatorResponseBlueprint extends GeneralCodeGenNamesBlueprint {
      *
      * @return the services that were generated
      */
-    List<TypeName> serviceTypeNames();
+    @Option.Singular
+    List<TypeName> serviceTypes();
 
     /**
      * The detailed information generated for those service type involved in code generation.

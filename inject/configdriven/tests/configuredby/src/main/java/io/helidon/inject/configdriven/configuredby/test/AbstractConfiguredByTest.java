@@ -48,6 +48,7 @@ import static io.helidon.inject.testing.InjectionTestingSupport.testableServices
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
@@ -182,7 +183,14 @@ public abstract class AbstractConfiguredByTest {
                 .build();
         list = services.lookupAll(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
-        assertThat("Slave providers expected here since we have default configuration for this service", desc,
+        assertThat("Even though there is a @default, it cannot match named", list, empty());
+
+        criteria = ServiceInfoCriteria.builder()
+                .addContract(ASingletonService.class)
+                .build();
+        list = services.lookupAll(criteria);
+        desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
+        assertThat("Managed providers expected here since we have default configuration for this service", desc,
                    contains("ASingletonService{@default}:ACTIVE"));
     }
 
@@ -200,8 +208,8 @@ public abstract class AbstractConfiguredByTest {
         ConfigBeanRegistry cbr = ConfigBeanRegistry.instance();
         assertThat(cbr.ready(), is(true));
 
-        Map<Class<?>, List<NamedInstance<?>>> beansByType = cbr.allConfigBeans();
-        List<NamedInstance<?>> namedInstances = beansByType.get(FakeServerConfig.class);
+        Map<TypeName, List<NamedInstance<?>>> beansByType = cbr.allConfigBeans();
+        List<NamedInstance<?>> namedInstances = beansByType.get(TypeName.create(FakeServerConfig.class));
 
         assertThat("We should have instances created for FakeServerConfig", namedInstances, notNullValue());
 

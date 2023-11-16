@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.helidon.common.testing.junit5.OptionalMatcher;
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.yaml.YamlConfigParser;
@@ -79,9 +80,9 @@ class NamedConfiguredByTest {
     @Test
     void namedConfiguredServices() {
         ConfigBeanRegistry cbr = ConfigBeanRegistry.instance();
-        Map<Class<?>, List<NamedInstance<?>>> allConfigBeans = cbr.allConfigBeans();
+        Map<TypeName, List<NamedInstance<?>>> allConfigBeans = cbr.allConfigBeans();
 
-        List<NamedInstance<?>> namedInstances = allConfigBeans.get(AsyncConfig.class);
+        List<NamedInstance<?>> namedInstances = allConfigBeans.get(TypeName.create(AsyncConfig.class));
 
         assertThat(namedInstances.stream().map(NamedInstance::name).toList(),
                    containsInAnyOrder("first", "second"));

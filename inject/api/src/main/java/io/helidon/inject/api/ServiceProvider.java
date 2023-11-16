@@ -134,4 +134,9 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
     default Set<TypeName> scopes() {
         return descriptor().scopes();
     }
+
+    @Override
+    default TypeName descriptorType() {
+        return descriptor().descriptorType();
+    }
 }

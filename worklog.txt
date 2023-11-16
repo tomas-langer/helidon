@@ -1,3 +1,8 @@
+        binder.bindTo(FakeWebServer__ServiceDescriptor.INSTANCE)
+            .bindVoid(FakeWebServer__ServiceDescriptor.IP_PARAM_0) // config bean
+            .bind(FakeWebServer__ServiceDescriptor.IP_PARAM_1, VoidServiceProvider.VoidDescriptor.INSTANCE) // Optional.empty()
+            .commit();
+
 InjectServiceActivator - gather dependencies
 InjectServiceProvider - requires implementation
 
@@ -36,3 +41,5 @@ ActivationResult DeActivator.deactivate(DeActivationRequest)
     -
 
 ServiceProvider
+
+io.helidon.inject.maven.plugin.AbstractCreatorMojo.determinePackageName - always create io.helidon.config

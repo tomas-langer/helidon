@@ -10,8 +10,8 @@ class ConfigBeanServiceDescriptor<CB> implements ServiceDescriptor<CB> {
     private final TypeName beanType;
     private final Set<Qualifier> qualifiers;
 
-    ConfigBeanServiceDescriptor(Class<?> beanType, String name) {
-        this.beanType = TypeName.create(beanType);
+    ConfigBeanServiceDescriptor(TypeName beanType, String name) {
+        this.beanType = beanType;
         this.qualifiers = Set.of(Qualifier.createNamed(name));
     }
 

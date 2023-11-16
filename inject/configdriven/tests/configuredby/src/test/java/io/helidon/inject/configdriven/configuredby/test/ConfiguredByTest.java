@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.MapConfigSource;
@@ -74,12 +75,12 @@ class ConfiguredByTest extends AbstractConfiguredByTest {
         assertThat(cbr.ready(),
                    is(true));
 
-        Map<Class<?>, List<NamedInstance<?>>> beans = cbr.allConfigBeans();
-        assertThat(beans, hasKey(SomeServiceConfig.class));
-        assertThat(beans, hasKey(ASingletonConfigBean.class));
+        Map<TypeName, List<NamedInstance<?>>> beans = cbr.allConfigBeans();
+        assertThat(beans, hasKey(TypeName.create(SomeServiceConfig.class)));
+        assertThat(beans, hasKey(TypeName.create(ASingletonConfigBean.class)));
 
-        assertHasNamed(beans.get(SomeServiceConfig.class), "@default");
-        assertHasNamed(beans.get(ASingletonConfigBean.class), "@default");
+        assertHasNamed(beans.get(TypeName.create(SomeServiceConfig.class)), "@default");
+        assertHasNamed(beans.get(TypeName.create(ASingletonConfigBean.class)), "@default");
     }
 
     private void assertHasNamed(List<NamedInstance<?>> namedInstances, String... expectedNames) {

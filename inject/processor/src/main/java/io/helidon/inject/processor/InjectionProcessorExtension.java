@@ -581,7 +581,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                         .append(param.constantName())
                         .append("\")")
                         .append(".contract(")
-                        .append(genericTypes.get(param.type().resolvedName()).constantName()).append(")");
+                        .append(genericTypes.get(param.contract().fqName()).constantName()).append(")");
 
                 if (param.access() != AccessModifier.PACKAGE_PRIVATE) {
                     defaultContent.append(".access(@io.helidon.common.types.AccessModifier@.")
@@ -825,6 +825,9 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         for (ParamDefinition param : params) {
             result.computeIfAbsent(param.type().resolvedName(),
+                                   type -> new GenericTypeDeclaration("TYPE_" + counter.getAndIncrement(),
+                                                                      param.type()));
+            result.computeIfAbsent(param.contract().fqName(),
                                    type -> new GenericTypeDeclaration("TYPE_" + counter.getAndIncrement(),
                                                                       param.type()));
         }

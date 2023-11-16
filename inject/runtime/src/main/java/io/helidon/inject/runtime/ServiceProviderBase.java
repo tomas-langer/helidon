@@ -247,6 +247,11 @@ public abstract class ServiceProviderBase<T>
                 .targetActivationPhase(targetPhase)
                 .finishingStatus(ActivationStatus.SUCCESS);
 
+        if (targetPhase.ordinal() >= Phase.PENDING.ordinal() && initialPhase == Phase.INIT) {
+            pending(req, res);
+        }
+        finishingPhase = res.finishingActivationPhase().orElse(finishingPhase);
+
         if (targetPhase.ordinal() > Phase.ACTIVATION_STARTING.ordinal()) {
             if (Phase.INIT == startingPhase
                     || Phase.PENDING == startingPhase
@@ -434,6 +439,10 @@ public abstract class ServiceProviderBase<T>
 
     private void startLifecycle(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.ACTIVATION_STARTING);
+    }
+
+    protected void pending(ActivationRequest req, ActivationResult.Builder res) {
+        stateTransitionStart(res, Phase.PENDING);
     }
 
     private void gatherDependencies(ActivationRequest req, ActivationResult.Builder res) {

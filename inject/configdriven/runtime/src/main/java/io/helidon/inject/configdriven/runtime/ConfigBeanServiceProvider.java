@@ -2,6 +2,7 @@ package io.helidon.inject.configdriven.runtime;
 
 import java.util.Optional;
 
+import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceDescriptor;
@@ -12,7 +13,7 @@ class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
     private final CB instance;
     private final String id;
 
-    ConfigBeanServiceProvider(Class<?> beanType, CB instance, String id) {
+    ConfigBeanServiceProvider(TypeName beanType, CB instance, String id) {
         this.instance = instance;
         this.id = id;
         this.serviceDescriptor = new ConfigBeanServiceDescriptor<>(beanType, id);

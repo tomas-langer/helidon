@@ -32,6 +32,7 @@ module io.helidon.inject.tools {
     requires transitive io.helidon.common.types;
     requires transitive io.helidon.inject.runtime;
     requires io.helidon.common.processor.classmodel;
+    requires io.helidon.common.processor.helidon.copyright;
 
     uses io.helidon.inject.tools.spi.ApplicationCreator;
     uses io.helidon.inject.tools.spi.ExternalModuleCreator;

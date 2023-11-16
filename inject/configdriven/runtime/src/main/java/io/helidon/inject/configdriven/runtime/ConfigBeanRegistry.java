@@ -19,6 +19,7 @@ package io.helidon.inject.configdriven.runtime;
 import java.util.List;
 import java.util.Map;
 
+import io.helidon.common.types.TypeName;
 import io.helidon.inject.configdriven.api.ConfigBean;
 import io.helidon.inject.configdriven.api.NamedInstance;
 
@@ -49,5 +50,5 @@ public interface ConfigBeanRegistry {
      *
      * @return map of all configuration beans, key is the config bean class, values are named instances
      */
-    Map<Class<?>, List<NamedInstance<?>>> allConfigBeans();
+    Map<TypeName, List<NamedInstance<?>>> allConfigBeans();
 }

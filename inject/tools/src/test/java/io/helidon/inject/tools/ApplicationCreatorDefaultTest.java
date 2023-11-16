@@ -94,7 +94,7 @@ class ApplicationCreatorDefaultTest extends AbstractBaseCreator {
         ApplicationCreatorResponse res = creator.createApplication(req);
         assertThat(res.error(), optionalEmpty());
         assertThat(res.success(), is(true));
-        assertThat(res.serviceTypeNames().stream().map(TypeName::name).collect(Collectors.toList()),
+        assertThat(res.serviceTypes().stream().map(TypeName::name).collect(Collectors.toList()),
                    contains("inject.TestHelidonInjection__Application"));
         assertThat(res.moduleName(), optionalEmpty());
     }

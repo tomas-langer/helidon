@@ -259,6 +259,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                                           .targetPhase(Phase.PENDING)
                                           .throwIfError(false)
                                           .build());
+
         ServiceProvider<?> serviceProvider = serviceActivator.serviceProvider();
         this.providersToActivators.put(serviceProvider, serviceActivator);
 
@@ -350,7 +351,8 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
             if (hasOneContractInCriteria) {
                 Set<ServiceProvider<?>> subsetOfMatches = servicesByContract.get(theOnlyContractRequested);
                 if (subsetOfMatches != null) {
-                    result = subsetOfMatches.stream().parallel()
+                    result = subsetOfMatches.stream()
+                            .parallel()
                             .filter(criteria::matches)
                             .limit(limit)
                             .toList();

@@ -2,9 +2,11 @@ package io.helidon.inject.configdriven.processor;
 
 import java.util.Optional;
 
+import io.helidon.common.codegen.TypesCodeGen;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.processor.classmodel.ClassModel;
 import io.helidon.common.processor.classmodel.Method;
+import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -64,15 +66,19 @@ class ConfigDrivenProcessorExtension implements HelidonProcessorExtension {
             classModel.addInterface(TypeName.builder(CONFIG_BEAN_FACTORY)
                                             .addTypeArgument(configBeanType)
                                             .build());
+            classModel.addField(cbType -> cbType.isFinal(true)
+                    .isStatic(true)
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .name("CB_TYPE")
+                    .type(TypeNames.TYPE_NAME)
+                    .defaultValueContent(TypesCodeGen.toCreate(configBeanType, false)));
+
             // Class<ConfigBeanType> configBeanType()
             classModel.addMethod(beanTypeMethod -> beanTypeMethod
                     .name("configBeanType")
                     .addAnnotation(Annotations.OVERRIDE)
-                    .returnType(TypeName.builder()
-                                        .type(Class.class)
-                                        .addTypeArgument(configBeanType)
-                                        .build())
-                    .addLine("return @" + configBeanType.fqName() + "@.class;"));
+                    .returnType(TypeNames.TYPE_NAME)
+                    .addLine("return CB_TYPE;"));
             // List<NamedInstance<T>> createConfigBeans(Config config)
             classModel.addMethod(createBeansMethod -> createBeansMethod
                     .name("createConfigBeans")

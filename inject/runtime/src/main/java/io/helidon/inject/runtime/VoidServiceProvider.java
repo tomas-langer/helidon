@@ -33,13 +33,11 @@ import jakarta.inject.Singleton;
  */
 public class VoidServiceProvider extends DescribedServiceProvider<Void> {
     static final TypeName TYPE_NAME = TypeName.create(Void.class);
-    public static final VoidServiceProvider INSTANCE = new VoidServiceProvider() { };
+    public static final VoidServiceProvider INSTANCE = new VoidServiceProvider();
     public static final List<ServiceProvider<?>> LIST_INSTANCE = List.of(INSTANCE);
 
-    private static final ServiceDescriptor<Void> DESCRIPTOR = new VoidDescriptor();
-
     private VoidServiceProvider() {
-        super(DESCRIPTOR);
+        super(new VoidDescriptor());
     }
 
     @Override

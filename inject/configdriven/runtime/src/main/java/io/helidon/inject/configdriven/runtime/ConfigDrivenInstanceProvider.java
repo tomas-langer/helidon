@@ -2,6 +2,7 @@ package io.helidon.inject.configdriven.runtime;
 
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import io.helidon.common.types.TypeName;
@@ -9,6 +10,7 @@ import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.IpInfo;
+import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
@@ -25,6 +27,7 @@ class ConfigDrivenInstanceProvider<T, CB>
     private final String instanceId;
     private final ConfigDrivenServiceProvider<T, CB> root;
     private final TypeName configBeanType;
+    private final Set<Qualifier> qualifiers;
 
     ConfigDrivenInstanceProvider(InjectionServices injectionServices,
                                  ServiceSource<T> descriptor,
@@ -33,10 +36,11 @@ class ConfigDrivenInstanceProvider<T, CB>
                                  CB instance) {
         super(injectionServices, descriptor);
 
-        this.configBeanType = TypeName.create(root.configBeanType());
+        this.configBeanType = root.configBeanType();
         this.beanInstance = instance;
         this.instanceId = name;
         this.root = root;
+        this.qualifiers = Set.of(Qualifier.createNamed(name));
     }
 
     @Override
@@ -64,7 +68,7 @@ class ConfigDrivenInstanceProvider<T, CB>
             return Optional.empty();    // we are being injected with neither a config bean nor a service that matches ourselves
         }
 
-        // if we are here then we are asking for a config bean for ourselves, or a slave/managed instance
+        // if we are here then we are asking for a config bean for ourselves, or a managed instance
         if (!dep.qualifiers().isEmpty()) {
             throw new ServiceProviderInjectionException("cannot use qualifiers while injecting config beans for self", this);
         }
@@ -74,7 +78,8 @@ class ConfigDrivenInstanceProvider<T, CB>
 
     @Override
     public String toString() {
-        return "Config Driven Instance for: " + descriptor().serviceType().fqName() + "[" + currentActivationPhase() + "]";
+        return "Config Driven Instance for: " + descriptor().serviceType().fqName() + "{" + instanceId
+                + "}[" + currentActivationPhase() + "]";
     }
 
     @Override
@@ -94,6 +99,11 @@ class ConfigDrivenInstanceProvider<T, CB>
         }
 
         super.prepareDependency(services, injectionPlan, dependency);
+    }
+
+    @Override
+    public Set<Qualifier> qualifiers() {
+        return qualifiers;
     }
 
     void activate() {
