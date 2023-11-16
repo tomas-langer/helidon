@@ -49,7 +49,7 @@ interface DependencyInfoBlueprint {
      * @return the set of dependencies
      */
     @Option.Singular("injectionPointDependency")
-    Set<InjectionPointInfo> injectionPointDependencies();
+    Set<IpInfo> injectionPointDependencies();
 
     /**
      * The {@link ServiceProvider} that this dependency is optional resolved and bound to. All dependencies

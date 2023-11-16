@@ -80,14 +80,6 @@ public final class TypeNames {
      */
     public static final String INJECTION_POINT_PROVIDER = "io.helidon.inject.api.InjectionPointProvider";
     /**
-     * Injection {@value INJECTION_POINT_PROVIDER} type.
-     */
-    public static final TypeName INJECTION_POINT_PROVIDER_TYPE = TypeName.create(INJECTION_POINT_PROVIDER);
-    /**
-     * Injection service provider type name.
-     */
-    public static final String INJECTION_SERVICE_PROVIDER = "io.helidon.inject.api.ServiceProvider";
-    /**
      * Injection service provider type.
      */
     public static final TypeName SERVICE_PROVIDER_TYPE = TypeName.create("io.helidon.inject.api.ServiceProvider");
@@ -135,10 +127,6 @@ public final class TypeNames {
      * Jakarta {@value} type.
      */
     public static final String JAKARTA_PROVIDER = "jakarta.inject.Provider";
-    /**
-     * Jakarta {@value #JAKARTA_PROVIDER} type.
-     */
-    public static final TypeName JAKARTA_PROVIDER_TYPE = TypeName.create(JAKARTA_PROVIDER);
     /**
      * Jakarta {@value} annotation.
      */
@@ -275,10 +263,6 @@ public final class TypeNames {
      * Jakarta legacy {@value} type.
      */
     public static final String JAVAX_PROVIDER = "javax.inject.Provider";
-    /**
-     * Jakarta legacy {@value JAVAX_PROVIDER} type.
-     */
-    public static final TypeName JAVAX_PROVIDER_TYPE = TypeName.create(JAVAX_PROVIDER);
     public static final TypeName SERVICE_DESCRIPTOR_TYPE = TypeName.create("io.helidon.inject.api.ServiceDescriptor");
     public static final TypeName SERVICE_SOURCE_TYPE = TypeName.create("io.helidon.inject.api.ServiceSource");
     public static final TypeName INJECTION_CONTEXT = TypeName.create("io.helidon.inject.api.InjectionContext");

@@ -60,7 +60,7 @@ public interface ServiceDescriptor<T> extends Weighted {
      *
      * @return required dependencies
      */
-    default List<ServiceDependencies> dependencies() {
+    default List<IpInfo> dependencies() {
         return List.of();
     }
 

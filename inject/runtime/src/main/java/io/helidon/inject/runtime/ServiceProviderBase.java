@@ -23,7 +23,6 @@ import io.helidon.inject.api.InterceptionMetadata;
 import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.ServiceDependencies;
 import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
@@ -204,6 +203,7 @@ public abstract class ServiceProviderBase<T>
             lock.unlock();
         }
     }
+
     protected void instance(T instance) {
         Lock lock = rwLock.writeLock();
         try {
@@ -353,7 +353,7 @@ public abstract class ServiceProviderBase<T>
 
         // todo: if empty, try to use injection point provider
 
-        TypeName ipType = id.typeName();
+        TypeName ipType = dependency.typeName();
 
         // now there are a few options - optional, list, and single instance
         if (discovered.isEmpty()) {
@@ -430,6 +430,10 @@ public abstract class ServiceProviderBase<T>
         this.currentPhase = phase;
     }
 
+    protected void pending(ActivationRequest req, ActivationResult.Builder res) {
+        stateTransitionStart(res, Phase.PENDING);
+    }
+
     private void setActive(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.ACTIVE);
     }
@@ -442,32 +446,23 @@ public abstract class ServiceProviderBase<T>
         stateTransitionStart(res, Phase.ACTIVATION_STARTING);
     }
 
-    protected void pending(ActivationRequest req, ActivationResult.Builder res) {
-        stateTransitionStart(res, Phase.PENDING);
-    }
-
     private void gatherDependencies(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.GATHERING_DEPENDENCIES);
 
-        List<ServiceDependencies> servicesDeps = dependencies();
+        List<IpInfo> servicesDeps = dependencies();
 
-        Map<TypeName, Map<IpId<?>, Supplier<?>>> injectionPlans = new HashMap<>();
-
-        for (ServiceDependencies service : servicesDeps) {
-            List<IpInfo> dependencies = service.dependencies();
-
-            if (dependencies.isEmpty()) {
-                continue;
-            }
-            Map<IpId<?>, Supplier<?>> injectionPlan = new HashMap<>();
-            Services services = injectionServices.services();
-            for (IpInfo dependency : dependencies) {
-                prepareDependency(services, injectionPlan, dependency);
-            }
-            injectionPlans.put(service.serviceType(), injectionPlan);
+        if (servicesDeps.isEmpty()) {
+            return;
         }
 
-        this.injectionContext = InjectionContext.create(injectionPlans);
+        Map<IpId<?>, Supplier<?>> injectionPlan = new HashMap<>();
+
+        Services services = injectionServices.services();
+        for (IpInfo ipInfo : servicesDeps) {
+            prepareDependency(services, injectionPlan, ipInfo);
+        }
+
+        this.injectionContext = InjectionContext.create(injectionPlan);
     }
 
     private void preDestroy(DeActivationRequest req, ActivationResult.Builder res) {

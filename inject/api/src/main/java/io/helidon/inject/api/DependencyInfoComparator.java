@@ -40,17 +40,18 @@ public class DependencyInfoComparator implements java.util.Comparator<Dependency
     @Override
     public int compare(DependencyInfo o1,
                        DependencyInfo o2) {
-        InjectionPointInfo ipi1 = o1.injectionPointDependencies().iterator().next();
-        InjectionPointInfo ipi2 = o2.injectionPointDependencies().iterator().next();
+        IpId<?> ipi1 = o1.injectionPointDependencies().iterator().next().id();
+        IpId<?> ipi2 = o2.injectionPointDependencies().iterator().next().id();
 
-        java.util.Comparator<InjectionPointInfo> idComp = java.util.Comparator.comparing(InjectionPointInfo::baseIdentity);
-        java.util.Comparator<InjectionPointInfo> posComp =
-                java.util.Comparator.comparing(DependencyInfoComparator::elementOffsetOf);
 
-        return idComp.thenComparing(posComp).compare(ipi1, ipi2);
-    }
+        java.util.Comparator<IpId<?>> idComp = (o11, o21) -> {
+            int result = Comparator.<IpId<?>>comparingInt(it -> it.elementKind().ordinal()).compare(o11, o21);
+            if (result != 0) {
+                return result;
+            }
+            return o11.name().compareTo(o21.name());
+        };
 
-    private static int elementOffsetOf(InjectionPointInfo ipi) {
-        return ipi.elementOffset().orElse(0);
+        return idComp.compare(ipi1, ipi2);
     }
 }

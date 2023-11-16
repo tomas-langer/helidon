@@ -65,7 +65,6 @@ public class BladeProvider implements InjectionPointProvider<AbstractBlade> {
     @Override
     public List<AbstractBlade> list(ContextualServiceQuery query) {
         Objects.requireNonNull(query);
-        assert (query.injectionPointInfo().orElseThrow().listWrapped()) : query;
         ServiceInfoCriteria criteria = query.serviceInfoCriteria();
 
         List<AbstractBlade> result = new ArrayList<>();

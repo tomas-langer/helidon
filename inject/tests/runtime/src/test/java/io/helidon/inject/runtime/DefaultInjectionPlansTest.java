@@ -83,6 +83,11 @@ class DefaultInjectionPlansTest {
 
     static class FakeModuleComponent implements ModuleComponent {
         @Override
+        public String name() {
+            return "fake";
+        }
+
+        @Override
         public void configure(ServiceBinder binder) {
             binder.bind(sp1);
             binder.bind(sp2);

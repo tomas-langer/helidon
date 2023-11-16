@@ -16,8 +16,6 @@
 
 package io.helidon.inject.runtime.testsubjects;
 
-import java.util.Optional;
-
 import io.helidon.common.Generated;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceBinder;
@@ -36,8 +34,8 @@ public final class HelloInjection__Module implements ModuleComponent {
     }
 
     @Override
-    public Optional<String> named() {
-        return Optional.of(NAME);
+    public String name() {
+        return NAME;
     }
 
     @Override

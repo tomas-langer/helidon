@@ -41,7 +41,6 @@ import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.Resettable;
-import io.helidon.inject.runtime.Dependencies;
 
 import static io.helidon.inject.tools.ModuleUtils.APPLICATION_MODULE_INFO;
 import static io.helidon.inject.tools.ModuleUtils.MODULE_COMPONENT_MODULE_INFO;
@@ -517,13 +516,13 @@ public class ServicesToProcess implements Resettable {
      * @param dependencies the dependencies
      */
     public void addDependencies(DependenciesInfo dependencies) {
-        TypeName serviceTypeName = dependencies.fromServiceTypeName().orElseThrow();
-        addServiceTypeName(serviceTypeName);
-        DependenciesInfo prevDependencies = servicesToDependencies.get(serviceTypeName);
-        if (prevDependencies != null) {
-            dependencies = Dependencies.combine(prevDependencies, dependencies);
-        }
-        servicesToDependencies.put(serviceTypeName, dependencies);
+//        TypeName serviceTypeName = dependencies.fromServiceTypeName().orElseThrow();
+//        addServiceTypeName(serviceTypeName);
+//        DependenciesInfo prevDependencies = servicesToDependencies.get(serviceTypeName);
+//        if (prevDependencies != null) {
+//            dependencies = Dependencies.combine(prevDependencies, dependencies);
+//        }
+//        servicesToDependencies.put(serviceTypeName, dependencies);
     }
 
     /**

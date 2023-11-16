@@ -116,7 +116,7 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
     }
 
     @Override
-    default List<ServiceDependencies> dependencies() {
+    default List<IpInfo> dependencies() {
         return descriptor().dependencies();
     }
 

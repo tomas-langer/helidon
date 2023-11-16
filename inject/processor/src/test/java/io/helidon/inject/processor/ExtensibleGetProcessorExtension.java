@@ -23,6 +23,7 @@ import io.helidon.common.processor.classmodel.ClassModel;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.processor.spi.HelidonProcessorExtension;
 import io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider;
 import io.helidon.inject.tools.TypeNames;
@@ -90,7 +91,7 @@ public class ExtensibleGetProcessorExtension implements HelidonProcessorExtensio
     }
 
     private TypeName provider(TypeName processedType) {
-        return TypeName.builder(TypeNames.JAKARTA_PROVIDER_TYPE)
+        return TypeName.builder(InjectTypes.JAKARTA_PROVIDER)
                 .addTypeArgument(processedType)
                 .build();
     }

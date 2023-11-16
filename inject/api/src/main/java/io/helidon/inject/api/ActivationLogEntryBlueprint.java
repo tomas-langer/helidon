@@ -27,7 +27,6 @@ import io.helidon.builder.api.Prototype;
  *
  * @see ActivationLog
  * @see Activator
- * @see DeActivator
  */
 @Prototype.Blueprint(decorator = ActivationLogEntryBlueprint.BuilderDecorator.class)
 interface ActivationLogEntryBlueprint {
@@ -65,7 +64,7 @@ interface ActivationLogEntryBlueprint {
      *
      * @return the injection point
      */
-    Optional<InjectionPointInfo> injectionPoint();
+    Optional<IpInfo> injectionPoint();
 
     /**
      * The time this event was generated.

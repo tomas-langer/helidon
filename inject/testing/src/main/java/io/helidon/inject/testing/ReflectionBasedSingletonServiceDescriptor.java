@@ -24,8 +24,8 @@ import java.util.Set;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InterceptionMetadata;
+import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceDependencies;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceSource;
 
@@ -97,7 +97,7 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements ServiceSour
     }
 
     @Override
-    public List<ServiceDependencies> dependencies() {
+    public List<IpInfo> dependencies() {
         return serviceInfo.dependencies();
     }
 

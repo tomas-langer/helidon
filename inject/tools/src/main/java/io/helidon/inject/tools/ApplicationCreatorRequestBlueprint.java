@@ -19,7 +19,7 @@ package io.helidon.inject.tools;
 import java.util.Optional;
 
 import io.helidon.builder.api.Prototype;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.api.InjectionServices;
 
 /**
  * Defines the request that will be passed to the {@link io.helidon.inject.tools.spi.ApplicationCreator} in order to produce the
@@ -49,6 +49,6 @@ interface ApplicationCreatorRequestBlueprint extends GeneralCreatorRequestBluepr
      */
     Optional<Messager> messager();
 
-    Optional<Services> services();
+    Optional<InjectionServices> services();
 
 }

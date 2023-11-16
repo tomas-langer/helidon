@@ -1,15 +1,22 @@
 package io.helidon.inject.api;
 
-import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 
 /**
- * Unique identification of an injection point within a type.
+ * Unique identification of an injection point.
+ *
+ * @param <T> type of the injection point, to support easy assignment in service sources
  */
 @Prototype.Blueprint
 interface IpIdBlueprint<T> {
+    /**
+     * Type name of the service that contains this injection point.
+     *
+     * @return the service declaring this injection point
+     */
+    TypeName serviceType();
     /**
      * Kind of element we inject into (constructor, field, method).
      *
@@ -23,12 +30,4 @@ interface IpIdBlueprint<T> {
      * @return unique name of the field or parameter
      */
     String name();
-
-    /**
-     * Type of the injection point (exact parameter type with all generics).
-     *
-     * @return type of the injection point as {@link io.helidon.common.types.TypeName}
-     */
-    @Option.Redundant
-    TypeName typeName();
 }

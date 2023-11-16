@@ -29,12 +29,8 @@ import java.util.Set;
 
 import io.helidon.common.LazyValue;
 import io.helidon.common.Weight;
-import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.DependenciesInfo;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.runtime.Dependencies;
 import io.helidon.inject.tools.spi.ExternalModuleCreator;
 
 import io.github.classgraph.ClassInfo;
@@ -42,7 +38,6 @@ import io.github.classgraph.ClassInfoList;
 import io.github.classgraph.ClassMemberInfo;
 import io.github.classgraph.FieldInfo;
 import io.github.classgraph.MethodInfo;
-import io.github.classgraph.MethodParameterInfo;
 import io.github.classgraph.ModuleInfo;
 import io.github.classgraph.PackageInfo;
 import io.github.classgraph.ScanResult;
@@ -297,68 +292,68 @@ public class ExternalModuleCreatorDefault extends AbstractCreator implements Ext
 
     private void processDependencies(ClassInfo classInfo,
                                      TypeName serviceTypeName) {
-        Dependencies.BuilderContinuation continuation = Dependencies.builder(serviceTypeName);
-        for (FieldInfo fieldInfo : classInfo.getFieldInfo()) {
-            continuation = continuationProcess(serviceTypeName, continuation, fieldInfo);
-        }
-
-        for (MethodInfo ctorInfo : classInfo.getDeclaredConstructorInfo()) {
-            continuation = continuationProcess(serviceTypeName,
-                                               continuation, ElementKind.CONSTRUCTOR, ctorInfo);
-        }
-
-        for (MethodInfo methodInfo : classInfo.getDeclaredMethodInfo()) {
-            continuation = continuationProcess(serviceTypeName,
-                                               continuation, ElementKind.METHOD, methodInfo);
-        }
-
-        DependenciesInfo dependencies = continuation.build();
-        services.addDependencies(dependencies);
+//        Dependencies.BuilderContinuation continuation = Dependencies.builder(serviceTypeName);
+//        for (FieldInfo fieldInfo : classInfo.getFieldInfo()) {
+//            continuation = continuationProcess(serviceTypeName, continuation, fieldInfo);
+//        }
+//
+//        for (MethodInfo ctorInfo : classInfo.getDeclaredConstructorInfo()) {
+//            continuation = continuationProcess(serviceTypeName,
+//                                               continuation, ElementKind.CONSTRUCTOR, ctorInfo);
+//        }
+//
+//        for (MethodInfo methodInfo : classInfo.getDeclaredMethodInfo()) {
+//            continuation = continuationProcess(serviceTypeName,
+//                                               continuation, ElementKind.METHOD, methodInfo);
+//        }
+//
+//        DependenciesInfo dependencies = continuation.build();
+//        services.addDependencies(dependencies);
     }
 
-    private Dependencies.BuilderContinuation continuationProcess(TypeName serviceTypeName,
-                                                                 Dependencies.BuilderContinuation continuation,
-                                                                 FieldInfo fieldInfo) {
-        if (TypeTools.hasAnnotation(fieldInfo, TypeNames.JAKARTA_INJECT)) {
-            if (!InjectionSupported.isSupportedInjectionPoint(logger(),
-                          serviceTypeName, fieldInfo.toString(),
-                          TypeTools.isPrivate(fieldInfo.getModifiers()), fieldInfo.isStatic())) {
-                return continuation;
-            }
+//    private Dependencies.BuilderContinuation continuationProcess(TypeName serviceTypeName,
+//                                                                 Dependencies.BuilderContinuation continuation,
+//                                                                 FieldInfo fieldInfo) {
+//        if (TypeTools.hasAnnotation(fieldInfo, TypeNames.JAKARTA_INJECT)) {
+//            if (!InjectionSupported.isSupportedInjectionPoint(logger(),
+//                          serviceTypeName, fieldInfo.toString(),
+//                          TypeTools.isPrivate(fieldInfo.getModifiers()), fieldInfo.isStatic())) {
+//                return continuation;
+//            }
+//
+//            InjectionPointInfo ipInfo = TypeTools.createInjectionPointInfo(serviceTypeName, fieldInfo);
+//            continuation = continuation.add(ipInfo);
+//        }
+//
+//        return continuation;
+//    }
 
-            InjectionPointInfo ipInfo = TypeTools.createInjectionPointInfo(serviceTypeName, fieldInfo);
-            continuation = continuation.add(ipInfo);
-        }
-
-        return continuation;
-    }
-
-    private Dependencies.BuilderContinuation continuationProcess(TypeName serviceTypeName,
-                                                                 Dependencies.BuilderContinuation continuation,
-                                                                 ElementKind kind,
-                                                                 MethodInfo methodInfo) {
-        if (TypeTools.hasAnnotation(methodInfo, TypeNames.JAKARTA_INJECT)) {
-            if (!isInjectionSupported(serviceTypeName, methodInfo, logger())) {
-                return continuation;
-            }
-
-            MethodParameterInfo[] params = methodInfo.getParameterInfo();
-            if (params.length == 0) {
-                continuation = continuation.add(methodInfo.getName(), Void.class, kind,
-                                                TypeTools.toAccess(methodInfo.getModifiers()))
-                        .ipName(methodInfo.getName())
-                        .ipType(TypeName.create(Void.class))
-                        .staticDeclaration(TypeTools.isStatic(methodInfo.getModifiers()));
-            } else {
-                int count = 0;
-                for (MethodParameterInfo ignore : params) {
-                    count++;
-                    InjectionPointInfo ipInfo = TypeTools.createInjectionPointInfo(serviceTypeName, methodInfo, count);
-                    continuation = continuation.add(ipInfo);
-                }
-            }
-        }
-        return continuation;
-    }
+//    private Dependencies.BuilderContinuation continuationProcess(TypeName serviceTypeName,
+//                                                                 Dependencies.BuilderContinuation continuation,
+//                                                                 ElementKind kind,
+//                                                                 MethodInfo methodInfo) {
+//        if (TypeTools.hasAnnotation(methodInfo, TypeNames.JAKARTA_INJECT)) {
+//            if (!isInjectionSupported(serviceTypeName, methodInfo, logger())) {
+//                return continuation;
+//            }
+//
+//            MethodParameterInfo[] params = methodInfo.getParameterInfo();
+//            if (params.length == 0) {
+//                continuation = continuation.add(methodInfo.getName(), Void.class, kind,
+//                                                TypeTools.toAccess(methodInfo.getModifiers()))
+//                        .ipName(methodInfo.getName())
+//                        .ipType(TypeName.create(Void.class))
+//                        .staticDeclaration(TypeTools.isStatic(methodInfo.getModifiers()));
+//            } else {
+//                int count = 0;
+//                for (MethodParameterInfo ignore : params) {
+//                    count++;
+//                    InjectionPointInfo ipInfo = TypeTools.createInjectionPointInfo(serviceTypeName, methodInfo, count);
+//                    continuation = continuation.add(ipInfo);
+//                }
+//            }
+//        }
+//        return continuation;
+//    }
 
 }

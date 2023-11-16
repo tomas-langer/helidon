@@ -33,9 +33,10 @@ import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
+import io.helidon.inject.api.InjectTypes;
+import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.RunLevel;
-import io.helidon.inject.api.ServiceDependencies;
 import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.tools.Options;
 import io.helidon.inject.tools.TypeNames;
@@ -266,7 +267,7 @@ public final class GeneralProcessorUtils {
                 name.equals(TypeNames.JAKARTA_PROVIDER)
                         || name.equals(TypeNames.JAVAX_PROVIDER)
                         || name.equals(TypeNames.INJECTION_POINT_PROVIDER)
-                        || TypeNames.INJECTION_SERVICE_PROVIDER.equals(name));
+                        || InjectTypes.INJECTION_SERVICE_PROVIDER.equals(name));
     }
 
     /**
@@ -331,7 +332,7 @@ public final class GeneralProcessorUtils {
         }
 
         @Override
-        public List<ServiceDependencies> dependencies() {
+        public List<IpInfo> dependencies() {
             throw new UnsupportedOperationException("Simple descriptor does not contain this information");
         }
 

@@ -329,7 +329,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                     .compilerOptions(compilerOptions)
                     .throwIfError(isFailOnError())
                     .generator(getClass().getName())
-                    .services(services);
+                    .services(injectionServices);
             if (MavenPluginUtils.hasValue(moduleName)) {
                 reqBuilder.moduleName(moduleName);
             } else if (!isUnnamedModuleName(moduleInfoModuleName)) {

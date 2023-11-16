@@ -185,7 +185,9 @@ class ToolBoxTest {
                    desc, contains("Injection$$Module:ACTIVE", "Injection$$Module:ACTIVE", "Injection$$TestModule:ACTIVE"));
         List<String> names = allModules.stream()
                 .sorted()
-                .map(m -> m.get().named().orElse(m.get().getClass().getSimpleName() + ":null")).collect(Collectors.toList());
+                .map(ServiceProvider::get)
+                .map(ModuleComponent::name)
+                .toList();
         assertThat(names,
                    contains("io.helidon.config", "io.helidon.inject.tests.inject", "io.helidon.inject.tests.inject/test"));
     }

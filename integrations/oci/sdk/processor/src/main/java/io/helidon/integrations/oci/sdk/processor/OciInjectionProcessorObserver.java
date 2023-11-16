@@ -49,6 +49,7 @@ import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.ExternalContracts;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.processor.ProcessingEvent;
 import io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
@@ -409,7 +410,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
     }
 
     private static TypeName ipProvider(TypeName provided, String suffix) {
-        return TypeName.builder(TypeNames.INJECTION_POINT_PROVIDER_TYPE)
+        return TypeName.builder(InjectTypes.INJECTION_POINT_PROVIDER)
                 .addTypeArgument(TypeName.create(provided.fqName() + suffix))
                 .build();
     }

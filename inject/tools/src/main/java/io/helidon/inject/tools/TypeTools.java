@@ -55,11 +55,9 @@ import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ElementInfo;
-import io.helidon.inject.api.InjectionPointInfo;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.runtime.Dependencies;
 
 import io.github.classgraph.AnnotationInfo;
 import io.github.classgraph.AnnotationInfoList;
@@ -706,9 +704,9 @@ public final class TypeTools {
      * @param elemInfo the method element info
      * @return the injection point info
      */
-    static InjectionPointInfo createInjectionPointInfo(MethodInfo elemInfo) {
-        return createInjectionPointInfo(createTypeNameFromClassInfo(elemInfo.getClassInfo()), elemInfo, null);
-    }
+//    static InjectionPointInfo createInjectionPointInfo(MethodInfo elemInfo) {
+//        return createInjectionPointInfo(createTypeNameFromClassInfo(elemInfo.getClassInfo()), elemInfo, null);
+//    }
 
     /**
      * Returns the injection point info given a method element.
@@ -718,71 +716,71 @@ public final class TypeTools {
      * @param elemOffset        optionally, the argument position (or null for the method level) - starts at 1 not 0
      * @return the injection point info
      */
-    static InjectionPointInfo createInjectionPointInfo(TypeName serviceTypeName,
-                                                       MethodInfo elemInfo,
-                                                       Integer elemOffset) {
-        TypeName elemType;
-        Set<Qualifier> qualifiers;
-        Set<Annotation> annotations;
-        AtomicReference<Boolean> isProviderWrapped = new AtomicReference<>();
-        AtomicReference<Boolean> isListWrapped = new AtomicReference<>();
-        AtomicReference<Boolean> isOptionalWrapped = new AtomicReference<>();
-        String ipName;
-        TypeName ipType;
-        if (elemOffset != null) {
-            MethodParameterInfo paramInfo = elemInfo.getParameterInfo()[elemOffset - 1];
-            elemType = extractInjectionPointTypeInfo(paramInfo, isProviderWrapped, isListWrapped, isOptionalWrapped);
-            TypeSignature typeSignature = paramInfo.getTypeSignature();
-            typeSignature = typeSignature == null ? paramInfo.getTypeDescriptor() : typeSignature;
-            ipType = TypeName.create(typeSignature.toString());
-            qualifiers = createQualifierSet(paramInfo.getAnnotationInfo());
-            annotations = createAnnotationSet(paramInfo.getAnnotationInfo());
-            ipName = paramInfo.getName();
-            if (ipName == null) {
-                ipName = "arg" + elemOffset;
-            }
-        } else {
-            elemType = TypeName.create(elemInfo.getTypeDescriptor().getResultType().toString());
-            ipType = elemType;
-            qualifiers = createQualifierSet(elemInfo);
-            annotations = createAnnotationSet(elemInfo.getAnnotationInfo());
-            ipName = elemInfo.getName();
-            if (ipName == null) {
-                ipName = "arg";
-            }
-        }
-
-        String elemName = elemInfo.isConstructor()
-                ? InjectionPointInfo.CONSTRUCTOR : elemInfo.getName();
-        int elemArgs = elemInfo.getParameterInfo().length;
-        AccessModifier access = toAccess(elemInfo.getModifiers());
-        String packageName = serviceTypeName.packageName();
-        ServiceInfoCriteria serviceInfo = ServiceInfoCriteria.builder()
-                .serviceTypeName(elemType)
-                .build();
-        return InjectionPointInfo.builder()
-                .baseIdentity(Dependencies.toMethodBaseIdentity(elemName, elemArgs, access, packageName))
-                .id(Dependencies.toMethodIdentity(elemName, elemArgs, elemOffset, access, packageName))
-                .dependencyToServiceInfo(serviceInfo)
-                .serviceTypeName(serviceTypeName)
-                .elementName(elemName)
-                .elementKind(elemInfo.isConstructor()
-                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
-                                     : io.helidon.common.types.ElementKind.METHOD)
-                .elementTypeName(elemType)
-                .elementArgs(elemArgs)
-                .elementOffset(elemOffset)
-                .access(access)
-                .staticDeclaration(isStatic(elemInfo.getModifiers()))
-                .qualifiers(qualifiers)
-                .annotations(annotations)
-                .optionalWrapped(isOptionalWrapped.get())
-                .providerWrapped(isProviderWrapped.get())
-                .listWrapped(isListWrapped.get())
-                .ipName(ipName)
-                .ipType(ipType)
-                .build();
-    }
+//    static InjectionPointInfo createInjectionPointInfo(TypeName serviceTypeName,
+//                                                       MethodInfo elemInfo,
+//                                                       Integer elemOffset) {
+//        TypeName elemType;
+//        Set<Qualifier> qualifiers;
+//        Set<Annotation> annotations;
+//        AtomicReference<Boolean> isProviderWrapped = new AtomicReference<>();
+//        AtomicReference<Boolean> isListWrapped = new AtomicReference<>();
+//        AtomicReference<Boolean> isOptionalWrapped = new AtomicReference<>();
+//        String ipName;
+//        TypeName ipType;
+//        if (elemOffset != null) {
+//            MethodParameterInfo paramInfo = elemInfo.getParameterInfo()[elemOffset - 1];
+//            elemType = extractInjectionPointTypeInfo(paramInfo, isProviderWrapped, isListWrapped, isOptionalWrapped);
+//            TypeSignature typeSignature = paramInfo.getTypeSignature();
+//            typeSignature = typeSignature == null ? paramInfo.getTypeDescriptor() : typeSignature;
+//            ipType = TypeName.create(typeSignature.toString());
+//            qualifiers = createQualifierSet(paramInfo.getAnnotationInfo());
+//            annotations = createAnnotationSet(paramInfo.getAnnotationInfo());
+//            ipName = paramInfo.getName();
+//            if (ipName == null) {
+//                ipName = "arg" + elemOffset;
+//            }
+//        } else {
+//            elemType = TypeName.create(elemInfo.getTypeDescriptor().getResultType().toString());
+//            ipType = elemType;
+//            qualifiers = createQualifierSet(elemInfo);
+//            annotations = createAnnotationSet(elemInfo.getAnnotationInfo());
+//            ipName = elemInfo.getName();
+//            if (ipName == null) {
+//                ipName = "arg";
+//            }
+//        }
+//
+//        String elemName = elemInfo.isConstructor()
+//                ? InjectionPointInfo.CONSTRUCTOR : elemInfo.getName();
+//        int elemArgs = elemInfo.getParameterInfo().length;
+//        AccessModifier access = toAccess(elemInfo.getModifiers());
+//        String packageName = serviceTypeName.packageName();
+//        ServiceInfoCriteria serviceInfo = ServiceInfoCriteria.builder()
+//                .serviceTypeName(elemType)
+//                .build();
+//        return InjectionPointInfo.builder()
+//                .baseIdentity(Dependencies.toMethodBaseIdentity(elemName, elemArgs, access, packageName))
+//                .id(Dependencies.toMethodIdentity(elemName, elemArgs, elemOffset, access, packageName))
+//                .dependencyToServiceInfo(serviceInfo)
+//                .serviceTypeName(serviceTypeName)
+//                .elementName(elemName)
+//                .elementKind(elemInfo.isConstructor()
+//                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+//                                     : io.helidon.common.types.ElementKind.METHOD)
+//                .elementTypeName(elemType)
+//                .elementArgs(elemArgs)
+//                .elementOffset(elemOffset)
+//                .access(access)
+//                .staticDeclaration(isStatic(elemInfo.getModifiers()))
+//                .qualifiers(qualifiers)
+//                .annotations(annotations)
+//                .optionalWrapped(isOptionalWrapped.get())
+//                .providerWrapped(isProviderWrapped.get())
+//                .listWrapped(isListWrapped.get())
+//                .ipName(ipName)
+//                .ipType(ipType)
+//                .build();
+//    }
 
     /**
      * Returns the method info given a method from introspection.
@@ -791,34 +789,34 @@ public final class TypeTools {
      * @param serviceLevelAnnos the annotation at the class level that should be inherited at the method level
      * @return the method info
      */
-    static MethodElementInfo createMethodElementInfo(MethodInfo methodInfo,
-                                                     Set<Annotation> serviceLevelAnnos) {
-        TypeName serviceTypeName = createTypeNameFromClassInfo(methodInfo.getClassInfo());
-        TypeName elemType = TypeName.create(methodInfo.getTypeDescriptor().getResultType().toString());
-        Set<Qualifier> qualifiers = createQualifierSet(methodInfo);
-        Set<Annotation> annotations = createAnnotationSet(methodInfo.getAnnotationInfo());
-        if (serviceLevelAnnos != null) {
-            annotations.addAll(serviceLevelAnnos);
-        }
-        List<String> throwables = extractThrowableTypeNames(methodInfo);
-        List<ElementInfo> parameters = createParameterInfo(serviceTypeName, methodInfo);
-        return MethodElementInfo.builder()
-                .serviceTypeName(serviceTypeName)
-                .elementName(methodInfo.isConstructor()
-                                     ? InjectionPointInfo.CONSTRUCTOR : methodInfo.getName())
-                .elementKind(methodInfo.isConstructor()
-                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
-                                     : io.helidon.common.types.ElementKind.METHOD)
-                .elementTypeName(elemType)
-                .elementArgs(methodInfo.getParameterInfo().length)
-                .access(toAccess(methodInfo.getModifiers()))
-                .staticDeclaration(isStatic(methodInfo.getModifiers()))
-                .annotations(annotations)
-                .qualifiers(qualifiers)
-                .throwableTypeNames(throwables)
-                .parameterInfo(parameters)
-                .build();
-    }
+//    static MethodElementInfo createMethodElementInfo(MethodInfo methodInfo,
+//                                                     Set<Annotation> serviceLevelAnnos) {
+//        TypeName serviceTypeName = createTypeNameFromClassInfo(methodInfo.getClassInfo());
+//        TypeName elemType = TypeName.create(methodInfo.getTypeDescriptor().getResultType().toString());
+//        Set<Qualifier> qualifiers = createQualifierSet(methodInfo);
+//        Set<Annotation> annotations = createAnnotationSet(methodInfo.getAnnotationInfo());
+//        if (serviceLevelAnnos != null) {
+//            annotations.addAll(serviceLevelAnnos);
+//        }
+//        List<String> throwables = extractThrowableTypeNames(methodInfo);
+//        List<ElementInfo> parameters = createParameterInfo(serviceTypeName, methodInfo);
+//        return MethodElementInfo.builder()
+//                .serviceTypeName(serviceTypeName)
+//                .elementName(methodInfo.isConstructor()
+//                                     ? InjectionPointInfo.CONSTRUCTOR : methodInfo.getName())
+//                .elementKind(methodInfo.isConstructor()
+//                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+//                                     : io.helidon.common.types.ElementKind.METHOD)
+//                .elementTypeName(elemType)
+//                .elementArgs(methodInfo.getParameterInfo().length)
+//                .access(toAccess(methodInfo.getModifiers()))
+//                .staticDeclaration(isStatic(methodInfo.getModifiers()))
+//                .annotations(annotations)
+//                .qualifiers(qualifiers)
+//                .throwableTypeNames(throwables)
+//                .parameterInfo(parameters)
+//                .build();
+//    }
 
     /**
      * Returns the method info given a method from annotation processing.
@@ -828,36 +826,36 @@ public final class TypeTools {
      * @param serviceLevelAnnos the annotation at the class level that should be inherited at the method level
      * @return the method info
      */
-    static MethodElementInfo createMethodElementInfo(ProcessingEnvironment processingEnv,
-                                                     TypeElement serviceTypeElement,
-                                                     ExecutableElement ee,
-                                                     Set<Annotation> serviceLevelAnnos) {
-        TypeName serviceTypeName = TypeFactory.createTypeName(serviceTypeElement).orElseThrow();
-        TypeName elemType = TypeName.create(ee.getReturnType().toString());
-        Set<Qualifier> qualifiers = createQualifierSet(ee);
-        Set<Annotation> annotations = AnnotationFactory.createAnnotations(ee, processingEnv.getElementUtils());
-        if (serviceLevelAnnos != null) {
-            annotations.addAll(serviceLevelAnnos);
-        }
-        List<String> throwables = extractThrowableTypeNames(ee);
-        List<ElementInfo> parameters = createParameterInfo(processingEnv, serviceTypeName, ee);
-        return MethodElementInfo.builder()
-                .serviceTypeName(serviceTypeName)
-                .elementName((ee.getKind() == ElementKind.CONSTRUCTOR)
-                                     ? InjectionPointInfo.CONSTRUCTOR : ee.getSimpleName().toString())
-                .elementKind((ee.getKind() == ElementKind.CONSTRUCTOR)
-                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
-                                     : io.helidon.common.types.ElementKind.METHOD)
-                .elementTypeName(elemType)
-                .elementArgs(ee.getParameters().size())
-                .access(toAccess(ee))
-                .staticDeclaration(isStatic(ee))
-                .qualifiers(qualifiers)
-                .annotations(annotations)
-                .throwableTypeNames(throwables)
-                .parameterInfo(parameters)
-                .build();
-    }
+//    static MethodElementInfo createMethodElementInfo(ProcessingEnvironment processingEnv,
+//                                                     TypeElement serviceTypeElement,
+//                                                     ExecutableElement ee,
+//                                                     Set<Annotation> serviceLevelAnnos) {
+//        TypeName serviceTypeName = TypeFactory.createTypeName(serviceTypeElement).orElseThrow();
+//        TypeName elemType = TypeName.create(ee.getReturnType().toString());
+//        Set<Qualifier> qualifiers = createQualifierSet(ee);
+//        Set<Annotation> annotations = AnnotationFactory.createAnnotations(ee, processingEnv.getElementUtils());
+//        if (serviceLevelAnnos != null) {
+//            annotations.addAll(serviceLevelAnnos);
+//        }
+//        List<String> throwables = extractThrowableTypeNames(ee);
+//        List<ElementInfo> parameters = createParameterInfo(processingEnv, serviceTypeName, ee);
+//        return MethodElementInfo.builder()
+//                .serviceTypeName(serviceTypeName)
+//                .elementName((ee.getKind() == ElementKind.CONSTRUCTOR)
+//                                     ? InjectionPointInfo.CONSTRUCTOR : ee.getSimpleName().toString())
+//                .elementKind((ee.getKind() == ElementKind.CONSTRUCTOR)
+//                                     ? io.helidon.common.types.ElementKind.CONSTRUCTOR
+//                                     : io.helidon.common.types.ElementKind.METHOD)
+//                .elementTypeName(elemType)
+//                .elementArgs(ee.getParameters().size())
+//                .access(toAccess(ee))
+//                .staticDeclaration(isStatic(ee))
+//                .qualifiers(qualifiers)
+//                .annotations(annotations)
+//                .throwableTypeNames(throwables)
+//                .parameterInfo(parameters)
+//                .build();
+//    }
 
     /**
      * Returns the element info given a method element parameter.
@@ -927,36 +925,36 @@ public final class TypeTools {
      * @param elemInfo          the field element info
      * @return the injection point info
      */
-    static InjectionPointInfo createInjectionPointInfo(TypeName serviceTypeName,
-                                                       FieldInfo elemInfo) {
-        AtomicReference<Boolean> isProviderWrapped = new AtomicReference<>();
-        AtomicReference<Boolean> isListWrapped = new AtomicReference<>();
-        AtomicReference<Boolean> isOptionalWrapped = new AtomicReference<>();
-        TypeName elemType = extractInjectionPointTypeInfo(elemInfo, isProviderWrapped, isListWrapped, isOptionalWrapped);
-        Set<Qualifier> qualifiers = createQualifierSet(elemInfo);
-        String elemName = elemInfo.getName();
-        String id = Dependencies.toFieldIdentity(elemName, serviceTypeName.packageName());
-        ServiceInfoCriteria serviceInfo = ServiceInfoCriteria.builder()
-                .serviceTypeName(elemType)
-                .build();
-        return InjectionPointInfo.builder()
-                .baseIdentity(id)
-                .id(id)
-                .dependencyToServiceInfo(serviceInfo)
-                .serviceTypeName(serviceTypeName)
-                .elementName(elemInfo.getName())
-                .elementKind(io.helidon.common.types.ElementKind.FIELD)
-                .elementTypeName(elemType)
-                .access(toAccess(elemInfo.getModifiers()))
-                .staticDeclaration(isStatic(elemInfo.getModifiers()))
-                .qualifiers(qualifiers)
-                .optionalWrapped(isOptionalWrapped.get())
-                .providerWrapped(isProviderWrapped.get())
-                .listWrapped(isListWrapped.get())
-                .ipName(elemInfo.getName())
-                .ipType(elemType)
-                .build();
-    }
+//    static InjectionPointInfo createInjectionPointInfo(TypeName serviceTypeName,
+//                                                       FieldInfo elemInfo) {
+//        AtomicReference<Boolean> isProviderWrapped = new AtomicReference<>();
+//        AtomicReference<Boolean> isListWrapped = new AtomicReference<>();
+//        AtomicReference<Boolean> isOptionalWrapped = new AtomicReference<>();
+//        TypeName elemType = extractInjectionPointTypeInfo(elemInfo, isProviderWrapped, isListWrapped, isOptionalWrapped);
+//        Set<Qualifier> qualifiers = createQualifierSet(elemInfo);
+//        String elemName = elemInfo.getName();
+//        String id = Dependencies.toFieldIdentity(elemName, serviceTypeName.packageName());
+//        ServiceInfoCriteria serviceInfo = ServiceInfoCriteria.builder()
+//                .serviceTypeName(elemType)
+//                .build();
+//        return InjectionPointInfo.builder()
+//                .baseIdentity(id)
+//                .id(id)
+//                .dependencyToServiceInfo(serviceInfo)
+//                .serviceTypeName(serviceTypeName)
+//                .elementName(elemInfo.getName())
+//                .elementKind(io.helidon.common.types.ElementKind.FIELD)
+//                .elementTypeName(elemType)
+//                .access(toAccess(elemInfo.getModifiers()))
+//                .staticDeclaration(isStatic(elemInfo.getModifiers()))
+//                .qualifiers(qualifiers)
+//                .optionalWrapped(isOptionalWrapped.get())
+//                .providerWrapped(isProviderWrapped.get())
+//                .listWrapped(isListWrapped.get())
+//                .ipName(elemInfo.getName())
+//                .ipType(elemType)
+//                .build();
+//    }
 
     /**
      * Determines the meta parts making up {@link InjectionPointInfo}.
@@ -1179,9 +1177,9 @@ public final class TypeTools {
      */
     public static boolean isProviderType(TypeName typeName) {
         TypeName type = translate(componentTypeNameOf(typeName));
-        return TypeNames.JAKARTA_PROVIDER_TYPE.equals(type)
-                || TypeNames.JAVAX_PROVIDER_TYPE.equals(type)
-                || TypeNames.INJECTION_POINT_PROVIDER_TYPE.equals(type);
+        return InjectTypes.JAKARTA_PROVIDER.equals(type)
+                || InjectTypes.JAVAX_PROVIDER.equals(type)
+                || InjectTypes.INJECTION_POINT_PROVIDER.equals(type);
     }
 
     /**

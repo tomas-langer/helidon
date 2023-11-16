@@ -26,6 +26,10 @@ import jakarta.inject.Singleton;
  */
 @Singleton
 public final class EmptyModule implements ModuleComponent {
+    @Override
+    public String name() {
+        return "empty";
+    }
 
     @Override
     public void configure(ServiceBinder binder) {

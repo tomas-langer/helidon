@@ -23,7 +23,6 @@ import io.helidon.inject.api.ActivationResult;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.Event;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.IpInfo;
@@ -60,9 +59,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     private final List<ConfigBeanServiceProvider<CB>> managedConfigBeans = new ArrayList<>();
     private final Set<Qualifier> qualifiers;
     private final ServiceSource<T> descriptor;
-    private final Set<TypeName> contracts;
 
-    @SuppressWarnings("unchecked")
     ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceSource<T> descriptor) {
         super(injectionServices, descriptor);
 
@@ -70,10 +67,6 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         Set<Qualifier> qualifiers = new LinkedHashSet<>(descriptor.qualifiers());
         qualifiers.add(WILDCARD_NAMED);
         this.qualifiers = Set.copyOf(qualifiers);
-
-        Set<TypeName> contracts = new LinkedHashSet<>(descriptor.contracts());
-        contracts.add(((ConfigBeanFactory<CB>) descriptor).configBeanType());
-        this.contracts = Set.copyOf(contracts);
     }
 
     static <T> Activator<T> create(InjectionServices injectionServices, ServiceSource<T> descriptor) {
@@ -88,7 +81,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
 
     // note that all responsibilities to resolve is delegated to the root provider
     @Override
-    public Optional<Object> resolve(InjectionPointInfo ipInfo,
+    public Optional<Object> resolve(IpInfo ipInfo,
                                     InjectionServices injectionServices,
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
@@ -97,7 +90,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             return Optional.empty();
         }
 
-        ServiceInfoCriteria dep = ipInfo.dependencyToServiceInfo();
+        ServiceInfoCriteria dep = ipInfo.toCriteria();
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
                 .addContract(configBeanType())
                 .build();
@@ -323,11 +316,6 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     @Override
     public Set<Qualifier> qualifiers() {
         return qualifiers;
-    }
-
-    @Override
-    public Set<TypeName> contracts() {
-        return contracts;
     }
 
     boolean hasManagedServices() {

@@ -19,7 +19,6 @@ package io.helidon.inject.tests.inject.tbox;
 import java.util.List;
 import java.util.Optional;
 
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.tests.inject.tbox.impl.CoarseBlade;
 import io.helidon.inject.tests.inject.tbox.impl.DullBlade;
 
@@ -100,7 +99,7 @@ public class TableSaw extends AbstractSaw {
 
     @Override
     public void verifyState() {
-        verifyInjected(ctorInjectedLubricantInSubClass, getClass() + "." + InjectionPointInfo.CONSTRUCTOR, null, false, null);
+        verifyInjected(ctorInjectedLubricantInSubClass, getClass() + ".<init>" , null, false, null);
         verifyInjected(setterInjectedLubricantInSubClass, getClass() + ".injectLubricant(Optional<Lubricant> lubricant)", setterInjectedLubricantInSubClassInjectedCount, false, null);
 
         verifyInjected(coarseBladeFieldInjectedPkgPrivateProviderInSubClass, getClass()

@@ -43,7 +43,7 @@ interface ContextualServiceQueryBlueprint {
      *
      * @return the optional injection point context info
      */
-    Optional<InjectionPointInfo> injectionPointInfo();
+    Optional<IpInfo> injectionPointInfo();
 
     /**
      * Set to true if there is an expectation that there is at least one match result from the search.
@@ -64,13 +64,13 @@ interface ContextualServiceQueryBlueprint {
          * @return the query
          */
         @Prototype.FactoryMethod
-        static ContextualServiceQuery create(InjectionPointInfo ipInfo,
+        static ContextualServiceQuery create(IpInfo ipInfo,
                                              boolean expected) {
             Objects.requireNonNull(ipInfo);
             return ContextualServiceQuery.builder()
                     .expected(expected)
                     .injectionPointInfo(ipInfo)
-                    .serviceInfoCriteria(ipInfo.dependencyToServiceInfo())
+                    .serviceInfoCriteria(ipInfo.toCriteria())
                     .build();
         }
     }

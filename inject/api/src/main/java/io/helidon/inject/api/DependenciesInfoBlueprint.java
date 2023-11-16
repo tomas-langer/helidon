@@ -16,13 +16,10 @@
 
 package io.helidon.inject.api;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
@@ -60,23 +57,4 @@ interface DependenciesInfoBlueprint {
                 .forEach(all::addAll);
         return all;
     }
-
-    /**
-     * Represents the list of all dependencies for a given injection point element name ordered by the element position.
-     *
-     * @param elemName the element name of the injection point
-     * @return the list of all dependencies got a given element name of a given injection point
-     */
-    default List<DependencyInfo> allDependenciesFor(String elemName) {
-        Objects.requireNonNull(elemName);
-        return allDependencies().stream()
-                .flatMap(dep -> dep.injectionPointDependencies().stream()
-                        .filter(ipi -> elemName.equals(ipi.elementName()))
-                        .map(ipi -> DependencyInfo.builder(dep)
-                                .injectionPointDependencies(Set.of(ipi))
-                                .build()))
-                .sorted(DependencyInfoComparator.instance())
-                .collect(Collectors.toList());
-    }
-
 }

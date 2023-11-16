@@ -12,8 +12,8 @@ import io.helidon.common.types.TypeName;
  * Injection point information.
  * Each injection point has two set of characteristics:
  * <nl>
- *     <li>Unique identification of the point we are injecting into (field, method parameter)</li>
- *     <li>Information required to obtain correct service instance(s) to inject (qualifiers, annotations)</li>
+ * <li>Unique identification of the point we are injecting into (field, method parameter)</li>
+ * <li>Information required to obtain correct service instance(s) to inject (qualifiers, annotations)</li>
  * </nl>
  */
 @Prototype.Blueprint
@@ -73,4 +73,23 @@ interface IpInfoBlueprint {
      * @return contract of the injected service(s)
      */
     TypeName contract();
+
+    /**
+     * Type of the injection point (exact parameter type with all generics).
+     *
+     * @return type of the injection point as {@link io.helidon.common.types.TypeName}
+     */
+    TypeName typeName();
+
+    /**
+     * Create service info criteria for lookup from this injection point information.
+     *
+     * @return criteria to lookup matching services
+     */
+    default ServiceInfoCriteria toCriteria() {
+        return ServiceInfoCriteria.builder()
+                .qualifiers(qualifiers())
+                .addContract(contract())
+                .build();
+    }
 }

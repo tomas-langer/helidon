@@ -60,24 +60,16 @@ public interface ServiceSource<T> extends ServiceDescriptor<T> {
      * Combine dependencies from this type with dependencies from supertype.
      * This is a utility for code generated types.
      *
-     * @param myType this type's dependencies
+     * @param myType    this type's dependencies
      * @param superType super type's dependencies
      * @return a new list without constructor dependencies from super type
      */
-    default List<ServiceDependencies> combineDependencies(ServiceDependencies myType, List<ServiceDependencies> superType) {
-        List<ServiceDependencies> result = new ArrayList<>();
-        result.add(myType);
+    default List<IpInfo> combineDependencies(List<IpInfo> myType, List<IpInfo> superType) {
+        List<IpInfo> result = new ArrayList<>(myType);
 
-        for (ServiceDependencies superDeps : superType) {
-            List<IpInfo> list = superDeps.dependencies()
-                    .stream()
-                    .filter(it -> it.id().elementKind() != ElementKind.CONSTRUCTOR)
-                    .toList();
-
-            if (!list.isEmpty()) {
-                result.add(new ServiceDependencies(superDeps.serviceType(), List.copyOf(list)));
-            }
-        }
+        result.addAll(superType.stream()
+                              .filter(it -> it.id().elementKind() != ElementKind.CONSTRUCTOR)
+                              .toList());
 
         return List.copyOf(result);
     }

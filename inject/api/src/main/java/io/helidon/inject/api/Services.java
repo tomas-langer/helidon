@@ -237,7 +237,7 @@ public interface Services {
      * @return the qualifying services relative to the given context
      * @see InjectionServicesConfig#supportsContextualLookup()
      */
-    default Services contextualServices(InjectionPointInfo ctx) {
+    default Services contextualServices(IpInfo ctx) {
         return this;
     }
 

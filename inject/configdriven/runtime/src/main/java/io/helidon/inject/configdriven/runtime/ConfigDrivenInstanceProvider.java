@@ -6,7 +6,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.IpInfo;
@@ -55,12 +54,12 @@ class ConfigDrivenInstanceProvider<T, CB>
 
     // note that all responsibilities to resolve is delegated to the root provider
     @Override
-    public Optional<Object> resolve(InjectionPointInfo ipInfo,
+    public Optional<Object> resolve(IpInfo ipInfo,
                                     InjectionServices injectionServices,
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
 
-        ServiceInfoCriteria dep = ipInfo.dependencyToServiceInfo();
+        ServiceInfoCriteria dep = ipInfo.toCriteria();
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
                 .addContract(configBeanType)
                 .build();

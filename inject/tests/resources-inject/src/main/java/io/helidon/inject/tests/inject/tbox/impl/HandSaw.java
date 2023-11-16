@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Optional;
 
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointInfo;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
@@ -107,7 +106,7 @@ public class HandSaw extends AbstractSaw {
     @Override
     public void verifyState() {
         Verification.verifyInjected(ctorInjectedLubricantInSubClass, getClass()
-                + "." + InjectionPointInfo.CONSTRUCTOR, null, false, null);
+                + ".<init>", null, false, null);
         Verification.verifyInjected(setterInjectedLubricantInSubClass, getClass()
                 + ".injectLubricant(Optional<Lubricant> lubricant)", setterInjectedLubricantInSubClassInjectedCount, false, null);
 

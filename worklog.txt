@@ -1,8 +1,4 @@
-Config bean registry should not be initialized if we are in maven plugin
- - this may have side effects
-
-If we start services in "limited" mode, we should only get `ServiceProviders` for services that have service descriptors
-on classpath (e.g. no services that are generated from config etc.)
+io.helidon.inject.runtime.DefaultInjectionPlans.resolve
 
 
 

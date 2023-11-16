@@ -41,7 +41,8 @@ interface InjectionPlanBlueprint {
      *
      * @return the injection point info for this element
      */
-    io.helidon.inject.api.InjectionPointInfo injectionPointInfo();
+    @Option.Type("io.helidon.inject.api.IpInfo")
+    IpInfo injectionPointInfo();
 
     /**
      * The list of service providers that are qualified to satisfy the given injection point for this service provider.

@@ -31,12 +31,14 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.DependenciesInfo;
 import io.helidon.inject.api.DependencyInfo;
-import io.helidon.inject.api.InjectionPointInfo;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.Interceptor;
+import io.helidon.inject.api.IpId;
+import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
@@ -63,12 +65,12 @@ class DefaultInjectionPlans {
      * @param logger            the logger to use for any logging
      * @return the injection plan per element identity belonging to the service provider
      */
-    static Map<String, HelidonInjectionPlan> createInjectionPlans(InjectionServices injectionServices,
+    static Map<IpId<?>, HelidonInjectionPlan> createInjectionPlans(InjectionServices injectionServices,
                                                                   ServiceProvider<?> self,
                                                                   DependenciesInfo dependencies,
                                                                   boolean resolveIps,
                                                                   System.Logger logger) {
-        Map<String, HelidonInjectionPlan> result = new LinkedHashMap<>();
+        Map<IpId<?>, HelidonInjectionPlan> result = new LinkedHashMap<>();
         if (dependencies.allDependencies().isEmpty()) {
             return result;
         }
@@ -152,54 +154,64 @@ class DefaultInjectionPlans {
      */
     @SuppressWarnings("unchecked")
     static Object resolve(ServiceProvider<?> self,
-                          InjectionPointInfo ipInfo,
+                          IpInfo ipInfo,
                           List<ServiceProvider<?>> serviceProviders,
                           System.Logger logger) {
-        if (ipInfo.staticDeclaration()) {
+        if (ipInfo.isStatic()) {
             throw new ServiceProviderInjectionException(ipInfo + ": static is not supported", null, self);
         }
         if (ipInfo.access() == AccessModifier.PRIVATE) {
             throw new ServiceProviderInjectionException(ipInfo + ": private is not supported", null, self);
         }
 
+        TypeName serviceType = self.descriptor().serviceType();
         try {
-            if (VOID.equals(ipInfo.serviceTypeName())) {
+            if (VOID.equals(ipInfo.contract())) {
                 return null;
             }
 
-            if (ipInfo.listWrapped()) {
-                if (ipInfo.optionalWrapped()) {
+            /*
+            List<Provider> -> ok
+            Optional<Provider> -> ok
+            Optional<?> - ok
+            List<?> - ok
+             */
+            TypeName injectedType = ipInfo.typeName();
+
+            if (injectedType.isList()) {
+                if (injectedType.typeArguments().getFirst().isOptional()) {
                     throw new ServiceProviderInjectionException("Optional + List injection is not supported for "
-                                                                        + ipInfo.serviceTypeName() + "." + ipInfo.elementName());
+                                                                        + serviceType.fqName()
+                                                                        + "." + ipInfo.id().name());
                 }
 
                 if (serviceProviders.isEmpty()) {
                     if (!allowNullableInjectionPoint(ipInfo)) {
                         throw new ServiceProviderInjectionException("Expected to resolve a service appropriate for "
-                                                                            + ipInfo.serviceTypeName() + "." + ipInfo.elementName(),
+                                                                            + serviceType.fqName()
+                                                                            + "." + ipInfo.id().name(),
                                                                     DefaultServices
                                                                             .resolutionBasedInjectionError(
-                                                                                    ipInfo.dependencyToServiceInfo()),
+                                                                                    ipInfo.toCriteria()),
                                                                     self);
                     } else {
                         return serviceProviders;
                     }
                 }
 
-                if (ipInfo.providerWrapped() && !ipInfo.optionalWrapped()) {
+                if (isProvider(injectedType.typeArguments().getFirst())) {
                     return serviceProviders;
                 }
 
-                if (ipInfo.listWrapped() && !ipInfo.optionalWrapped()) {
-                    return toEligibleInjectionRefs(ipInfo, self, serviceProviders, true);
-                }
+                return toEligibleInjectionRefs(serviceType, ipInfo, self, serviceProviders, true);
             } else if (serviceProviders.isEmpty()) {
-                if (ipInfo.optionalWrapped()) {
+                if (injectedType.isOptional()) {
                     return Optional.empty();
                 } else {
                     throw new ServiceProviderInjectionException("Expected to resolve a service appropriate for "
-                                                                        + ipInfo.serviceTypeName() + "." + ipInfo.elementName(),
-                                                                DefaultServices.resolutionBasedInjectionError(ipInfo.dependencyToServiceInfo()),
+                                                                        + serviceType.fqName()
+                                                                        + "." + ipInfo.id().name(),
+                                                                DefaultServices.resolutionBasedInjectionError(ipInfo.toCriteria()),
                                                                 self);
                 }
             } else {
@@ -212,17 +224,17 @@ class DefaultInjectionPlans {
                         && serviceProviderBindable.get() instanceof ServiceProviderProvider) {
                     serviceProvider = serviceProviderBindable.get();
                     serviceProviders = (List<ServiceProvider<?>>) ((ServiceProviderProvider) serviceProvider)
-                            .serviceProviders(ipInfo.dependencyToServiceInfo(), true, false);
+                            .serviceProviders(ipInfo.toCriteria(), true, false);
                     if (!serviceProviders.isEmpty()) {
                         serviceProvider = serviceProviders.get(0);
                     }
                 }
 
-                if (ipInfo.providerWrapped()) {
-                    return ipInfo.optionalWrapped() ? Optional.of(serviceProvider) : serviceProvider;
+                if (isProvider(injectedType)) {
+                    return injectedType.typeArguments().getFirst().isOptional() ? Optional.of(serviceProvider) : serviceProvider;
                 }
 
-                if (ipInfo.optionalWrapped()) {
+                if (injectedType.isOptional()) {
                     Optional<?> optVal;
                     try {
                         optVal = Objects.requireNonNull(
@@ -241,15 +253,13 @@ class DefaultInjectionPlans {
         } catch (ServiceProviderInjectionException ie) {
             throw ie;
         } catch (Throwable t) {
-            throw expectedToResolveCriteria(ipInfo, t, self);
+            throw expectedToResolveCriteria(serviceType, ipInfo, t, self);
         }
-
-        throw expectedToResolveCriteria(ipInfo, null, self);
     }
 
     @SuppressWarnings("unchecked")
     private static void accumulate(DependencyInfo dep,
-                                   Map<String, HelidonInjectionPlan> result,
+                                   Map<IpId<?>, HelidonInjectionPlan> result,
                                    InjectionServices injectionServices,
                                    ServiceProvider<?> self,
                                    boolean resolveIps,
@@ -264,9 +274,9 @@ class DefaultInjectionPlans {
             dep.injectionPointDependencies()
                     .stream()
                     .filter(ipInfo -> (isPrivateSupported || ipInfo.access() != AccessModifier.PRIVATE)
-                            && (isStaticSupported || !ipInfo.staticDeclaration()))
+                            && (isStaticSupported || !ipInfo.isStatic()))
                     .forEach(ipInfo -> {
-                        String id = ipInfo.id();
+                        IpId<?> id = ipInfo.id();
                         if (!result.containsKey(id)) {
                             Object resolved = ((InjectionResolver) self)
                                     .resolve(ipInfo, injectionServices, self, resolveIps)
@@ -281,7 +291,7 @@ class DefaultInjectionPlans {
                                         .unqualifiedProviders(toIpUnqualified(target))
                                         .wasResolved(resolved != null);
 
-                                if (ipInfo.optionalWrapped()) {
+                                if (ipInfo.typeName().isOptional()) {
                                     planBuilder.resolved((target instanceof Optional && ((Optional<?>) target).isEmpty())
                                                                  ? Optional.empty() : Optional.of(target));
                                 } else {
@@ -322,17 +332,16 @@ class DefaultInjectionPlans {
                 .stream()
                 .filter(ipInfo ->
                                 (isPrivateSupported || ipInfo.access() != AccessModifier.PRIVATE)
-                                        && (isStaticSupported || !ipInfo.staticDeclaration()))
+                                        && (isStaticSupported || !ipInfo.isStatic()))
                 .forEach(ipInfo -> {
-                    String id = ipInfo.id();
+                    IpId<?> id = ipInfo.id();
                     if (!result.containsKey(id)) {
                         Object resolved = (resolveIps)
                                 ? resolve(self, ipInfo, serviceProviders, logger) : null;
-                        if (!resolveIps && !ipInfo.optionalWrapped()
+                        if (!resolveIps && !ipInfo.typeName().isOptional()
                                 && serviceProviders.isEmpty()
                                 && !allowNullableInjectionPoint(ipInfo)) {
-                            throw DefaultServices.resolutionBasedInjectionError(
-                                    ipInfo.dependencyToServiceInfo());
+                            throw DefaultServices.resolutionBasedInjectionError(ipInfo.toCriteria());
                         }
                         HelidonInjectionPlan plan = HelidonInjectionPlan.builder()
                                 .injectionPointInfo(ipInfo)
@@ -400,19 +409,20 @@ class DefaultInjectionPlans {
         return false;
     }
 
-    private static boolean allowNullableInjectionPoint(InjectionPointInfo ipInfo) {
-        if (ipInfo.listWrapped()) {
+    private static boolean allowNullableInjectionPoint(IpInfo ipInfo) {
+        if (ipInfo.typeName().isList()) {
             // allow empty lists to be injected
             return true;
         }
 
-        ServiceInfoCriteria missingServiceInfo = ipInfo.dependencyToServiceInfo();
+        ServiceInfoCriteria missingServiceInfo = ipInfo.toCriteria();
         Set<TypeName> contractsNeeded = missingServiceInfo.contracts();
         return (1 == contractsNeeded.size() && contractsNeeded.contains(INTERCEPTOR));
     }
 
     @SuppressWarnings({"unchecked", "rawTypes"})
-    private static List<?> toEligibleInjectionRefs(InjectionPointInfo ipInfo,
+    private static List<?> toEligibleInjectionRefs(TypeName serviceType,
+                                                   IpInfo ipInfo,
                                                    ServiceProvider<?> self,
                                                    List<ServiceProvider<?>> list,
                                                    boolean expected) {
@@ -420,7 +430,7 @@ class DefaultInjectionPlans {
 
         ContextualServiceQuery query = ContextualServiceQuery.builder()
                 .injectionPointInfo(ipInfo)
-                .serviceInfoCriteria(ipInfo.dependencyToServiceInfo())
+                .serviceInfoCriteria(ipInfo.toCriteria())
                 .expected(expected)
                 .build();
         for (ServiceProvider<?> sp : list) {
@@ -429,20 +439,29 @@ class DefaultInjectionPlans {
         }
 
         if (expected && result.isEmpty()) {
-            throw expectedToResolveCriteria(ipInfo, null, self);
+            throw expectedToResolveCriteria(serviceType, ipInfo, null, self);
         }
 
         return result;
     }
 
-    private static ServiceProviderInjectionException expectedToResolveCriteria(InjectionPointInfo ipInfo,
+    private static ServiceProviderInjectionException expectedToResolveCriteria(TypeName serviceType,
+                                                                               IpInfo ipInfo,
                                                                                Throwable cause,
                                                                                ServiceProvider<?> self) {
         String msg = (cause == null) ? "Expected" : "Failed";
         return new ServiceProviderInjectionException(msg + " to resolve a service instance appropriate for '"
-                                                             + ipInfo.serviceTypeName() + "." + ipInfo.elementName()
-                                                             + "' with criteria = '" + ipInfo.dependencyToServiceInfo(),
+                                                             + serviceType.fqName() + "." + ipInfo.id().name()
+                                                             + "' with criteria = '" + ipInfo.toCriteria(),
                                                      cause, self);
     }
+
+    private static boolean isProvider(TypeName typeName) {
+        return  typeName.equals(InjectTypes.JAKARTA_PROVIDER)
+                || typeName.equals(InjectTypes.JAVAX_PROVIDER)
+                || typeName.equals(InjectTypes.INJECTION_POINT_PROVIDER)
+                || typeName.equals(InjectTypes.INJECTION_SERVICE_PROVIDER);
+    }
+
 
 }
