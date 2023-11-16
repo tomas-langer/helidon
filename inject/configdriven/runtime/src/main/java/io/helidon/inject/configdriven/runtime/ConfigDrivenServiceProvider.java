@@ -286,12 +286,6 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             if (Phase.INIT == currentActivationPhase()) {
                 stateTransitionStart(res, Phase.PENDING);
             }
-
-            // one of the configured services need to "tickle" the bean registry to initialize
-            ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
-            if (cbr != null) {
-                cbr.initialize();
-            }
         } else if (phase == Phase.FINAL_RESOLVE) {
             // post-initialize ourselves
             if (drivesActivation()) {

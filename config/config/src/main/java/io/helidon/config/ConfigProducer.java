@@ -27,8 +27,6 @@ import io.helidon.common.config.GlobalConfig;
 import io.helidon.config.spi.ConfigSource;
 import io.helidon.inject.api.ExternalContracts;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
@@ -37,9 +35,6 @@ import jakarta.inject.Singleton;
 @ExternalContracts(Config.class)
 class ConfigProducer implements Config {
     private final Config config;
-
-    @Inject
-    ConfigSource injectField;
 
     @Inject
     ConfigProducer(List<Provider<ConfigSource>> serviceProviders) {
@@ -54,26 +49,6 @@ class ConfigProducer implements Config {
                             .forEach(it::addSource))
                     .build();
         }
-    }
-
-    @Inject
-    void injectMethod(ConfigSource cs, ConfigSource second) {
-
-    }
-
-    @Inject
-    void injectMethod(ConfigSource cs, String second) {
-
-    }
-
-    @PostConstruct
-    void postConstructMethod() {
-    }
-
-    // all temporary methods and fields must be removed, this is to test injection
-    @PreDestroy
-    public void preDestroyMethod() {
-
     }
 
     @Override

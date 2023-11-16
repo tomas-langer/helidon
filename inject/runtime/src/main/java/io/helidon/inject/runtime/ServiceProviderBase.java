@@ -296,7 +296,8 @@ public abstract class ServiceProviderBase<T>
 
     protected ActivationResult doDeactivate(DeActivationRequest req) {
         ActivationResult.Builder res = ActivationResult.builder()
-                .serviceProvider(this);
+                .serviceProvider(this)
+                .finishingStatus(ActivationStatus.SUCCESS);
 
         if (!currentPhase.eligibleForDeactivation()) {
             stateTransitionStart(res, Phase.DESTROYED);

@@ -439,7 +439,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     void bind(InjectionServices injectionServices,
               ModuleComponent module,
               boolean initializing) {
-        String moduleName = module.named().orElse(module.getClass().getName());
+        String moduleName = module.name();
         boolean isLoggable = DefaultInjectionServices.LOGGER.isLoggable(System.Logger.Level.TRACE);
         if (isLoggable) {
             DefaultInjectionServices.LOGGER.log(System.Logger.Level.TRACE, "starting binding module: " + moduleName);

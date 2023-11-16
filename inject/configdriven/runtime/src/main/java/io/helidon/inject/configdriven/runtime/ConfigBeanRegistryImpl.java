@@ -151,7 +151,32 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
             }
 
             LOGGER.log(System.Logger.Level.DEBUG, "Initializing");
-            initialize(config);
+            doInitialize(config);
+            // we are now ready and initialized
+            initialized.countDown();
+        } catch (Throwable t) {
+            InjectionException e = new InjectionServiceProviderException("Error while initializing config bean registry", t);
+            LOGGER.log(System.Logger.Level.ERROR, e.getMessage(), e);
+            reset(true);
+            throw e;
+        }
+    }
+
+    void initialize(Config config) {
+        Objects.requireNonNull(config);
+
+        if (registeredForReset.compareAndSet(false, true)) {
+            ResettableHandler.addRegistry(this);
+        }
+        try {
+            if (initializing.getAndSet(true)) {
+                // all threads should wait for the leader (and the config bean registry) to have been fully initialized
+                initialized.await();
+                return;
+            }
+
+            LOGGER.log(System.Logger.Level.DEBUG, "Initializing");
+            doInitialize(config);
             // we are now ready and initialized
             initialized.countDown();
         } catch (Throwable t) {
@@ -167,7 +192,7 @@ class ConfigBeanRegistryImpl implements ConfigBeanRegistry, Resettable {
     }
 
     @SuppressWarnings("rawtypes")
-    private void initialize(Config rootConfiguration) {
+    private void doInitialize(Config rootConfiguration) {
         if (configBeanFactories.isEmpty()) {
             LOGGER.log(System.Logger.Level.DEBUG, "No config driven services found");
             return;

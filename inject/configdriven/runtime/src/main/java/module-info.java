@@ -41,5 +41,9 @@ module io.helidon.inject.configdriven.runtime {
     exports io.helidon.inject.configdriven.runtime;
 
     provides io.helidon.inject.spi.ActivatorProvider
-            with io.helidon.inject.configdriven.runtime.ConfigDrivenActivatorProvider;
+            with io.helidon.inject.configdriven.runtime.ConfigDrivenActivatorProvider,
+                 io.helidon.inject.configdriven.runtime.CbrActivatorProvider;
+
+    provides io.helidon.inject.api.ModuleComponent
+            with io.helidon.inject.configdriven.runtime.ConfigDrivenInjectModule;
 }

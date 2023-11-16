@@ -60,7 +60,7 @@ class ModuleComponentHandler {
                 .isFinal(true)
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .defaultValue("\"" + moduleName + "\""));
-        builder.addMethod(named -> named.name("named")
+        builder.addMethod(named -> named.name("name")
                 .addAnnotation(Annotations.OVERRIDE)
                 .returnType(TypeNames.STRING)
                 .addLine("return NAME;"));

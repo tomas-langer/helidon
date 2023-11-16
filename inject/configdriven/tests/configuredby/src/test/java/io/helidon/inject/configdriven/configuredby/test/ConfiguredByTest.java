@@ -43,6 +43,17 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
  */
 class ConfiguredByTest extends AbstractConfiguredByTest {
     @Test
+    void testInjectCbr() {
+        resetWith(Config.create());
+
+        ServiceProvider<ServiceUsingRegistry> lookup = services.lookup(ServiceUsingRegistry.class);
+        ServiceUsingRegistry service = lookup.get();
+
+        assertThat(service.registry(), notNullValue());
+        assertThat(service.registry().ready(), is(true));
+    }
+
+    @Test
     void testRepeatableConfigBean() {
         resetWith(Config.create());
 
