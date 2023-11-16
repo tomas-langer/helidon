@@ -16,9 +16,6 @@ class ModuleComponentHandler {
     private static final TypeName MODULE_COMPONENT_TYPE = TypeName.create("io.helidon.inject.api.ModuleComponent");
     private static final TypeName SERVICE_BINDER_TYPE = TypeName.create("io.helidon.inject.api.ServiceBinder");
     private static final TypeName GENERATOR = TypeName.create(ModuleComponentHandler.class);
-    private static final TypeName OPTIONAL_STRING = TypeName.builder(TypeNames.OPTIONAL)
-            .addTypeArgument(TypeNames.STRING)
-            .build();
 
     private ModuleComponentHandler() {
     }
@@ -56,7 +53,7 @@ class ModuleComponentHandler {
                                  .addTag("deprecated", "for use by Java ServiceLoader, do not use directly")
                                  .build()));
 
-        // Optional<String> named()
+        // String name()
         builder.addField(name -> name.name("NAME")
                 .type(TypeNames.STRING)
                 .isStatic(true)
@@ -65,8 +62,8 @@ class ModuleComponentHandler {
                 .defaultValue("\"" + moduleName + "\""));
         builder.addMethod(named -> named.name("named")
                 .addAnnotation(Annotations.OVERRIDE)
-                .returnType(OPTIONAL_STRING)
-                .addLine("return @java.util.Optional@.of(NAME);"));
+                .returnType(TypeNames.STRING)
+                .addLine("return NAME;"));
 
         // to String
         builder.addMethod(named -> named.name("toString")

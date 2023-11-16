@@ -16,8 +16,6 @@
 
 package io.helidon.inject.api;
 
-import java.util.Optional;
-
 /**
  * Provides aggregation of services to the "containing" (jar) module.
  * <p>
@@ -29,7 +27,7 @@ import java.util.Optional;
  * @see Application
  */
 @Contract
-public interface ModuleComponent extends OptionallyNamed {
+public interface ModuleComponent {
 
     /**
      * Called by the provider implementation at bootstrapping time to bind all services / service providers to the
@@ -39,9 +37,11 @@ public interface ModuleComponent extends OptionallyNamed {
      */
     void configure(ServiceBinder binder);
 
-    @Override
-    default Optional<String> named() {
-        return Optional.empty();
-    }
+    /**
+     * This module name. If the module does not have a JPMS {@code module-info.java}, use {@code unnamed/package}.
+     *
+     * @return name of this module
+     */
+    String name();
 
 }
