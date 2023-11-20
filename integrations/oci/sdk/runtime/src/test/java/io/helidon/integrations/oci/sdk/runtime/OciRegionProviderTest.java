@@ -23,7 +23,7 @@ import io.helidon.config.Config;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpInfo;
+import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
@@ -70,12 +70,12 @@ class OciRegionProviderTest {
         TypeName regionType = TypeName.create(Region.class);
 
         ContextualServiceQuery query = ContextualServiceQuery.create(
-                IpInfo.builder()
+                IpId.builder()
                         .contract(regionType)
                         .typeName(regionType)
-                        .id(id -> id.serviceType(TypeName.create("io.helidon.Whatever"))
-                                .name("region")
-                                .elementKind(ElementKind.METHOD))
+                        .service(TypeName.create("io.helidon.Whatever"))
+                        .name("region")
+                        .elementKind(ElementKind.METHOD)
                         .access(AccessModifier.PUBLIC)
                         .addQualifier(Qualifier.createNamed("us-phoenix-1"))
                         .build(),

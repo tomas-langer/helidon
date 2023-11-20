@@ -20,6 +20,7 @@ interface IpIdBlueprint {
      * @return the service declaring this injection point
      */
     TypeName service();
+
     /**
      * Kind of element we inject into (constructor, field, method).
      *
@@ -33,20 +34,24 @@ interface IpIdBlueprint {
      * @return unique name of the field or parameter
      */
     String name();
+
     /**
      * Descriptor declaring this dependency.
      *
      * @return descriptor
      */
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     TypeName descriptor();
+
     /**
      * Each injection point expects a specific contract to be injected.
      * For example for {@code List<MyService>}, the contract is {@code MyService}.
      *
      * @return contract of the injected service(s)
      */
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     TypeName contract();
 
     /**
@@ -55,7 +60,8 @@ interface IpIdBlueprint {
      * @return the qualifier type annotations on this element
      */
     @Option.Singular
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     Set<Qualifier> qualifiers();
 
     /**
@@ -64,8 +70,10 @@ interface IpIdBlueprint {
      *
      * @return field that has the id on the descriptor
      */
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     String field();
+
     /**
      * The access modifier on the injection point/receiver.
      * Defaults to {@link io.helidon.common.types.AccessModifier#PACKAGE_PRIVATE}.
@@ -73,8 +81,10 @@ interface IpIdBlueprint {
      * @return the access
      */
     @Option.Default("PACKAGE_PRIVATE")
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     AccessModifier access();
+
     /**
      * True if the injection point is static.
      *
@@ -83,21 +93,26 @@ interface IpIdBlueprint {
     @Option.Redundant // kind + service type + name is a unique identification already
     @Option.DefaultBoolean(false)
     boolean isStatic();
+
     /**
      * The annotations on this element.
      *
      * @return the annotations on this element
      */
     @Option.Singular
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     Set<Annotation> annotations();
+
     /**
      * Type of the injection point (exact parameter type with all generics).
      *
      * @return type of the injection point as {@link io.helidon.common.types.TypeName}
      */
-    @Option.Redundant // kind + service type + name is a unique identification already
+    @Option.Redundant
+    // kind + service type + name is a unique identification already
     TypeName typeName();
+
     /**
      * Create service info criteria for lookup from this injection point information.
      *

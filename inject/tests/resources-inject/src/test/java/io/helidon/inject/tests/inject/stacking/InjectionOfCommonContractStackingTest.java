@@ -39,9 +39,10 @@ import static org.hamcrest.Matchers.contains;
  */
 class InjectionOfCommonContractStackingTest {
 
-    Config config = InjectionTestingSupport.basicTestableConfig();
-    InjectionServices injectionServices;
-    Services services;
+    private final Config config = InjectionTestingSupport.basicTestableConfig();
+
+    private InjectionServices injectionServices;
+    private Services services;
 
     @BeforeEach
     void setUp() {

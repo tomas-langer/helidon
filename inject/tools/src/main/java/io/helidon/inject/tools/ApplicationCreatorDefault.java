@@ -286,7 +286,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
         if (req.codeGenPaths().isPresent()
                 && req.codeGenPaths().get().generatedSourcesPath().isPresent()) {
-            codegen(null, req, applicationType, body);
+            codegen(req, applicationType, body);
         }
 
         GeneralCodeGenDetail codeGenDetail = GeneralCodeGenDetail.builder()
@@ -322,11 +322,11 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         }
 
         Set<Binding> bindings = new LinkedHashSet<>();
-        for (IpId ipoint : dependencies) {
+        for (IpId dependency : dependencies) {
             // type of the result that satisfies the injection point (full generic type)
-            TypeName ipType = ipoint.typeName();
+            TypeName ipType = dependency.typeName();
 
-            InjectionPlan iPlan = injectionPlan(services, sp, ipoint);
+            InjectionPlan iPlan = injectionPlan(services, sp, dependency);
             List<ServiceProvider<?>> qualified = iPlan.qualifiedProviders();
             List<?> unqualified = iPlan.unqualifiedProviders();
 
@@ -342,11 +342,11 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                     targetType = tn;
                 } else {
                     // the actual class name may be some generated type, we are interested in the contract required
-                    targetType = ipoint.contract();
+                    targetType = dependency.contract();
                 }
-                bindings.add(new Binding(BindingTime.RUNTIME, type, ipoint, isProvider, List.of(targetType)));
+                bindings.add(new Binding(BindingTime.RUNTIME, type, dependency, isProvider, List.of(targetType)));
             } else {
-                bindings.add(new Binding(BindingTime.BUILD, type, ipoint, isProvider, qualified.stream()
+                bindings.add(new Binding(BindingTime.BUILD, type, dependency, isProvider, qualified.stream()
                         .map(ServiceProvider::descriptorType)
                         .toList()));
             }
@@ -358,13 +358,11 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
     /**
      * Perform the file creation and javac it.
      *
-     * @param injectionServices   the injection services to use
      * @param req                 the request
      * @param applicationTypeName the application type name
      * @param body                the source code / body to generate
      */
-    void codegen(InjectionServices injectionServices,
-                 ApplicationCreatorRequest req,
+    void codegen(ApplicationCreatorRequest req,
                  TypeName applicationTypeName,
                  String body) {
         CodeGenFiler filer = createDirectCodeGenFiler(req.codeGenPaths().orElse(null), req.analysisOnly());
@@ -441,11 +439,20 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         return BindingType.SINGLE;
     }
 
-    private InjectionPlan injectionPlan(InjectionServices services, ServiceProvider<?> self, IpId ipoint) {
-        ServiceInfoCriteria dependencyTo = toServiceInfoCriteria(ipoint);
+    private InjectionPlan injectionPlan(InjectionServices services,
+                                        ServiceProvider<?> self,
+                                        IpId dependency) {
+        ServiceInfoCriteria dependencyTo = dependency.toCriteria();
+        if (self.contracts().containsAll(dependencyTo.contracts())) {
+            // criteria must have a single contract for each injection point
+            // if this service implements the contracts actually required, we must look for services with lower weight
+            dependencyTo = ServiceInfoCriteria.builder(dependencyTo)
+                    .weight(self.weight())
+                    .build();
+        }
 
         if (self instanceof InjectionResolver ir) {
-            Optional<Object> resolved = ir.resolve(ipoint, services, self, false);
+            Optional<Object> resolved = ir.resolve(dependency, services, self, false);
             Object target = resolved instanceof Optional<?> opt
                     ? opt.orElse(null)
                     : resolved;
@@ -457,10 +464,10 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         List<ServiceProvider<?>> qualifiedProviders = services.services().lookupAll(dependencyTo, false);
         List<ServiceProvider<?>> unqualifiedProviders = List.of();
         if (qualifiedProviders.isEmpty()) {
-            if (ipoint.typeName().isOptional()) {
+            if (dependency.typeName().isOptional()) {
                 return new InjectionPlan(List.of(), List.of());
             } else {
-                unqualifiedProviders = injectionPointProvidersFor(services.services(), ipoint);
+                unqualifiedProviders = injectionPointProvidersFor(services.services(), dependency);
             }
         }
 
@@ -501,19 +508,13 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         if (ipoint.qualifiers().isEmpty()) {
             return List.of();
         }
-        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(toServiceInfoCriteria(ipoint))
+        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(ipoint.toCriteria())
                 .qualifiers(Set.of())
                 .addContract(IP_PROVIDER_TYPE)
                 .build();
         return services.lookupAll(criteria);
     }
 
-    private ServiceInfoCriteria toServiceInfoCriteria(IpId ipoint) {
-        return ServiceInfoCriteria.builder()
-                .addContract(ipoint.contract())
-                .qualifiers(ipoint.qualifiers())
-                .build();
-    }
 
     private void createConfigureMethodBody(InjectionServices services, List<TypeName> serviceTypes, Method.Builder method) {
         // first collect required dependencies by descriptor

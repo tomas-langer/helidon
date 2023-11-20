@@ -931,8 +931,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
     private List<ParamDefinition> declareCtrParamsAndGetThem(Method.Builder method, List<ParamDefinition> params) {
         /*
-            var ipParam1_serviceProviders = (Type) ctx.param(IP_PARAM_1);
-            var ipParam2_someOtherName = (Type) ctx.param(IP_PARAM_2);
+            var ipParam1_serviceProviders = ctx.param(IP_PARAM_1);
+            var ipParam2_someOtherName = ctx.param(IP_PARAM_2);
 
             return new ConfigProducer(ipParam1_serviceProviders, someOtherName);
          */
@@ -942,8 +942,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         // for each parameter, obtain its value from context
         for (ParamDefinition param : constructorParams) {
-            method.addLine("var " + param.ipParamName() + " = (" + param.type().resolvedName()
-                                   + ") ctx.param(" + param.constantName() + ")"
+            method.addLine("var " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
                                    + ";");
         }
 
@@ -964,8 +963,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         }
 
         for (ParamDefinition param : fields) {
-            method.addLine("var " + param.ipParamName() + " = (" + param.type().resolvedName()
-                                   + ") ctx.param(" + param.constantName() + ")"
+            method.addLine("var " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
                                    + ";");
         }
 
@@ -1028,8 +1026,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         // for each parameter, obtain its value from context
         for (ParamDefinition param : methodsParams) {
-            method.addLine("var " + param.fieldId() + " = (" + param.type().resolvedName()
-                                   + ") ctx.param(" + param.constantName() + ");");
+            method.addLine("var " + param.fieldId() + " = ctx.param(" + param.constantName() + ");");
         }
 
         method.addLine("");

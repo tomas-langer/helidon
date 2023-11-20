@@ -25,21 +25,16 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InterceptionMetadata;
 import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.runtime.ServiceUtils;
-
-import jakarta.inject.Provider;
 
 /**
  * Serves as an exemplar of what will is normally code generated.
  */
 public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<HelloInjectionWorldImpl> {
     public static final HelloInjectionImpl__ServiceDescriptor INSTANCE = new HelloInjectionImpl__ServiceDescriptor();
-    public static final IpId<InjectionWorld> IP_5 = IpId.<InjectionWorld>builder()
-            .elementKind(ElementKind.METHOD)
-            .name("world_1_world")
-            .build();
+
+    private static final TypeName DESCRIPTOR = TypeName.create(HelloInjectionImpl__ServiceDescriptor.class);
     private static final TypeName TYPE_NAME = TypeName.create(HelloInjectionWorldImpl.class);
 
     private static final Set<TypeName> CONTRACTS = Set.of(TypeName.create(HelloInjectionWorld.class));
@@ -53,73 +48,67 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
     private static final TypeName TYPE_4 = TypeName.create(
             "java.util.Optional<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
 
-    public static final IpId<InjectionWorld> IP_0 = IpId.<InjectionWorld>builder()
+    public static final IpId IP_0 = IpId.<InjectionWorld>builder()
             .elementKind(ElementKind.FIELD)
             .name("world")
-            .serviceType(TYPE_NAME)
-            .build();
-    private static final IpInfo IPI_0 = IpInfo.builder()
-            .id(IP_0)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
             .field("IP_0")
             .contract(TYPE_0)
             .typeName(TYPE_0)
             .build();
-    public static final IpId<Provider<InjectionWorld>> IP_1 = IpId.<Provider<InjectionWorld>>builder()
+    public static final IpId IP_1 = IpId.builder()
             .elementKind(ElementKind.FIELD)
             .name("worldRef")
-            .serviceType(TYPE_NAME)
-            .build();
-    private static final IpInfo IPI_1 = IpInfo.builder()
-            .id(IP_1)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
             .field("IP_1")
             .typeName(TYPE_1)
             .contract(TYPE_0)
             .build();
-    public static final IpId<List<Provider<InjectionWorld>>> IP_2 = IpId.<List<Provider<InjectionWorld>>>builder()
+    public static final IpId IP_2 = IpId.builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorldRefs")
-            .serviceType(TYPE_NAME)
-            .build();
-    private static final IpInfo IPI_2 = IpInfo.builder()
-            .id(IP_2)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
             .field("IP_2")
             .contract(TYPE_0)
             .typeName(TYPE_2)
             .build();
-    public static final IpId<List<InjectionWorld>> IP_3 = IpId.<List<InjectionWorld>>builder()
+    public static final IpId IP_3 = IpId.<List<InjectionWorld>>builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorlds")
-            .serviceType(TYPE_NAME)
-            .build();
-    private static final IpInfo IPI_3 = IpInfo.builder()
-            .id(IP_3)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
             .field("IP_3")
             .contract(TYPE_0)
             .typeName(TYPE_3)
             .build();
-    public static final IpId<Optional<InjectionWorld>> IP_4 = IpId.<Optional<InjectionWorld>>builder()
+    public static final IpId IP_4 = IpId.<Optional<InjectionWorld>>builder()
             .elementKind(ElementKind.FIELD)
             .name("redWorld")
-            .serviceType(TYPE_NAME)
-            .build();
-    private static final IpInfo IPI_4 = IpInfo.builder()
-            .id(IP_4)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
             .field("IP_4")
             .contract(TYPE_0)
             .typeName(TYPE_4)
             .build();
-    private static final IpInfo IPI_5 = IpInfo.builder()
-            .id(IP_5)
+
+    public static final IpId IP_5 = IpId.builder()
+            .elementKind(ElementKind.METHOD)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
+            .name("world_1_world")
             .field("IP_5")
             .contract(TYPE_0)
             .typeName(TYPE_0)
             .build();
-    private static final List<IpInfo> DEPENDENCIES = List.of(IPI_0,
-                                                             IPI_1,
-                                                             IPI_2,
-                                                             IPI_3,
-                                                             IPI_4,
-                                                             IPI_5);
+    private static final List<IpId> DEPENDENCIES = List.of(IP_0,
+                                                           IP_1,
+                                                           IP_2,
+                                                           IP_3,
+                                                           IP_4,
+                                                           IP_5);
 
     public HelloInjectionImpl__ServiceDescriptor() {
     }
@@ -140,7 +129,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
     }
 
     @Override
-    public List<IpInfo> dependencies() {
+    public List<IpId> dependencies() {
         return DEPENDENCIES;
     }
 

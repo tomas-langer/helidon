@@ -25,7 +25,7 @@ import io.helidon.common.types.Annotation;
 import io.helidon.config.Config;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpInfo;
+import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
@@ -95,10 +95,10 @@ class OciAuthenticationDetailsProviderTest {
 
     @Test
     void testToNamedProfile() {
-        assertThat(OciAuthenticationDetailsProvider.toNamedProfile((IpInfo) null),
+        assertThat(OciAuthenticationDetailsProvider.toNamedProfile((IpId) null),
                    nullValue());
 
-        IpInfo.Builder ipi = IpInfo.builder()
+        IpId.Builder ipi = IpId.builder()
                 .annotations(Set.of());
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());
