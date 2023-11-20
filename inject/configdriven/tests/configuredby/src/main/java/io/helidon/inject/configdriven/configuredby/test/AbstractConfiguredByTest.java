@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.helidon.common.config.GlobalConfig;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
@@ -77,6 +78,7 @@ public abstract class AbstractConfiguredByTest {
     }
 
     protected void resetWith(Config config) {
+        GlobalConfig.config(() -> config, true);
         InjectionTestingSupport.resetAll();
         this.injectionServices = testableServices(config);
         this.services = injectionServices.services();
@@ -152,7 +154,7 @@ public abstract class AbstractConfiguredByTest {
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("no root providers expected in result, but all are auto-started unless overridden", desc,
                    contains("FakeWebServer{@default}:ACTIVE",
-                            "FakeWebServerNotDrivenAndHavingConfiguredByOverrides{@default}:PENDING"));
+                            "FakeWebServerNotDrivenAndHavingConfiguredByOverrides{@default}:INIT"));
 
         criteria = ServiceInfoCriteria.builder()
                 .serviceTypeName(TypeName.create(FakeTlsWSNotDrivenByCB.class))

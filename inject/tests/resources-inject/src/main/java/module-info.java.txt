@@ -16,6 +16,8 @@
 
 /**
  * Injection Test Resources.
+ * We are not using module info for now, as the test application does not discover it, and as a result it does not find
+ * services provided by ModuleComponent
  */
 module io.helidon.inject.tests.inject {
     requires static jakarta.inject;

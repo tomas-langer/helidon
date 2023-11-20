@@ -29,10 +29,6 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -263,27 +259,12 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
                                                        State state) {
         long start = System.currentTimeMillis();
 
-        ThreadFactory threadFactory = r -> {
-            Thread thread = new Thread(r);
-            thread.setDaemon(false);
-            thread.setPriority(Thread.MAX_PRIORITY);
-            thread.setName("injection-shutdown-" + System.currentTimeMillis());
-            return thread;
-        };
-
         Shutdown shutdown = new Shutdown(services, state);
-
-        long finish;
-        try (ExecutorService es = Executors.newSingleThreadExecutor(threadFactory)) {
-            return es.submit(shutdown)
-                    .get(cfg.shutdownTimeout().toMillis(), TimeUnit.MILLISECONDS);
-        } catch (Throwable t) {
-            finish = System.currentTimeMillis();
-            errorLog("Error detected during shutdown (elapsed = " + (finish - start) + " ms)", t);
-            throw new InjectionException("Error detected during shutdown", t);
+        try {
+            return shutdown.call();
         } finally {
             state.finished(true);
-            finish = System.currentTimeMillis();
+            long finish = System.currentTimeMillis();
             log("Finished shutdown (elapsed = " + (finish - start) + " ms)");
         }
     }

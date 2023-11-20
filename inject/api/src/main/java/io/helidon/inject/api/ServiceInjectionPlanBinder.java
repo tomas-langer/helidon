@@ -29,7 +29,6 @@ public interface ServiceInjectionPlanBinder {
      */
     Binder bindTo(ServiceDescriptor<?> serviceDescriptor);
 
-
     /**
      * The binder builder for the service plan.
      *
@@ -38,45 +37,75 @@ public interface ServiceInjectionPlanBinder {
     interface Binder {
 
         /**
-         * Binds a single service provider to the injection point identified by {@link InjectionPointInfo#id()}.
+         * Binds a single service provider to the injection point identified by the id.
          * It is assumed that the caller of this is aware of the proper cardinality for each injection point.
          *
-         * @param id                the injection point identity
-         * @param serviceProvider   the service provider to bind to this identity.
+         * @param id          the injection point identity
+         * @param useProvider whether we inject a provider or provided
+         * @param descriptor  the service provider to bind to this identity.
          * @return the binder builder
          */
-        Binder bind(IpId<?> id,
-                    ServiceDescriptor<?> serviceProvider);
+        Binder bind(IpId id,
+                    boolean useProvider,
+                    ServiceDescriptor<?> descriptor);
 
         /**
-        * Binds a list of service providers to the injection point identified by {@link InjectionPointInfo#id()}.
-        * It is assumed that the caller of this is aware of the proper cardinality for each injection point.
-        *
-        * @param id                 the injection point identity
-        * @param serviceProviders   the list of service providers to bind to this identity
-        * @return the binder builder
-        */
-        Binder bindMany(IpId<?> id,
+         * Bind to an optional field, with zero or one descriptors.
+         *
+         * @param id          injection point identity
+         * @param useProvider whether we inject a provider or provided
+         * @param descriptor  the descriptor to bind (zero or one)
+         * @return the binder builder
+         */
+        Binder bindOptional(IpId id,
+                            boolean useProvider,
+                            ServiceDescriptor<?>... descriptor);
+
+        /**
+         * Binds a list of service providers to the injection point identified by the id.
+         * It is assumed that the caller of this is aware of the proper cardinality for each injection point.
+         *
+         * @param id               the injection point identity
+         * @param useProvider      whether we inject a provider or provided
+         * @param serviceProviders service descriptors to bind to this identity (zero or more)
+         * @return the binder builder
+         */
+        Binder bindMany(IpId id,
+                        boolean useProvider,
                         ServiceDescriptor<?>... serviceProviders);
 
         /**
-         * Represents a void / null bind, only applicable for an Optional injection point.
+         * Represents a null bind.
+         * Binding of null values must be allowed in the registry, by default this is not an option.
          *
          * @param id the injection point identity
          * @return the binder builder
          */
-        Binder bindVoid(IpId<?> id);
+        Binder bindNull(IpId id);
 
         /**
          * Represents injection points that cannot be bound at startup, and instead must rely on a
          * deferred resolver based binding. Typically, this represents some form of dynamic or configurable instance.
          *
-         * @param id            the injection point identity
-         * @param serviceType   the service type needing to be resolved
+         * @param id          the injection point identity
+         * @param serviceType the service type needing to be resolved
          * @return the binder builder
          */
-        Binder runtimeBind(IpId<?> id,
-                            Class<?> serviceType);
+        Binder runtimeBind(IpId id,
+                           boolean useProvider,
+                           Class<?> serviceType);
+
+        Binder runtimeBindOptional(IpId id,
+                                   boolean useProvider,
+                                   Class<?> serviceType);
+
+        Binder runtimeBindMany(IpId id,
+                               boolean useProvider,
+                               Class<?> serviceType);
+
+        Binder runtimeBindNullable(IpId id,
+                                   boolean useProvider,
+                                   Class<?> serviceType);
 
         /**
          * Commits the bindings for this service provider.

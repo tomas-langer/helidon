@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.ServiceProvider;
 
 /**
@@ -41,8 +42,8 @@ interface InjectionPlanBlueprint {
      *
      * @return the injection point info for this element
      */
-    @Option.Type("io.helidon.inject.api.IpInfo")
-    IpInfo injectionPointInfo();
+    @Option.Type("io.helidon.inject.api.IpId")
+    IpId injectionPointInfo();
 
     /**
      * The list of service providers that are qualified to satisfy the given injection point for this service provider.

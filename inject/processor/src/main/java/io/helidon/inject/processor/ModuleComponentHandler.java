@@ -20,12 +20,13 @@ class ModuleComponentHandler {
     private ModuleComponentHandler() {
     }
 
-    static ClassCode createClassModel(Set<TypeName> generatedServiceDescriptors,
+    static ClassCode createClassModel(HandlingScope scope,
+                                      Set<TypeName> generatedServiceDescriptors,
                                       String moduleName,
                                       String packageName) {
         TypeName newType = TypeName.builder()
                 .packageName(packageName)
-                .className(MODULE_NAME)
+                .className(scope.prefix() + MODULE_NAME)
                 .build();
 
         ClassModel.Builder builder = ClassModel.builder()

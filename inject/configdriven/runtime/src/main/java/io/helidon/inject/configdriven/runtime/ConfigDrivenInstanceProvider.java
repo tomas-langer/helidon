@@ -6,9 +6,9 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
@@ -54,7 +54,7 @@ class ConfigDrivenInstanceProvider<T, CB>
 
     // note that all responsibilities to resolve is delegated to the root provider
     @Override
-    public Optional<Object> resolve(IpInfo ipInfo,
+    public Optional<Object> resolve(IpId ipInfo,
                                     InjectionServices injectionServices,
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
@@ -82,18 +82,23 @@ class ConfigDrivenInstanceProvider<T, CB>
     }
 
     @Override
+    public Set<Qualifier> qualifiers() {
+        return qualifiers;
+    }
+
+    @Override
     protected String id(boolean fq) {
         return super.id(fq) + "{" + instanceId + "}";
     }
 
     @Override
-    protected void prepareDependency(Services services, Map<IpId<?>, Supplier<?>> injectionPlan, IpInfo dependency) {
+    protected void prepareDependency(Services services, Map<IpId, Supplier<?>> injectionPlan, IpId dependency) {
         // it the type is this bean's type and it does not have any additional qualifier,
         // inject instance
 
         if (dependency.contract().equals(configBeanType) && dependency.qualifiers().isEmpty()) {
             // we are injecting the config bean that drives this instance
-            injectionPlan.put(dependency.id(), () -> beanInstance);
+            injectionPlan.put(dependency, () -> beanInstance);
             return;
         }
 
@@ -101,11 +106,17 @@ class ConfigDrivenInstanceProvider<T, CB>
     }
 
     @Override
-    public Set<Qualifier> qualifiers() {
-        return qualifiers;
+    protected void injectionContext(InjectionContext injectionContext) {
+        super.injectionContext(injectionContext);
+    }
+
+    CB beanInstance() {
+        return beanInstance;
     }
 
     void activate() {
         super.activate(InjectionServices.createActivationRequestDefault());
     }
+
+
 }

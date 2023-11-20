@@ -8,7 +8,7 @@ import io.helidon.common.types.TypeName;
 
 /**
  * Service metadata.
- * Also a unique identification of a service in the service registry.
+ * Also serves as a unique identification of a service in the service registry.
  *
  * @param <T> type of the service implementation this descriptor describes
  */
@@ -60,7 +60,7 @@ public interface ServiceDescriptor<T> extends Weighted {
      *
      * @return required dependencies
      */
-    default List<IpInfo> dependencies() {
+    default List<IpId> dependencies() {
         return List.of();
     }
 
@@ -89,5 +89,15 @@ public interface ServiceDescriptor<T> extends Weighted {
      */
     default Set<TypeName> scopes() {
         return Set.of();
+    }
+
+    /**
+     * Returns {@code true} for abstract classes and interfaces,
+     * returns {@code false} by default.
+     *
+     * @return whether this descriptor describes an abstract class or interface
+     */
+    default boolean isAbstract() {
+        return false;
     }
 }

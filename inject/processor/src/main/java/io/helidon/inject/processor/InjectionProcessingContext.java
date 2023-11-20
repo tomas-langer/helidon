@@ -18,4 +18,6 @@ public interface InjectionProcessingContext {
     void addClass(TypeName triggerType, TypeName typeName, ClassModel.Builder generate);
 
     Optional<ClassModel.Builder> generatedType(TypeName typeName);
+
+    HandlingScope scope();
 }

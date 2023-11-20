@@ -12,9 +12,11 @@ class InjectionProcessingContextImpl implements InjectionProcessingContext {
     private final List<ClassCode> descriptors = new ArrayList<>();
     private final List<ClassCode> nonDescriptors = new ArrayList<>();
     private final ProcessingContext ctx;
+    private final HandlingScope scope;
 
-    InjectionProcessingContextImpl(ProcessingContext ctx) {
+    InjectionProcessingContextImpl(ProcessingContext ctx, String scope) {
         this.ctx = ctx;
+        this.scope = new HandlingScope(scope);
     }
 
     @Override
@@ -70,6 +72,11 @@ class InjectionProcessingContextImpl implements InjectionProcessingContext {
             }
         }
         return Optional.empty();
+    }
+
+    @Override
+    public HandlingScope scope() {
+        return scope;
     }
 
     List<ClassCode> otherClassModels() {

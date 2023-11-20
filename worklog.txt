@@ -1,3 +1,22 @@
+Injection plans
+
+1. on service activation, we create the injection plan (io.helidon.inject.runtime.ServiceProviderBase.gatherDependencies)
+    - for each IpInfo, find providers
+    - create injectionContext
+2. we may obtain an injection plan from Application through injectionPlanBinder
+
+
+Map<IpId<?>, Supplier<?>> injectionPlan = new HashMap<>();
+
+        Services services = injectionServices.services();
+        for (IpInfo ipInfo : servicesDeps) {
+            prepareDependency(services, injectionPlan, ipInfo);
+        }
+
+        this.injectionContext = InjectionContext.create(injectionPlan);
+
+
+
 io.helidon.inject.runtime.DefaultInjectionPlans.resolve
 
 
@@ -30,20 +49,3 @@ User APIs:
 Internal APIs (code generated)
 - ServiceSource<T> extends ServiceDescriptor<T>
 
-
-- Activator - manages the state of the ServiceProvider
-
-In the end, we should bind an Activator, that creates a ServiceProvider and manages its state
-
-
-what do we want to bind to the service binder?
-
-ActivationResult Activator.activate(ActivationRequest)
-    - result contains ServiceProvider
-
-ActivationResult DeActivator.deactivate(DeActivationRequest)
-    -
-
-ServiceProvider
-
-io.helidon.inject.maven.plugin.AbstractCreatorMojo.determinePackageName - always create io.helidon.config

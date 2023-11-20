@@ -23,7 +23,6 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.helidon.common.types.Annotation;
-import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.InvocationContext;
@@ -45,13 +44,13 @@ import jakarta.inject.Provider;
 public class Invocation<V> implements Interceptor.Chain<V> {
     private final InvocationContext ctx;
     private final List<Provider<Interceptor>> interceptors;
-    private final Set<TypeName> checkedExceptions;
+    private final Set<Class<? extends Throwable>> checkedExceptions;
     private int interceptorPos;
     private Invoker<V> call;
 
     private Invocation(InvocationContext ctx,
                       Invoker<V> call,
-                      Set<TypeName> checkedExceptions) {
+                       Set<Class<? extends Throwable>> checkedExceptions) {
         this.ctx = ctx;
         this.call = call;
         this.interceptors = List.copyOf(ctx.interceptors());
@@ -79,24 +78,23 @@ public class Invocation<V> implements Interceptor.Chain<V> {
     public static <V> V createInvokeAndSupply(InvocationContext ctx,
                                               Invoker<V> call,
                                               Object[] args,
-                                              TypeName... checkedExceptions) throws Exception {
+                                              Set<Class<? extends Throwable>> checkedExceptions) throws Exception {
         Objects.requireNonNull(ctx);
         Objects.requireNonNull(call);
         Objects.requireNonNull(args);
         Objects.requireNonNull(checkedExceptions);
 
-        Set<TypeName> checked = Set.of(checkedExceptions);
         if (ctx.interceptors().isEmpty()) {
             try {
                 return call.invoke(args);
             } catch (Throwable t) {
-                if (shouldThrow(checked, t.getClass())) {
+                if (shouldThrow(checkedExceptions, t.getClass())) {
                     throw t;
                 }
                 throw new InvocationException("Error in interceptor chain processing", t, true);
             }
         } else {
-            return (V) new Invocation(ctx, call, checked).proceed(args);
+            return (V) new Invocation(ctx, call, checkedExceptions).proceed(args);
         }
     }
 
@@ -216,10 +214,13 @@ public class Invocation<V> implements Interceptor.Chain<V> {
             interceptorPos++;
             try {
                 return interceptor.proceed(ctx, this, args);
+            } catch (RuntimeException e) {
+                interceptorPos--;
+                throw e;
             } catch (Throwable t) {
                 interceptorPos--;
 
-                if (t instanceof InvocationException) {
+                if (shouldThrow(checkedExceptions, t.getClass())) {
                     throw t;
                 }
 
@@ -239,32 +240,36 @@ public class Invocation<V> implements Interceptor.Chain<V> {
 
         try {
             return call.invoke(args);
-        } catch (Throwable t) {
-            if (t instanceof InvocationException) {
-                if (!((InvocationException) t).targetWasCalled()) {
-                    // allow the call to happen again
-                    this.call = call;
-                }
-                throw t;
+        } catch (InvocationException e) {
+            if (e.targetWasCalled()) {
+                // allow the call to happen again
+                this.call = call;
             }
-
+            throw e;
+        } catch (RuntimeException e) {
+            this.call = call;
+            throw e;
+        } catch (Throwable t) {
             // allow the call to happen again
             this.call = call;
             if (shouldThrow(checkedExceptions, t.getClass())) {
+                // do not wrap, declared checked exception
                 throw t;
             }
+            // wrap, unexpected exception/throwable
             throw new InvocationException("Error in interceptor chain processing", t, true);
         }
     }
 
-    private static boolean shouldThrow(Set<TypeName> checked, Class<?> t) {
-        if (checked.contains(TypeName.create(t))) {
+    private static boolean shouldThrow(Set<Class<? extends Throwable>> checked, Class<? extends Throwable> t) {
+        if (checked.contains(t)) {
             return true;
         }
-        Class<?> superclass = t.getSuperclass();
-        if (superclass == null || superclass.equals(Object.class)) {
-            return false;
+        for (Class<? extends Throwable> aClass : checked) {
+            if (aClass.isAssignableFrom(t)) {
+                return true;
+            }
         }
-        return shouldThrow(checked, superclass);
+        return false;
     }
 }

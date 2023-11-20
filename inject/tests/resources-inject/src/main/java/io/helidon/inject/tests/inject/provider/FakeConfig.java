@@ -35,7 +35,7 @@ public interface FakeConfig {
     }
 
     @Singleton
-    @Weight(Weighted.DEFAULT_WEIGHT+1)
+    @Weight(Weighted.DEFAULT_WEIGHT + 1)
     class HigherWeightBuilder extends Builder {
     }
 

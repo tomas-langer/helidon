@@ -35,7 +35,7 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     @Override
     public Binder bindTo(ServiceDescriptor<?> untrustedSp) {
         // don't trust what we get, but instead lookup the service provider that we carry in our services registry
-        ServiceProvider<?> serviceProvider = services.serviceProviderFor(untrustedSp.serviceType());
+        ServiceProvider<?> serviceProvider = services.serviceProvider(untrustedSp);
         Optional<? extends ServiceProviderBindable<?>> bindable = serviceProvider.serviceProviderBindable();
         Optional<Binder> binder = (bindable.isPresent()) ? bindable.get().injectionPlanBinder() : Optional.empty();
         if (binder.isEmpty()) {
@@ -53,29 +53,43 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bind(IpId<?> id,
-                       ServiceDescriptor<?> serviceProvider) {
+    public Binder bindNull(IpId ipIdentity) {
         // NOP
         return this;
     }
 
     @Override
-    public Binder bindMany(IpId<?> id,
-                           ServiceDescriptor<?>... serviceProviders) {
-        // NOP
+    public Binder bind(IpId id, boolean useProvider, ServiceDescriptor<?> descriptor) {
         return this;
     }
 
     @Override
-    public Binder bindVoid(IpId<?> ipIdentity) {
-        // NOP
+    public Binder bindOptional(IpId id, boolean useProvider, ServiceDescriptor<?>... descriptor) {
         return this;
     }
 
     @Override
-    public Binder runtimeBind(IpId<?> ipIdentity,
-                               Class<?> serviceType) {
-        // NOP
+    public Binder bindMany(IpId id, boolean useProvider, ServiceDescriptor<?>... serviceProviders) {
+        return this;
+    }
+
+    @Override
+    public Binder runtimeBind(IpId id, boolean useProvider, Class<?> serviceType) {
+        return this;
+    }
+
+    @Override
+    public Binder runtimeBindOptional(IpId id, boolean useProvider, Class<?> serviceType) {
+        return this;
+    }
+
+    @Override
+    public Binder runtimeBindMany(IpId id, boolean useProvider, Class<?> serviceType) {
+        return this;
+    }
+
+    @Override
+    public Binder runtimeBindNullable(IpId id, boolean useProvider, Class<?> serviceType) {
         return this;
     }
 

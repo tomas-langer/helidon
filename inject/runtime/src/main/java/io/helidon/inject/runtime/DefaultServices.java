@@ -44,6 +44,7 @@ import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.Resettable;
 import io.helidon.inject.api.ServiceBinder;
+import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
@@ -115,10 +116,6 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         }
 
         return exploded;
-    }
-
-    static boolean hasContracts(ServiceInfoCriteria criteria) {
-        return !criteria.contracts().isEmpty();
     }
 
     /**
@@ -256,7 +253,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
         // make sure the activator has a chance to do something, such as create the initial service provider instance
         serviceActivator.activate(ActivationRequest.builder()
-                                          .targetPhase(Phase.PENDING)
+                                          .targetPhase(Phase.INIT)
                                           .throwIfError(false)
                                           .build());
 
@@ -291,6 +288,12 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 return servicesSharingThisContract;
             });
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> ServiceProvider<T> serviceProvider(ServiceDescriptor<T> descriptor) {
+        return (ServiceProvider<T>) servicesByTypeName.get(descriptor.serviceType());
     }
 
     void state(State state) {
@@ -328,27 +331,22 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     List<ServiceProvider<?>> lookup(ServiceInfoCriteria criteria,
                                     boolean expected,
                                     int limit) {
+
         List<ServiceProvider<?>> result;
 
         lookupCount.incrementAndGet();
 
-        if (hasContracts(criteria)) {
-            TypeName serviceTypeName = criteria.serviceTypeName().orElse(null);
-            boolean hasOneContractInCriteria = (1 == criteria.contracts().size());
-            TypeName theOnlyContractRequested = (hasOneContractInCriteria)
-                    ? criteria.contracts().iterator().next() : null;
-            if (serviceTypeName == null
-                    && hasOneContractInCriteria
-                    && criteria.qualifiers().isEmpty()) {
-                serviceTypeName = theOnlyContractRequested;
-            }
-            if (serviceTypeName != null) {
-                ServiceProvider exact = servicesByTypeName.get(serviceTypeName);
+        if (!criteria.contracts().isEmpty()) {
+            if (criteria.serviceTypeName().isPresent()) {
+                // when a specific service type is requested, we go for it
+                ServiceProvider exact = servicesByTypeName.get(criteria.serviceTypeName().get());
                 if (exact != null) {
                     return explodeFilterAndSort(List.of(exact), criteria, expected);
                 }
             }
-            if (hasOneContractInCriteria) {
+
+            if (1 == criteria.contracts().size()) {
+                TypeName theOnlyContractRequested = criteria.contracts().iterator().next();
                 Set<ServiceProvider<?>> subsetOfMatches = servicesByContract.get(theOnlyContractRequested);
                 if (subsetOfMatches != null) {
                     result = subsetOfMatches.stream()
@@ -462,5 +460,4 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                                                       InjectionServices injectionServices) {
         return InjectionApplicationActivator.create(injectionServices, app);
     }
-
 }

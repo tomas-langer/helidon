@@ -22,9 +22,9 @@ import java.util.List;
 
 import io.helidon.common.Weighted;
 import io.helidon.common.Weights;
+import io.helidon.inject.api.testsubjects.InjectionServices1Provider;
 import io.helidon.inject.api.testsubjects.InjectionServices2Provider;
 import io.helidon.inject.api.testsubjects.InjectionServices3Provider;
-import io.helidon.inject.api.testsubjects.InjectionServices1Provider;
 
 import org.junit.jupiter.api.Test;
 

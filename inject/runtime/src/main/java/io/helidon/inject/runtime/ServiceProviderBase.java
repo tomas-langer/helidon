@@ -8,6 +8,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationRequest;
@@ -21,23 +22,26 @@ import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InterceptionMetadata;
 import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
+import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.spi.InjectionResolver;
 
 import jakarta.inject.Provider;
 
 public abstract class ServiceProviderBase<T>
         extends DescribedServiceProvider<T>
         implements ServiceProviderBindable<T>, ServiceDescriptor<T>, Activator<T> {
-    private static final TypeName PROVIDER_TYPE = TypeName.create(Provider.class);
+    static final TypeName PROVIDER_TYPE = TypeName.create(Provider.class);
+    private static final System.Logger LOGGER = System.getLogger(ServiceProviderBase.class.getName());
     private static final TypeName SERVICE_PROVIDER_TYPE = TypeName.create(ServiceProvider.class);
+    private static final TypeName INJECTION_POINT_PROVIDER_TYPE = TypeName.create(InjectionPointProvider.class);
 
     private final InjectionServices injectionServices;
     private final InterceptionMetadata interceptionMetadata;
@@ -45,7 +49,7 @@ public abstract class ServiceProviderBase<T>
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
     private volatile T serviceInstance;
-    private volatile Phase currentPhase = Phase.INIT;
+    private volatile Phase currentPhase = Phase.CONSTRUCTED;
     private volatile ServiceProvider<?> interceptor;
     private volatile InjectionContext injectionContext;
 
@@ -105,29 +109,69 @@ public abstract class ServiceProviderBase<T>
         return this;
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
     @Override
-    public Optional<T> first(ContextualServiceQuery ctx) {
-        T serviceOrProvider = get(ctx.expected());
+    public List<T> list(ContextualServiceQuery query) {
+        T serviceOrProvider = get(query.expected());
+
+        Object result;
+        if (contracts().contains(PROVIDER_TYPE)) {
+            if (contracts().contains(INJECTION_POINT_PROVIDER_TYPE)) {
+                InjectionPointProvider<T> provider = (InjectionPointProvider<T>) serviceOrProvider;
+                result = provider.list(query);
+            } else if (contracts().contains(SERVICE_PROVIDER_TYPE)) {
+                ServiceProvider<T> provider = (ServiceProvider<T>) serviceOrProvider;
+                result = provider.list(query);
+            } else {
+                Provider<T> provider = (Provider<T>) serviceOrProvider;
+                result = provider.get();
+            }
+        } else {
+            result = serviceOrProvider;
+        }
+
+        if (result == null) {
+            if (query.expected()) {
+                throw new ServiceProviderInjectionException("This managed service instance expected to have been set",
+                                                            this);
+            }
+            return List.of();
+        }
+
+        if (result instanceof List list) {
+            return list;
+        } else {
+            return (List<T>) List.of(result);
+        }
+    }
+
+    @Override
+    public Optional<T> first(ContextualServiceQuery query) {
+        T serviceOrProvider = get(query.expected());
 
         T service;
-        if (serviceOrProvider == null) {
-            service = null;
-        } else {
-            if (isProvider()) {
-                service = fromProvider(ctx, serviceOrProvider);
+        if (contracts().contains(PROVIDER_TYPE)) {
+            if (contracts().contains(INJECTION_POINT_PROVIDER_TYPE)) {
+                InjectionPointProvider<T> provider = (InjectionPointProvider<T>) serviceOrProvider;
+                service = provider.first(query).orElse(null);
+            } else if (contracts().contains(SERVICE_PROVIDER_TYPE)) {
+                ServiceProvider<T> provider = (ServiceProvider<T>) serviceOrProvider;
+                service = provider.first(query).orElse(null);
             } else {
-                service = serviceOrProvider;
+                Provider<T> provider = (Provider<T>) serviceOrProvider;
+                service = provider.get();
             }
+        } else {
+            service = serviceOrProvider;
         }
 
         if (service == null) {
-            if (ctx.expected()) {
+            if (query.expected()) {
                 throw new ServiceProviderInjectionException("This managed service instance expected to have been set",
                                                             this);
             }
             return Optional.empty();
         }
-
         return Optional.of(service);
     }
 
@@ -167,8 +211,22 @@ public abstract class ServiceProviderBase<T>
     }
 
     @Override
+    public Optional<ServiceInjectionPlanBinder.Binder> injectionPlanBinder() {
+        if (injectionContext != null) {
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "this service provider already has an injection plan (which is unusual here): " + this);
+        }
+        return Optional.of(new ServiceInjectBinderImpl(injectionServices, this));
+    }
+
+    @Override
     public String toString() {
         return description();
+    }
+
+    @Override
+    public boolean isProvider() {
+        return contracts().contains(PROVIDER_TYPE);
     }
 
     protected T get(boolean expected) {
@@ -187,7 +245,7 @@ public abstract class ServiceProviderBase<T>
         }
         try {
             lock.lock();
-            return get();
+            return serviceInstance;
         } finally {
             lock.unlock();
         }
@@ -202,6 +260,10 @@ public abstract class ServiceProviderBase<T>
         } finally {
             lock.unlock();
         }
+    }
+
+    protected ServiceSource<T> source() {
+        return source;
     }
 
     protected void instance(T instance) {
@@ -226,7 +288,7 @@ public abstract class ServiceProviderBase<T>
         if (fq) {
             return descriptor().serviceType().fqName();
         }
-        return descriptor().serviceType().className();
+        return descriptor().serviceType().classNameWithEnclosingNames();
     }
 
     protected InjectionServices injectionServices() {
@@ -235,7 +297,7 @@ public abstract class ServiceProviderBase<T>
 
     protected ActivationResult doActivate(ActivationRequest req) {
         Phase initialPhase = this.currentPhase;
-        Phase startingPhase = req.startingPhase().orElse(Phase.PENDING);
+        Phase startingPhase = req.startingPhase().orElse(initialPhase);
         Phase targetPhase = req.targetPhase();
         this.currentPhase = startingPhase;
         Phase finishingPhase = startingPhase;
@@ -247,8 +309,8 @@ public abstract class ServiceProviderBase<T>
                 .targetActivationPhase(targetPhase)
                 .finishingStatus(ActivationStatus.SUCCESS);
 
-        if (targetPhase.ordinal() >= Phase.PENDING.ordinal() && initialPhase == Phase.INIT) {
-            pending(req, res);
+        if (targetPhase.ordinal() >= Phase.INIT.ordinal() && initialPhase == Phase.CONSTRUCTED) {
+            init(req, res);
         }
         finishingPhase = res.finishingActivationPhase().orElse(finishingPhase);
 
@@ -308,6 +370,7 @@ public abstract class ServiceProviderBase<T>
                     .build();
         }
 
+        res.startingActivationPhase(this.currentPhase);
         stateTransitionStart(res, Phase.PRE_DESTROYING);
         preDestroy(req, res);
         stateTransitionStart(res, Phase.DESTROYED);
@@ -342,10 +405,8 @@ public abstract class ServiceProviderBase<T>
         }
     }
 
-    protected void prepareDependency(Services services, Map<IpId<?>, Supplier<?>> injectionPlan, IpInfo dependency) {
-        IpId<?> id = dependency.id();
-
-        ServiceInfoCriteria criteria = toCriteria(dependency);
+    protected void prepareDependency(Services services, Map<IpId, Supplier<?>> injectionPlan, IpId dependency) {
+        ServiceInfoCriteria criteria = dependency.toCriteria();
         List<ServiceProvider<?>> discovered = services.lookupAll(criteria, false)
                 .stream()
                 .filter(it -> it != this)
@@ -358,11 +419,11 @@ public abstract class ServiceProviderBase<T>
         // now there are a few options - optional, list, and single instance
         if (discovered.isEmpty()) {
             if (ipType.isOptional()) {
-                injectionPlan.put(id, Optional::empty);
+                injectionPlan.put(dependency, Optional::empty);
                 return;
             }
             if (ipType.isList()) {
-                injectionPlan.put(id, List::of);
+                injectionPlan.put(dependency, List::of);
                 return;
             }
             throw new ServiceProviderInjectionException("Expected to resolve a service matching "
@@ -377,12 +438,12 @@ public abstract class ServiceProviderBase<T>
             // is a list needed?
             TypeName typeOfElements = ipType.typeArguments().getFirst();
             if (typeOfElements.equals(PROVIDER_TYPE) || typeOfElements.equals(SERVICE_PROVIDER_TYPE)) {
-                injectionPlan.put(id, () -> discovered);
+                injectionPlan.put(dependency, () -> discovered);
                 return;
             }
 
             if (discovered.size() == 1) {
-                injectionPlan.put(id, () -> {
+                injectionPlan.put(dependency, () -> {
                     Object resolved = discovered.getFirst().get();
                     if (resolved instanceof List<?>) {
                         return resolved;
@@ -392,7 +453,7 @@ public abstract class ServiceProviderBase<T>
                 return;
             }
 
-            injectionPlan.put(id, () -> discovered.stream()
+            injectionPlan.put(dependency, () -> discovered.stream()
                     .map(ServiceProvider::get)
                     .toList());
             return;
@@ -401,11 +462,11 @@ public abstract class ServiceProviderBase<T>
             // is an Optional needed?
             TypeName typeOfElement = ipType.typeArguments().getFirst();
             if (typeOfElement.equals(PROVIDER_TYPE) || typeOfElement.equals(SERVICE_PROVIDER_TYPE)) {
-                injectionPlan.put(id, () -> Optional.of(discovered.getFirst()));
+                injectionPlan.put(dependency, () -> Optional.of(discovered.getFirst()));
                 return;
             }
 
-            injectionPlan.put(id, () -> {
+            injectionPlan.put(dependency, () -> {
                 Object resolved = discovered.getFirst().get();
                 if (resolved instanceof Optional<?>) {
                     return resolved;
@@ -415,23 +476,30 @@ public abstract class ServiceProviderBase<T>
             return;
         }
 
-        if (ipType.equals(PROVIDER_TYPE) || ipType.equals(SERVICE_PROVIDER_TYPE)) {
+        if (ipType.equals(PROVIDER_TYPE) || ipType.equals(SERVICE_PROVIDER_TYPE) || ipType.equals(INJECTION_POINT_PROVIDER_TYPE)) {
             // is a provider needed?
-            injectionPlan.put(id, discovered::getFirst);
+            injectionPlan.put(dependency, discovered::getFirst);
             return;
         }
         // and finally just get the value of the first service
-        injectionPlan.put(id, discovered.getFirst()::get);
+        injectionPlan.put(dependency, discovered.getFirst()::get);
     }
 
     protected void stateTransitionStart(ActivationResult.Builder res, Phase phase) {
-        res.startingActivationPhase(currentPhase)
-                .finishingActivationPhase(phase);
+        res.finishingActivationPhase(phase);
         this.currentPhase = phase;
     }
 
-    protected void pending(ActivationRequest req, ActivationResult.Builder res) {
-        stateTransitionStart(res, Phase.PENDING);
+    protected Optional<InjectionContext> injectionContext() {
+        return Optional.ofNullable(injectionContext);
+    }
+
+    protected void injectionContext(InjectionContext injectionContext) {
+        this.injectionContext = injectionContext;
+    }
+
+    protected void init(ActivationRequest req, ActivationResult.Builder res) {
+        stateTransitionStart(res, Phase.INIT);
     }
 
     private void setActive(ActivationRequest req, ActivationResult.Builder res) {
@@ -449,16 +517,21 @@ public abstract class ServiceProviderBase<T>
     private void gatherDependencies(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.GATHERING_DEPENDENCIES);
 
-        List<IpInfo> servicesDeps = dependencies();
+        List<IpId> servicesDeps = dependencies();
 
         if (servicesDeps.isEmpty()) {
             return;
         }
 
-        Map<IpId<?>, Supplier<?>> injectionPlan = new HashMap<>();
+        if (injectionContext != null) {
+            // obtained from application
+            return;
+        }
+
+        Map<IpId, Supplier<?>> injectionPlan = new HashMap<>();
 
         Services services = injectionServices.services();
-        for (IpInfo ipInfo : servicesDeps) {
+        for (IpId ipInfo : servicesDeps) {
             prepareDependency(services, injectionPlan, ipInfo);
         }
 
@@ -472,22 +545,171 @@ public abstract class ServiceProviderBase<T>
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private T fromProvider(ContextualServiceQuery ctx, T serviceOrProvider) {
-        if (serviceOrProvider instanceof InjectionPointProvider<?> ipp) {
-            return (T) ipp.first(ctx).orElse(null);
-        }
-        if (serviceOrProvider instanceof Provider<?> provider) {
-            return (T) provider.get();
-        }
-        throw new UnsupportedOperationException("Not yet implemented in new world");
-        // return NonSingletonServiceProvider.createAndActivate(this);
-    }
+    protected static class ServiceInjectBinderImpl implements ServiceInjectionPlanBinder.Binder {
+        private final InjectionServices injectionServices;
+        private final ServiceProviderBase<?> self;
+        private final Map<IpId, Supplier<?>> injectionPlan = new HashMap<>();
+        private final Services services;
 
-    private ServiceInfoCriteria toCriteria(IpInfo dependency) {
-        return ServiceInfoCriteria.builder()
-                .addContract(dependency.contract())
-                .qualifiers(dependency.qualifiers())
-                .build();
+        protected ServiceInjectBinderImpl(InjectionServices services, ServiceProviderBase<?> self) {
+            this.injectionServices = services;
+            this.self = self;
+            this.services = services.services();
+        }
+
+        @Override
+        public void commit() {
+            self.injectionContext(InjectionContext.create(injectionPlan));
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder bind(IpId id, boolean useProvider, ServiceDescriptor<?> descriptor) {
+            ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(descriptor), id);
+            if (useProvider) {
+                injectionPlan.put(id, () -> serviceProvider);
+            } else {
+                ContextualServiceQuery query = ContextualServiceQuery.builder()
+                        .serviceInfoCriteria(id.toCriteria())
+                        .expected(true)
+                        .build();
+                injectionPlan.put(id, () -> mapFromProvider(query, serviceProvider));
+            }
+
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder bindOptional(IpId id,
+                                                              boolean useProvider,
+                                                              ServiceDescriptor<?>... descriptor) {
+
+            if (descriptor.length == 0) {
+                injectionPlan.put(id, Optional::empty);
+            } else {
+                ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(descriptor[0]), id);
+                if (useProvider) {
+                    injectionPlan.put(id, () -> Optional.of(serviceProvider));
+                } else {
+                    ContextualServiceQuery query = ContextualServiceQuery.builder()
+                            .serviceInfoCriteria(id.toCriteria())
+                            .build();
+                    injectionPlan.put(id, () -> Optional.ofNullable(mapFromProvider(query, serviceProvider)));
+                }
+            }
+
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder bindMany(IpId id,
+                                                          boolean useProvider,
+                                                          ServiceDescriptor<?>... descriptors) {
+
+            List<? extends ServiceProvider<?>> providers = Stream.of(descriptors)
+                    .map(services::serviceProvider)
+                    .map(it -> BoundServiceProvider.create(it, id))
+                    .toList();
+
+            if (useProvider) {
+                injectionPlan.put(id, () -> providers);
+            } else {
+                ContextualServiceQuery query = ContextualServiceQuery.builder()
+                        .serviceInfoCriteria(id.toCriteria())
+                        .expected(true)
+                        .build();
+                injectionPlan.put(id, () -> providers.stream()
+                        .flatMap(it -> mapStreamFromProvider(query, it))
+                        .toList());
+            }
+
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder bindNull(IpId id) {
+            injectionPlan.put(id, () -> null);
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder runtimeBind(IpId id, boolean useProvider, Class<?> serviceType) {
+            if (self instanceof InjectionResolver ir) {
+                Optional<IpId> foundIp = self.dependencies()
+                        .stream()
+                        .filter(it -> it == id)
+                        .findFirst();
+
+                if (foundIp.isPresent()) {
+                    injectionPlan.put(id, () -> ir.resolve(foundIp.get(), injectionServices, self, true).get());
+                    return this;
+                }
+            }
+            ServiceProvider<?> serviceProvider = services.lookup(serviceType);
+            injectionPlan.put(id, () -> useProvider ? serviceProvider : serviceProvider.get());
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder runtimeBindOptional(IpId id, boolean useProvider, Class<?> serviceType) {
+            if (self instanceof InjectionResolver ir) {
+                Optional<IpId> foundIp = self.dependencies()
+                        .stream()
+                        .filter(it -> it == id)
+                        .findFirst();
+
+                if (foundIp.isPresent()) {
+                    injectionPlan.put(id, () -> ir.resolve(foundIp.get(), injectionServices, self, true));
+                    return this;
+                }
+            }
+            Optional<? extends ServiceProvider<?>> serviceProvider = services.lookupFirst(serviceType, false);
+            if (serviceProvider.isEmpty()) {
+                injectionPlan.put(id, Optional::empty);
+            } else {
+                injectionPlan.put(id, () -> useProvider ? Optional.of(serviceProvider) : Optional.of(serviceProvider.get()));
+            }
+
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder runtimeBindMany(IpId id, boolean useProvider, Class<?> serviceType) {
+            List<? extends ServiceProvider<?>> providers = services.lookupAll(serviceType);
+
+            if (useProvider) {
+                injectionPlan.put(id, () -> providers);
+            } else {
+                injectionPlan.put(id, () -> providers.stream()
+                        .map(ServiceProvider::get)
+                        .toList());
+            }
+
+            return this;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder runtimeBindNullable(IpId id, boolean useProvider, Class<?> serviceType) {
+            Optional<? extends ServiceProvider<?>> serviceProvider = services.lookupFirst(serviceType, false);
+
+            if (serviceProvider.isEmpty()) {
+                injectionPlan.put(id, () -> null);
+            } else {
+                injectionPlan.put(id, () -> useProvider ? serviceProvider : serviceProvider.get());
+            }
+
+            return this;
+        }
+
+        protected Map<IpId, Supplier<?>> injectionPlan() {
+            return injectionPlan;
+        }
+
+        private Object mapFromProvider(ContextualServiceQuery query, ServiceProvider<?> provider) {
+            return provider.first(query).orElse(null);
+        }
+
+        private Stream<?> mapStreamFromProvider(ContextualServiceQuery query, ServiceProvider<?> provider) {
+            return provider.list(query).stream();
+        }
     }
 }

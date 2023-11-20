@@ -20,9 +20,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
-import io.helidon.inject.api.InterceptedTrigger;
 import io.helidon.inject.api.ClassNamed;
 import io.helidon.inject.api.ExternalContracts;
+import io.helidon.inject.api.InterceptedTrigger;
 import io.helidon.inject.tests.inject.ClassNamedY;
 import io.helidon.inject.tests.plain.interceptor.IA;
 import io.helidon.inject.tests.plain.interceptor.IB;

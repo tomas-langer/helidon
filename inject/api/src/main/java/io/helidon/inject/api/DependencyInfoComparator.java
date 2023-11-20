@@ -40,12 +40,12 @@ public class DependencyInfoComparator implements java.util.Comparator<Dependency
     @Override
     public int compare(DependencyInfo o1,
                        DependencyInfo o2) {
-        IpId<?> ipi1 = o1.injectionPointDependencies().iterator().next().id();
-        IpId<?> ipi2 = o2.injectionPointDependencies().iterator().next().id();
+        IpId ipi1 = o1.injectionPointDependencies().iterator().next();
+        IpId ipi2 = o2.injectionPointDependencies().iterator().next();
 
 
-        java.util.Comparator<IpId<?>> idComp = (o11, o21) -> {
-            int result = Comparator.<IpId<?>>comparingInt(it -> it.elementKind().ordinal()).compare(o11, o21);
+        java.util.Comparator<IpId> idComp = (o11, o21) -> {
+            int result = Comparator.<IpId>comparingInt(it -> it.elementKind().ordinal()).compare(o11, o21);
             if (result != 0) {
                 return result;
             }

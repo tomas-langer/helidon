@@ -39,7 +39,7 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InterceptionStrategy;
-import io.helidon.inject.api.IpInfo;
+import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.processor.spi.HelidonProcessorExtension;
 import io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
@@ -55,7 +55,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             .addTypeArgument(TypeNames.HELIDON_QUALIFIER)
             .build();
     private static final TypeName SERVICE_DEPS = TypeName.builder(io.helidon.common.types.TypeNames.LIST)
-            .addTypeArgument(TypeName.create(IpInfo.class))
+            .addTypeArgument(TypeName.create(IpId.class))
             .build();
     private static final TypeName CONTRACTS_RETURN_TYPE = TypeName.builder(io.helidon.common.types.TypeNames.SET)
             .addTypeArgument(io.helidon.common.types.TypeNames.TYPE_NAME)
@@ -183,7 +183,6 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             serviceTypeFields(classModel, serviceType, descriptorType);
             typeFields(classModel, genericTypes);
             injectionPointIdFields(classModel, genericTypes, params);
-            injectionPointInfoFields(classModel, genericTypes, params);
             contractsField(classModel, contracts);
             dependenciesField(classModel, params);
             qualifiersField(classModel, qualifiers);
@@ -215,12 +214,13 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             descriptorTypeMethod(classModel);
             contractsMethod(classModel, contracts);
             dependenciesMethod(classModel, params, hasSuperType);
+            isAbstractMethod(classModel, hasSuperType, isAbstractClass);
             instantiateMethod(classModel, serviceType, params, isAbstractClass, constructorIntercepted, methodsIntercepted);
             injectFieldsMethod(classModel, serviceType, params, hasSuperType, canIntercept, maybeIntercepted);
             injectMethodsMethod(classModel, serviceType, params, hasSuperType);
             postConstructMethod(typeInfo, classModel, serviceType);
             preDestroyMethod(typeInfo, classModel, serviceType);
-            qualifiersMethod(classModel, qualifiers);
+            qualifiersMethod(classModel, qualifiers, hasSuperType);
             weightMethod(typeInfo, classModel);
             runLevelMethod(typeInfo, classModel);
 
@@ -284,8 +284,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .addLine("return " + aDouble + ";")));
     }
 
-    private void qualifiersMethod(ClassModel.Builder classModel, Set<Qualifier> qualifiers) {
-        if (qualifiers.isEmpty()) {
+    private void qualifiersMethod(ClassModel.Builder classModel, Set<Qualifier> qualifiers, boolean hasSuperType) {
+        if (qualifiers.isEmpty() && !hasSuperType) {
             return;
         }
         // List<Qualifier> qualifiers()
@@ -364,6 +364,18 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         }
     }
 
+    private void isAbstractMethod(ClassModel.Builder classModel, boolean hasSuperType, boolean isAbstractClass) {
+        if (!isAbstractClass && !hasSuperType) {
+            return;
+        }
+        // only override for abstract types (and subtypes, where we do not want to check if super is abstract), default is false
+        classModel.addMethod(isAbstract -> isAbstract
+                .name("isAbstract")
+                .returnType(io.helidon.common.types.TypeNames.PRIMITIVE_BOOLEAN)
+                .addAnnotation(Annotations.OVERRIDE)
+                .addLine("return " + isAbstractClass + ";"));
+    }
+
     private void instantiateMethod(ClassModel.Builder classModel,
                                    TypeName serviceType,
                                    List<ParamDefinition> params,
@@ -374,7 +386,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             return;
         }
 
-        // T instantiate(InjectionContext ctx)
+        // T instantiate(InjectionContext ctx, InterceptionMetadata interceptMeta)
         TypeName toInstantiate = interceptedMethods
                 ? TypeName.builder(serviceType).className(serviceType.className() + "__Intercepted").build()
                 : serviceType;
@@ -517,7 +529,6 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .type(SERVICE_DEPS)
                 .defaultValueContent("@java.util.List@.of(" + params.stream()
                         .map(ParamDefinition::constantName)
-                        .map(it -> it + "_INFO")
                         .collect(Collectors.joining(", "))
                                              + ")"));
     }
@@ -546,72 +557,56 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                     .accessModifier(AccessModifier.PUBLIC)
                     .isStatic(true)
                     .isFinal(true)
-                    .type(ipId(param.type()))
+                    .type(TypeNames.INJECTION_PARAMETER_ID)
                     .name(param.constantName())
-                    .defaultValueContent("@io.helidon.inject.api.IpId@.<"
-                                                 + param.type.resolvedName()
-                                                 + ">builder()"
-                                                 + ".elementKind(@io.helidon.common.types.ElementKind@."
-                                                 + param.kind.name() + ")"
-                                                 + ".name(\""
-                                                 + param.fieldId() + "\")"
-                                                 + ".serviceType(TYPE_NAME)"
-                                                 + ".build()"));
-        }
-    }
+                    .update(it -> {
+                        StringBuilder defaultContent = new StringBuilder();
+                        defaultContent.append("@io.helidon.inject.api.IpId@")
+                                .append(".builder()")
+                                .append(".elementKind(@io.helidon.common.types.ElementKind@.")
+                                .append(param.kind.name())
+                                .append(")")
+                                .append(".name(\"")
+                                .append(param.fieldId())
+                                .append("\")")
+                                .append(".service(TYPE_NAME)")
+                                .append(".descriptor(DESCRIPTOR_TYPE)")
+                                .append(".field(\"")
+                                .append(param.constantName())
+                                .append("\")")
+                                .append(".typeName(")
+                                .append(genericTypes.get(param.type().resolvedName()).constantName())
+                                .append(")")
+                                .append(".contract(")
+                                .append(genericTypes.get(param.contract().fqName()).constantName())
+                                .append(")");
+                        if (param.access() != AccessModifier.PACKAGE_PRIVATE) {
+                            defaultContent.append(".access(@io.helidon.common.types.AccessModifier@.")
+                                    .append(param.access())
+                                    .append(")");
+                        }
 
-    private void injectionPointInfoFields(ClassModel.Builder classModel,
-                                          Map<String, GenericTypeDeclaration> genericTypes,
-                                          List<ParamDefinition> params) {
-        // constant for injection points
-        for (ParamDefinition param : params) {
-            classModel.addField(field -> {
-                field.accessModifier(AccessModifier.PRIVATE)
-                        .isStatic(true)
-                        .isFinal(true)
-                        .type(TypeNames.INJECTION_PARAMETER_INFO)
-                        .name(param.constantName() + "_INFO");
-                StringBuilder defaultContent = new StringBuilder();
-                defaultContent.append("@io.helidon.inject.api.IpInfo@.builder()")
-                        .append(".id(")
-                        .append(param.constantName())
-                        .append(")")
-                        .append(".field(\"")
-                        .append(param.constantName())
-                        .append("\")")
-                        .append(".typeName(")
-                        .append(genericTypes.get(param.type().resolvedName()).constantName())
-                        .append(")")
-                        .append(".contract(")
-                        .append(genericTypes.get(param.contract().fqName()).constantName()).append(")");
+                        if (param.isStatic()) {
+                            defaultContent.append(".isStatic(true)");
+                        }
 
-                if (param.access() != AccessModifier.PACKAGE_PRIVATE) {
-                    defaultContent.append(".access(@io.helidon.common.types.AccessModifier@.")
-                            .append(param.access())
-                            .append(")");
-                }
+                        if (!param.qualifiers().isEmpty()) {
+                            for (Qualifier qualifier : param.qualifiers()) {
+                                defaultContent.append(
+                                                "\n.addQualifier(qualifier -> qualifier.typeName(@io.helidon.common.types.TypeName@"
+                                                        + ".create(\"")
+                                        .append(qualifier.qualifierTypeName())
+                                        .append("\"))");
+                                qualifier.value().ifPresent(q -> defaultContent.append(".value(\"")
+                                        .append(q)
+                                        .append("\")"));
+                                defaultContent.append(")");
+                            }
+                        }
 
-                if (param.isStatic()) {
-                    defaultContent.append(".isStatic(true)");
-                }
-
-                if (!param.qualifiers().isEmpty()) {
-                    for (Qualifier qualifier : param.qualifiers()) {
-                        defaultContent.append(
-                                        "\n.addQualifier(qualifier -> qualifier.typeName(@io.helidon.common.types.TypeName@"
-                                                + ".create(\"")
-                                .append(qualifier.qualifierTypeName())
-                                .append("\"))");
-                        qualifier.value().ifPresent(it -> defaultContent.append(".value(\"")
-                                .append(it)
-                                .append("\")"));
-                        defaultContent.append(")");
-                    }
-                }
-
-                defaultContent.append(".build()");
-                field.defaultValueContent(defaultContent.toString());
-            });
+                        defaultContent.append(".build()");
+                        it.defaultValueContent(defaultContent.toString());
+                    }));
         }
     }
 
@@ -776,9 +771,9 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .ifPresent(it -> collectedContracts.addAll(it.typeValues().orElseGet(List::of)));
 
         // go through hierarchy
-        typeInfo.superTypeInfo().ifPresent(it -> contracts(collectedContracts, it, false));
+        typeInfo.superTypeInfo().ifPresent(it -> contracts(collectedContracts, it, contractEligible));
         // interfaces are considered contracts by default
-        typeInfo.interfaceTypeInfo().forEach(it -> contracts(collectedContracts, it, true));
+        typeInfo.interfaceTypeInfo().forEach(it -> contracts(collectedContracts, it, contractEligible));
     }
 
     private String codeGenQualifier(Qualifier qualifier) {
@@ -936,8 +931,9 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
     private List<ParamDefinition> declareCtrParamsAndGetThem(Method.Builder method, List<ParamDefinition> params) {
         /*
-            var ipParam1_serviceProviders = ctx.param(IP_PARAM_1);
-            var ipParam2_someOtherName = ctx.param(IP_PARAM_2);
+            var ipParam1_serviceProviders = (Type) ctx.param(IP_PARAM_1);
+            var ipParam2_someOtherName = (Type) ctx.param(IP_PARAM_2);
+
             return new ConfigProducer(ipParam1_serviceProviders, someOtherName);
          */
         List<ParamDefinition> constructorParams = params.stream()
@@ -946,7 +942,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         // for each parameter, obtain its value from context
         for (ParamDefinition param : constructorParams) {
-            method.addLine("var " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
+            method.addLine("var " + param.ipParamName() + " = (" + param.type().resolvedName()
+                                   + ") ctx.param(" + param.constantName() + ")"
                                    + ";");
         }
 
@@ -967,7 +964,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         }
 
         for (ParamDefinition param : fields) {
-            method.addLine("var " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
+            method.addLine("var " + param.ipParamName() + " = (" + param.type().resolvedName()
+                                   + ") ctx.param(" + param.constantName() + ")"
                                    + ";");
         }
 
@@ -1030,7 +1028,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         // for each parameter, obtain its value from context
         for (ParamDefinition param : methodsParams) {
-            method.addLine("var " + param.fieldId() + " = ctx.param(" + param.constantName() + ");");
+            method.addLine("var " + param.fieldId() + " = (" + param.type().resolvedName()
+                                   + ") ctx.param(" + param.constantName() + ");");
         }
 
         method.addLine("");
@@ -1046,12 +1045,6 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                     .collect(Collectors.joining(", "))
                                    + ");");
         }
-    }
-
-    private TypeName ipId(TypeName type) {
-        return TypeName.builder(TypeNames.INJECTION_PARAMETER_ID)
-                .addTypeArgument(type)
-                .build();
     }
 
     private Optional<Double> weight(TypeInfo typeInfo) {

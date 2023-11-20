@@ -31,7 +31,7 @@ class TurnInterceptor implements Interceptor {
     @SuppressWarnings("unchecked")
     public <V> V proceed(InvocationContext ctx,
                          Chain<V> chain,
-                         Object... args) {
+                         Object... args) throws Exception {
         // in "real life" you'd use the ctx to determine the best decision - this is just for simple demonstration only!
         if (args.length == 1) {
             // this is the call to turn()

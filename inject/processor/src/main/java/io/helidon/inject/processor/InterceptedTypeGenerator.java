@@ -12,6 +12,7 @@ import io.helidon.common.processor.GeneratedAnnotationHandler;
 import io.helidon.common.processor.classmodel.ClassModel;
 import io.helidon.common.processor.classmodel.Constructor;
 import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
@@ -22,6 +23,7 @@ import static io.helidon.inject.processor.InjectionProcessorExtension.SET_OF_QUA
 class InterceptedTypeGenerator {
     private static final TypeName GENERATOR = TypeName.create(InterceptedTypeGenerator.class);
     private static final TypeName INVOKER_TYPE = TypeName.create("io.helidon.inject.api.Invoker");
+    private static final TypeName RUNTIME_EXCEPTION_TYPE = TypeName.create(RuntimeException.class);
     private final TypeName serviceType;
     private final TypeName descriptorType;
     private final TypeName interceptedType;
@@ -77,6 +79,7 @@ class InterceptedTypeGenerator {
             String invoker = interceptedMethod.invokerName();
 
             classModel.addMethod(method -> method
+                    .addAnnotation(Annotations.OVERRIDE)
                     .accessModifier(info.accessModifier())
                     .name(info.elementName())
                     .returnType(info.typeName())
@@ -107,6 +110,11 @@ class InterceptedTypeGenerator {
                                     .addLine(" throw helidonInject__e;")
                                     .add("}");
 
+                        }
+                        if (!interceptedMethod.exceptionTypes().contains(RUNTIME_EXCEPTION_TYPE)) {
+                            it.addLine(" catch (@" + RuntimeException.class.getName() + "@ helidonInject__e) {")
+                                    .addLine("throw helidonInject__e;")
+                                    .add("}");
                         }
                         it.addLine(" catch (@" + Exception.class.getName() + "@ helidonInject__e) {")
                                 .addLine("throw new @" + RuntimeException.class.getName() + "@(helidonInject__e);")
@@ -166,14 +174,12 @@ class InterceptedTypeGenerator {
                 cModel.addLine("return null;");
                 cModel.add("}");
             }
-            if (!interceptedMethod.exceptionTypes().isEmpty()) {
-                cModel.addLine(",");
-                cModel.add(interceptedMethod.exceptionTypes()
-                                   .stream()
-                                   .map(it -> TypesCodeGen.toCreate(it, false))
-                                   .collect(Collectors.joining(", ")));
-            }
-            cModel.addLine(");")
+            cModel.add(", @java.util.Set@.of(")
+                    .add(interceptedMethod.exceptionTypes()
+                                 .stream()
+                                 .map(it -> it.fqName() + ".class")
+                                 .collect(Collectors.joining(", ")))
+                    .addLine("));")
                     .decreasePadding();
         }
     }
@@ -227,9 +233,29 @@ class InterceptedTypeGenerator {
                                     Set<TypeName> exceptionTypes) {
 
         public static List<MethodDefinition> toDefinitions(List<TypedElementInfo> interceptedMethods) {
+            List<TypedElementInfo> sortedMethods = new ArrayList<>(interceptedMethods);
+            // order must be fixed
+            sortedMethods.sort((first, second) -> {
+                int compare = first.elementName().compareTo(second.elementName());
+                if (compare != 0) {
+                    return compare;
+                }
+                compare = Integer.compare(first.parameterArguments().size(), second.parameterArguments().size());
+                if (compare != 0) {
+                    return compare;
+                }
+                for (int i = 0; i < first.parameterArguments().size(); i++) {
+                     compare = first.parameterArguments().get(i).elementName().compareTo(second.parameterArguments().get(i).elementName());
+                     if (compare != 0) {
+                         return compare;
+                     }
+                }
+                return 0;
+            });
+
             List<MethodDefinition> result = new ArrayList<>();
-            for (int i = 0; i < interceptedMethods.size(); i++) {
-                TypedElementInfo typedElementInfo = interceptedMethods.get(i);
+            for (int i = 0; i < sortedMethods.size(); i++) {
+                TypedElementInfo typedElementInfo = sortedMethods.get(i);
 
                 String constantName =
                         "METHOD_" + i + "_" + InjectionProcessorExtension.toConstantName(typedElementInfo.elementName());

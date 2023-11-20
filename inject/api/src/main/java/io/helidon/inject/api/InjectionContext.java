@@ -10,7 +10,7 @@ import java.util.function.Supplier;
  * for the specific location.
  */
 public interface InjectionContext {
-    static InjectionContext create(Map<IpId<?>, Supplier<?>> injectionPlans) {
+    static InjectionContext create(Map<IpId, Supplier<?>> injectionPlans) {
         return new InjectionContextImpl(injectionPlans);
     }
 
@@ -19,8 +19,8 @@ public interface InjectionContext {
      * The ID must be known in advance and provided through {@link io.helidon.inject.api.ServiceDescriptor}.
      *
      * @param paramId parameter ID
-     * @param <T>     type of the parameter
+     * @param <T>     type of the parameter, for convenience, the result is cast to this type
      * @return value for the parameter, this may be null
      */
-    <T> T param(IpId<T> paramId);
+    <T> T param(IpId paramId);
 }

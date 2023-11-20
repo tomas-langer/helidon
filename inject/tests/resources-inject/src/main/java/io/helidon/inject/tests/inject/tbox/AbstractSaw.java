@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Optional;
 
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.tests.inject.tbox.impl.DullBlade;
 import io.helidon.inject.tests.inject.Verification;
+import io.helidon.inject.tests.inject.tbox.impl.DullBlade;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Provider;

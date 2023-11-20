@@ -64,7 +64,7 @@ interface ActivationLogEntryBlueprint {
      *
      * @return the injection point
      */
-    Optional<IpInfo> injectionPoint();
+    Optional<IpId> injectionPoint();
 
     /**
      * The time this event was generated.

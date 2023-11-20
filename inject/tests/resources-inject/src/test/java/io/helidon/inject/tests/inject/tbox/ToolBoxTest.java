@@ -52,8 +52,6 @@ import org.junit.jupiter.api.Test;
 import static io.helidon.common.types.TypeName.create;
 import static io.helidon.inject.testing.InjectionTestingSupport.resetAll;
 import static io.helidon.inject.testing.InjectionTestingSupport.testableServices;
-import static io.helidon.inject.tests.inject.TestUtils.loadStringFromFile;
-import static io.helidon.inject.tests.inject.TestUtils.loadStringFromResource;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
@@ -178,36 +176,26 @@ class ToolBoxTest {
     @Test
     void modules() {
         List<ServiceProvider<ModuleComponent>> allModules = services.lookupAll(ModuleComponent.class);
-        List<String> desc = allModules.stream().map(ServiceProvider::description).collect(Collectors.toList());
+        List<String> desc = allModules.stream()
+                .map(it -> it.id() + ":" + it.currentActivationPhase())
+                .toList();
         // note that order matters here
         // there is now config module as active as well
         assertThat("ensure that Annotation Processors are enabled in the tools module meta-inf/services",
-                   desc, contains("Injection$$Module:ACTIVE", "Injection$$Module:ACTIVE", "Injection$$TestModule:ACTIVE"));
+                   desc, contains("io.helidon.config.HelidonInjection__ModuleComponent:ACTIVE",
+                                  "io.helidon.inject.configdriven.runtime.ConfigDrivenInjectModule:ACTIVE",
+                                  "io.helidon.inject.tests.inject.HelidonInjection__ModuleComponent:ACTIVE",
+                                  "io.helidon.inject.tests.inject.TestHelidonInjection__ModuleComponent:ACTIVE"));
         List<String> names = allModules.stream()
                 .sorted()
                 .map(ServiceProvider::get)
                 .map(ModuleComponent::name)
                 .toList();
         assertThat(names,
-                   contains("io.helidon.config", "io.helidon.inject.tests.inject", "io.helidon.inject.tests.inject/test"));
-    }
-
-    /**
-     * The module-info that was created (by APT processing).
-     */
-    @Test
-    void moduleInfo() {
-        assertThat(loadStringFromFile("target/inject/classes/module-info.java.inject"),
-                   equalTo(loadStringFromResource("expected/module-info.java._inject_")));
-    }
-
-    /**
-     * The test version of module-info that was created (by APT processing).
-     */
-    @Test
-    void testModuleInfo() {
-        assertThat(loadStringFromFile("target/inject/test-classes/module-info.java.inject"),
-                   equalTo(loadStringFromResource("expected/tests-module-info.java._inject_")));
+                   contains("io.helidon.config",
+                            "io.helidon.inject.configdriven.runtime",
+                            "unknown/io.helidon.inject.tests.inject",
+                            "unknown/io.helidon.inject.tests.inject/test"));
     }
 
     @Test
@@ -242,9 +230,9 @@ class ToolBoxTest {
      */
     @Test
     void runlevel() {
-        assertThat("we start with 2 because we are looking for interceptors (which there is 2 here in this module)",
+        assertThat("we start with 1 because of config driven",
                    injectionServices.metrics().orElseThrow().lookupCount().orElseThrow(),
-                   equalTo(2));
+                   equalTo(1));
         List<ServiceProvider<?>> runLevelServices = services
                 .lookupAll(ServiceInfoCriteria.builder().runLevel(RunLevel.STARTUP).build(), true);
         List<String> desc = runLevelServices.stream().map(ServiceProvider::description).collect(Collectors.toList());
@@ -254,7 +242,7 @@ class ToolBoxTest {
         runLevelServices.forEach(sp -> Objects.requireNonNull(sp.get(), sp + " failed on get()"));
         assertThat("activation should not triggered one new lookup from startup",
                    injectionServices.metrics().orElseThrow().lookupCount().orElseThrow(),
-                   equalTo(3));
+                   equalTo(2));
         desc = runLevelServices.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat(desc,
                    contains("TestingSingleton:ACTIVE"));
@@ -298,16 +286,16 @@ class ToolBoxTest {
                 .collect(Collectors.toMap(Map.Entry::getKey,
                                           e -> e.getValue().startingActivationPhase().toString()
                                                   + "->" + e.getValue().finishingActivationPhase()));
-        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.Injection$$Application"), "ACTIVE->DESTROYED"));
-        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.Injection$$Module"), "ACTIVE->DESTROYED"));
-        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.Injection$$TestApplication"), "ACTIVE->DESTROYED"));
-        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.Injection$$TestModule"), "ACTIVE->DESTROYED"));
+        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.HelidonInjection__Application"), "ACTIVE->DESTROYED"));
+        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.HelidonInjection__ModuleComponent"), "ACTIVE->DESTROYED"));
+        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.TestHelidonInjection__Application"), "ACTIVE->DESTROYED"));
+        assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.TestHelidonInjection__ModuleComponent"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.stacking.MostOuterCommonContractImpl"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.stacking.OuterCommonContractImpl"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.stacking.CommonContractImpl"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.TestingSingleton"), "ACTIVE->DESTROYED"));
-        // ConfigProducer is the 9th
-        assertThat(report + " : expected 9 services to be present", report.size(), equalTo(9));
+        // 8 above + Config module + ConfigProducer + config driven lifecycle service = 11
+        assertThat(report + " : expected 9 services to be present", report.size(), equalTo(11));
 
         assertThat(TestingSingleton.postConstructCount(), equalTo(1));
         assertThat(TestingSingleton.preDestroyCount(), equalTo(1));
@@ -325,7 +313,7 @@ class ToolBoxTest {
                                           e2 -> e2.getValue().startingActivationPhase().toString()
                                                   + "->" + e2.getValue().finishingActivationPhase()));
         // now contains config as well
-        assertThat(report.toString(), report.size(), is(9));
+        assertThat(report.toString(), report.size(), is(10));
 
         tearDown();
         map = injectionServices.shutdown().orElseThrow();
@@ -340,8 +328,8 @@ class ToolBoxTest {
         // note that order matters here (weight ranked)
         assertThat(desc,
                 contains("ASerialProviderImpl:INIT",
-                         "MyServices$MyConcreteClassContractPerRequestIPProvider:INIT",
-                         "MyServices$MyConcreteClassContractPerRequestProvider:INIT",
+                         "MyServices.MyConcreteClassContractPerRequestIPProvider:INIT",
+                         "MyServices.MyConcreteClassContractPerRequestProvider:INIT",
                          "BladeProvider:INIT"));
     }
 
@@ -353,7 +341,7 @@ class ToolBoxTest {
                         .build());
         List<String> desc = providers.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat(desc,
-                   contains("YImpl$$Injection$$Interceptor:INIT",
+                   contains("YImpl:INIT",
                             "BladeProvider:INIT"));
 
         providers = services.lookupAll(

@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.empty;
 
 /**
  * Designed to re-run the same tests from base, but using the application-created DI model instead.
@@ -62,23 +62,17 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
         Set<TypeName> searchLog = new LinkedHashSet<>(contractSearchLog);
         searchLog.addAll(servicesSearchLog);
 
-        // we expect three classes of lookups here:
-        // 1) Any and all config beans (like FakeServerConfig).
-        // 2) Any *Optional* unknown services (like the FakeTracer).
-        // 3) Any intercepted service (like ZImpl).
+        // everything is handle by Application class
+        // except for config beans, and these are handled by  ConfigDrivenInstanceProvider itself
         assertThat("Full log: " + searchLog,
                    searchLog,
-                   containsInAnyOrder(
-                           // config beans are always looked up
-                           TypeName.create("io.helidon.inject.configdriven.tests.config.FakeServerConfig"),
-                           // tracer doesn't really exist, so it is looked up out of best-effort (as an optional injection dep)
-                           TypeName.create("io.helidon.inject.configdriven.tests.config.FakeTracer"),
-                           // ZImpl is intercepted
-                           TypeName.create("io.helidon.inject.configdriven.interceptor.test.ZImpl")
-                   ));
+                   empty());
+
+        // there is always a lookup for Config from config bean registry
+        // nothing else should be done
         assertThat("lookup log: " + criteriaSearchLog,
                    metrics.lookupCount().orElseThrow(),
-                   is(3));
+                   is(1));
     }
 
     @Test
@@ -101,6 +95,7 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
                 .build();
         List<ServiceProvider<?>> startups = services.lookupAll(criteria);
         List<String> desc = startups.stream().map(ServiceProvider::description).collect(Collectors.toList());
+
         assertThat(desc,
                    contains(ASimpleRunLevelService.class.getSimpleName() + ":INIT"));
         startups.forEach(ServiceProvider::get);

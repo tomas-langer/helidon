@@ -22,7 +22,6 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -43,10 +42,10 @@ import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Application;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
@@ -307,8 +306,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
     }
 
     BindingPlan bindingPlan(InjectionServices services,
-                            TypeName serviceTypeName,
-                            List<IpInfo> dependencies) {
+                            TypeName serviceTypeName) {
 
         ServiceInfoCriteria si = toServiceInfoCriteria(serviceTypeName);
         ServiceProvider<?> sp = services.services().lookupFirst(si);
@@ -318,14 +316,13 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
             return new BindingPlan(serviceDescriptorType, Set.of());
         }
 
+        List<IpId> dependencies = sp.dependencies();
         if (dependencies.isEmpty()) {
             return new BindingPlan(serviceDescriptorType, Set.of());
         }
 
         Set<Binding> bindings = new LinkedHashSet<>();
-        for (IpInfo ipoint : dependencies) {
-            IpId<?> id = ipoint.id();
-
+        for (IpId ipoint : dependencies) {
             // type of the result that satisfies the injection point (full generic type)
             TypeName ipType = ipoint.typeName();
 
@@ -333,22 +330,10 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
             List<ServiceProvider<?>> qualified = iPlan.qualifiedProviders();
             List<?> unqualified = iPlan.unqualifiedProviders();
 
-            BindingType type;
-            if (ipType.isList()) {
-                type = BindingType.MANY;
-            } else {
-                if (qualified.isEmpty()) {
-                    if (unqualified.isEmpty()) {
-                        type = BindingType.VOID;
-                    } else {
-                        type = BindingType.RUNTIME;
-                    }
-                } else {
-                    type = BindingType.BIND;
-                }
-            }
-            switch (type) {
-            case RUNTIME -> {
+            BindingType type = bindingType(ipType);
+            boolean isProvider = isProvider(ipType);
+
+            if (qualified.isEmpty() && !unqualified.isEmpty()) {
                 Object target = unqualified.getFirst();
                 TypeName targetType;
                 if (target instanceof Class<?> aClass) {
@@ -359,13 +344,11 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                     // the actual class name may be some generated type, we are interested in the contract required
                     targetType = ipoint.contract();
                 }
-                bindings.add(new Binding(type, ipoint, List.of(targetType)));
-            }
-            case BIND -> bindings.add(new Binding(type, ipoint, List.of(qualified.getFirst().descriptorType())));
-            case MANY -> bindings.add(new Binding(type, ipoint, qualified.stream()
-                    .map(ServiceProvider::descriptorType)
-                    .toList()));
-            case VOID -> bindings.add(new Binding(type, ipoint, List.of()));
+                bindings.add(new Binding(BindingTime.RUNTIME, type, ipoint, isProvider, List.of(targetType)));
+            } else {
+                bindings.add(new Binding(BindingTime.BUILD, type, ipoint, isProvider, qualified.stream()
+                        .map(ServiceProvider::descriptorType)
+                        .toList()));
             }
         }
 
@@ -439,7 +422,26 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         return builder.error(e).success(false).build();
     }
 
-    private InjectionPlan injectionPlan(InjectionServices services, ServiceProvider<?> self, IpInfo ipoint) {
+    private boolean isProvider(TypeName ipType) {
+        if (ipType.isOptional() || ipType.isList() && !ipType.typeArguments().isEmpty()) {
+            return isProvider(ipType.typeArguments().getFirst());
+        }
+        return InjectTypes.JAKARTA_PROVIDER.equals(ipType)
+                || InjectTypes.JAVAX_PROVIDER.equals(ipType)
+                || InjectTypes.INJECTION_POINT_PROVIDER.equals(ipType);
+    }
+
+    private BindingType bindingType(TypeName ipType) {
+        if (ipType.isList()) {
+            return BindingType.MANY;
+        }
+        if (ipType.isOptional()) {
+            return BindingType.OPTIONAL;
+        }
+        return BindingType.SINGLE;
+    }
+
+    private InjectionPlan injectionPlan(InjectionServices services, ServiceProvider<?> self, IpId ipoint) {
         ServiceInfoCriteria dependencyTo = toServiceInfoCriteria(ipoint);
 
         if (self instanceof InjectionResolver ir) {
@@ -495,7 +497,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                 : Stream.of(target);
     }
 
-    private List<ServiceProvider<?>> injectionPointProvidersFor(Services services, IpInfo ipoint) {
+    private List<ServiceProvider<?>> injectionPointProvidersFor(Services services, IpId ipoint) {
         if (ipoint.qualifiers().isEmpty()) {
             return List.of();
         }
@@ -506,7 +508,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
         return services.lookupAll(criteria);
     }
 
-    private ServiceInfoCriteria toServiceInfoCriteria(IpInfo ipoint) {
+    private ServiceInfoCriteria toServiceInfoCriteria(IpId ipoint) {
         return ServiceInfoCriteria.builder()
                 .addContract(ipoint.contract())
                 .qualifiers(ipoint.qualifiers())
@@ -515,91 +517,104 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
     private void createConfigureMethodBody(InjectionServices services, List<TypeName> serviceTypes, Method.Builder method) {
         // first collect required dependencies by descriptor
-        Map<IpId<?>, IpInfo> dependenciesById = new HashMap<>();
-        for (TypeName typeName : serviceTypes) {
-            gatherDependencies(services, typeName, dependenciesById);
-        }
-
-        Map<TypeName, List<IpInfo>> dependenciesByService = new HashMap<>();
-        dependenciesById.forEach((id, info) -> {
-            dependenciesByService.computeIfAbsent(id.serviceType(), it -> new ArrayList<>())
-                    .add(info);
-        });
 
         Map<TypeName, Set<Binding>> injectionPlan = new LinkedHashMap<>();
-        dependenciesByService.forEach((service, dependencies) -> {
-            BindingPlan plan = bindingPlan(services, service, dependencies);
+        for (TypeName serviceType : serviceTypes) {
+            BindingPlan plan = bindingPlan(services, serviceType);
             if (!plan.bindings.isEmpty()) {
                 injectionPlan.put(plan.descriptorType(), plan.bindings());
             }
-        });
+        }
 
+        boolean supportNulls = false;
         // we group all bindings by descriptor they belong to
         injectionPlan.forEach((descriptorType, bindings) -> {
-            String descriptor = "@" + descriptorType.fqName() + "@";
+            method.addLine("binder.bindTo(@" + descriptorType.fqName() + "@.INSTANCE)")
+                    .increasePadding();
 
-            method.addLine("binder.bindTo(" + descriptor + ".INSTANCE)")
-                    .increasePadding()
-                    .update(it -> {
-                        for (Binding binding : bindings) {
-                            it.add(".")
-                                    .add(switch (binding.type()) {
-                                        case BIND -> "bind";
-                                        case MANY -> "bindMany";
-                                        case VOID -> "bindVoid";
-                                        case RUNTIME -> "runtimeBind";
-                                    })
-                                    .add("(")
-                                    .add(descriptor)
-                                    .add(".")
-                                    .add(binding.ipInfo().field());
+            for (Binding binding : bindings) {
+                String ipId = "@" + binding.ipInfo().descriptor().fqName() + "@." + binding.ipInfo().field();
 
-                            // we trust our own method to prepare the stuff correctly
-                            if (!binding.typeNames.isEmpty()) {
-                                if (binding.type() == BindingType.RUNTIME) {
-                                    it.add(", @" + binding.typeNames().getFirst().fqName() + "@.class");
-                                } else {
-                                    it.add((", "))
-                                            .add(binding.typeNames.stream()
-                                                         .map(targetDescriptor -> "@" + targetDescriptor.fqName()
-                                                                 + "@.INSTANCE")
-                                                         .collect(Collectors.joining(", ")));
-                                }
-                            }
-                            it.addLine(")");
+                switch (binding.time()) {
+                case RUNTIME -> {
+                    switch (binding.type()) {
+                    case SINGLE -> {
+                        if (supportNulls) {
+                            method.add(".runtimeBindNullable");
+                        } else {
+                            method.add(".runtimeBind");
                         }
-                    })
-                    .addLine(".commit();")
+                    }
+                    case OPTIONAL -> method.add(".runtimeBindOptional");
+                    case MANY -> method.add(".runtimeBindMany");
+                    }
+                    // such ass .runtimeBind(MyDescriptor.IP_ID_0, false, ConfigBean.class)
+                    method.add("(")
+                            .add(ipId + ", ")
+                            .add(binding.useProvider + ", ")
+                            .addLine("@" + binding.typeNames().getFirst().fqName() + "@.class)");
+                }
+                case BUILD -> {
+                    switch (binding.type()) {
+                    case SINGLE -> {
+                        if (binding.typeNames().isEmpty()) {
+                            if (supportNulls) {
+                                method.addLine(".bindNull(" + ipId + ")");
+                            } else {
+                                throw new ToolsException("Injection point requires a value, but no provider discovered: " + binding.ipInfo());
+                            }
+                        } else {
+                            method.add(".bind(")
+                                    .add(ipId + ",")
+                                    .add(binding.useProvider() + ", ")
+                                    .addLine("@" + binding.typeNames.getFirst().fqName() + "@.INSTANCE)");
+                        }
+                    }
+                    case OPTIONAL -> {
+                        method.add(".bindOptional(" + ipId + ", ")
+                                .add(String.valueOf(binding.useProvider()));
+                        if (binding.typeNames.isEmpty()) {
+                            method.addLine(")");
+                        } else {
+                            method.addLine(", @" + binding.typeNames.getFirst().fqName() + "@.INSTANCE)");
+                        }
+                    }
+                    case MANY -> {
+                        method.add(".bindMany(" + ipId + ", ")
+                                .add(String.valueOf(binding.useProvider()));
+                        if (binding.typeNames.isEmpty()) {
+                            method.addLine(")");
+                        } else {
+                            method.add(", ")
+                                    .add(binding.typeNames.stream()
+                                                     .map(targetDescriptor -> "@" + targetDescriptor.fqName()
+                                                             + "@.INSTANCE")
+                                                     .collect(Collectors.joining(", ")))
+                                    .addLine(")");
+                        }
+                    }
+                    }
+                }
+                }
+            }
+
+            /*
+            Commit the dependencies
+             */
+            method.addLine(".commit();")
                     .decreasePadding()
                     .addLine("");
         });
     }
 
-    private void gatherDependencies(InjectionServices services,
-                                    TypeName serviceTypeName,
-                                    Map<IpId<?>, IpInfo> dependenciesByServiceType) {
-        ServiceInfoCriteria si = toServiceInfoCriteria(serviceTypeName);
-        ServiceProvider<?> sp = services.services().lookupFirst(si);
-
-        if (!isQualifiedInjectionTarget(sp)) {
-            return;
-        }
-
-        List<IpInfo> dependencies = sp.dependencies();
-        if (dependencies.isEmpty()) {
-            return;
-        }
-
-        for (IpInfo dependency : dependencies) {
-            IpId<?> id = dependency.id();
-            dependenciesByServiceType.put(id, dependency);
-        }
+    enum BindingType {
+        SINGLE,
+        OPTIONAL,
+        MANY
     }
 
-    enum BindingType {
-        BIND,
-        MANY,
-        VOID,
+    enum BindingTime {
+        BUILD,
         RUNTIME
     }
 
@@ -609,17 +624,12 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
 
     record BindingPlan(TypeName descriptorType,
                        Set<Binding> bindings) {
-        void merge(BindingPlan plan) {
-            if (!descriptorType.equals(plan.descriptorType)) {
-                throw new IllegalStateException("Descriptor type mis-match in injection plan. " + descriptorType
-                                                        + ", and " + plan.descriptorType);
-            }
-            bindings.addAll(plan.bindings);
-        }
     }
 
-    record Binding(BindingType type,
-                   IpInfo ipInfo,
+    record Binding(BindingTime time,
+                   BindingType type,
+                   IpId ipInfo,
+                   boolean useProvider,
                    List<TypeName> typeNames) {
     }
 }

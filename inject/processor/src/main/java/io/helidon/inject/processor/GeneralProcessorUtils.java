@@ -34,7 +34,7 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.InjectTypes;
-import io.helidon.inject.api.IpInfo;
+import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.api.ServiceDescriptor;
@@ -332,7 +332,7 @@ public final class GeneralProcessorUtils {
         }
 
         @Override
-        public List<IpInfo> dependencies() {
+        public List<IpId> dependencies() {
             throw new UnsupportedOperationException("Simple descriptor does not contain this information");
         }
 

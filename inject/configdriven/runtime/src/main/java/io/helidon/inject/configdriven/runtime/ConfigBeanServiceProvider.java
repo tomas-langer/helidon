@@ -31,7 +31,7 @@ class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
 
     @Override
     public String description() {
-        return id() + ":ACTIVE";
+        return description() + "{" + id + "}:ACTIVE";
     }
 
     @Override

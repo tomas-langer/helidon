@@ -56,7 +56,7 @@ class PerRequestProviderTest {
     void myConcreteClassContractTest() {
         ServiceProvider<MyConcreteClassContract> sp = services.lookupFirst(MyConcreteClassContract.class);
         assertThat(sp.description(),
-                   equalTo("MyServices$MyConcreteClassContractPerRequestIPProvider:INIT"));
+                   equalTo("MyServices.MyConcreteClassContractPerRequestIPProvider:INIT"));
         MyConcreteClassContract instance0 = sp.get();
         assertThat(instance0.toString(),
                    equalTo("MyConcreteClassContractPerRequestIPProvider:instance_0, "

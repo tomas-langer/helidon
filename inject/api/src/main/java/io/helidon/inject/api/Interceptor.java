@@ -17,7 +17,7 @@
 package io.helidon.inject.api;
 
 /**
- * Implementors of this contract must be {@link jakarta.inject.Named} according to the {@link Intercepted}
+ * Implementors of this contract must be {@link jakarta.inject.Named} according to the {@link io.helidon.inject.api.InterceptedTrigger}
  * annotation they support.
  */
 @Contract

@@ -1,6 +1,7 @@
 package io.helidon.inject.configdriven.runtime;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,12 +24,13 @@ import io.helidon.inject.api.ActivationResult;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.Event;
+import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.IpInfo;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
+import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
@@ -60,6 +62,8 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     private final Set<Qualifier> qualifiers;
     private final ServiceSource<T> descriptor;
 
+    private volatile ConfigDrivenBinderImpl cdInjectionContext;
+
     ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceSource<T> descriptor) {
         super(injectionServices, descriptor);
 
@@ -81,7 +85,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
 
     // note that all responsibilities to resolve is delegated to the root provider
     @Override
-    public Optional<Object> resolve(IpInfo ipInfo,
+    public Optional<Object> resolve(IpId ipInfo,
                                     InjectionServices injectionServices,
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
@@ -119,12 +123,20 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
                                                                                            configBean.instance(),
                                                                                            configBean.name());
         managedConfigBeans.add(configBeanProvider);
+
+        ConfigDrivenInstanceProvider<T, CB> cdInstanceProvider
+                = new ConfigDrivenInstanceProvider<>(injectionServices(),
+                                                     descriptor,
+                                                     this,
+                                                     configBean.name(),
+                                                     configBean.instance());
         Object prev = managedConfiguredServicesMap.put(configBean.name(),
-                                                       new ConfigDrivenInstanceProvider<>(injectionServices(),
-                                                                                          descriptor,
-                                                                                          this,
-                                                                                          configBean.name(),
-                                                                                          configBean.instance()));
+                                                       cdInstanceProvider);
+
+        if (cdInjectionContext != null) {
+            cdInstanceProvider.injectionContext(cdInjectionContext.forInstance(cdInstanceProvider));
+        }
+
         assert (prev == null);
     }
 
@@ -214,31 +226,31 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
 
     @Override
     @SuppressWarnings("unchecked")
-    public Optional<T> first(ContextualServiceQuery ctx) {
+    public Optional<T> first(ContextualServiceQuery query) {
         // we are root provider
         if (currentActivationPhase() != Phase.ACTIVE) {
             // we know the activator is present, as we send it through constructor...
             ActivationResult res = super.activate(ActivationRequest.builder()
                                                           .targetPhase(InjectionServices.terminalActivationPhase()).build());
             if (res.failure()) {
-                if (ctx.expected()) {
+                if (query.expected()) {
                     throw new ServiceProviderInjectionException("Activation failed: " + res, this);
                 }
                 return Optional.empty();
             }
         }
 
-        ServiceInfoCriteria criteria = ctx.serviceInfoCriteria();
+        ServiceInfoCriteria criteria = query.serviceInfoCriteria();
         List<ServiceProvider<?>> qualifiedProviders = serviceProviders(criteria, false, true);
         for (ServiceProvider<?> qualifiedProvider : qualifiedProviders) {
             assert (this != qualifiedProvider);
-            Optional<?> serviceOrProvider = qualifiedProvider.first(ctx);
+            Optional<?> serviceOrProvider = qualifiedProvider.first(query);
             if (serviceOrProvider.isPresent()) {
                 return (Optional<T>) serviceOrProvider;
             }
         }
 
-        if (ctx.expected()) {
+        if (query.expected()) {
             throw new ServiceProviderInjectionException("Expected to find a match", this);
         }
 
@@ -318,6 +330,15 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         return qualifiers;
     }
 
+    @Override
+    public Optional<ServiceInjectionPlanBinder.Binder> injectionPlanBinder() {
+        if (injectionContext().isPresent()) {
+            LOGGER.log(System.Logger.Level.WARNING,
+                       "this service provider already has an injection plan (which is unusual here): " + this);
+        }
+        return Optional.of(new ConfigDrivenBinderImpl(injectionServices(), this));
+    }
+
     boolean hasManagedServices() {
         return !managedConfigBeans.isEmpty();
     }
@@ -328,7 +349,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     }
 
     @Override
-    protected void prepareDependency(Services services, Map<IpId<?>, Supplier<?>> injectionPlan, IpInfo dependency) {
+    protected void prepareDependency(Services services, Map<IpId, Supplier<?>> injectionPlan, IpId dependency) {
         // do nothing, config driven root service CANNOT be instantiated, as it does not have
         // a config bean to inject
     }
@@ -345,8 +366,8 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     }
 
     @Override
-    protected void pending(ActivationRequest req, ActivationResult.Builder res) {
-        super.pending(req, res);
+    protected void init(ActivationRequest req, ActivationResult.Builder res) {
+        super.init(req, res);
         if (registeredWithCbr.compareAndSet(false, true)) {
             ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
             if (cbr != null) {
@@ -374,7 +395,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             }
 
             csp.activate(ActivationRequest.builder()
-                                 .targetPhase(Phase.PENDING)
+                                 .targetPhase(Phase.INIT)
                                  .build());
         });
 
@@ -393,5 +414,70 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         }
 
         managedConfiguredServicesMap.values().forEach(ConfigDrivenInstanceProvider::activate);
+    }
+
+    protected static class ConfigDrivenBinderImpl extends ServiceProviderBase.ServiceInjectBinderImpl {
+        private final ConfigDrivenServiceProvider<?, ?> self;
+        private final List<RuntimeBind> beanInstanceBindings = new ArrayList<>();
+
+        protected ConfigDrivenBinderImpl(InjectionServices services, ConfigDrivenServiceProvider<?, ?> self) {
+            super(services, self);
+            this.self = self;
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder runtimeBind(IpId id, boolean useProvider, Class<?> serviceType) {
+
+            if (id.contract().equals(self.configBeanType()) && id.qualifiers().isEmpty()) {
+                beanInstanceBindings.add(new RuntimeBind(id, useProvider, false));
+                return this;
+            }
+
+            return super.runtimeBind(id, useProvider, serviceType);
+        }
+
+        @Override
+        public ServiceInjectionPlanBinder.Binder runtimeBindOptional(IpId id, boolean useProvider, Class<?> serviceType) {
+
+            if (id.contract().equals(self.configBeanType()) && id.qualifiers().isEmpty()) {
+                beanInstanceBindings.add(new RuntimeBind(id, useProvider, false));
+                return this;
+            }
+
+            return super.runtimeBindOptional(id, useProvider, serviceType);
+        }
+
+        @Override
+        public void commit() {
+            super.commit();
+
+            self.cdInjectionContext = this;
+        }
+
+        InjectionContext forInstance(ConfigDrivenInstanceProvider<?, ?> provider) {
+            Map<IpId, Supplier<?>> copy = new HashMap<>(injectionPlan());
+            for (RuntimeBind beanInstanceBinding : beanInstanceBindings) {
+                Supplier<?> supplier;
+                if (beanInstanceBinding.optional()) {
+                    if (beanInstanceBinding.provider()) {
+                        supplier = () -> Optional.of(provider);
+                    } else {
+                        supplier = () -> Optional.of(provider.beanInstance());
+                    }
+                } else {
+                    if (beanInstanceBinding.provider()) {
+                        supplier = () -> provider;
+                    } else {
+                        supplier = provider::beanInstance;
+                    }
+                }
+                copy.put(beanInstanceBinding.id(), supplier);
+            }
+
+            return InjectionContext.create(copy);
+        }
+
+        private record RuntimeBind(IpId id, boolean provider, boolean optional) {
+        }
     }
 }

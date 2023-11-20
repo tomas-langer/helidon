@@ -16,8 +16,8 @@
 
 package io.helidon.inject.tests.interception;
 
-import io.helidon.inject.api.InvocationException;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.InvocationException;
 import io.helidon.inject.api.Services;
 
 import org.junit.jupiter.api.BeforeAll;

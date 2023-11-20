@@ -3,6 +3,7 @@ package io.helidon.inject.processor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,6 +15,8 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -52,14 +55,23 @@ import static java.lang.System.Logger.Level.TRACE;
  * There is only a single annotation processor registered, which uses Helidon extension mechanism.
  */
 public final class HelidonAnnotationProcessor extends AbstractProcessor {
+    public static final String OPTION_INJECT_SCOPE = "inject.scope";
+    private static final Pattern SCOPE_PATTERN = Pattern.compile("(\\w+).*classes");
+
     private static final List<HelidonProcessorExtensionProvider> EXTENSIONS =
             HelidonServiceLoader.create(ServiceLoader.load(HelidonProcessorExtensionProvider.class,
                                                            HelidonAnnotationProcessor.class.getClassLoader()))
                     .asList();
-    private static final Set<String> SUPPORTED_APT_OPTIONS = EXTENSIONS.stream()
-            .flatMap(it -> it.supportedOptions().stream())
-            .collect(Collectors.toSet());
+    private static final Set<String> SUPPORTED_APT_OPTIONS;
     private static final TypeName GENERATOR = TypeName.create(HelidonAnnotationProcessor.class);
+
+    static {
+        Set<String> supportedOptions = EXTENSIONS.stream()
+                .flatMap(it -> it.supportedOptions().stream())
+                .collect(Collectors.toSet());
+        supportedOptions.add(OPTION_INJECT_SCOPE);
+        SUPPORTED_APT_OPTIONS = Set.copyOf(supportedOptions);
+    }
 
     private final System.Logger logger = System.getLogger(getClass().getName());
     private final Map<TypeName, List<HelidonProcessorExtension>> typeToExtensions = new HashMap<>();
@@ -117,7 +129,10 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
         super.init(processingEnv);
 
         this.ctx = ProcessingContext.create(processingEnv, SUPPORTED_APT_OPTIONS.toArray(new String[0]));
-        this.iCtx = new InjectionProcessingContextImpl(ctx);
+
+        String scope = guessScope(processingEnv, ctx);
+
+        this.iCtx = new InjectionProcessingContextImpl(ctx, scope);
         this.extensions = EXTENSIONS.stream()
                 .map(it -> {
 
@@ -167,6 +182,46 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
         };
     }
 
+    private String guessScope(ProcessingEnvironment processingEnv, ProcessingContext ctx) {
+        String scopeFromOptions = ctx.options().option(OPTION_INJECT_SCOPE, null);
+        if (scopeFromOptions != null) {
+            return scopeFromOptions;
+        }
+        try {
+            URI resourceUri = processingEnv.getFiler()
+                    .getResource(StandardLocation.CLASS_OUTPUT, "does.not.exist", "DefinitelyDoesNotExist")
+                    .toUri();
+
+            // should be something like:
+            // file:///projects/helidon_4/inject/tests/resources-inject/target/test-classes/does/not/exist/DefinitlyDoesNotExist
+            String resourceUriString = resourceUri.toString();
+            if (!resourceUriString.endsWith("/does/not/exist/DefinitelyDoesNotExist")) {
+                // cannot guess, not ending in expected string, assume production scope
+                return "";
+            }
+            // full URI
+            resourceUriString = resourceUriString
+                    .substring(0, resourceUriString.length() - "/does/not/exist/DefinitelyDoesNotExist".length());
+            // file:///projects/helidon_4/inject/tests/resources-inject/target/test-classes
+            int lastSlash = resourceUriString.lastIndexOf('/');
+            if (lastSlash < 0) {
+                // cannot guess, no path, assume production scope
+                return "";
+            }
+            resourceUriString = resourceUriString.substring(lastSlash + 1);
+            // test-classes
+            Matcher matcher = SCOPE_PATTERN.matcher(resourceUriString);
+            if (matcher.matches()) {
+                return matcher.group(1);
+            }
+            // not matched, either production (just "classes"), or could not match - assume production scope
+            return "";
+        } catch (IOException e) {
+            // we assume production scope
+            return "";
+        }
+    }
+
     private boolean doProcess(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (logger.isLoggable(TRACE)) {
             logger.log(TRACE, "Process annotations: " + annotations + ", processing over: " + roundEnv.processingOver());
@@ -183,9 +238,10 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
                 String packageName = topLevelPackage(generatedServiceDescriptors);
                 boolean hasModule = moduleName != null && !"unnamed module".equals(moduleName);
                 if (!hasModule) {
-                    moduleName = "unknown/" + packageName;
+                    moduleName = "unknown/" + packageName + (iCtx.scope().isProduction() ? "" : "/" + iCtx.scope().name());
                 }
-                ClassCode moduleComponent = ModuleComponentHandler.createClassModel(generatedServiceDescriptors,
+                ClassCode moduleComponent = ModuleComponentHandler.createClassModel(iCtx.scope(),
+                                                                                    generatedServiceDescriptors,
                                                                                     moduleName,
                                                                                     packageName);
 
@@ -217,7 +273,7 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
 
                     generatedServiceDescriptors.add(moduleType);
                     JavaFileObject sourceFile = filer
-                            .createSourceFile(  moduleType.declaredName(),
+                            .createSourceFile(moduleType.declaredName(),
                                               originatingElements);
                     try (PrintWriter pw = new PrintWriter(sourceFile.openWriter())) {
                         classModel.write(pw, "    ");
@@ -318,7 +374,6 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
         }
 
         Filer filer = ctx.aptEnv().getFiler();
-
 
         // generate all code
         var builders = iCtx.descriptorClassModels();

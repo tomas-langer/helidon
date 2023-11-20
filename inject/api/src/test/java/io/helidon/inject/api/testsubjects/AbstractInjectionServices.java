@@ -24,9 +24,9 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationLog;
 import io.helidon.inject.api.ActivationResult;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.Metrics;
-import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.Services;
 

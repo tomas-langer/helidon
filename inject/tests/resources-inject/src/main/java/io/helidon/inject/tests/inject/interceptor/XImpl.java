@@ -20,9 +20,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
-import io.helidon.inject.api.InterceptedTrigger;
 import io.helidon.inject.api.ClassNamed;
 import io.helidon.inject.api.ExternalContracts;
+import io.helidon.inject.api.InterceptedTrigger;
 import io.helidon.inject.tests.inject.ClassNamedX;
 import io.helidon.inject.tests.plain.interceptor.IA;
 import io.helidon.inject.tests.plain.interceptor.IB;
@@ -33,8 +33,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
 /**
- * This test case is applying {@link InterceptorBasedAnno} (an {@link InterceptedTrigger}) using the no-arg
- * constructor approach - all methods are intercepted.
+ * This test case is applying {@link InterceptorBasedAnno} (an {@link InterceptedTrigger})
  * <p>
  * Also note that interception was triggered by the presence of the {@link TestNamed} and {@link InterceptorBasedAnno} triggers.
  */
@@ -49,6 +48,7 @@ public class XImpl implements IA, IB, Closeable {
     }
 
     @Inject
+    @InterceptorBasedAnno("<init>")
     // will be intercepted
     XImpl(Optional<IA> optionalIA) {
         assert (optionalIA.isEmpty());
@@ -93,6 +93,7 @@ public class XImpl implements IA, IB, Closeable {
     }
 
     // will be intercepted
+    @InterceptorBasedAnno
     public long methodX(String arg1,
                         int arg2,
                         boolean arg3) throws IOException, RuntimeException, AssertionError {
@@ -101,18 +102,21 @@ public class XImpl implements IA, IB, Closeable {
 
     // test of package private
     // will be intercepted
+    @InterceptorBasedAnno
     String methodY() {
         return "methodY";
     }
 
     // test of protected
     // will be intercepted
+    @InterceptorBasedAnno
     protected String methodZ() {
         return "methodZ";
     }
 
     // test of protected
     // will be intercepted
+    @InterceptorBasedAnno
     protected void throwRuntimeException() {
         throw new RuntimeException("forced");
     }

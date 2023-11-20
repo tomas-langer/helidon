@@ -19,7 +19,7 @@ package io.helidon.inject.spi;
 import java.util.Optional;
 
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpInfo;
+import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.ServiceProvider;
 
 /**
@@ -41,7 +41,7 @@ public interface InjectionResolver {
      * @param resolveIps        flag indicating whether injection points should be resolved
      * @return the resolution for the plan or the injection point, or empty if unable to resolve the injection point context
      */
-    Optional<Object> resolve(IpInfo ipInfo,
+    Optional<Object> resolve(IpId ipInfo,
                              InjectionServices injectionServices,
                              ServiceProvider<?> serviceProvider,
                              boolean resolveIps);

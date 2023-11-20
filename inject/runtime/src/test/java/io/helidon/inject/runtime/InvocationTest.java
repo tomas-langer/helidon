@@ -19,6 +19,7 @@ package io.helidon.inject.runtime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.helidon.common.types.ElementKind;
@@ -65,7 +66,7 @@ class InvocationTest {
     @Test
     void normalCaseWithInterceptors() throws Exception {
         Object[] args = new Object[] {};
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, (arguments) -> calls.add(arguments), args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, (arguments) -> calls.add(arguments), args, Set.of());
         assertThat(result, is(true));
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(1));
@@ -89,7 +90,7 @@ class InvocationTest {
                 .build();
 
         Object[] args = new Object[] {};
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, (arguments) -> calls.add(arguments), args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, (arguments) -> calls.add(arguments), args, Set.of());
         assertThat(result, is(true));
         assertThat(first.callCount.get(), equalTo(0));
         assertThat(first.proceedCount.get(), equalTo(0));
@@ -105,7 +106,7 @@ class InvocationTest {
             throw re;
         };
         InvocationException e = assertThrows(InvocationException.class,
-                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
+                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of()));
         assertThat(e.getMessage(), equalTo("Error in interceptor chain processing"));
         assertThat(e.targetWasCalled(), is(true));
         assertThat(e.getCause(), is(re));
@@ -118,7 +119,7 @@ class InvocationTest {
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
-                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
+                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of()));
         assertThat(e.getMessage(),
                    equalTo("Duplicate invocation, or unknown call type: io.helidon.inject.runtime.InvocationTest test"));
         assertThat(e.targetWasCalled(), is(true));
@@ -137,7 +138,7 @@ class InvocationTest {
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = arguments -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
-                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
+                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of()));
         assertThat(e.getMessage(),
                    equalTo("Duplicate invocation, or unknown call type: io.helidon.inject.runtime.InvocationTest test"));
         assertThat(e.targetWasCalled(), is(true));
@@ -157,7 +158,7 @@ class InvocationTest {
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
-                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
+                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of()));
         assertThat(e.targetWasCalled(), is(true));
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(2));
@@ -175,7 +176,7 @@ class InvocationTest {
         second.control.exceptionBeforeProceed(new RuntimeException("before"));
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of());
         assertThat(result, is(true));
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(2));
@@ -193,7 +194,7 @@ class InvocationTest {
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
         InvocationException e = assertThrows(InvocationException.class,
-                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args));
+                                             () -> Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of()));
         assertThat(e.getMessage(),
                    equalTo("Duplicate invocation, or unknown call type: io.helidon.inject.runtime.InvocationTest test"));
         assertThat(e.targetWasCalled(), is(true));
@@ -214,7 +215,7 @@ class InvocationTest {
         second.control.exceptionAfterProceed(new RuntimeException("after"));
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of());
         assertThat("because exception happened after we called proceed in second the value is lost", result, nullValue());
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(3));
@@ -230,7 +231,7 @@ class InvocationTest {
         first.control.shortCircuitValue(false);
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of());
         assertThat(result, is(false));
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(0));
@@ -246,7 +247,7 @@ class InvocationTest {
         second.control.shortCircuitValue(false);
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of());
         assertThat(result, is(false));
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(1));
@@ -263,7 +264,7 @@ class InvocationTest {
         second.control.timesToCallProceed(0);
         Object[] args = new Object[] {};
         Invoker<Boolean> fnc = (arguments) -> calls.add(arguments);
-        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args);
+        Boolean result = Invocation.createInvokeAndSupply(dummyCtx, fnc, args, Set.of());
         assertThat(result, is(true));
         assertThat(first.callCount.get(), equalTo(1));
         assertThat(first.proceedCount.get(), equalTo(2));

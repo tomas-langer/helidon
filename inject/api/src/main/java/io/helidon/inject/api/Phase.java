@@ -20,9 +20,13 @@ package io.helidon.inject.api;
  * Forms a progression of full activation and deactivation.
  */
 public enum Phase {
-
     /**
-     * Starting state before anything happens activation-wise.
+     * A new instance has been created, service registry is not yet aware.
+     */
+    CONSTRUCTED(false),
+    /**
+     * Starting state before anything happens activation-wise. Service registry is aware.
+     * Initialization may be done here.
      */
     INIT(false),
 

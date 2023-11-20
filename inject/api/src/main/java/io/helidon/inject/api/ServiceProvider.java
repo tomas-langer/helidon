@@ -46,7 +46,7 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
      * @return the logical and immutable description
      */
     default String description() {
-        return descriptor().serviceType().className() + "[" + currentActivationPhase() + "]";
+        return serviceType().classNameWithEnclosingNames() + "[" + currentActivationPhase() + "]";
     }
 
     /**
@@ -116,7 +116,7 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
     }
 
     @Override
-    default List<IpInfo> dependencies() {
+    default List<IpId> dependencies() {
         return descriptor().dependencies();
     }
 
@@ -138,5 +138,10 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
     @Override
     default TypeName descriptorType() {
         return descriptor().descriptorType();
+    }
+
+    @Override
+    default boolean isAbstract() {
+        return descriptor().isAbstract();
     }
 }

@@ -80,6 +80,14 @@ interface ServiceInfoCriteriaBlueprint {
     Optional<Double> weight();
 
     /**
+     * Whether to include abstract type service providers.
+     *
+     * @return whether to include abstract classes and interfaces
+     */
+    @Option.DefaultBoolean(false)
+    boolean includeAbstract();
+
+    /**
      * Determines whether this service info matches the criteria for injection.
      * Matches is a looser form of equality check than {@code equals()}. If a service matches criteria
      * it is generally assumed to be viable for assignability.
@@ -89,6 +97,7 @@ interface ServiceInfoCriteriaBlueprint {
      */
     default boolean matches(ServiceInfoCriteriaBlueprint criteria) {
         return matchesContracts(criteria)
+                && matchesAbstract(includeAbstract(), criteria.includeAbstract())
                 && scopeTypeNames().containsAll(criteria.scopeTypeNames())
                 && Qualifiers.matchesQualifiers(qualifiers(), criteria.qualifiers())
                 && matches(runLevel(), criteria.runLevel());
@@ -114,10 +123,18 @@ interface ServiceInfoCriteriaBlueprint {
                     || this.contracts().contains(descriptor.serviceType());
         }
         return matches
+                && matchesAbstract(includeAbstract(), descriptor.isAbstract())
                 && descriptor.scopes().containsAll(this.scopeTypeNames())
                 && Qualifiers.matchesQualifiers(descriptor.qualifiers(), this.qualifiers())
                 && matchesWeight(descriptor, this)
                 && matches(descriptor.runLevel(), this.runLevel());
+    }
+
+    private boolean matchesAbstract(boolean criteriaAbstract, boolean isAbstract) {
+        if (criteriaAbstract) {
+            return true;
+        }
+        return !isAbstract;
     }
 
     /**

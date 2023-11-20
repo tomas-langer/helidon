@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Set;
 
 import io.helidon.common.types.Annotation;
-import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 
 import jakarta.inject.Provider;
@@ -31,5 +30,5 @@ public interface InterceptionMetadata {
                                  List<Annotation> typeAnnotations,
                                  TypedElementInfo element,
                                  Invoker<T> targetInvoker,
-                                 TypeName... checkedExceptions);
+                                 Set<Class<? extends Throwable>> checkedExceptions);
 }
