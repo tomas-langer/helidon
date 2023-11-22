@@ -19,6 +19,7 @@ import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.DeActivationRequest;
 import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InjectionPointProvider;
+import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InterceptionMetadata;
 import io.helidon.inject.api.IpId;
@@ -42,6 +43,9 @@ public abstract class ServiceProviderBase<T>
     private static final System.Logger LOGGER = System.getLogger(ServiceProviderBase.class.getName());
     private static final TypeName SERVICE_PROVIDER_TYPE = TypeName.create(ServiceProvider.class);
     private static final TypeName INJECTION_POINT_PROVIDER_TYPE = TypeName.create(InjectionPointProvider.class);
+    private static final ContextualServiceQuery EMPTY_QUERY = ContextualServiceQuery.builder()
+            .serviceInfoCriteria(InjectionServices.EMPTY_CRITERIA)
+            .build();
 
     private final InjectionServices injectionServices;
     private final InterceptionMetadata interceptionMetadata;
@@ -149,30 +153,14 @@ public abstract class ServiceProviderBase<T>
     public Optional<T> first(ContextualServiceQuery query) {
         T serviceOrProvider = get(query.expected());
 
-        T service;
-        if (contracts().contains(PROVIDER_TYPE)) {
-            if (contracts().contains(INJECTION_POINT_PROVIDER_TYPE)) {
-                InjectionPointProvider<T> provider = (InjectionPointProvider<T>) serviceOrProvider;
-                service = provider.first(query).orElse(null);
-            } else if (contracts().contains(SERVICE_PROVIDER_TYPE)) {
-                ServiceProvider<T> provider = (ServiceProvider<T>) serviceOrProvider;
-                service = provider.first(query).orElse(null);
-            } else {
-                Provider<T> provider = (Provider<T>) serviceOrProvider;
-                service = provider.get();
-            }
-        } else {
-            service = serviceOrProvider;
+        try {
+            return first(query, serviceOrProvider);
+        } catch (ServiceProviderInjectionException ie) {
+            throw ie;
+        } catch (Exception e) {
+            LOGGER.log(System.Logger.Level.ERROR, "Unable to activate: " + descriptorType().fqName(), e);
+            throw new InjectionServiceProviderException("Unable to activate: " + descriptorType().fqName(), e, this);
         }
-
-        if (service == null) {
-            if (query.expected()) {
-                throw new ServiceProviderInjectionException("This managed service instance expected to have been set",
-                                                            this);
-            }
-            return Optional.empty();
-        }
-        return Optional.of(service);
     }
 
     @Override
@@ -467,7 +455,11 @@ public abstract class ServiceProviderBase<T>
             }
 
             injectionPlan.put(dependency, () -> {
-                Object resolved = discovered.getFirst().get();
+                Optional<?> firstResult = discovered.getFirst().first(EMPTY_QUERY);
+                if (firstResult.isEmpty()) {
+                    return Optional.empty();
+                }
+                Object resolved = firstResult.get();
                 if (resolved instanceof Optional<?>) {
                     return resolved;
                 }
@@ -500,6 +492,34 @@ public abstract class ServiceProviderBase<T>
 
     protected void init(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.INIT);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Optional<T> first(ContextualServiceQuery query, T serviceOrProvider) {
+        T service;
+        if (contracts().contains(PROVIDER_TYPE)) {
+            if (contracts().contains(INJECTION_POINT_PROVIDER_TYPE)) {
+                InjectionPointProvider<T> provider = (InjectionPointProvider<T>) serviceOrProvider;
+                service = provider.first(query).orElse(null);
+            } else if (contracts().contains(SERVICE_PROVIDER_TYPE)) {
+                ServiceProvider<T> provider = (ServiceProvider<T>) serviceOrProvider;
+                service = provider.first(query).orElse(null);
+            } else {
+                Provider<T> provider = (Provider<T>) serviceOrProvider;
+                service = provider.get();
+            }
+        } else {
+            service = serviceOrProvider;
+        }
+
+        if (service == null) {
+            if (query.expected()) {
+                throw new ServiceProviderInjectionException("This managed service instance expected to have been set",
+                                                            this);
+            }
+            return Optional.empty();
+        }
+        return Optional.of(service);
     }
 
     private void setActive(ActivationRequest req, ActivationResult.Builder res) {

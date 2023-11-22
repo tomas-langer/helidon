@@ -66,6 +66,11 @@ public class Options {
      */
     public static final String TAG_MAP_APPLICATION_TO_SINGLETON_SCOPE = "inject.mapApplicationToSingletonScope";
     /**
+     * Additional meta annotations that mark scope annotations. This can be used to include
+     * jakarta.enterprise.context.NormalScope annotated types as scopes.
+     */
+    public static final String TAG_SCOPE_META_ANNOTATIONS = "inject.scopeMetaAnnotations";
+    /**
      * Identify whether any unsupported types should trigger annotation processing to keep going (the default is to fail).
      */
     public static final String TAG_IGNORE_UNSUPPORTED_ANNOTATIONS = "inject.ignoreUnsupportedAnnotations";

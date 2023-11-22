@@ -17,13 +17,13 @@
 package io.helidon.inject.runtime;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import io.helidon.inject.api.ActivationResult;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.DeActivationRequest;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServiceProviderException;
-import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.InjectorOptions;
 import io.helidon.inject.api.ServiceProvider;
@@ -34,9 +34,9 @@ import io.helidon.inject.api.ServiceSource;
  */
 class DefaultInjector implements Injector {
 
-    private final InjectionServices injectionServices;
+    private final DefaultInjectionServices injectionServices;
 
-    DefaultInjector(InjectionServices injectionServices) {
+    DefaultInjector(DefaultInjectionServices injectionServices) {
         this.injectionServices = injectionServices;
     }
 
@@ -71,13 +71,16 @@ class DefaultInjector implements Injector {
 
         resultBuilder.serviceProvider(serviceProvider);
 
-        if (serviceProvider instanceof Activator<?> activator) {
-            return activator.deactivate(DeActivationRequest.builder()
-                                                .throwIfError(opts.activationRequest().throwIfError())
-                                                .build());
-        }
+        // each service must have an activator, as that is how we bind services to the registry
+        Activator<?> activator = injectionServices.services(true)
+                .flatMap(defaultServices -> defaultServices.activator(serviceProvider))
+                .or(() -> serviceProvider instanceof Activator<?> act ? Optional.of(act) : Optional.empty())
+                .orElseThrow(() -> new InjectionServiceProviderException("Service activator not available.",
+                                                                         serviceProvider));
 
-        return handleError(resultBuilder, opts, "the service provider does not have a deactivator", serviceProvider);
+        return activator.deactivate(DeActivationRequest.builder()
+                                            .throwIfError(opts.activationRequest().throwIfError())
+                                            .build());
     }
 
     private ActivationResult handleError(ActivationResult.Builder resultBuilder,

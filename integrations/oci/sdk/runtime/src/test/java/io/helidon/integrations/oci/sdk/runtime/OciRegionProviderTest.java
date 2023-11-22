@@ -72,6 +72,8 @@ class OciRegionProviderTest {
         ContextualServiceQuery query = ContextualServiceQuery.create(
                 IpId.builder()
                         .contract(regionType)
+                        .field("TEST_ONLY")
+                        .descriptor(TypeName.create("io.helidon.Whatever"))
                         .typeName(regionType)
                         .service(TypeName.create("io.helidon.Whatever"))
                         .name("region")

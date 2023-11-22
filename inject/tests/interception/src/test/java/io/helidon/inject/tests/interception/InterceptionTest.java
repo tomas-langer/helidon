@@ -28,6 +28,7 @@ import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.CoreMatchers.startsWith;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -194,7 +195,7 @@ class InterceptionTest {
     void testRepeatWithNoExceptionThrownFromTarget() {
         InvocationException e = assertThrows(InvocationException.class,
                                          () -> service.intercepted("hello", false, true, false));
-        assertThat(e.getMessage(), equalTo("Duplicate invocation, or unknown call type: java.lang.String intercepted"));
+        assertThat(e.getMessage(), startsWith("Duplicate invocation, or unknown call type: java.lang.String intercepted"));
         assertThat(e.targetWasCalled(), is(true));
     }
 

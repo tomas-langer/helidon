@@ -296,6 +296,10 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         return (ServiceProvider<T>) servicesByTypeName.get(descriptor.serviceType());
     }
 
+    Optional<Activator<?>> activator(ServiceProvider<?> instance) {
+        return Optional.ofNullable(providersToActivators.get(instance));
+    }
+
     void state(State state) {
         this.stateWatchOnly = Objects.requireNonNull(state);
     }

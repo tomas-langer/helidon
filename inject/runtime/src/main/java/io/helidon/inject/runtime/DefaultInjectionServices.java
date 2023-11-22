@@ -181,15 +181,22 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
 
     @Override
     public Optional<Map<TypeName, ActivationResult>> shutdown() {
-        Map<TypeName, ActivationResult> result = Map.of();
-        DefaultServices current = services.get();
-        if (services.compareAndSet(current, null) && current != null) {
-            State currentState = state.clone().currentPhase(Phase.PRE_DESTROYING);
-            log("Started shutdown");
-            result = doShutdown(current, currentState);
-            log("Finished shutdown");
+        Lock lock = lifecycleLock.writeLock();
+        try {
+            lock.lock();
+            Map<TypeName, ActivationResult> result = Map.of();
+            DefaultServices current = services.get();
+            if (current != null) {
+                State currentState = state.clone().currentPhase(Phase.PRE_DESTROYING);
+                log("Started shutdown");
+                result = doShutdown(current, currentState);
+                log("Finished shutdown");
+            }
+            services.set(null);
+            return Optional.ofNullable(result);
+        } finally {
+            lock.unlock();
         }
-        return Optional.ofNullable(result);
     }
 
     @Override
@@ -508,7 +515,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
             List<ServiceProvider<?>> serviceProviders = services.lookupAll(ServiceInfoCriteria.builder().build(), false);
             serviceProviders = serviceProviders.stream()
                     .filter(sp -> sp.currentActivationPhase().eligibleForDeactivation())
-                    .collect(Collectors.toList());
+                    .collect(Collectors.toList()); // must be a mutable list, as we sort it in next step
             serviceProviders.sort(Comparator.comparingInt(ServiceDescriptor::runLevel));
             doFinalShutdown(serviceProviders);
 

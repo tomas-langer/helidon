@@ -44,7 +44,7 @@ public class HelloInjection__Application implements Application {
                 .bind(HelloInjectionImpl__ServiceDescriptor.IP_1, true, InjectionWorldImpl__ServiceDescriptor.INSTANCE)
                 .bindMany(HelloInjectionImpl__ServiceDescriptor.IP_2, true, InjectionWorldImpl__ServiceDescriptor.INSTANCE)
                 .bindMany(HelloInjectionImpl__ServiceDescriptor.IP_3, false, InjectionWorldImpl__ServiceDescriptor.INSTANCE)
-                .bindNull(HelloInjectionImpl__ServiceDescriptor.IP_4)
+                .bindOptional(HelloInjectionImpl__ServiceDescriptor.IP_4, false)
                 .bind(HelloInjectionImpl__ServiceDescriptor.IP_5, false, InjectionWorldImpl__ServiceDescriptor.INSTANCE)
                 .commit();
 

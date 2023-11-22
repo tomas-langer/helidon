@@ -492,7 +492,7 @@ public final class HelidonAnnotationProcessor extends AbstractProcessor {
             }
         }
 
-        return RoundContext.create(roundEnv, Set.copyOf(extAnnots), Map.copyOf(extAnnotToType), List.copyOf(extTypes.values()));
+        return RoundContext.create(ctx, roundEnv, Set.copyOf(extAnnots), Map.copyOf(extAnnotToType), List.copyOf(extTypes.values()));
     }
 
     private Set<TypeName> annotations(TypeInfo theTypeInfo) {

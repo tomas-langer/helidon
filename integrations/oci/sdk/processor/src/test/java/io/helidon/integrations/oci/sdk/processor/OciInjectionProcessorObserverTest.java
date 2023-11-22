@@ -16,8 +16,11 @@
 
 package io.helidon.integrations.oci.sdk.processor;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Calendar;
 import java.util.Set;
 
 import io.helidon.common.processor.classmodel.ClassModel;
@@ -28,7 +31,6 @@ import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.streaming.Stream;
 import com.oracle.bmc.streaming.StreamAdmin;
 import com.oracle.bmc.streaming.StreamAsync;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -39,74 +41,80 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 class OciInjectionProcessorObserverTest {
 
     @Test
-    void generatedInjectionArtifactsForTypicalOciServices() {
+    void generatedInjectionArtifactsForTypicalOciServices() throws IOException {
         TypeName ociServiceType = TypeName.create(ObjectStorage.class);
 
         TypeName generatedOciServiceClientTypeName = OciInjectionProcessorObserver.toGeneratedServiceClientTypeName(ociServiceType);
         assertThat(generatedOciServiceClientTypeName.name(),
-                   equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "$$Oci$$Client"));
+                   equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "__Oci_Client"));
 
-        ClassModel serviceClientBody = OciInjectionProcessorObserver.toBody(ociServiceType,
+        ClassModel classModel = OciInjectionProcessorObserver.toBody(ociServiceType,
                                                                             generatedOciServiceClientTypeName);
-        assertThat(serviceClientBody,
-                   equalTo(loadStringFromResource("expected/objectstorage$$Oci$$Client._java_")));
+        StringWriter sw = new StringWriter();
+        classModel.write(sw);
+        String stringBody = sw.toString();
+        assertThat(stringBody.trim(),
+                   equalTo(loadStringFromResource("expected/Objectstorage__Oci_Client._java_")));
 
         TypeName generatedOciServiceClientBuilderTypeName = OciInjectionProcessorObserver.toGeneratedServiceClientBuilderTypeName(ociServiceType);
         assertThat(generatedOciServiceClientBuilderTypeName.name(),
-                   equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "$$Oci$$ClientBuilder"));
+                   equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "__Oci_ClientBuilder"));
 
-        ClassModel serviceClientBuilderBody = OciInjectionProcessorObserver.toBuilderBody(ociServiceType,
+        classModel = OciInjectionProcessorObserver.toBuilderBody(ociServiceType,
                                                                                generatedOciServiceClientTypeName,
                                                                                           generatedOciServiceClientBuilderTypeName);
-        assertThat(serviceClientBuilderBody,
-                   equalTo(loadStringFromResource("expected/objectstorage$$Oci$$ClientBuilder._java_")));
+        sw = new StringWriter();
+        classModel.write(sw);
+        stringBody = sw.toString();
+        assertThat(stringBody.trim(),
+                   equalTo(loadStringFromResource("expected/Objectstorage__Oci_ClientBuilder._java_")));
     }
 
     @Test
     void oddballServiceTypeNames() {
         TypeName ociServiceType = TypeName.create(Stream.class);
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
+        assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
                                  equalTo(""));
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
+        assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
                                  equalTo(false));
 
         ociServiceType = TypeName.create(StreamAsync.class);
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
+        assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
                                  equalTo(""));
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
+        assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
                                  equalTo(false));
 
         ociServiceType = TypeName.create(StreamAdmin.class);
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
+        assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
                                  equalTo("."));
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
+        assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
                                  equalTo(true));
     }
 
     @Test
     void testShouldProcess() {
         TypeName typeName = TypeName.create(ObjectStorage.class);
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
+        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
                                  is(true));
 
         typeName = TypeName.create("com.oracle.bmc.circuitbreaker.OciCircuitBreaker");
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
+        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
                                  is(false));
 
         typeName = TypeName.create("com.oracle.another.Service");
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
+        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
                                  is(false));
 
         typeName = TypeName.create("com.oracle.bmc.Service");
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
+        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
                                  is(true));
 
         typeName = TypeName.create("com.oracle.bmc.ServiceClient");
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
+        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
                                  is(false));
 
         typeName = TypeName.create("com.oracle.bmc.ServiceClientBuilder");
-        MatcherAssert.assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
+        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
                                  is(false));
     }
 
@@ -140,7 +148,9 @@ class OciInjectionProcessorObserverTest {
     static String loadStringFromResource(String resourceNamePath) {
         try {
             try (InputStream in = OciInjectionProcessorObserverTest.class.getClassLoader().getResourceAsStream(resourceNamePath)) {
-                return new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+                String result = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
+                return result.replaceAll("\\{\\{YEAR}}", String.valueOf(Calendar.getInstance().get(Calendar.YEAR)))
+                        .trim(); // remove leading and trailing whitespaces
             }
         } catch (Exception e) {
             throw new ToolsException("Failed to load: " + resourceNamePath, e);

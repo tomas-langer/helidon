@@ -25,6 +25,7 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InterceptionMetadata;
 import io.helidon.inject.api.IpId;
+import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.runtime.ServiceUtils;
 
@@ -92,6 +93,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
             .field("IP_4")
             .contract(TYPE_0)
             .typeName(TYPE_4)
+            .qualifiers(Set.of(Qualifier.createNamed("red")))
             .build();
 
     public static final IpId IP_5 = IpId.builder()

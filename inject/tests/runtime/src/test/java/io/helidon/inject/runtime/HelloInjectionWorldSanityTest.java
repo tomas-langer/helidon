@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import io.helidon.common.Weighted;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
@@ -34,6 +33,7 @@ import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.InjectorOptions;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
+import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.testsubjects.HelloInjectionImpl__ServiceDescriptor;
@@ -43,7 +43,6 @@ import io.helidon.inject.runtime.testsubjects.HelloInjection__Application;
 import io.helidon.inject.runtime.testsubjects.InjectionWorld;
 
 import jakarta.inject.Singleton;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,13 +90,15 @@ class HelloInjectionWorldSanityTest {
         List<String> descriptions = ServiceUtils.toDescriptions(moduleProviders);
         // helidon-config is now first
         assertThat(descriptions,
-                   containsInAnyOrder("Injection$$Module:ACTIVE", "EmptyModule:ACTIVE", "HelloInjection$$Module:ACTIVE"));
+                   containsInAnyOrder("HelidonInjection__ModuleComponent:ACTIVE",
+                                      "EmptyModule:ACTIVE",
+                                      "HelloInjection__Module:ACTIVE"));
 
         List<ServiceProvider<Application>> applications = services.lookupAll(Application.class);
         assertThat(applications.size(),
                    equalTo(1));
         assertThat(ServiceUtils.toDescriptions(applications),
-                   containsInAnyOrder("HelloInjection$$Application:ACTIVE"));
+                   containsInAnyOrder("HelloInjection__Application:ACTIVE"));
     }
 
     @Test
@@ -136,9 +137,9 @@ class HelloInjectionWorldSanityTest {
         assertThat(helloProvider1.qualifiers().size(),
                    equalTo(0));
         assertThat(helloProvider1.runLevel(),
-                   equalTo(0));
+                   equalTo(RunLevel.NORMAL));
         assertThat(helloProvider1.weight(),
-                   equalTo(Weighted.DEFAULT_WEIGHT));
+                   equalTo(ServiceUtils.DEFAULT_INJECT_WEIGHT));
 
         ServiceProvider<InjectionWorld> worldProvider1 = services.lookup(InjectionWorld.class);
         assertThat(worldProvider1, notNullValue());
@@ -147,7 +148,7 @@ class HelloInjectionWorldSanityTest {
 
         // now activate
         HelloInjectionWorld hello1 = helloProvider1.get();
-        MatcherAssert.assertThat(hello1.sayHello(),
+        assertThat(hello1.sayHello(),
                                  equalTo("Hello inject"));
         assertThat(helloProvider1.currentActivationPhase(),
                    equalTo(Phase.ACTIVE));
@@ -159,9 +160,9 @@ class HelloInjectionWorldSanityTest {
                    equalTo("InjectionWorldImpl:ACTIVE"));
 
         // check the post construct counts
-        MatcherAssert.assertThat(((HelloInjectionWorldImpl) helloProvider1.get()).postConstructCallCount(),
+        assertThat(((HelloInjectionWorldImpl) helloProvider1.get()).postConstructCallCount(),
                                  equalTo(1));
-        MatcherAssert.assertThat(((HelloInjectionWorldImpl) helloProvider1.get()).preDestroyCallCount(),
+        assertThat(((HelloInjectionWorldImpl) helloProvider1.get()).preDestroyCallCount(),
                                  equalTo(0));
 
         // deactivate just the Hello service
@@ -176,9 +177,9 @@ class HelloInjectionWorldSanityTest {
                    is(Phase.ACTIVE));
         assertThat(helloProvider1.description(),
                    equalTo("HelloInjectionWorldImpl:DESTROYED"));
-        MatcherAssert.assertThat(((HelloInjectionWorldImpl) hello1).postConstructCallCount(),
+        assertThat(((HelloInjectionWorldImpl) hello1).postConstructCallCount(),
                                  equalTo(1));
-        MatcherAssert.assertThat(((HelloInjectionWorldImpl) hello1).preDestroyCallCount(),
+        assertThat(((HelloInjectionWorldImpl) hello1).preDestroyCallCount(),
                                  equalTo(1));
         assertThat(worldProvider1.description(),
                    equalTo("InjectionWorldImpl:ACTIVE"));
@@ -199,14 +200,14 @@ class HelloInjectionWorldSanityTest {
                 (ServiceProvider<HelloInjectionWorldImpl>) result.serviceProvider();
 
         HelloInjectionWorld hello1 = subversiveProvider.get();
-        MatcherAssert.assertThat(hello1.sayHello(),
-                                 equalTo("Hello inject"));
-        MatcherAssert.assertThat(subversiveProvider.currentActivationPhase(),
-                                 equalTo(Phase.ACTIVE));
+        assertThat(hello1.sayHello(),
+                   equalTo("Hello inject"));
+        assertThat(subversiveProvider.currentActivationPhase(),
+                   equalTo(Phase.ACTIVE));
 
-        MatcherAssert.assertThat(hello1,
-                                 sameInstance(subversiveProvider.get()));
-        assertThat(subversiveDescriptor, sameInstance(result.serviceProvider()));
+        assertThat(hello1,
+                   sameInstance(subversiveProvider.get()));
+        assertThat(subversiveDescriptor, sameInstance(result.serviceProvider().descriptor()));
 
         // the above is subversive because it is disconnected from the "real" activator
         Services services = injectionServices.services();
@@ -232,9 +233,9 @@ class HelloInjectionWorldSanityTest {
         ActivationResult result = provider.activate(ActivationRequest.builder().targetPhase(Phase.INJECTING).build());
         assertThat(result.success(), is(true));
 
-        MatcherAssert.assertThat(activator.currentActivationPhase(), is(Phase.INJECTING));
-        MatcherAssert.assertThat(activator.serviceRef().orElseThrow().postConstructCallCount(), equalTo(0));
-        MatcherAssert.assertThat(activator.serviceRef().orElseThrow().preDestroyCallCount(), equalTo(0));
+        assertThat(activator.currentActivationPhase(), is(Phase.INJECTING));
+        assertThat(activator.serviceRef().orElseThrow().postConstructCallCount(), equalTo(0));
+        assertThat(activator.serviceRef().orElseThrow().preDestroyCallCount(), equalTo(0));
 
         Map<String, ? extends InjectionPlan> injectionPlan = result.injectionPlans();
         assertThat(injectionPlan.keySet(), containsInAnyOrder(
@@ -265,9 +266,9 @@ class HelloInjectionWorldSanityTest {
                                             .startingPhase(activator.currentActivationPhase())
                                             .build());
         assertThat(result.success(), is(true));
-        MatcherAssert.assertThat(activator.currentActivationPhase(), is(Phase.ACTIVE));
-        MatcherAssert.assertThat(activator.serviceRef().orElseThrow().postConstructCallCount(), equalTo(1));
-        MatcherAssert.assertThat(activator.serviceRef().orElseThrow().preDestroyCallCount(), equalTo(0));
+        assertThat(activator.currentActivationPhase(), is(Phase.ACTIVE));
+        assertThat(activator.serviceRef().orElseThrow().postConstructCallCount(), equalTo(1));
+        assertThat(activator.serviceRef().orElseThrow().preDestroyCallCount(), equalTo(0));
 
         // these should have happened prior, so not there any longer
         assertThat(result.injectionPlans(), equalTo(Map.of()));

@@ -4,24 +4,33 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.processing.RoundEnvironment;
 
+import io.helidon.common.processor.ProcessingContext;
+import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 
 class RoundContextImpl implements RoundContext {
+    // within one round, we can safely cache
+    private final Map<TypeName, Optional<TypeInfo>> typeInfoCache = new ConcurrentHashMap<>();
+    private final ProcessingContext ctx;
     private final RoundEnvironment env;
     private final Map<TypeName, List<TypeInfo>> annotationToTypes;
     private final List<TypeInfo> types;
     private final Collection<TypeName> annotations;
 
-    RoundContextImpl(RoundEnvironment env,
+    RoundContextImpl(ProcessingContext ctx,
+                     RoundEnvironment env,
                      Collection<TypeName> annotations,
                      Map<TypeName, List<TypeInfo>> annotationToTypes,
                      List<TypeInfo> types) {
+        this.ctx = ctx;
         this.env = env;
         this.annotations = annotations;
         this.annotationToTypes = annotationToTypes;
@@ -78,5 +87,10 @@ class RoundContextImpl implements RoundContext {
     @Override
     public RoundEnvironment roundEnvironment() {
         return env;
+    }
+
+    @Override
+    public Optional<TypeInfo> createTypeInfo(TypeName typeName) {
+        return typeInfoCache.computeIfAbsent(typeName, it -> TypeInfoFactory.create(ctx, typeName));
     }
 }

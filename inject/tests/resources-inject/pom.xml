@@ -94,6 +94,7 @@
                         <arg>-Ainject.allowListedInterceptorAnnotations=io.helidon.inject.tests.inject.interceptor.TestNamed</arg>
                         <arg>-Ainject.application.pre.create=false</arg> <!-- keeping this set to false will allow the IDE to run tests directly -->
                         <arg>-Ainject.mapApplicationToSingletonScope=true</arg>
+                        <arg>-Ainject.scopeMetaAnnotations=jakarta.enterprise.context.NormalScope</arg>
                         <arg>-Ainject.debug=${inject.debug}</arg>
 <!--                        <arg>-XprintProcessorInfo</arg>-->
 <!--                        <arg>-XprintRounds</arg>-->

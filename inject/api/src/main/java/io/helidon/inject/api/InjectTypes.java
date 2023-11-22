@@ -2,6 +2,9 @@ package io.helidon.inject.api;
 
 import io.helidon.common.types.TypeName;
 
+import jakarta.inject.Provider;
+import jakarta.inject.Singleton;
+
 public final class InjectTypes {
 
     /**
@@ -11,15 +14,20 @@ public final class InjectTypes {
     /**
      * Jakarta {@link jakarta.inject.Provider} type.
      */
-    public static final TypeName JAKARTA_PROVIDER = TypeName.create("jakarta.inject.Provider");
+    public static final TypeName JAKARTA_PROVIDER = TypeName.create(Provider.class);
+    /**
+     * Jakarta {@link jakarta.inject.Singleton} type.
+     */
+    public static final TypeName SINGLETON = TypeName.create(Singleton.class);
+
     /**
      * Injection {@link io.helidon.inject.api.InjectionPointProvider} type.
      */
-    public static final TypeName INJECTION_POINT_PROVIDER = TypeName.create("io.helidon.inject.api.InjectionPointProvider");
+    public static final TypeName INJECTION_POINT_PROVIDER = TypeName.create(InjectionPointProvider.class);
     /**
      * Injection {@link io.helidon.inject.api.ServiceProvider} type.
      */
-    public static final TypeName INJECTION_SERVICE_PROVIDER = TypeName.create("io.helidon.inject.api.ServiceProvider");
+    public static final TypeName INJECTION_SERVICE_PROVIDER = TypeName.create(ServiceProvider.class);
 
     private InjectTypes() {
     }

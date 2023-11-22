@@ -38,7 +38,8 @@ module io.helidon.inject.processor {
     uses io.helidon.common.processor.spi.TypeMapperProvider;
 
     provides io.helidon.common.processor.spi.AnnotationMapperProvider
-            with io.helidon.inject.processor.JavaxAnnotationMapperProvider;
+            with io.helidon.inject.processor.JavaxAnnotationMapperProvider,
+                 io.helidon.inject.processor.ApplicationScopedMapperProvider;
 
     provides io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider
             with io.helidon.inject.processor.InjectionProcessorExtensionProvider;

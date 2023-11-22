@@ -88,7 +88,7 @@ public interface ServiceDescriptor<T> extends Weighted {
      * @return scopes
      */
     default Set<TypeName> scopes() {
-        return Set.of();
+        return Set.of(InjectTypes.SINGLETON);
     }
 
     /**

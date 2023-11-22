@@ -34,7 +34,6 @@ import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import jakarta.inject.Named;
-import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,23 +72,23 @@ class OciAuthenticationDetailsProviderTest {
 
     @Test
     void testCanReadPath() {
-        MatcherAssert.assertThat(OciAuthenticationDetailsProvider.canReadPath("./target"),
+        assertThat(OciAuthenticationDetailsProvider.canReadPath("./target"),
                                  is(true));
-        MatcherAssert.assertThat(OciAuthenticationDetailsProvider.canReadPath("./~bogus~"),
+        assertThat(OciAuthenticationDetailsProvider.canReadPath("./~bogus~"),
                                  is(false));
     }
 
     @Test
     void testUserHomePrivateKeyPath() {
         OciConfig ociConfig = Objects.requireNonNull(OciExtension.ociConfig());
-        MatcherAssert.assertThat(OciAuthenticationDetailsProvider.userHomePrivateKeyPath(ociConfig),
+        assertThat(OciAuthenticationDetailsProvider.userHomePrivateKeyPath(ociConfig),
                                  endsWith("/.oci/oci_api_key.pem"));
 
         ociConfig = OciConfig.builder(ociConfig)
                 .configPath("/decoy/path")
                 .authKeyFile("key.pem")
                 .build();
-        MatcherAssert.assertThat(OciAuthenticationDetailsProvider.userHomePrivateKeyPath(ociConfig),
+        assertThat(OciAuthenticationDetailsProvider.userHomePrivateKeyPath(ociConfig),
                                  endsWith("/.oci/key.pem"));
     }
 

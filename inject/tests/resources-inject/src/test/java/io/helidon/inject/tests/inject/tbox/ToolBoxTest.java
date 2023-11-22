@@ -313,7 +313,7 @@ class ToolBoxTest {
                                           e2 -> e2.getValue().startingActivationPhase().toString()
                                                   + "->" + e2.getValue().finishingActivationPhase()));
         // now contains config as well
-        assertThat(report.toString(), report.size(), is(10));
+        assertThat(report.toString(), report.size(), is(11));
 
         tearDown();
         map = injectionServices.shutdown().orElseThrow();

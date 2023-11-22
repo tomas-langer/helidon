@@ -17,6 +17,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.Weight;
@@ -47,12 +48,17 @@ import io.helidon.inject.tools.Options;
 import io.helidon.inject.tools.ToolsException;
 import io.helidon.inject.tools.TypeNames;
 
+import static io.helidon.inject.tools.TypeNames.JAKARTA_SINGLETON_TYPE;
+
 class InjectionProcessorExtension implements HelidonProcessorExtension {
     static final TypeName LIST_OF_ANNOTATIONS_TYPE = TypeName.builder(io.helidon.common.types.TypeNames.LIST)
             .addTypeArgument(TypeName.create(Annotation.class))
             .build();
     static final TypeName SET_OF_QUALIFIERS_TYPE = TypeName.builder(io.helidon.common.types.TypeNames.SET)
             .addTypeArgument(TypeNames.HELIDON_QUALIFIER)
+            .build();
+    static final TypeName SET_OF_TYPES_TYPE = TypeName.builder(io.helidon.common.types.TypeNames.SET)
+            .addTypeArgument(io.helidon.common.types.TypeNames.TYPE_NAME)
             .build();
     private static final TypeName SERVICE_DEPS = TypeName.builder(io.helidon.common.types.TypeNames.LIST)
             .addTypeArgument(TypeName.create(IpId.class))
@@ -75,6 +81,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
     private final InjectionProcessingContext ctx;
     private final boolean autoAddIfaces;
+    private final Set<TypeName> scopeMetaAnnotations;
     private final InterceptionStrategy interceptionStrategy;
 
     InjectionProcessorExtension(InjectionProcessingContext ctx) {
@@ -82,6 +89,12 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         this.autoAddIfaces = ctx.ctx().options().option(Options.TAG_AUTO_ADD_NON_CONTRACT_INTERFACES, false);
         this.interceptionStrategy = ctx.ctx().options()
                 .option(Options.TAG_INTERCEPTION_STRATEGY, InterceptionStrategy.EXPLICIT, InterceptionStrategy.class);
+        this.scopeMetaAnnotations = Stream.concat(ctx.ctx().options()
+                                                          .listOption(Options.TAG_SCOPE_META_ANNOTATIONS)
+                                                          .stream()
+                                                          .map(TypeName::create),
+                                                  Stream.of(TypeNames.JAKARTA_SCOPE_TYPE))
+                .collect(Collectors.toSet());
     }
 
     static String toConstantName(String elementName) {
@@ -150,6 +163,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                    methodInjectElements);
 
             Map<String, GenericTypeDeclaration> genericTypes = genericTypes(params, methods);
+            Set<TypeName> scopes = scopes(typeInfo);
             Set<Qualifier> qualifiers = qualifiers(typeInfo, typeInfo);
             Set<TypeName> contracts = new HashSet<>();
             contracts(contracts, typeInfo, autoAddIfaces);
@@ -186,6 +200,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             contractsField(classModel, contracts);
             dependenciesField(classModel, params);
             qualifiersField(classModel, qualifiers);
+            scopesField(classModel, scopes, hasSuperType);
             if (canIntercept) {
                 annotationsField(classModel, typeInfo);
                 // if constructor intercepted, add its element
@@ -221,6 +236,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
             postConstructMethod(typeInfo, classModel, serviceType);
             preDestroyMethod(typeInfo, classModel, serviceType);
             qualifiersMethod(classModel, qualifiers, hasSuperType);
+            scopesMethod(classModel, scopes, hasSuperType);
             weightMethod(typeInfo, classModel);
             runLevelMethod(typeInfo, classModel);
 
@@ -282,6 +298,20 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                 .addAnnotation(Annotations.OVERRIDE)
                 .returnType(io.helidon.common.types.TypeNames.PRIMITIVE_DOUBLE)
                 .addLine("return " + aDouble + ";")));
+    }
+
+    private void scopesMethod(ClassModel.Builder classModel, Set<TypeName> scopes, boolean hasSuperType) {
+        if (!hasSuperType) {
+            if (scopes.size() == 1 && scopes.contains(JAKARTA_SINGLETON_TYPE)) {
+                // this is the default as returned from the parent
+                return;
+            }
+        }
+        // List<Qualifier> qualifiers()
+        classModel.addMethod(scopesMethod -> scopesMethod.name("scopes")
+                .addAnnotation(Annotations.OVERRIDE)
+                .returnType(SET_OF_TYPES_TYPE)
+                .addLine("return SCOPES;"));
     }
 
     private void qualifiersMethod(ClassModel.Builder classModel, Set<Qualifier> qualifiers, boolean hasSuperType) {
@@ -509,6 +539,24 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                                              + ")"));
     }
 
+    private void scopesField(ClassModel.Builder classModel, Set<TypeName> scopes, boolean hasSuperType) {
+        if (!hasSuperType) {
+            if (scopes.size() == 1 && scopes.contains(JAKARTA_SINGLETON_TYPE)) {
+                // this is the default as returned from the parent
+                return;
+            }
+        }
+        classModel.addField(scopesField -> scopesField
+                .isStatic(true)
+                .isFinal(true)
+                .name("SCOPES")
+                .type(SET_OF_TYPES_TYPE)
+                .defaultValueContent("@java.util.Set@.of(" + scopes.stream()
+                        .map(it -> TypesCodeGen.toCreate(it, false))
+                        .collect(Collectors.joining(", "))
+                                             + ")"));
+    }
+
     private void qualifiersField(ClassModel.Builder classModel, Set<Qualifier> qualifiers) {
         classModel.addField(qualifiersField -> qualifiersField
                 .isStatic(true)
@@ -563,6 +611,9 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                         StringBuilder defaultContent = new StringBuilder();
                         defaultContent.append("@io.helidon.inject.api.IpId@")
                                 .append(".builder()")
+                                .append(".typeName(")
+                                .append(genericTypes.get(param.type().resolvedName()).constantName())
+                                .append(")")
                                 .append(".elementKind(@io.helidon.common.types.ElementKind@.")
                                 .append(param.kind.name())
                                 .append(")")
@@ -574,9 +625,6 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                                 .append(".field(\"")
                                 .append(param.constantName())
                                 .append("\")")
-                                .append(".typeName(")
-                                .append(genericTypes.get(param.type().resolvedName()).constantName())
-                                .append(")")
                                 .append(".contract(")
                                 .append(genericTypes.get(param.contract().fqName()).constantName())
                                 .append(")");
@@ -593,7 +641,8 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
                         if (!param.qualifiers().isEmpty()) {
                             for (Qualifier qualifier : param.qualifiers()) {
                                 defaultContent.append(
-                                                "\n.addQualifier(qualifier -> qualifier.typeName(@io.helidon.common.types.TypeName@"
+                                                "\n.addQualifier(qualifier -> qualifier.typeName(@io.helidon.common.types"
+                                                        + ".TypeName@"
                                                         + ".create(\"")
                                         .append(qualifier.qualifierTypeName())
                                         .append("\"))");
@@ -942,7 +991,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         // for each parameter, obtain its value from context
         for (ParamDefinition param : constructorParams) {
-            method.addLine("var " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
+            method.addLine(param.type().resolvedName() + " " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
                                    + ";");
         }
 
@@ -963,7 +1012,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         }
 
         for (ParamDefinition param : fields) {
-            method.addLine("var " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
+            method.addLine(param.type().resolvedName() + " " + param.ipParamName() + " = ctx.param(" + param.constantName() + ")"
                                    + ";");
         }
 
@@ -1026,7 +1075,7 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
 
         // for each parameter, obtain its value from context
         for (ParamDefinition param : methodsParams) {
-            method.addLine("var " + param.fieldId() + " = ctx.param(" + param.constantName() + ");");
+            method.addLine(param.type().resolvedName() + " " + param.fieldId() + " = ctx.param(" + param.constantName() + ");");
         }
 
         method.addLine("");
@@ -1196,6 +1245,21 @@ class InjectionProcessorExtension implements HelidonProcessorExtension {
         }
 
         return typeName;
+    }
+
+    private Set<TypeName> scopes(TypeInfo service) {
+        Set<TypeName> result = new LinkedHashSet<>();
+
+        for (io.helidon.common.types.Annotation anno : service.annotations()) {
+            TypeName annoType = anno.typeName();
+            for (TypeName scopeMetaAnnotation : scopeMetaAnnotations) {
+                if (service.hasMetaAnnotation(annoType, scopeMetaAnnotation)) {
+                    result.add(annoType);
+                }
+            }
+        }
+
+        return result;
     }
 
     private Set<Qualifier> qualifiers(TypeInfo service, Annotated element) {

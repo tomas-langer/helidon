@@ -78,7 +78,7 @@ class DefaultInjectionPlansTest {
         List<String> result = DefaultInjectionPlans.injectionPointProvidersFor(services, criteria).stream()
                 .map(ServiceProvider::description).toList();
         assertThat(result,
-                   contains(sp1.toString()));
+                   contains(sp1.serviceType().classNameWithEnclosingNames() + ":INIT"));
     }
 
     static class FakeModuleComponent implements ModuleComponent {
@@ -95,6 +95,7 @@ class DefaultInjectionPlansTest {
     }
 
     static class FakeInjectionPointProviderActivator implements ServiceSource<Closeable> {
+        private static final TypeName SERVICE_TYPE = TypeName.create(FakeInjectionPointProviderActivator.class);
         private static final TypeName CLOSEABLE = TypeName.create(Closeable.class);
         private static final TypeName IP_PROVIDER = TypeName.create(InjectionPointProvider.class);
         private static final TypeName PROVIDER = TypeName.create(jakarta.inject.Provider.class);
@@ -105,7 +106,7 @@ class DefaultInjectionPlansTest {
 
         @Override
         public TypeName serviceType() {
-            return CLOSEABLE;
+            return SERVICE_TYPE;
         }
 
         @Override
@@ -115,13 +116,14 @@ class DefaultInjectionPlansTest {
     }
 
     static class FakeRegularActivator implements ServiceSource<Closeable> {
+        private static final TypeName SERVICE_TYPE = TypeName.create(FakeRegularActivator.class);
         private static final TypeName CLOSEABLE = TypeName.create(Closeable.class);
         private static final TypeName PROVIDER = TypeName.create(jakarta.inject.Provider.class);
         private static final Set<TypeName> CONTRACTS = Set.of(CLOSEABLE, PROVIDER);
 
         @Override
         public TypeName serviceType() {
-            return CLOSEABLE;
+            return SERVICE_TYPE;
         }
 
         @Override

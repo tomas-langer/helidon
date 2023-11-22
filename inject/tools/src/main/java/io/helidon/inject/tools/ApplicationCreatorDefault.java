@@ -223,9 +223,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
     ApplicationCreatorResponse codegen(ApplicationCreatorRequest req,
                                        ApplicationCreatorResponse.Builder builder) {
 
-        // TODO the maven plugin should analyze all applications on classpath, and assign a higher weight
-        // to this one, so we always load the last one
-
         TypeName applicationType = toApplicationTypeName(req);
         builder.addServiceType(applicationType);
 
@@ -240,11 +237,6 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                                                                  applicationType,
                                                                  "1",
                                                                  ""))
-                .addAnnotation(Annotation.builder()
-                                       .type(Weight.class)
-                                       // .putValue("value", req.weight())
-                                       .putValue("value", 100)
-                                       .build())
                 .addInterface(TypeNames.APPLICATION);
 
         // deprecated default constructor - application should always be service loaded
@@ -254,7 +246,7 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                                                                              + ".ServiceLoader}.")
                                                              .addTag("deprecated", "to be used by Java Service Loader only")
                                                              .build())
-                .addAnnotation(Annotation.create(Deprecated.class)));
+                .addAnnotation(Annotations.DEPRECATED));
 
         // public String name()
         String applicationName = toApplicationName(req);
@@ -443,9 +435,10 @@ public class ApplicationCreatorDefault extends AbstractCreator implements Applic
                                         ServiceProvider<?> self,
                                         IpId dependency) {
         ServiceInfoCriteria dependencyTo = dependency.toCriteria();
-        if (self.contracts().containsAll(dependencyTo.contracts())) {
+        if (self.contracts().containsAll(dependencyTo.contracts()) && self.qualifiers().equals(dependencyTo.qualifiers())) {
             // criteria must have a single contract for each injection point
             // if this service implements the contracts actually required, we must look for services with lower weight
+            // but only if we also have the same qualifiers
             dependencyTo = ServiceInfoCriteria.builder(dependencyTo)
                     .weight(self.weight())
                     .build();
