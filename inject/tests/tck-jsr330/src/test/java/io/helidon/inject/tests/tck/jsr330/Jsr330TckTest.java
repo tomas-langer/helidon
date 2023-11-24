@@ -38,13 +38,13 @@ import static org.hamcrest.Matchers.greaterThan;
  * Jsr-330 TCK Testing.
  * This test requires the annotation processing and the maven-plugin to run - see pom.xml.
  */
-class Jsr330TckTest {
+public class Jsr330TckTest {
 
     /**
      * Run's the TCK tests.
      */
     @Test
-    void testItAll() {
+    public void testItAll() {
         InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
         InjectionServicesConfig cfg = injectionServices.config();
         Provider<Car> carProvider = injectionServices.services().lookupFirst(Car.class);

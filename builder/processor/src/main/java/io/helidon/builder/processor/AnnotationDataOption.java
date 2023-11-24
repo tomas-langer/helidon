@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;

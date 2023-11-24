@@ -77,20 +77,37 @@
             <version>${version.plugin.api}</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.aether</groupId>
+            <artifactId>aether-api</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.aether</groupId>
+            <artifactId>aether-util</artifactId>
+            <version>1.1.0</version>
+            <scope>provided</scope>
+        </dependency>
+
 
         <!-- normal dependencies -->
         <dependency>
             <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-tools</artifactId>
+            <artifactId>helidon-inject-codegen</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.codegen</groupId>
+            <artifactId>helidon-codegen-scan</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.codegen</groupId>
+            <artifactId>helidon-codegen-compiler</artifactId>
         </dependency>
         <!-- for ConfigBeanRegistry (reset) -->
         <dependency>
             <groupId>io.helidon.inject.configdriven</groupId>
             <artifactId>helidon-inject-configdriven-runtime</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.builder</groupId>
-            <artifactId>helidon-builder-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>
@@ -104,10 +121,6 @@
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.jknack</groupId>
-            <artifactId>handlebars</artifactId>
         </dependency>
         <dependency>
             <groupId>io.github.classgraph</groupId>

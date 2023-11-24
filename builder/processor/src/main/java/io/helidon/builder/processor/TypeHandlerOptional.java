@@ -21,17 +21,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import io.helidon.common.processor.classmodel.Field;
-import io.helidon.common.processor.classmodel.InnerClass;
-import io.helidon.common.processor.classmodel.Javadoc;
-import io.helidon.common.processor.classmodel.Method;
+import io.helidon.codegen.classmodel.Field;
+import io.helidon.codegen.classmodel.InnerClass;
+import io.helidon.codegen.classmodel.Javadoc;
+import io.helidon.codegen.classmodel.Method;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 
 import static io.helidon.builder.processor.Types.CHAR_ARRAY_TYPE;
 import static io.helidon.builder.processor.Types.CONFIG_TYPE;
-import static io.helidon.common.processor.GeneratorTools.capitalize;
+import static io.helidon.codegen.CodegenUtil.capitalize;
 import static io.helidon.common.types.TypeNames.BOXED_BOOLEAN;
 import static io.helidon.common.types.TypeNames.BOXED_BYTE;
 import static io.helidon.common.types.TypeNames.BOXED_CHAR;

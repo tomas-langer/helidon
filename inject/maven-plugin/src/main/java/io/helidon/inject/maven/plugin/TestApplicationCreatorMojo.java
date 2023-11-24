@@ -23,13 +23,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import io.helidon.codegen.CodegenScope;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.tools.spi.ApplicationCreator;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Build;
@@ -39,11 +39,10 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
+import static io.helidon.inject.maven.plugin.ApplicationCreator.APPLICATION_NAME;
 import static io.helidon.inject.maven.plugin.MavenPluginUtils.injectionServices;
-import static io.helidon.inject.tools.ApplicationCreatorDefault.APPLICATION_NAME;
-import static io.helidon.inject.tools.ApplicationCreatorDefault.upperFirstChar;
-import static io.helidon.inject.tools.ModuleUtils.toBasePath;
-import static io.helidon.inject.tools.ModuleUtils.toSuggestedModuleName;
+import static io.helidon.inject.maven.plugin.MavenUtil.toBasePath;
+import static io.helidon.inject.maven.plugin.MavenUtil.toSuggestedModuleName;
 
 /**
  * A mojo wrapper to {@link ApplicationCreator} for test specific types.
@@ -127,11 +126,6 @@ public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
         return (className == null) ? "Test" + APPLICATION_NAME : className;
     }
 
-    @Override
-    String getClassPrefixName() {
-        return upperFirstChar("test");
-    }
-
     /**
      * Excludes everything from source main scope.
      */
@@ -140,7 +134,7 @@ public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
         Set<Path> classPath = getSourceClasspathElements();
 
         ClassLoader prev = Thread.currentThread().getContextClassLoader();
-        URLClassLoader loader = ExecutableClassLoader.create(classPath, prev);
+        URLClassLoader loader = MavenUtil.createClassLoader(classPath, prev);
 
         try {
             Thread.currentThread().setContextClassLoader(loader);
@@ -160,4 +154,8 @@ public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
         }
     }
 
+    @Override
+    protected CodegenScope scope() {
+        return new CodegenScope("test");
+    }
 }

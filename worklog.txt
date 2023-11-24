@@ -1,51 +1,35 @@
-Injection plans
 
-1. on service activation, we create the injection plan (io.helidon.inject.runtime.ServiceProviderBase.gatherDependencies)
-    - for each IpInfo, find providers
-    - create injectionContext
-2. we may obtain an injection plan from Application through injectionPlanBinder
+Services that do not have @Singleton are automatically providers that always create a new instace
+- maybe add a custom annotation so we can force annotation processing on such types?
 
-
-Map<IpId<?>, Supplier<?>> injectionPlan = new HashMap<>();
-
-        Services services = injectionServices.services();
-        for (IpInfo ipInfo : servicesDeps) {
-            prepareDependency(services, injectionPlan, ipInfo);
-        }
-
-        this.injectionContext = InjectionContext.create(injectionPlan);
+1. Using service source instead of activators/service providers
+    a. Interfaces `ServiceSource` and `ServiceDescriptor`
+2.
 
 
+External module build using maven (process a jar file)
+Remove <T> from ServiceDescriptor
+Maybe rename ServiceSource to ServiceDescriptor and ServiceDescriptor to ServiceInfo?
+Use ServiceProvider as a parameter to exception again?
+Static method inject
+Static field inject
+Prepare dependencies same way from application creator as from injection itself
+    1. on service activation, we create the injection plan (io.helidon.inject.runtime.ServiceProviderBase.gatherDependencies)
+        - for each IpInfo, find providers
+        - create injectionContext
+    2. we may obtain an injection plan from Application through injectionPlanBinder
 
-io.helidon.inject.runtime.DefaultInjectionPlans.resolve
+    InjectServiceActivator - gather dependencies
+    InjectServiceProvider - requires implementation
 
+External module request - remove inner classes switch, as it does not make sense. We always want to process non-private inner classes
 
+What can be used:
 
-        binder.bindTo(FakeWebServer__ServiceDescriptor.INSTANCE)
-            .bindVoid(FakeWebServer__ServiceDescriptor.IP_PARAM_0) // config bean
-            .bind(FakeWebServer__ServiceDescriptor.IP_PARAM_1, VoidServiceProvider.VoidDescriptor.INSTANCE) // Optional.empty()
-            .commit();
-
-InjectServiceActivator - gather dependencies
-InjectServiceProvider - requires implementation
-
-Maven plugin (AbstractApplicationCreatorMojo and others)
-Application
-
-io.helidon.inject.runtime.DefaultInjectionPlans.accumulate - next step, gather dependencies
-
-io.helidon.inject.runtime.AbstractServiceProvider - the main culprit
-
-test subject:
-io.helidon.inject.tests.inject.tbox.impl.MainToolBox
-
-io.helidon.inject.runtime.HelloInjectionWorldSanityTest.injectionPlanResolved
+ApplicationCreator - only from maven plugin
+ExternalModuleCreator - only from maven plugin
+DescriptorCreator = both from maven plugin and from annotation processor
 
 
-User APIs:
-- ServiceDescriptor<T>
-- ServiceProvider<T> extends Provider<T>, ServiceDescriptor<T>
-
-Internal APIs (code generated)
-- ServiceSource<T> extends ServiceDescriptor<T>
-
+Helidon injection extensions
+ -

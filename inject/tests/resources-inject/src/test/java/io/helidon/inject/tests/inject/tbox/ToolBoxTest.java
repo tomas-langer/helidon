@@ -42,7 +42,6 @@ import io.helidon.inject.tests.inject.stacking.CommonContract;
 import io.helidon.inject.tests.inject.tbox.impl.BigHammer;
 import io.helidon.inject.tests.inject.tbox.impl.HandSaw;
 import io.helidon.inject.tests.inject.tbox.impl.MainToolBox;
-import io.helidon.inject.tools.Options;
 
 import jakarta.inject.Provider;
 import org.junit.jupiter.api.AfterEach;
@@ -152,7 +151,7 @@ class ToolBoxTest {
     }
 
     /**
-     * This assumes {@link Options#TAG_AUTO_ADD_NON_CONTRACT_INTERFACES} has
+     * This assumes {@link io.helidon.inject.codegen.InjectOptions#AUTO_ADD_NON_CONTRACT_INTERFACES} has
      * been enabled - see pom.xml
      */
     @Test

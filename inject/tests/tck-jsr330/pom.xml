@@ -60,12 +60,10 @@
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>io.helidon.inject</groupId>
@@ -92,8 +90,15 @@
                 <version>${helidon.version}</version>
                 <executions>
                     <execution>
+                        <id>create-module</id>
                         <goals>
                             <goal>external-module-create</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>create-application</id>
+                        <goals>
+                            <goal>application-create</goal>
                         </goals>
                     </execution>
                 </executions>

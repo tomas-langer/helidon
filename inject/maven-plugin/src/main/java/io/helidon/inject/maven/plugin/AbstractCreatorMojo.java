@@ -29,36 +29,34 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.ModuleInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.tools.AbstractCreator;
-import io.helidon.inject.tools.Messager;
-import io.helidon.inject.tools.ModuleInfoDescriptor;
-import io.helidon.inject.tools.ModuleUtils;
-import io.helidon.inject.tools.Options;
-import io.helidon.inject.tools.ToolsException;
+import io.helidon.inject.codegen.InjectOptions;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-import static io.helidon.inject.tools.ModuleUtils.toSuggestedGeneratedPackageName;
+import static io.helidon.inject.maven.plugin.MavenUtil.toSuggestedGeneratedPackageName;
 
 /**
  * Abstract base for all creator mojo's.
  */
 @SuppressWarnings({"unused", "FieldCanBeLocal", "FieldMayBeFinal"})
 public abstract class AbstractCreatorMojo extends AbstractMojo {
-    private final System.Logger logger = System.getLogger(getClass().getName());
-
-    static final String DEFAULT_SOURCE = AbstractCreator.DEFAULT_SOURCE;
-    static final String DEFAULT_TARGET = AbstractCreator.DEFAULT_TARGET;
-
-    static final TrafficCop TRAFFIC_COP = new TrafficCop();
+    /**
+     * The file name written to ./target/inject/ to track the last package name generated for this application.
+     * This application package name is what we fall back to for the application name and the module name if not otherwise
+     * specified directly.
+     */
+    protected static final String APPLICATION_PACKAGE_FILE_NAME = "app-package-name.txt";
 
     /**
      * Tag controlling whether we fail on error.
@@ -71,22 +69,15 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     static final String TAG_FAIL_ON_WARNING = "inject.failOnWarning";
 
     static final String TAG_PACKAGE_NAME = "inject.package.name";
-
-    /**
-     * The file name written to ./target/inject/ to track the last package name generated for this application.
-     * This application package name is what we fall back to for the application name and the module name if not otherwise
-     * specified directly.
-     */
-    protected static final String APPLICATION_PACKAGE_FILE_NAME = ModuleUtils.APPLICATION_PACKAGE_FILE_NAME;
+    private final System.Logger logger = System.getLogger(getClass().getName());
 
     // ----------------------------------------------------------------------
     // Configurables
     // ----------------------------------------------------------------------
-
     /**
      * The module name to apply. If not found the module name will be inferred.
      */
-    @Parameter(property = Options.TAG_MODULE_NAME, readonly = true)
+    @Parameter(property = InjectOptions.MODULE_NAME, readonly = true)
     private String moduleName;
 
     // ----------------------------------------------------------------------
@@ -116,14 +107,14 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
      * The -source argument for the Java compiler.
      * Note: using the same as maven-compiler for convenience and least astonishment.
      */
-    @Parameter(property = "maven.compiler.source", defaultValue = DEFAULT_SOURCE)
+    @Parameter(property = "maven.compiler.source", defaultValue = "21")
     private String source;
 
     /**
      * The -target argument for the Java compiler.
      * Note: using the same as maven-compiler for convenience and least astonishment.
      */
-    @Parameter(property = "maven.compiler.target", defaultValue = DEFAULT_TARGET)
+    @Parameter(property = "maven.compiler.target", defaultValue = "21")
     private String target;
 
     /**
@@ -167,6 +158,21 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     protected AbstractCreatorMojo() {
     }
 
+    @Override
+    public void execute() throws MojoExecutionException {
+        try {
+            getLog().info("Started " + getClass().getName() + " for " + getProject());
+            innerExecute();
+            getLog().info("Finishing " + getClass().getName() + " for " + getProject());
+        } catch (Throwable t) {
+            MojoExecutionException me = new MojoExecutionException("Injection maven-plugin execution failed", t);
+            getLog().error(me.getMessage(), t);
+            throw me;
+        } finally {
+            getLog().info("Finished " + getClass().getName() + " for " + getProject());
+        }
+    }
+
     /**
      * Returns true if debug is enabled.
      *
@@ -207,7 +213,7 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
         return logger;
     }
 
-    String getModuleName() {
+    String moduleName() {
         return moduleName;
     }
 
@@ -235,35 +241,19 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
         return compilerArgs;
     }
 
-    @Override
-    public void execute() throws MojoExecutionException {
-        try (TrafficCop.GreenLight greenLight = TRAFFIC_COP.waitForGreenLight()) {
-            getLog().info("Started " + getClass().getName() + " for " + getProject());
-            innerExecute();
-            getLog().info("Finishing " + getClass().getName() + " for " + getProject());
-            MavenPluginUtils.resetAll();
-        } catch (Throwable t) {
-            MojoExecutionException me = new MojoExecutionException("Injection maven-plugin execution failed", t);
-            getLog().error(me.getMessage(), t);
-            throw me;
-        } finally {
-            getLog().info("Finished " + getClass().getName() + " for " + getProject());
-        }
-    }
-
     /**
      * Determines the primary package name (which also typically doubles as the application name).
      *
-     * @param optModuleSp            the module service provider
-     * @param typeNames              the type names
-     * @param descriptor             the descriptor
-     * @param sourceRoots            source roots that contain current sources
-     * @param persistIt              pass true to write it to scratch, so that we can use it in the future for this module
+     * @param optModuleSp the module service provider
+     * @param typeNames   the type names
+     * @param descriptor  the descriptor
+     * @param sourceRoots source roots that contain current sources
+     * @param persistIt   pass true to write it to scratch, so that we can use it in the future for this module
      * @return the package name (which also typically doubles as the application name)
      */
     protected String determinePackageName(Optional<ServiceProvider<ModuleComponent>> optModuleSp,
                                           Collection<TypeName> typeNames,
-                                          ModuleInfoDescriptor descriptor,
+                                          ModuleInfo descriptor,
                                           List<Path> sourceRoots,
                                           boolean persistIt) {
         String packageName = getPackageName();
@@ -286,7 +276,7 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
                         packageName = toSuggestedGeneratedPackageName(typeNames, "inject");
                     }
                 } else {
-                    if (!(sourceRoots.isEmpty() && descriptor.isUnnamed())) {
+                    if (!(sourceRoots.isEmpty() && descriptor.name().equals(ModuleInfo.DEFAULT_MODULE_NAME))) {
                         packageName = packageFromSourceRoots(sourceRoots);
                     }
                     if (packageName == null) {
@@ -297,8 +287,8 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
         }
 
         if (packageName == null || packageName.isBlank()) {
-            throw new ToolsException("Unable to determine the package name. The package name can be set using "
-                                             + TAG_PACKAGE_NAME);
+            throw new CodegenException("Unable to determine the package name. The package name can be set using "
+                                               + TAG_PACKAGE_NAME);
         }
 
         if (persistIt) {
@@ -308,6 +298,62 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
 
         return packageName;
     }
+
+    /**
+     * Attempts to load the app package name from what was previously recorded.
+     *
+     * @return the app package name that was loaded
+     */
+    protected Optional<String> loadAppPackageName() {
+        return MavenUtil.loadAppPackageName(getInjectScratchDir().toPath());
+    }
+
+    /**
+     * Persist the package name into scratch for later usage.
+     *
+     * @param packageName the package name
+     */
+    protected void saveAppPackageName(String packageName) {
+        MavenUtil.saveAppPackageName(getInjectScratchDir().toPath(), packageName);
+    }
+
+    /**
+     *
+     *
+     * @throws MojoExecutionException if any mojo problems occur
+     */
+    protected abstract void innerExecute() throws MojoExecutionException, MojoFailureException;
+
+    LinkedHashSet<Path> getDependencies(String optionalScopeFilter) {
+        MavenProject project = getProject();
+        LinkedHashSet<Path> result = new LinkedHashSet<>(project.getDependencyArtifacts().size());
+        for (Object a : project.getDependencyArtifacts()) {
+            Artifact artifact = (Artifact) a;
+            if (optionalScopeFilter == null || optionalScopeFilter.equals(artifact.getScope())) {
+                result.add(((Artifact) a).getFile().toPath());
+            }
+        }
+        return result;
+    }
+
+    LinkedHashSet<Path> getSourceClasspathElements() {
+        MavenProject project = getProject();
+        LinkedHashSet<Path> result = new LinkedHashSet<>(project.getCompileArtifacts().size());
+        result.add(new File(project.getBuild().getOutputDirectory()).toPath());
+        for (Object a : project.getCompileArtifacts()) {
+            result.add(((Artifact) a).getFile().toPath());
+        }
+        return result;
+    }
+
+    /**
+     * Provides a convenient way to handle test scope. Returns the classpath for source files (or test sources) only.
+     */
+    LinkedHashSet<Path> getClasspathElements() {
+        return getSourceClasspathElements();
+    }
+
+    abstract File getGeneratedSourceDirectory();
 
     private String packageFromSourceRoots(List<Path> sourceRoots) {
         // we are interested in the shortest path that contains a java file other than module-info.java
@@ -343,7 +389,7 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
                         if (fileName.endsWith(".java")) {
                             String packageName = toPackageName(sourceRoot, file.getParent());
                             String current = foundPackage.get();
-                            if (current == null || current.length() > packageName.length())  {
+                            if (current == null || current.length() > packageName.length()) {
                                 foundPackage.set(packageName);
                             }
                             return FileVisitResult.SKIP_SIBLINGS;
@@ -363,97 +409,4 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
         Path relativize = root.relativize(resolved);
         return relativize.toString().replace('\\', '/').replace('/', '.');
     }
-
-    /**
-     * Attempts to load the app package name from what was previously recorded.
-     *
-     * @return the app package name that was loaded
-     */
-    protected Optional<String> loadAppPackageName() {
-        return ModuleUtils.loadAppPackageName(getInjectScratchDir().toPath());
-    }
-
-    /**
-     * Persist the package name into scratch for later usage.
-     *
-     * @param packageName the package name
-     */
-    protected void saveAppPackageName(String packageName) {
-        ModuleUtils.saveAppPackageName(getInjectScratchDir().toPath(), packageName);
-    }
-
-    /**
-     * Gated/controlled by the {@link TrafficCop}.
-     *
-     * @throws MojoExecutionException if any mojo problems occur
-     */
-    protected abstract void innerExecute() throws MojoExecutionException;
-
-    LinkedHashSet<Path> getDependencies(String optionalScopeFilter) {
-        MavenProject project = getProject();
-        LinkedHashSet<Path> result = new LinkedHashSet<>(project.getDependencyArtifacts().size());
-        for (Object a : project.getDependencyArtifacts()) {
-            Artifact artifact = (Artifact) a;
-            if (optionalScopeFilter == null || optionalScopeFilter.equals(artifact.getScope())) {
-                result.add(((Artifact) a).getFile().toPath());
-            }
-        }
-        return result;
-    }
-
-    LinkedHashSet<Path> getSourceClasspathElements() {
-        MavenProject project = getProject();
-        LinkedHashSet<Path> result = new LinkedHashSet<>(project.getCompileArtifacts().size());
-        result.add(new File(project.getBuild().getOutputDirectory()).toPath());
-        for (Object a : project.getCompileArtifacts()) {
-            result.add(((Artifact) a).getFile().toPath());
-        }
-        return result;
-    }
-
-    /**
-     * Provides a convenient way to handle test scope. Returns the classpath for source files (or test sources) only.
-     */
-    LinkedHashSet<Path> getClasspathElements() {
-        return getSourceClasspathElements();
-    }
-
-    abstract File getGeneratedSourceDirectory();
-
-
-    class Messager2LogAdapter implements Messager {
-        @Override
-        public void debug(String message) {
-            getLog().debug(message);
-        }
-
-        @Override
-        public void debug(String message,
-                          Throwable t) {
-            getLog().debug(message, t);
-        }
-
-        @Override
-        public void log(String message) {
-            getLog().info(message);
-        }
-
-        @Override
-        public void warn(String message) {
-            getLog().warn(message);
-        }
-
-        @Override
-        public void warn(String message,
-                         Throwable t) {
-            getLog().warn(message, t);
-        }
-
-        @Override
-        public void error(String message,
-                          Throwable t) {
-            getLog().error(message, t);
-        }
-    }
-
 }

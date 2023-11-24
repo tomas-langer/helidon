@@ -23,13 +23,13 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
-import io.helidon.common.processor.ProcessingContext;
-import io.helidon.common.processor.TypeInfoFactory;
+import io.helidon.codegen.apt.AptContext;
+import io.helidon.codegen.apt.AptTypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 
 interface BlueprintProcessingContext {
-    static BlueprintProcessingContext create(ProcessingContext ctx) {
+    static BlueprintProcessingContext create(AptContext ctx) {
         return new ProcessingContextProcessor(ctx);
     }
 
@@ -38,9 +38,9 @@ interface BlueprintProcessingContext {
     Optional<String> javadoc(Element typeName);
 
     class ProcessingContextProcessor implements BlueprintProcessingContext {
-        private final ProcessingContext ctx;
+        private final AptContext ctx;
 
-        ProcessingContextProcessor(ProcessingContext ctx) {
+        ProcessingContextProcessor(AptContext ctx) {
             this.ctx = ctx;
         }
 
@@ -58,7 +58,7 @@ interface BlueprintProcessingContext {
             if (typeElement == null) {
                 return Optional.empty();
             }
-            return TypeInfoFactory.create(ctx, typeElement);
+            return AptTypeInfoFactory.create(ctx, typeElement);
         }
     }
 }

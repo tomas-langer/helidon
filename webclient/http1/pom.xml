@@ -123,7 +123,7 @@
                         </path>
                         <path>
                             <groupId>io.helidon.inject.configdriven</groupId>
-                            <artifactId>helidon-inject-configdriven-processor</artifactId>
+                            <artifactId>helidon-inject-configdriven-codegen</artifactId>
                             <version>${helidon.version}</version>
                         </path>
                         <path>
@@ -152,7 +152,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>io.helidon.inject.configdriven</groupId>
-                        <artifactId>helidon-inject-configdriven-processor</artifactId>
+                        <artifactId>helidon-inject-configdriven-codegen</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
                     <dependency>

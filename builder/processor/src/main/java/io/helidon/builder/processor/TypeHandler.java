@@ -22,10 +22,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import io.helidon.common.processor.classmodel.Field;
-import io.helidon.common.processor.classmodel.InnerClass;
-import io.helidon.common.processor.classmodel.Javadoc;
-import io.helidon.common.processor.classmodel.Method;
+import io.helidon.codegen.classmodel.Field;
+import io.helidon.codegen.classmodel.InnerClass;
+import io.helidon.codegen.classmodel.Javadoc;
+import io.helidon.codegen.classmodel.Method;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
@@ -37,7 +37,7 @@ import static io.helidon.builder.processor.Types.DURATION_TYPE;
 import static io.helidon.builder.processor.Types.LINKED_HASH_MAP_TYPE;
 import static io.helidon.builder.processor.Types.LINKED_HASH_SET_TYPE;
 import static io.helidon.builder.processor.Types.STRING_TYPE;
-import static io.helidon.common.processor.classmodel.ClassModel.TYPE_TOKEN;
+import static io.helidon.codegen.classmodel.ClassModel.TYPE_TOKEN;
 
 class TypeHandler {
     private final String name;

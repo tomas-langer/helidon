@@ -56,7 +56,6 @@ import static io.helidon.inject.testing.InjectionTestingSupport.testableServices
 import static io.helidon.inject.testing.InjectionTestingSupport.toDescription;
 import static io.helidon.inject.testing.InjectionTestingSupport.toDescriptions;
 import static io.helidon.inject.tests.inject.TestUtils.loadStringFromResource;
-import static io.helidon.inject.tools.TypeTools.toFilePath;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -242,6 +241,25 @@ class InterceptorRuntimeTest {
         sval = ibInstance.methodIB2("test");
         assertThat(sval,
                    equalTo("intercepted:test"));
+    }
+
+    private static String toFilePath(TypeName typeName) {
+        return toFilePath(typeName, ".java");
+    }
+
+    private static String toFilePath(TypeName typeName,
+                                     String fileType) {
+        String className = typeName.className();
+        String packageName = typeName.packageName().replace('.', File.separatorChar);
+
+        String suffix;
+        if (fileType.startsWith(".")) {
+            suffix = fileType;
+        } else {
+            suffix = "." + fileType;
+        }
+
+        return packageName + File.separatorChar + className + suffix;
     }
 
     private void compareContentByLines(String description, List<String> generatedSource, String expectedSource)

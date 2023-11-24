@@ -16,13 +16,14 @@
 
 package io.helidon.inject.tests.inject;
 
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.tools.Options;
-import io.helidon.inject.tools.TypeNames;
+import io.helidon.inject.codegen.InjectCodegenTypes;
 
+import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +56,7 @@ class JavaxTest {
     }
 
     /**
-     * Uses {@link Options#TAG_MAP_APPLICATION_TO_SINGLETON_SCOPE}.
+     * Uses {@link io.helidon.inject.codegen.InjectOptions#MAP_APPLICATION_TO_SINGLETON_SCOPE}.
      * This also verifies that the qualifiers were mapped over properly from javax as well.
      */
     @Test
@@ -66,7 +67,8 @@ class JavaxTest {
         assertThat(sp.qualifiers(),
                    contains(Qualifier.create(Default.class)));
         assertThat(sp.scopes(),
-                   containsInAnyOrder(TypeNames.JAKARTA_SINGLETON_TYPE, TypeNames.JAKARTA_APPLICATION_SCOPED_TYPE));
+                   containsInAnyOrder(InjectCodegenTypes.INJECT_SINGLETON,
+                                      TypeName.create(ApplicationScoped.class)));
     }
 
 }

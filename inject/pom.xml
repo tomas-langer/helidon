@@ -33,16 +33,10 @@
 
     <packaging>pom</packaging>
 
-    <properties>
-        <!-- Helidon Injection supports a universal debug flag -->
-        <inject.debug>true</inject.debug>
-    </properties>
-
-    <!-- this will show the progression of what has come over, and what is left to come over -->
     <modules>
         <module>api</module>
+        <module>codegen</module>
         <module>configdriven</module>
-        <module>tools</module>
         <module>processor</module>
         <module>maven-plugin</module>
         <module>testing</module>

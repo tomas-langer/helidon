@@ -20,8 +20,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.common.Errors;
-import io.helidon.common.processor.ElementInfoPredicates;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;

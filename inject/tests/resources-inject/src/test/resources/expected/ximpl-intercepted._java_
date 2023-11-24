@@ -35,7 +35,7 @@ import io.helidon.inject.tests.plain.interceptor.IA;
 /**
  * Intercepted sub-type for {@link io.helidon.inject.tests.inject.interceptor.XImpl}.
  */
-@Generated(value = "io.helidon.inject.processor.InterceptedTypeGenerator", trigger = "io.helidon.inject.tests.inject.interceptor.XImpl")
+@Generated(value = "io.helidon.inject.codegen.InterceptedTypeGenerator", trigger = "io.helidon.inject.tests.inject.interceptor.XImpl")
 public class XImpl__Intercepted extends XImpl {
 
     private static final TypedElementInfo METHOD_0_CLOSE = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("void")).elementName("close").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).accessModifier(AccessModifier.PUBLIC).build();
@@ -67,7 +67,7 @@ public class XImpl__Intercepted extends XImpl {
             helidonInject__params -> {
                 super.close();
                 return null;
-            }, Set.of(java.io.IOException.class, java.lang.RuntimeException.class));
+            }, Set.of(java.io.IOException.class));
         this.methodIA2_1_invoker = helidonInject__interceptMeta.createInvoker(
             helidonInject__serviceDescriptor,
             helidonInject__typeQualifiers,
@@ -97,7 +97,7 @@ public class XImpl__Intercepted extends XImpl {
             helidonInject__typeQualifiers,
             helidonInject__typeAnnotations,
             METHOD_4_METHOD_X,
-            helidonInject__params -> super.methodX((java.lang.String) helidonInject__params[0], (int) helidonInject__params[1], (boolean) helidonInject__params[2]), Set.of(java.io.IOException.class, java.lang.RuntimeException.class, java.lang.AssertionError.class));
+            helidonInject__params -> super.methodX((java.lang.String) helidonInject__params[0], (int) helidonInject__params[1], (boolean) helidonInject__params[2]), Set.of(java.io.IOException.class));
         this.methodY_5_invoker = helidonInject__interceptMeta.createInvoker(
             helidonInject__serviceDescriptor,
             helidonInject__typeQualifiers,
@@ -122,7 +122,7 @@ public class XImpl__Intercepted extends XImpl {
     }
 
     @Override
-    public void close() throws IOException, RuntimeException {
+    public void close() throws IOException {
         try {
             close_0_invoker.invoke();
         } catch (IOException helidonInject__e) {
@@ -168,14 +168,12 @@ public class XImpl__Intercepted extends XImpl {
     }
 
     @Override
-    public long methodX(String arg1, int arg2, boolean arg3) throws IOException, RuntimeException, AssertionError {
+    public long methodX(String arg1, int arg2, boolean arg3) throws IOException {
         try {
             return methodX_4_invoker.invoke(arg1, arg2, arg3);
         } catch (IOException helidonInject__e) {
              throw helidonInject__e;
         } catch (RuntimeException helidonInject__e) {
-             throw helidonInject__e;
-        } catch (AssertionError helidonInject__e) {
              throw helidonInject__e;
         } catch (Exception helidonInject__e) {
             throw new RuntimeException(helidonInject__e);

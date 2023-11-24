@@ -146,41 +146,17 @@ public final class TypeNames {
     /**
      * Type name of the type name.
      */
-    public static final TypeName TYPE_NAME = TypeName.create(TypeName.class);
+    public static final TypeName HELIDON_TYPE_NAME = TypeName.create(TypeName.class);
     /**
-     * Type name of typed element info.
+     * Helidon typed element info type
      */
-    public static final TypeName TYPED_ELEMENT_INFO = TypeName.create(TypedElementInfo.class);
-
-    static final Map<String, TypeName> PRIMITIVES = Map.of(
-            "boolean", PRIMITIVE_BOOLEAN,
-            "byte", PRIMITIVE_BYTE,
-            "short", PRIMITIVE_SHORT,
-            "int", PRIMITIVE_INT,
-            "long", PRIMITIVE_LONG,
-            "char", PRIMITIVE_CHAR,
-            "float", PRIMITIVE_FLOAT,
-            "double", PRIMITIVE_DOUBLE,
-            "void", PRIMITIVE_VOID
-    );
-
-    private static final Map<TypeName, TypeName> BOXED_TYPES = Map.of(
-            PRIMITIVE_BOOLEAN, BOXED_BOOLEAN,
-            PRIMITIVE_BYTE, BOXED_BYTE,
-            PRIMITIVE_SHORT, BOXED_SHORT,
-            PRIMITIVE_INT, BOXED_INT,
-            PRIMITIVE_LONG, BOXED_LONG,
-            PRIMITIVE_CHAR, BOXED_CHAR,
-            PRIMITIVE_FLOAT, BOXED_FLOAT,
-            PRIMITIVE_DOUBLE, BOXED_DOUBLE,
-            PRIMITIVE_VOID, BOXED_VOID
-    );
-
-    private TypeNames() {
-    }
-
-    static TypeName boxed(TypeName original) {
-        return Optional.ofNullable(BOXED_TYPES.get(original))
-                .orElse(original);
-    }
+    public static final TypeName HELIDON_TYPED_ELEMENT_INFO = TypeName.create(TypedElementInfo.class);
+    /**
+     * Helidon annotation type.
+     */
+    public static final TypeName HELIDON_ANNOTATION = TypeName.create(Annotation.class);
+    /**
+     * Type name for {@link java.lang.annotation.Retention}.
+     */
+    public static final TypeName RETENTION = TypeName.create("java.lang.annotation.Retention");
 }

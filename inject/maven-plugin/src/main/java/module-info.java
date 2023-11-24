@@ -18,23 +18,26 @@
  * Injection maven-plugin module.
  */
 module io.helidon.inject.maven.plugin {
+    uses io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
     requires io.helidon.builder.api;
     requires io.helidon.common;
     requires io.helidon.config;
     requires io.helidon.inject.configdriven.runtime;
+    requires io.helidon.codegen.scan;
+    requires io.helidon.codegen.compiler;
+    requires io.helidon.inject.codegen;
+
+    requires jakarta.inject;
+
     requires maven.artifact;
     requires maven.model;
     requires maven.plugin.annotations;
     requires maven.plugin.api;
     requires maven.project;
-
-    requires transitive io.helidon.inject.tools;
+    requires aether.api;
+    requires aether.util;
+    requires io.github.classgraph;
 
     exports io.helidon.inject.maven.plugin;
-
-    uses io.helidon.inject.tools.spi.ActivatorCreator;
-    uses io.helidon.inject.tools.spi.ApplicationCreator;
-    uses io.helidon.inject.tools.spi.ExternalModuleCreator;
-
 }

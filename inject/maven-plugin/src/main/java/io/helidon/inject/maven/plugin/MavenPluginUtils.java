@@ -20,10 +20,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.stream.Collectors;
 
-import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.LazyValue;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
@@ -35,9 +33,6 @@ import io.helidon.inject.api.Resettable;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.configdriven.runtime.ConfigBeanRegistry;
-import io.helidon.inject.tools.spi.ActivatorCreator;
-import io.helidon.inject.tools.spi.ApplicationCreator;
-import io.helidon.inject.tools.spi.ExternalModuleCreator;
 
 final class MavenPluginUtils {
     private MavenPluginUtils() {
@@ -58,18 +53,6 @@ final class MavenPluginUtils {
      */
     static void resetAll() {
         Internal.reset();
-    }
-
-    static ApplicationCreator applicationCreator() {
-        return HelidonServiceLoader.create(ServiceLoader.load(ApplicationCreator.class)).iterator().next();
-    }
-
-    static ExternalModuleCreator externalModuleCreator() {
-        return HelidonServiceLoader.create(ServiceLoader.load(ExternalModuleCreator.class)).iterator().next();
-    }
-
-    static ActivatorCreator activatorCreator() {
-        return HelidonServiceLoader.create(ServiceLoader.load(ActivatorCreator.class)).iterator().next();
     }
 
     /**

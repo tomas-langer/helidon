@@ -17,36 +17,32 @@
 package io.helidon.inject.maven.plugin;
 
 import java.io.File;
-import java.net.URLClassLoader;
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenScope;
+import io.helidon.codegen.ModuleInfo;
+import io.helidon.codegen.scan.ScanModuleInfo;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.tools.AbstractFilerMessager;
-import io.helidon.inject.tools.ActivatorCreatorConfigOptions;
-import io.helidon.inject.tools.ActivatorCreatorRequest;
-import io.helidon.inject.tools.ActivatorCreatorResponse;
-import io.helidon.inject.tools.CodeGenFiler;
-import io.helidon.inject.tools.CodeGenPaths;
-import io.helidon.inject.tools.ExternalModuleCreatorRequest;
-import io.helidon.inject.tools.ExternalModuleCreatorResponse;
-import io.helidon.inject.tools.spi.ActivatorCreator;
-import io.helidon.inject.tools.spi.ExternalModuleCreator;
+import io.helidon.inject.codegen.InjectOptions;
 
-import org.apache.maven.plugin.MojoExecutionException;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ScanResult;
+import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 
-import static io.helidon.inject.maven.plugin.MavenPluginUtils.activatorCreator;
-import static io.helidon.inject.maven.plugin.MavenPluginUtils.externalModuleCreator;
+import static java.util.function.Predicate.not;
 
 /**
  * Responsible for creating {@link Activator}'s and a {@link ModuleComponent}
@@ -56,9 +52,10 @@ import static io.helidon.inject.maven.plugin.MavenPluginUtils.externalModuleCrea
       requiresDependencyResolution = ResolutionScope.COMPILE)
 @SuppressWarnings("unused")
 public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
+    private static final String UNNAMED_MODULE = "unnamed";
 
     /**
-     * Sets the packages to be passed to the creator.
+     * Sets the packages to be passed to the creator. If not defined, all types in the referenced modules will be processed.
      * <p>
      * Example:
      * <pre>
@@ -72,26 +69,6 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
     private List<String> packageNames;
 
     /**
-     * Sets the qualifiers to be passed to the creator.
-     * <p>
-     * Example:
-     * <pre>
-     * &lt;serviceTypeToQualifiers&gt;
-     *   &lt;org.atinject.tck.auto.accessories.SpareTire&gt;
-     *   &lt;qualifier&gt;
-     *      &lt;qualifierTypeName&gt;
-     *      &lt;/qualifierTypeName&gt;
-     *      &lt;value&gt;
-     *      &lt;/value&gt;
-     *   &lt;/qualifier&gt;
-     *   &lt;/org.atinject.tck.auto.accessories.SpareTire&gt;
-     * &lt;/serviceTypeToQualifiers&gt;
-     * </pre>
-     */
-    @Parameter(name = "serviceTypeQualifiers")
-    private List<ServiceTypeQualifiers> serviceTypeQualifiers;
-
-    /**
      * Establishes whether strict jsr-330 compliance is in effect.
      */
     @Parameter(name = "supportsJsr330Strict", property = "inject.supports-jsr330.strict")
@@ -100,33 +77,13 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
     /**
      * Specify where to place generated source files created by annotation processing.
      */
-    @Parameter(defaultValue = "${project.build.directory}/generated-sources/inject")
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources/annotations")
     private File generatedSourcesDirectory;
 
     /**
      * Default constructor.
      */
     public ExternalModuleCreatorMojo() {
-    }
-
-    /**
-     * @return the package names that should be targeted for activator creation
-     */
-    List<String> getPackageNames() {
-        return packageNames;
-    }
-
-    /**
-     * @return the explicit qualifiers that should be setup as part of activator creation
-     */
-    Map<String, Set<Qualifier>> getServiceTypeToQualifiers() {
-        if (serviceTypeQualifiers == null) {
-            return Map.of();
-        }
-
-        Map<String, Set<Qualifier>> result = new LinkedHashMap<>();
-        serviceTypeQualifiers.forEach((serviceTypeQualifiers) -> result.putAll(serviceTypeQualifiers.toMap()));
-        return result;
     }
 
     /**
@@ -152,68 +109,137 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
     }
 
     @Override
-    protected void innerExecute() throws MojoExecutionException {
-        if (packageNames == null || packageNames.isEmpty()) {
-            throw new MojoExecutionException("packageNames are required to be specified");
-        }
-
-        ClassLoader prev = Thread.currentThread().getContextClassLoader();
+    protected void innerExecute() throws MojoFailureException {
         Set<Path> classpath = getDependencies("compile");
-        URLClassLoader loader = ExecutableClassLoader.create(classpath, prev);
 
-        try {
-            Thread.currentThread().setContextClassLoader(loader);
-
-            if (1 == 1) {
-                return;
-            }
-            ExternalModuleCreator externalModuleCreator = externalModuleCreator();
-
-            ActivatorCreatorConfigOptions configOptions = ActivatorCreatorConfigOptions.builder()
-                    .supportsJsr330InStrictMode(isSupportsJsr330InStrictMode())
-                    .build();
-            String generatedSourceDir = getGeneratedSourceDirectory().getPath();
-
-            CodeGenPaths codeGenPaths = CodeGenPaths.builder()
-                    .generatedSourcesPath(generatedSourceDir)
-                    .outputPath(getOutputDirectory().getPath())
-                    .metaInfServicesPath(new File(getOutputDirectory(), "META-INF/services").getPath())
-                    .build();
-            AbstractFilerMessager directFiler = AbstractFilerMessager.createDirectFiler(codeGenPaths, getLogger());
-            CodeGenFiler codeGenFiler = CodeGenFiler.create(directFiler);
-            ExternalModuleCreatorRequest request = ExternalModuleCreatorRequest.builder()
-                    .packageNamesToScan(getPackageNames())
-                    .serviceTypeToQualifiersMap(getServiceTypeToQualifiers())
-                    .throwIfError(isFailOnWarning())
-                    .activatorCreatorConfigOptions(configOptions)
-                    .codeGenPaths(codeGenPaths)
-                    .update(it -> Optional.ofNullable(getModuleName()).ifPresent(it::moduleName))
-                    .filer(codeGenFiler)
-                    .build();
-            ExternalModuleCreatorResponse res = externalModuleCreator.prepareToCreateExternalModule(request);
-            if (res.success()) {
-                getLog().debug("processed service type names: " + res.serviceTypes());
-                if (getLog().isDebugEnabled()) {
-                    getLog().debug("response: " + res);
-                }
-
-                // now proceed to creating the activators (we get this from the external module creation)
-                ActivatorCreatorRequest activatorCreatorRequest = res.activatorCreatorRequest();
-                ActivatorCreator activatorCreator = activatorCreator();
-                ActivatorCreatorResponse activatorCreatorResponse =
-                        activatorCreator.createModuleActivators(activatorCreatorRequest);
-                if (activatorCreatorResponse.success()) {
-                    getProject().addCompileSourceRoot(generatedSourceDir);
-                    getLog().info("successfully processed: " + activatorCreatorResponse.serviceTypes());
-                } else {
-                    getLog().error("failed to process", activatorCreatorResponse.error().orElse(null));
-                }
-            } else {
-                getLog().error("failed to process", res.error().orElse(null));
-            }
-        } finally {
-            Thread.currentThread().setContextClassLoader(prev);
+        try (ScanResult scan = new ClassGraph()
+                .overrideClasspath(classpath)
+                .enableAllInfo()
+                .scan()) {
+            processInjectCodegen(scan);
+        } catch (CodegenException e) {
+            throw new MojoFailureException("Failed to generate service descriptors", e);
         }
     }
 
+    private void processInjectCodegen(ScanResult scan) throws MojoFailureException {
+        Path generatedSourceDir = getGeneratedSourceDirectory().toPath();
+        Path outputDirectory = getOutputDirectory().toPath();
+        CodegenScope scope = CodegenScope.PRODUCTION;
+
+        MavenLogger mavenLogger = MavenLogger.create(getLog(), isFailOnWarning());
+
+        Set<String> packagesToScan = resolvePackages();
+        Set<ClassInfo> candidates = candidates(scan, packagesToScan::contains);
+        if (candidates.isEmpty()) {
+            throw new MojoFailureException("Did not discovery and candidates to processing in packages: " + packagesToScan);
+        }
+
+        Optional<ModuleInfo> moduleInfo = discoverModuleInfo(scan, candidates);
+
+        MavenScanContext scanContext = MavenScanContext.create(MavenOptions.create(toOptions()),
+                                                               scan,
+                                                               scope,
+                                                               generatedSourceDir,
+                                                               outputDirectory,
+                                                               mavenLogger,
+                                                               moduleInfo.orElse(null));
+
+        HelidonScanProcessor processor = new HelidonScanProcessor(scanContext);
+
+        boolean generated = processor.process(candidates);
+
+        if (generated) {
+            scanContext.logger().log(System.Logger.Level.DEBUG, "Types were generated by "
+                    + ExternalModuleCreatorMojo.class.getName() + ", adding source root: "
+                    + generatedSourceDir.toAbsolutePath());
+            getProject().addCompileSourceRoot(generatedSourceDir.toString());
+        } else {
+            scanContext.logger().log(System.Logger.Level.DEBUG, "Nothing was generated by "
+                    + ExternalModuleCreatorMojo.class.getName());
+        }
+
+        if (mavenLogger.hasErrors()) {
+            throw new MojoFailureException("Errors while processing code generation for injection:\n"
+                                                   + String.join("\n", mavenLogger.messages()));
+        }
+    }
+
+    private Set<String> toOptions() {
+        Set<String> options = new HashSet<>(getCompilerArgs());
+        options.add("-A" + InjectOptions.JSR_330_STRICT + "=" + isSupportsJsr330InStrictMode());
+        String moduleName = moduleName();
+        if (moduleName != null) {
+            options.add("-A" + InjectOptions.MODULE_NAME + "=" + moduleName);
+        }
+
+        return options;
+    }
+
+    private Set<ClassInfo> candidates(ScanResult scan, Predicate<String> packagePredicate) {
+        return scan.getAllClasses()
+                .stream()
+                .filter(it -> packagePredicate.test(it.getPackageName()))
+                .filter(not(ClassInfo::isInterface))
+                .filter(not(ClassInfo::isExternalClass))
+                .filter(not(ClassInfo::isAnonymousInnerClass))
+                // .filter(it -> !it.isInnerClass())
+                .collect(Collectors.toSet());
+
+    }
+
+    private Optional<ModuleInfo> discoverModuleInfo(ScanResult scanResult, Set<ClassInfo> candidates) {
+        // now make sure we have only a single module
+        Set<String> moduleNames = candidates.stream()
+                .map(this::toModuleName)
+                .collect(Collectors.toSet());
+
+        if (moduleNames.size() != 1) {
+            throw new CodegenException("All types processed by external module Mojo must reside in a single module, but found: "
+                                               + moduleNames);
+        }
+        String moduleName = moduleNames.iterator().next();
+        if (UNNAMED_MODULE.equals(moduleName)) {
+            return Optional.empty();
+        }
+        var moduleInfo = scanResult.getModuleInfo(moduleName);
+        if (moduleInfo == null) {
+            return Optional.empty();
+        }
+        try {
+            var moduleRef = moduleInfo.getModuleRef();
+            if (moduleRef == null) {
+                return Optional.empty();
+            }
+            return ScanModuleInfo.map(moduleRef);
+        } catch (Exception e) {
+            getLog().debug("Failed to get module ref for " + moduleInfo);
+            return Optional.empty();
+        }
+    }
+
+    private Set<String> resolvePackages() {
+        if (packageNames == null) {
+            return Set.of();
+        }
+        return Set.copyOf(packageNames);
+    }
+
+    private boolean sameOrNull(String first, String second) {
+        if (first == null) {
+            return second == null;
+        }
+        if (second == null) {
+            return false;
+        }
+        return first.equals(second);
+    }
+
+    private String toModuleName(ClassInfo classInfo) {
+        io.github.classgraph.ModuleInfo moduleInfo = classInfo.getModuleInfo();
+        if (moduleInfo == null) {
+            return UNNAMED_MODULE;
+        }
+        return moduleInfo.getName();
+    }
 }

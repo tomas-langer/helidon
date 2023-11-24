@@ -35,9 +35,9 @@
 
     <modules>
         <module>api</module>
-        <module>processor</module>
         <module>runtime</module>
         <module>tests</module>
+        <module>codegen</module>
     </modules>
 
 </project>

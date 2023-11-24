@@ -1339,7 +1339,7 @@
             </dependency>
             <dependency>
                 <groupId>io.helidon.inject</groupId>
-                <artifactId>helidon-inject-tools</artifactId>
+                <artifactId>helidon-inject-codegen</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
@@ -1376,7 +1376,7 @@
             </dependency>
             <dependency>
                 <groupId>io.helidon.inject.configdriven</groupId>
-                <artifactId>helidon-inject-configdriven-processor</artifactId>
+                <artifactId>helidon-inject-configdriven-codegen</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
 

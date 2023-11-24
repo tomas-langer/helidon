@@ -19,9 +19,9 @@ package io.helidon.builder.processor;
 import java.util.Optional;
 import java.util.Set;
 
-import io.helidon.common.processor.classmodel.Field;
-import io.helidon.common.processor.classmodel.InnerClass;
-import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.codegen.classmodel.Field;
+import io.helidon.codegen.classmodel.InnerClass;
+import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -30,7 +30,7 @@ import io.helidon.common.types.TypedElementInfo;
 import static io.helidon.builder.processor.Types.OPTION_CONFIDENTIAL_TYPE;
 import static io.helidon.builder.processor.Types.OPTION_REDUNDANT_TYPE;
 import static io.helidon.builder.processor.Types.OPTION_SAME_GENERIC_TYPE;
-import static io.helidon.common.processor.GeneratorTools.capitalize;
+import static io.helidon.codegen.CodegenUtil.capitalize;
 
 // builder property
 record PrototypeProperty(MethodSignature signature,

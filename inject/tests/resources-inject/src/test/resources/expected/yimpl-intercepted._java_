@@ -35,7 +35,7 @@ import io.helidon.inject.tests.plain.interceptor.IA;
 /**
  * Intercepted sub-type for {@link io.helidon.inject.tests.inject.interceptor.YImpl}.
  */
-@Generated(value = "io.helidon.inject.processor.InterceptedTypeGenerator", trigger = "io.helidon.inject.tests.inject.interceptor.YImpl")
+@Generated(value = "io.helidon.inject.codegen.InterceptedTypeGenerator", trigger = "io.helidon.inject.tests.inject.interceptor.YImpl")
 public class YImpl__Intercepted extends YImpl {
 
     private static final TypedElementInfo METHOD_0_CLOSE = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("void")).elementName("close").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).accessModifier(AccessModifier.PUBLIC).build();
@@ -57,7 +57,7 @@ public class YImpl__Intercepted extends YImpl {
             helidonInject__params -> {
                 super.close();
                 return null;
-            }, Set.of(java.io.IOException.class, java.lang.RuntimeException.class));
+            }, Set.of(java.io.IOException.class));
         this.methodIB2_2_invoker = helidonInject__interceptMeta.createInvoker(
             helidonInject__serviceDescriptor,
             helidonInject__typeQualifiers,
@@ -76,7 +76,7 @@ public class YImpl__Intercepted extends YImpl {
     }
 
     @Override
-    public void close() throws IOException, RuntimeException {
+    public void close() throws IOException {
         try {
             close_0_invoker.invoke();
         } catch (IOException helidonInject__e) {

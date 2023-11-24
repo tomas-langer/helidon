@@ -19,33 +19,17 @@
  */
 module io.helidon.inject.processor {
 
-    exports io.helidon.inject.processor.spi;
+    requires java.compiler;
+
+    requires io.helidon.common.types;
+    requires io.helidon.codegen;
+    requires io.helidon.codegen.apt;
+    requires io.helidon.inject.codegen;
+
     exports io.helidon.inject.processor;
 
-    requires io.helidon.common.processor.classmodel;
-    requires io.helidon.builder.api;
-    requires io.helidon.common.processor;
-    requires io.helidon.common;
-    requires io.helidon.common.codegen;
-
-    requires transitive io.helidon.inject.tools;
-    requires transitive java.compiler;
-
-    uses io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
-    uses io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider;
-    uses io.helidon.common.processor.spi.AnnotationMapperProvider;
-    uses io.helidon.common.processor.spi.ElementMapperProvider;
-    uses io.helidon.common.processor.spi.TypeMapperProvider;
-
-    provides io.helidon.common.processor.spi.AnnotationMapperProvider
-            with io.helidon.inject.processor.JavaxAnnotationMapperProvider,
-                 io.helidon.inject.processor.ApplicationScopedMapperProvider;
-
-    provides io.helidon.inject.processor.spi.HelidonProcessorExtensionProvider
-            with io.helidon.inject.processor.InjectionProcessorExtensionProvider;
-
+    //noinspection deprecation
     provides javax.annotation.processing.Processor with
-            io.helidon.inject.processor.HelidonAnnotationProcessor,
-            io.helidon.inject.processor.UnsupportedConstructsProcessor;
+            io.helidon.inject.processor.HelidonAnnotationProcessor;
 
 }

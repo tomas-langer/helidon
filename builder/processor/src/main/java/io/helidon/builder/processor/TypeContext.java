@@ -28,9 +28,9 @@ import java.util.function.Predicate;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
+import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.common.Errors;
 import io.helidon.common.Severity;
-import io.helidon.common.processor.ElementInfoPredicates;
 import io.helidon.common.types.Annotated;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Modifier;
