@@ -40,15 +40,6 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
 
     private static final Set<TypeName> CONTRACTS = Set.of(TypeName.create(HelloInjectionWorld.class));
     private static final TypeName TYPE_0 = TypeName.create("io.helidon.inject.runtime.testsubjects.InjectionWorld");
-    private static final TypeName TYPE_1 = TypeName.create(
-            "jakarta.inject.Provider<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
-    private static final TypeName TYPE_2 = TypeName.create(
-            "java.util.List<jakarta.inject.Provider<io.helidon.inject.runtime.testsubjects.InjectionWorld>>");
-    private static final TypeName TYPE_3 = TypeName.create("java.util.List<io.helidon.inject.runtime.testsubjects"
-                                                                   + ".InjectionWorld>");
-    private static final TypeName TYPE_4 = TypeName.create(
-            "java.util.Optional<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
-
     public static final IpId IP_0 = IpId.<InjectionWorld>builder()
             .elementKind(ElementKind.FIELD)
             .name("world")
@@ -58,6 +49,17 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
             .contract(TYPE_0)
             .typeName(TYPE_0)
             .build();
+    public static final IpId IP_5 = IpId.builder()
+            .elementKind(ElementKind.METHOD)
+            .service(TYPE_NAME)
+            .descriptor(DESCRIPTOR)
+            .name("world_1_world")
+            .field("IP_5")
+            .contract(TYPE_0)
+            .typeName(TYPE_0)
+            .build();
+    private static final TypeName TYPE_1 = TypeName.create(
+            "jakarta.inject.Provider<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
     public static final IpId IP_1 = IpId.builder()
             .elementKind(ElementKind.FIELD)
             .name("worldRef")
@@ -67,6 +69,8 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
             .typeName(TYPE_1)
             .contract(TYPE_0)
             .build();
+    private static final TypeName TYPE_2 = TypeName.create(
+            "java.util.List<jakarta.inject.Provider<io.helidon.inject.runtime.testsubjects.InjectionWorld>>");
     public static final IpId IP_2 = IpId.builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorldRefs")
@@ -76,6 +80,8 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
             .contract(TYPE_0)
             .typeName(TYPE_2)
             .build();
+    private static final TypeName TYPE_3 = TypeName.create("java.util.List<io.helidon.inject.runtime.testsubjects"
+                                                                   + ".InjectionWorld>");
     public static final IpId IP_3 = IpId.<List<InjectionWorld>>builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorlds")
@@ -85,6 +91,8 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
             .contract(TYPE_0)
             .typeName(TYPE_3)
             .build();
+    private static final TypeName TYPE_4 = TypeName.create(
+            "java.util.Optional<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
     public static final IpId IP_4 = IpId.<Optional<InjectionWorld>>builder()
             .elementKind(ElementKind.FIELD)
             .name("redWorld")
@@ -94,16 +102,6 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
             .contract(TYPE_0)
             .typeName(TYPE_4)
             .qualifiers(Set.of(Qualifier.createNamed("red")))
-            .build();
-
-    public static final IpId IP_5 = IpId.builder()
-            .elementKind(ElementKind.METHOD)
-            .service(TYPE_NAME)
-            .descriptor(DESCRIPTOR)
-            .name("world_1_world")
-            .field("IP_5")
-            .contract(TYPE_0)
-            .typeName(TYPE_0)
             .build();
     private static final List<IpId> DEPENDENCIES = List.of(IP_0,
                                                            IP_1,
@@ -141,16 +139,16 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
     }
 
     @Override
-    public void injectFields(InjectionContext ctx, InterceptionMetadata interceptionMetadata, HelloInjectionWorldImpl instance) {
+    public void inject(InjectionContext ctx,
+                       InterceptionMetadata interceptionMetadata,
+                       Set<MethodSignature> injected,
+                       HelloInjectionWorldImpl instance) {
         instance.world = ctx.param(IP_0);
         instance.worldRef = ctx.param(IP_1);
         instance.listOfWorldRefs = ctx.param(IP_2);
         instance.listOfWorlds = ctx.param(IP_3);
         instance.redWorld = ctx.param(IP_4);
-    }
 
-    @Override
-    public void injectMethods(InjectionContext ctx, Set<MethodSignature> injected, HelloInjectionWorldImpl instance) {
         instance.world(ctx.param(IP_5));
     }
 

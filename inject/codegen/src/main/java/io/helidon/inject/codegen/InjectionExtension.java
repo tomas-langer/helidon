@@ -83,7 +83,6 @@ class InjectionExtension implements InjectCodegenExtension {
     private final InterceptionStrategy interceptionStrategy;
     private final Set<TypeName> scopeMetaAnnotations;
     private final List<InjectCodegenObserver> observers;
-    private final boolean strictJsr330;
 
     InjectionExtension(InjectionCodegenContext codegenContext) {
         this.ctx = codegenContext;
@@ -93,7 +92,6 @@ class InjectionExtension implements InjectCodegenExtension {
         this.scopeMetaAnnotations = InjectOptions.scopeMetaAnnotations(options);
         this.observers = HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenObserver.class))
                 .asList();
-        this.strictJsr330 = options.enabled(InjectOptions.JSR_330_STRICT);
     }
 
     @Override
@@ -179,12 +177,16 @@ class InjectionExtension implements InjectCodegenExtension {
         singletonInstanceField(classModel, descriptorType);
         serviceTypeFields(classModel, serviceType, descriptorType);
         typeFields(classModel, genericTypes);
-        injectionPointIdFields(classModel, genericTypes, params);
         contractsField(classModel, contracts);
-        dependenciesField(classModel, params);
         qualifiersField(classModel, qualifiers);
         scopesField(classModel, scopes, superType);
         methodFields(classModel, methods);
+
+        // public fields are last, so they do not intersect with private fields (it is not as nice to read)
+        // they cannot be first, as they require some of the private fields
+        injectionPointIdFields(classModel, typeInfo, genericTypes, params);
+        // dependencies require IP IDs, so they really must be last
+        dependenciesField(classModel, params);
 
         if (canIntercept) {
             annotationsField(classModel, typeInfo);
@@ -492,7 +494,8 @@ class InjectionExtension implements InjectCodegenExtension {
                                                  String methodId) {
         return method.parameterArguments()
                 .stream()
-                .map(param -> new ParamDefinition(param,
+                .map(param -> new ParamDefinition(method,
+                                                  param,
                                                   "IP_PARAM_" + paramCounter.get(),
                                                   "ipParam" + paramCounter.getAndIncrement(),
                                                   param.typeName(),
@@ -611,7 +614,8 @@ class InjectionExtension implements InjectCodegenExtension {
                                          TypedElementInfo constructor) {
         constructor.parameterArguments()
                 .stream()
-                .map(param -> new ParamDefinition(param,
+                .map(param -> new ParamDefinition(constructor,
+                                                  param,
                                                   "IP_PARAM_" + paramCounter.get(),
                                                   "ipParam" + paramCounter.getAndIncrement(),
                                                   param.typeName(),
@@ -632,6 +636,7 @@ class InjectionExtension implements InjectCodegenExtension {
 
     private void fieldParam(TypeInfo service, List<ParamDefinition> result, AtomicInteger paramCounter, TypedElementInfo field) {
         result.add(new ParamDefinition(field,
+                                       field,
                                        "IP_PARAM_" + paramCounter.get(),
                                        "ipParam" + paramCounter.getAndIncrement(),
                                        field.typeName(),
@@ -829,6 +834,7 @@ class InjectionExtension implements InjectCodegenExtension {
     }
 
     private void injectionPointIdFields(ClassModel.Builder classModel,
+                                        TypeInfo service,
                                         Map<String, GenericTypeDeclaration> genericTypes,
                                         List<ParamDefinition> params) {
         // constant for injection points
@@ -839,6 +845,7 @@ class InjectionExtension implements InjectCodegenExtension {
                     .isFinal(true)
                     .type(InjectCodegenTypes.HELIDON_IP_ID)
                     .name(param.constantName())
+                    .description(ipIdDescription(service, param))
                     .update(it -> {
                         StringBuilder defaultContent = new StringBuilder();
                         defaultContent.append("@io.helidon.inject.api.IpId@")
@@ -888,6 +895,94 @@ class InjectionExtension implements InjectCodegenExtension {
                         defaultContent.append(".build()");
                         it.defaultValueContent(defaultContent.toString());
                     }));
+        }
+    }
+
+    /**
+     * {@link io.helidon.inject.codegen.InjectionExtension#InjectionExtension(String)}
+     * @param service
+     * @param param
+     * @return
+     */
+    private String ipIdDescription(TypeInfo service, ParamDefinition param) {
+        TypeName serviceType = service.typeName();
+        StringBuilder result = new StringBuilder("Injection point dependency for ");
+        boolean servicePublic = service.accessModifier() == AccessModifier.PUBLIC;
+        boolean elementPublic = param.owningElement().accessModifier() == AccessModifier.PUBLIC;
+
+        if (servicePublic) {
+            result.append("{@link ")
+                    .append(serviceType.fqName());
+            if (!elementPublic) {
+                result.append("}");
+            }
+        } else {
+            result.append(serviceType.classNameWithEnclosingNames());
+        }
+
+        if (servicePublic && elementPublic) {
+            // full javadoc reference
+            switch (param.kind()) {
+            case CONSTRUCTOR -> result
+                    .append("#")
+                    .append(serviceType.className())
+                    .append("(")
+                    .append(toDescriptionSignature(param.owningElement(), true))
+                    .append(")");
+            case METHOD -> result
+                    .append("#")
+                    .append(param.owningElement().elementName())
+                    .append("(")
+                    .append(toDescriptionSignature(param.owningElement(), true))
+                    .append(")");
+            case FIELD -> result
+                    .append("#")
+                    .append(param.elementInfo().elementName());
+            default -> {
+            } // do nothing, this should not be possible
+            }
+            result.append("}");
+        } else {
+            // just text
+            switch (param.kind()) {
+            case CONSTRUCTOR -> result.append("(")
+                    .append(toDescriptionSignature(param.owningElement(), false))
+                    .append(")");
+            case METHOD -> result.append("#")
+                    .append(param.owningElement().elementName())
+                    .append("(")
+                    .append(toDescriptionSignature(param.owningElement(), false))
+                    .append(")");
+            case FIELD -> result.append(".")
+                    .append(param.elementInfo().elementName());
+            default -> {
+            } // do nothing, this should not be possible
+            }
+        }
+
+        switch (param.kind()) {
+        case CONSTRUCTOR, METHOD -> result
+                .append(", parameter ")
+                .append(param.elementInfo().elementName());
+        default -> {
+        } // do nothing, this should not be possible
+        }
+
+        result.append(".");
+        return result.toString();
+    }
+
+    private String toDescriptionSignature(TypedElementInfo method, boolean javadoc) {
+        if (javadoc) {
+            return method.parameterArguments()
+                    .stream()
+                    .map(it -> it.typeName().fqName())
+                    .collect(Collectors.joining(", "));
+        } else {
+            return method.parameterArguments()
+                    .stream()
+                    .map(it -> it.typeName().classNameWithEnclosingNames() + " " + it.elementName())
+                    .collect(Collectors.joining(", "));
         }
     }
 
@@ -1308,19 +1403,34 @@ class InjectionExtension implements InjectCodegenExtension {
             if (!method.isFinal) {
                 methodBuilder.addLine("if (" + method.invokeName() + ") {");
             }
-            for (ParamDefinition param : method.params()) {
-                // MyType ipParam4_param = ctx.param(IP_PARAM_4);
-                methodBuilder.addLine(param.type()
-                                              .resolvedName() + " " + param.fieldId()
-                                              + " = ctx.param(" + param.constantName() + ");");
-            }
+            List<ParamDefinition> params = method.params();
 
-            methodBuilder
-                    .add("instance." + method.methodName() + "(")
-                    .add(method.params().stream()
-                                 .map(ParamDefinition::fieldId)
-                                 .collect(Collectors.joining(", ")))
-                    .addLine(");");
+            methodBuilder.add("instance." + method.methodName() + "(");
+            if (params.size() > 2) {
+                methodBuilder.addLine("");
+                methodBuilder.increasePadding();
+                methodBuilder.increasePadding();
+
+                // multiline
+                for (int i = 0; i < params.size(); i++) {
+                    ParamDefinition param = params.get(i);
+                    methodBuilder.add("ctx.param(" + param.constantName() + ")");
+                    if (i != params.size() - 1) {
+                        // not the last one
+                        methodBuilder.addLine(",");
+                    }
+                }
+                methodBuilder.decreasePadding();
+                methodBuilder.decreasePadding();
+            } else {
+                methodBuilder.add(params.stream()
+                                          .map(ParamDefinition::constantName)
+                                          .map(it -> "ctx.param(" + it + ")")
+                                          .collect(Collectors.joining(", ")));
+            }
+            // single line
+            methodBuilder.addLine(");");
+
             if (!method.isFinal) {
                 methodBuilder.addLine("}");
             }
@@ -1525,7 +1635,8 @@ class InjectionExtension implements InjectCodegenExtension {
         }
     }
 
-    private record ParamDefinition(TypedElementInfo elementInfo,
+    private record ParamDefinition(TypedElementInfo owningElement,
+                                   TypedElementInfo elementInfo,
                                    String constantName,
                                    String fieldName,
                                    TypeName type,

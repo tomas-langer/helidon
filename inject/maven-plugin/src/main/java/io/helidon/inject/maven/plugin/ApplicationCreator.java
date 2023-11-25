@@ -77,14 +77,12 @@ public class ApplicationCreator {
     private final Set<TypeName> permittedProviderTypes;
     private final Set<TypeName> permittedProviderQualifierTypes;
     private final String moduleName;
-    private final boolean strictJsr330;
 
     ApplicationCreator(MavenCodegenContext scanContext, boolean failOnError) {
         this.ctx = scanContext;
         this.failOnError = failOnError;
 
         CodegenOptions options = scanContext.options();
-        this.strictJsr330 = options.enabled(InjectOptions.JSR_330_STRICT);
         this.moduleName = options.option(InjectOptions.MODULE_NAME)
                 .or(() -> scanContext.module().map(ModuleInfo::name))
                 .orElse(null);
