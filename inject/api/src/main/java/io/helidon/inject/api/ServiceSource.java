@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Set;
 
 import io.helidon.common.types.ElementKind;
+import io.helidon.common.types.TypeName;
 
 /**
  * Usually code generated source of a service. In addition to providing service metadata, this also allows instantiation
@@ -67,9 +68,17 @@ public interface ServiceSource<T> extends ServiceDescriptor<T> {
         return List.copyOf(result);
     }
 
-    record MethodSignature(String name, List<String> parameterTypes) {
-        public MethodSignature(String name) {
-            this(name, List.of());
+    /**
+     * Method signature uniquely identifies a method by its signature.
+     * The declaring class is the top level class that declares the method. This allows us to identify overridden methods.
+     *
+     * @param declaringType top level type that declares the method, may be inaccessible (so cannot use class)
+     * @param name name of the method
+     * @param parameterTypes string representation of fully qualified (and with generic declaration) parameter types
+     */
+    record MethodSignature(TypeName declaringType, String name, List<String> parameterTypes) {
+        public MethodSignature(TypeName declaringType, String name) {
+            this(declaringType, name, List.of());
         }
     }
 }

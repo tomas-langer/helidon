@@ -134,7 +134,6 @@ class InjectionExtension implements InjectCodegenExtension {
 
         TypedElementInfo constructorInjectElement = injectConstructor(typeInfo);
         List<TypedElementInfo> fieldInjectElements = fieldInjectElements(typeInfo);
-        List<TypedElementInfo> methodInjectElements = methodInjectElements(services, typeInfo, superType);
 
         boolean constructorIntercepted = maybeIntercepted.contains(constructorInjectElement);
 
@@ -144,8 +143,7 @@ class InjectionExtension implements InjectCodegenExtension {
                methods,
                params,
                constructorInjectElement,
-               fieldInjectElements,
-               methodInjectElements);
+               fieldInjectElements);
 
         Map<String, GenericTypeDeclaration> genericTypes = genericTypes(params, methods);
         Set<TypeName> scopes = scopes(typeInfo);
@@ -218,7 +216,7 @@ class InjectionExtension implements InjectCodegenExtension {
         dependenciesMethod(classModel, params, superType);
         isAbstractMethod(classModel, superType, isAbstractClass);
         instantiateMethod(classModel, serviceType, params, isAbstractClass, constructorIntercepted, methodsIntercepted);
-        injectMethod(classModel, serviceType, params, superType, methods, canIntercept, maybeIntercepted);
+        injectMethod(classModel, params, superType, methods, canIntercept, maybeIntercepted);
         postConstructMethod(typeInfo, classModel, serviceType);
         preDestroyMethod(typeInfo, classModel, serviceType);
         qualifiersMethod(classModel, qualifiers, superType);
@@ -367,8 +365,15 @@ class InjectionExtension implements InjectCodegenExtension {
                 .toList();
     }
 
-    private List<TypedElementInfo> methodInjectElements(Collection<TypeInfo> services, TypeInfo typeInfo, SuperType superType) {
-        List<TypedElementInfo> atInjectMethods = typeInfo.elementInfo()
+    private List<MethodDefinition> methodParams(Collection<TypeInfo> services,
+                                                TypeInfo service,
+                                                SuperType superType,
+                                                List<ParamDefinition> allParams,
+                                                AtomicInteger methodCounter,
+                                                AtomicInteger paramCounter) {
+        TypeName serviceType = service.typeName();
+        // Discover all methods on this type that are not private or static and that have @Inject
+        List<TypedElementInfo> atInjectMethods = service.elementInfo()
                 .stream()
                 .filter(not(ElementInfoPredicates::isPrivate))
                 .filter(not(ElementInfoPredicates::isStatic))
@@ -376,13 +381,46 @@ class InjectionExtension implements InjectCodegenExtension {
                 .filter(ElementInfoPredicates.hasAnnotation(InjectCodegenTypes.INJECT_INJECT))
                 .toList();
 
-        List<TypedElementInfo> result = new ArrayList<>(atInjectMethods);
+        List<MethodDefinition> result = new ArrayList<>();
+        // add all @Inject methods(always)
+        // there is no supertype, no need to check anything else
+        atInjectMethods.stream()
+                .map(it -> {
+                    TypeName declaringType;
+                    boolean overrides;
+
+                    if (superType.hasSupertype()) {
+                        declaringType = overrides(services,
+                                                  superType.superType(),
+                                                  it,
+                                                  it.parameterArguments()
+                                                          .stream()
+                                                          .map(TypedElementInfo::typeName)
+                                                          .toList(),
+                                                  serviceType.packageName())
+                                .orElse(serviceType);
+                        overrides = !declaringType.equals(serviceType);
+                    } else {
+                        declaringType = serviceType;
+                        overrides = false;
+                    }
+                    return toMethodDefinition(service,
+                                              allParams,
+                                              methodCounter,
+                                              paramCounter,
+                                              it,
+                                              declaringType,
+                                              overrides,
+                                              true);
+                })
+                .forEach(result::add);
 
         if (!superType.hasSupertype()) {
             return result;
         }
 
-        List<TypedElementInfo> otherMethods = typeInfo.elementInfo()
+        // discover all methods that are not private or static and that do NOT have @Inject
+        List<TypedElementInfo> otherMethods = service.elementInfo()
                 .stream()
                 .filter(ElementInfoPredicates::isMethod)
                 .filter(not(ElementInfoPredicates::isStatic))
@@ -390,33 +428,107 @@ class InjectionExtension implements InjectCodegenExtension {
                 .filter(it -> !it.hasAnnotation(InjectCodegenTypes.INJECT_INJECT))
                 .toList();
 
-        if (otherMethods.isEmpty()) {
-            return result;
-        }
+        // some of the methods we declare that do not have @Inject may disable injection, we need to check that
 
         for (TypedElementInfo otherMethod : otherMethods) {
             // now find all methods that override a method that is annotated from any supertype (ouch)
-            if (overrides(services,
-                          superType.superType(),
-                          otherMethod,
-                          typeInfo.typeName().packageName(),
-                          InjectCodegenTypes.INJECT_INJECT)) {
-
-                result.add(otherMethod);
+            Optional<TypeName> overrides = overrides(services,
+                                                     superType.superType(),
+                                                     otherMethod,
+                                                     otherMethod.parameterArguments()
+                                                             .stream()
+                                                             .map(TypedElementInfo::typeName)
+                                                             .toList(),
+                                                     serviceType.packageName(),
+                                                     InjectCodegenTypes.INJECT_INJECT);
+            if (overrides.isPresent()) {
+                // we do override a method, we need to declare it
+                result.add(toMethodDefinition(service,
+                                              allParams,
+                                              methodCounter,
+                                              paramCounter,
+                                              otherMethod,
+                                              overrides.get(),
+                                              true,
+                                              false));
             }
         }
         return result;
     }
 
-    private boolean overrides(Collection<TypeInfo> services,
-                              TypeInfo type,
-                              TypedElementInfo method,
-                              String currentPackage,
-                              TypeName... expectedAnnotations) {
-        List<TypeName> arguments = method.parameterArguments()
+    private MethodDefinition toMethodDefinition(TypeInfo service,
+                                                List<ParamDefinition> allParams,
+                                                AtomicInteger methodCounter,
+                                                AtomicInteger paramCounter,
+                                                TypedElementInfo method,
+                                                TypeName declaringType,
+                                                boolean overrides,
+                                                boolean isInjectionPoint) {
+
+        int methodIndex = methodCounter.getAndIncrement();
+        String methodId = method.elementName() + "_" + methodIndex;
+        String constantName = "METHOD_" + methodIndex;
+        List<ParamDefinition> methodParams = toMethodParams(service, paramCounter, method, methodId);
+
+        if (isInjectionPoint) {
+            // we want to declare these
+            allParams.addAll(methodParams);
+        }
+
+        return new MethodDefinition(declaringType,
+                                    method.accessModifier(),
+                                    methodId,
+                                    constantName,
+                                    method.elementName(),
+                                    overrides,
+                                    methodParams,
+                                    isInjectionPoint,
+                                    method.modifiers().contains(Modifier.FINAL));
+    }
+
+    private List<ParamDefinition> toMethodParams(TypeInfo service,
+                                                 AtomicInteger paramCounter,
+                                                 TypedElementInfo method,
+                                                 String methodId) {
+        return method.parameterArguments()
                 .stream()
-                .map(TypedElementInfo::typeName)
+                .map(param -> new ParamDefinition(param,
+                                                  "IP_PARAM_" + paramCounter.get(),
+                                                  "ipParam" + paramCounter.getAndIncrement(),
+                                                  param.typeName(),
+                                                  ElementKind.METHOD,
+                                                  method.elementName(),
+                                                  param.elementName(),
+                                                  methodId + "_" + param.elementName(),
+                                                  method.modifiers().contains(Modifier.STATIC),
+                                                  param.annotations(),
+                                                  qualifiers(service, param),
+                                                  contract("Method " + service.typeName()
+                                                                   .fqName() + "#" + method.elementName() + ", parameter: " + param.elementName(),
+                                                           param.typeName()),
+                                                  method.accessModifier(),
+                                                  methodId))
                 .toList();
+    }
+
+    /**
+     * Find if there is a method in the hierarchy that this method overrides.
+     *
+     * @param services            list of services being processed
+     * @param type                first immediate supertype we will be checking
+     * @param method              method we are investigating
+     * @param arguments           method signature
+     * @param currentPackage      package of the current type declaring the method
+     * @param expectedAnnotations only look for methods annotated with a specific annotation
+     * @return type name of the top level declaring type of this method
+     */
+    private Optional<TypeName> overrides(Collection<TypeInfo> services,
+                                         TypeInfo type,
+                                         TypedElementInfo method,
+                                         List<TypeName> arguments,
+                                         String currentPackage,
+                                         TypeName... expectedAnnotations) {
+
         String methodName = method.elementName();
         // we look only for exact match (including types)
         Optional<TypedElementInfo> found = type.elementInfo()
@@ -435,30 +547,36 @@ class InjectionExtension implements InjectCodegenExtension {
                 .filter(ElementInfoPredicates.hasParams(arguments))
                 .findFirst();
 
-        boolean normalCase = true;
+        // if found, we either return this one, or look further up the hierarchy
         if (found.isPresent()) {
-            // only found if super method protected or public, or if both type in the same package
             TypedElementInfo superMethod = found.get();
-            if (superMethod.accessModifier() == AccessModifier.PUBLIC
-                    || superMethod.accessModifier() == AccessModifier.PROTECTED) {
-                return true;
+
+            boolean realOverride = true;
+            if (superMethod.accessModifier() == AccessModifier.PACKAGE_PRIVATE && !currentPackage.equals(type.typeName()
+                                                                                                                 .packageName())) {
+                // method has same signature, but is package local and is in a different package
+                realOverride = false;
             }
-            if (superMethod.accessModifier() == AccessModifier.PACKAGE_PRIVATE) {
-                // there may be another type in the hierarchy that declares the same method that is in the same package
-                if (currentPackage.equals(type.typeName().packageName())) {
-                    return true;
+
+            if (realOverride) {
+                // let's find the declaring type
+                SuperType superType = superType(type, services);
+                if (superType.hasSupertype()) {
+                    // do not care about annotations, we already have a match
+                    var fromSuperHierarchy = overrides(services, superType.superType(), method, arguments, currentPackage);
+                    return Optional.of(fromSuperHierarchy.orElseGet(type::typeName));
                 }
-                normalCase = false;
-            }
-            if (normalCase) {
-                return false;
+                // there is no supertype, this type declares the method
+                return Optional.of(type.typeName());
             }
         }
+
+        // we did not find a method on this type, let's look above
         SuperType superType = superType(type, services);
         if (superType.hasSupertype) {
-            return overrides(services, superType.superType(), method, currentPackage, expectedAnnotations);
+            return overrides(services, superType.superType(), method, arguments, currentPackage, expectedAnnotations);
         }
-        return false;
+        return Optional.empty();
     }
 
     private void params(Collection<TypeInfo> services,
@@ -467,8 +585,7 @@ class InjectionExtension implements InjectCodegenExtension {
                         List<MethodDefinition> methods,
                         List<ParamDefinition> params,
                         TypedElementInfo constructor,
-                        List<TypedElementInfo> fieldInjectElements,
-                        List<TypedElementInfo> methodInjectElements) {
+                        List<TypedElementInfo> fieldInjectElements) {
         AtomicInteger paramCounter = new AtomicInteger();
         AtomicInteger methodCounter = new AtomicInteger();
 
@@ -479,8 +596,12 @@ class InjectionExtension implements InjectCodegenExtension {
         fieldInjectElements
                 .forEach(it -> fieldParam(service, params, paramCounter, it));
 
-        methodInjectElements
-                .forEach(it -> methodParams(services, service, superType, methods, params, methodCounter, paramCounter, it));
+        methods.addAll(methodParams(services,
+                                    service,
+                                    superType,
+                                    params,
+                                    methodCounter,
+                                    paramCounter));
 
     }
 
@@ -525,66 +646,6 @@ class InjectionExtension implements InjectCodegenExtension {
                                                 field.typeName()),
                                        field.accessModifier(),
                                        null));
-    }
-
-    private void methodParams(Collection<TypeInfo> services,
-                              TypeInfo service,
-                              SuperType superType,
-                              List<MethodDefinition> methods,
-                              List<ParamDefinition> params,
-                              AtomicInteger methodCounter,
-                              AtomicInteger paramCounter,
-                              TypedElementInfo method) {
-
-        List<ParamDefinition> methodParams = new ArrayList<>();
-        int methodIndex = methodCounter.getAndIncrement();
-        String methodId = method.elementName() + "_" + methodIndex;
-
-        method.parameterArguments()
-                .stream()
-                .map(param -> new ParamDefinition(param,
-                                                  "IP_PARAM_" + paramCounter.get(),
-                                                  "ipParam" + paramCounter.getAndIncrement(),
-                                                  param.typeName(),
-                                                  ElementKind.METHOD,
-                                                  method.elementName(),
-                                                  param.elementName(),
-                                                  methodId + "_" + param.elementName(),
-                                                  method.modifiers().contains(Modifier.STATIC),
-                                                  param.annotations(),
-                                                  qualifiers(service, param),
-                                                  contract("Method " + service.typeName()
-                                                                   .fqName() + "#" + method.elementName() + ", parameter: " + param.elementName(),
-                                                           param.typeName()),
-                                                  method.accessModifier(),
-                                                  methodId))
-                .forEach(methodParams::add);
-
-        // there is a chance this method is forbidding injection
-        // overrides a method with @Inject that do not have @Inject should forbid the super type injection
-        boolean isInjectionPoint = method.hasAnnotation(InjectCodegenTypes.INJECT_INJECT);
-
-        if (isInjectionPoint) {
-            params.addAll(methodParams);
-        }
-
-        String constantName = "METHOD_" + methodIndex;
-
-        boolean overrides;
-        if (superType.hasSupertype()) {
-            overrides = overrides(services, superType.superType(), method, service.typeName().packageName());
-        } else {
-            overrides = false;
-        }
-        MethodDefinition methodDefinition = new MethodDefinition(method.accessModifier(),
-                                                                 methodId,
-                                                                 constantName,
-                                                                 method.elementName(),
-                                                                 overrides,
-                                                                 methodParams,
-                                                                 isInjectionPoint);
-
-        methods.add(methodDefinition);
     }
 
     private Set<Annotation> qualifiers(TypeInfo service, Annotated element) {
@@ -903,13 +964,14 @@ class InjectionExtension implements InjectCodegenExtension {
                     .isFinal(true)
                     .name(method.constantName)
                     .type(HELIDON_SERVICE_SOURCE_METHOD)
-                    // MethodSignature is inherited from ServiceSource, no need to import
                     .defaultValueContent(fieldForMethodConstantBody(method)));
         }
     }
 
     private String fieldForMethodConstantBody(MethodDefinition method) {
-        StringBuilder result = new StringBuilder("new @" + HELIDON_SERVICE_SOURCE_METHOD.fqName() + "@(\"")
+        StringBuilder result = new StringBuilder("new @" + HELIDON_SERVICE_SOURCE_METHOD.fqName() + "@(")
+                .append(TypesCodeGen.toCreate(method.declaringType, false))
+                .append(", \"")
                 .append(method.methodName)
                 .append("\"");
 
@@ -1173,7 +1235,6 @@ class InjectionExtension implements InjectCodegenExtension {
     }
 
     private void injectMethod(ClassModel.Builder classModel,
-                              TypeName serviceType,
                               List<ParamDefinition> params,
                               SuperType superType,
                               List<MethodDefinition> methods, boolean canIntercept,
@@ -1194,7 +1255,6 @@ class InjectionExtension implements InjectCodegenExtension {
                 .addParameter(instanceParam -> instanceParam.type(GENERIC_T_TYPE)
                         .name("instance"))
                 .update(it -> createInjectBody(it,
-                                               serviceType,
                                                superType.hasSupertype(),
                                                methods,
                                                fields,
@@ -1203,7 +1263,6 @@ class InjectionExtension implements InjectCodegenExtension {
     }
 
     private void createInjectBody(Method.Builder methodBuilder,
-                                  TypeName serviceType,
                                   boolean hasSuperType,
                                   List<MethodDefinition> methods,
                                   List<ParamDefinition> fields,
@@ -1212,16 +1271,8 @@ class InjectionExtension implements InjectCodegenExtension {
 
         // two passes for methods - first mark method to be injected, then call super, then inject
         for (MethodDefinition method : methods) {
-            if (method.isInjectionPoint()) {
-                if (method.overrides()) {
-                    // we are overriding something from supertype - need to keep that method in, and tell them we do it
-                    methodBuilder.addLine("boolean " + method.invokeName() + " = injected.add(" + method.constantName() + ");");
-                } else {
-                    // we are not overriding method from supertype - need to remove that method if exists, so supertype
-                    // can inject its own
-                    methodBuilder.addLine("boolean " + method.invokeName() + " = !injected.remove(" + method.constantName() +
-                                                  ");");
-                }
+            if (method.isInjectionPoint() && !method.isFinal()) {
+                methodBuilder.addLine("boolean " + method.invokeName() + " = injected.add(" + method.constantName() + ");");
             } else {
                 methodBuilder.addLine("injected.add(" + method.constantName() + ");");
             }
@@ -1254,30 +1305,25 @@ class InjectionExtension implements InjectCodegenExtension {
                 // this method "disabled" injection point from superclass
                 continue;
             }
-            methodBuilder.addLine("if (" + method.invokeName() + ") {");
+            if (!method.isFinal) {
+                methodBuilder.addLine("if (" + method.invokeName() + ") {");
+            }
             for (ParamDefinition param : method.params()) {
                 // MyType ipParam4_param = ctx.param(IP_PARAM_4);
                 methodBuilder.addLine(param.type()
-                                              .resolvedName() + " " + param.fieldId() + " = ctx.param(" + param.constantName() + ")"
-                                              + ";");
+                                              .resolvedName() + " " + param.fieldId()
+                                              + " = ctx.param(" + param.constantName() + ");");
             }
 
-            // we need to explicitly cast the current instance to correctly invoke methods
-            // on this instance, and not on subtype
-            //            if (method.access() == AccessModifier.PACKAGE_PRIVATE) {
-            //                // package private methods will only be called if the instance we are injecting si the same class
-            //                methodBuilder.addLine("if (instance.getClass().equals(@" + serviceType.fqName() + "@.class)) {");
-            //            }
             methodBuilder
                     .add("instance." + method.methodName() + "(")
                     .add(method.params().stream()
                                  .map(ParamDefinition::fieldId)
                                  .collect(Collectors.joining(", ")))
                     .addLine(");");
-            //            if (method.access() == AccessModifier.PACKAGE_PRIVATE) {
-            //                methodBuilder.addLine("}");
-            //            }
-            methodBuilder.addLine("}");
+            if (!method.isFinal) {
+                methodBuilder.addLine("}");
+            }
             methodBuilder.addLine("");
         }
     }
@@ -1466,13 +1512,14 @@ class InjectionExtension implements InjectCodegenExtension {
                                           TypeName typeName) {
     }
 
-    private record MethodDefinition(AccessModifier access,
+    private record MethodDefinition(TypeName declaringType, AccessModifier access,
                                     String methodId,
                                     String constantName,
                                     String methodName,
                                     boolean overrides,
                                     List<ParamDefinition> params,
-                                    boolean isInjectionPoint) {
+                                    boolean isInjectionPoint,
+                                    boolean isFinal) {
         public String invokeName() {
             return "invoke" + capitalize(methodId());
         }
