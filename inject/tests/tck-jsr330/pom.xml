@@ -113,6 +113,10 @@
                     </packageNames>
                     <supportsJsr330Strict>true</supportsJsr330Strict>
                     <serviceTypeQualifiers>
+                        <!--
+                        This is working around TCK of JSR-330, as we want to be deterministic, and
+                        guessing qualifiers based of class names does not resonate with our approach
+                         -->
                         <serviceTypeQualifier>
                             <serviceTypeName>org.atinject.tck.auto.accessories.SpareTire</serviceTypeName>
                             <qualifiers>

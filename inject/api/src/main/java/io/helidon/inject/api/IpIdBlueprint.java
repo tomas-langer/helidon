@@ -60,7 +60,7 @@ interface IpIdBlueprint {
      * @return the qualifier type annotations on this element
      */
     @Option.Singular
-    @Option.Redundant
+    @Option.Redundant(stringValue = false)
     // kind + service type + name is a unique identification already
     Set<Qualifier> qualifiers();
 
@@ -109,7 +109,7 @@ interface IpIdBlueprint {
      *
      * @return type of the injection point as {@link io.helidon.common.types.TypeName}
      */
-    @Option.Redundant
+    @Option.Redundant(stringValue = false)
     // kind + service type + name is a unique identification already
     TypeName typeName();
 

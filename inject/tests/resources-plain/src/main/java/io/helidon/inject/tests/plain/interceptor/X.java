@@ -27,11 +27,6 @@ import jakarta.inject.Singleton;
 @Singleton
 @Named("ClassX")
 public class X implements IA, IB, Closeable {
-
-    X() {
-        // this is the one that will be used by interception
-    }
-
     @Inject
     public X(Optional<IA> optionalIA) {
         assert (optionalIA.isEmpty());

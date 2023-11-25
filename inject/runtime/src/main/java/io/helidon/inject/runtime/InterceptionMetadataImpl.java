@@ -6,6 +6,7 @@ import java.util.Set;
 
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypedElementInfo;
+import io.helidon.inject.api.CommonQualifiers;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InterceptionMetadata;
 import io.helidon.inject.api.Interceptor;
@@ -30,7 +31,7 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
                                                     List<Annotation> typeAnnotations,
                                                     TypedElementInfo element) {
         // need to find all interceptors for the providers (ordered by weight)
-        List<ServiceProvider<Interceptor>> allInterceptors = services.lookupAll(Interceptor.class);
+        List<ServiceProvider<Interceptor>> allInterceptors = services.lookupAll(Interceptor.class, CommonQualifiers.WILDCARD);
 
         List<Provider<Interceptor>> result = new ArrayList<>();
 

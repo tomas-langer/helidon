@@ -43,10 +43,6 @@ import jakarta.inject.Singleton;
 @ExternalContracts(value = Closeable.class, moduleNames = {"test1", "test2"})
 @SuppressWarnings("unused")
 public class XImpl implements IA, IB, Closeable {
-
-    XImpl() {
-    }
-
     @Inject
     @InterceptorBasedAnno("<init>")
     // will be intercepted

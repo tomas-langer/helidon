@@ -35,6 +35,7 @@ import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.CallingContext;
 import io.helidon.inject.api.CallingContextFactory;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
@@ -76,26 +77,24 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
      * The constructor taking a configuration.
      *
      * @param injectionServices injection services
-     * @param cfg                      the config
+     * @param cfg               the config
      */
     DefaultServices(InjectionServices injectionServices, InjectionServicesConfig cfg) {
         this.injectionServices = injectionServices;
         this.cfg = Objects.requireNonNull(cfg);
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    static <T> List<T> explodeFilterAndSort(Collection<?> coll,
-                                            ServiceInfoCriteria criteria,
-                                            boolean expected) {
-        List exploded;
+    static List<ServiceProvider<?>> explodeFilterAndSort(final Collection<ServiceProvider<?>> coll,
+                                                         ServiceInfoCriteria criteria,
+                                                         boolean expected) {
+        List<ServiceProvider<?>> exploded;
         if ((coll.size() > 1)
                 || coll.stream().anyMatch(sp -> sp instanceof ServiceProviderProvider)) {
             exploded = new ArrayList<>();
 
             coll.forEach(s -> {
-                if (s instanceof ServiceProviderProvider) {
-                    List<? extends ServiceProvider<?>> subList = ((ServiceProviderProvider) s)
-                            .serviceProviders(criteria, true, true);
+                if (s instanceof ServiceProviderProvider spp) {
+                    List<? extends ServiceProvider<?>> subList = spp.serviceProviders(criteria, true, true);
                     if (subList != null && !subList.isEmpty()) {
                         subList.stream().filter(Objects::nonNull).forEach(exploded::add);
                     }
@@ -104,7 +103,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 }
             });
         } else {
-            exploded = (coll instanceof List) ? (List) coll : new ArrayList<>(coll);
+            exploded = new ArrayList<>(coll);
         }
 
         if (expected && exploded.isEmpty()) {
@@ -115,7 +114,43 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
             exploded.sort(serviceProviderComparator());
         }
 
+        // the providers are sorted by weight and other properties
+        // we need to have unnamed providers before named ones (if criteria does not contain a Named qualifier)
+        // in similar fashion, if criteria does not contain any qualifier, put unqualified instances first
+        if (criteria.qualifiers().isEmpty()) {
+            // unqualified first, unnamed before named, but keep the existing order otherwise
+            List<ServiceProvider<?>> unqualified = new ArrayList<>();
+            List<ServiceProvider<?>> qualified = new ArrayList<>();
+            for (ServiceProvider<?> serviceProvider : exploded) {
+                if (serviceProvider.qualifiers().isEmpty()) {
+                    unqualified.add(serviceProvider);
+                } else {
+                    qualified.add(serviceProvider);
+                }
+            }
+            unqualified.addAll(qualified);
+            return unqualified;
+        } else if (!hasNamed(criteria.qualifiers())) {
+            // unnamed first
+            List<ServiceProvider<?>> unnamed = new ArrayList<>();
+            List<ServiceProvider<?>> named = new ArrayList<>();
+            for (ServiceProvider<?> serviceProvider : exploded) {
+                if (hasNamed(serviceProvider.qualifiers())) {
+                    named.add(serviceProvider);
+                } else {
+                    unnamed.add(serviceProvider);
+                }
+            }
+            unnamed.addAll(named);
+            return unnamed;
+        }
+
         return exploded;
+    }
+
+    private static boolean hasNamed(Set<Qualifier> qualifiers) {
+        return qualifiers.stream()
+                .anyMatch(it -> it.typeName().equals(InjectTypes.JAKARTA_NAMED));
     }
 
     /**
@@ -220,7 +255,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                                                     boolean expected) {
         List<ServiceProvider<?>> result = lookup(criteria, expected, 1);
         assert (!expected || !result.isEmpty());
-        return (result.isEmpty()) ? Optional.empty() : Optional.of(result.get(0));
+        return (result.isEmpty()) ? Optional.empty() : Optional.of(result.getFirst());
     }
 
     @Override
@@ -340,27 +375,25 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
         lookupCount.incrementAndGet();
 
-        if (!criteria.contracts().isEmpty()) {
-            if (criteria.serviceTypeName().isPresent()) {
-                // when a specific service type is requested, we go for it
-                ServiceProvider exact = servicesByTypeName.get(criteria.serviceTypeName().get());
-                if (exact != null) {
-                    return explodeFilterAndSort(List.of(exact), criteria, expected);
-                }
+        if (criteria.serviceTypeName().isPresent()) {
+            // when a specific service type is requested, we go for it
+            ServiceProvider exact = servicesByTypeName.get(criteria.serviceTypeName().get());
+            if (exact != null) {
+                return explodeFilterAndSort(List.of(exact), criteria, expected);
             }
+        }
 
-            if (1 == criteria.contracts().size()) {
-                TypeName theOnlyContractRequested = criteria.contracts().iterator().next();
-                Set<ServiceProvider<?>> subsetOfMatches = servicesByContract.get(theOnlyContractRequested);
-                if (subsetOfMatches != null) {
-                    result = subsetOfMatches.stream()
-                            .parallel()
-                            .filter(criteria::matches)
-                            .limit(limit)
-                            .toList();
-                    if (!result.isEmpty()) {
-                        return explodeFilterAndSort(result, criteria, expected);
-                    }
+        if (1 == criteria.contracts().size()) {
+            TypeName theOnlyContractRequested = criteria.contracts().iterator().next();
+            Set<ServiceProvider<?>> subsetOfMatches = servicesByContract.get(theOnlyContractRequested);
+            if (subsetOfMatches != null) {
+                result = subsetOfMatches.stream()
+                        .parallel()
+                        .filter(criteria::matches)
+                        .limit(limit)
+                        .toList();
+                if (!result.isEmpty()) {
+                    return explodeFilterAndSort(result, criteria, expected);
                 }
             }
         }
@@ -455,13 +488,13 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     }
 
     private Activator<?> createServiceActivator(ModuleComponent module,
-                                                      String moduleName,
-                                                      InjectionServices injectionServices) {
+                                                String moduleName,
+                                                InjectionServices injectionServices) {
         return InjectionModuleActivator.create(injectionServices, module, moduleName);
     }
 
     private Activator<?> createServiceActivator(Application app,
-                                                      InjectionServices injectionServices) {
+                                                InjectionServices injectionServices) {
         return InjectionApplicationActivator.create(injectionServices, app);
     }
 }

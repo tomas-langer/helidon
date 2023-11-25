@@ -21,8 +21,10 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationPhaseReceiver;
 import io.helidon.inject.api.ActivationRequest;
 import io.helidon.inject.api.ActivationResult;
+import io.helidon.inject.api.ActivationStatus;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
+import io.helidon.inject.api.DeActivationRequest;
 import io.helidon.inject.api.Event;
 import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InjectionServices;
@@ -211,6 +213,9 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
 
     @Override
     public Map<String, ConfigDrivenInstanceProvider<?, CB>> managedServiceProviders(ServiceInfoCriteria criteria) {
+        // managed instances are always named, so the criteria must provide either wildcard named qualifier
+        // or we add @default name (if none)
+
         Map<String, ConfigDrivenInstanceProvider<?, CB>> map = managedConfiguredServicesMap.entrySet()
                 .stream()
                 .filter(e -> criteria.matches(e.getValue()))
@@ -376,6 +381,20 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
                         .findFirst();
                 assert (configuredByQualifier.isPresent());
                 cbr.bind(this, configuredByQualifier.get());
+            }
+        }
+    }
+
+    @Override
+    protected void preDestroy(DeActivationRequest req, ActivationResult.Builder res) {
+        // we never have an instance (this is a config driven root)
+        // but we do have child instances
+        for (ConfigDrivenInstanceProvider<T, CB> value : managedConfiguredServicesMap.values()) {
+            ActivationResult result = value.deactivate(req);
+            if (result.failure() && !(res.finishingStatus().map(it -> it != ActivationStatus.FAILURE).orElse(false))) {
+                // record first failure
+                res.serviceProvider(value);
+                res.finishingStatus(result.finishingStatus());
             }
         }
     }

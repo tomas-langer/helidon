@@ -52,7 +52,7 @@ public abstract class ServiceProviderBase<T>
     private final ServiceSource<T> source;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-    private volatile T serviceInstance;
+    private volatile ServiceInstance<T> serviceInstance;
     private volatile Phase currentPhase = Phase.CONSTRUCTED;
     private volatile ServiceProvider<?> interceptor;
     private volatile InjectionContext injectionContext;
@@ -222,7 +222,7 @@ public abstract class ServiceProviderBase<T>
         try {
             lock.lock();
             if (currentPhase == Phase.ACTIVE) {
-                return serviceInstance;
+                return serviceInstance.get();
             }
         } finally {
             lock.unlock();
@@ -233,7 +233,7 @@ public abstract class ServiceProviderBase<T>
         }
         try {
             lock.lock();
-            return serviceInstance;
+            return serviceInstance.get();
         } finally {
             lock.unlock();
         }
@@ -244,7 +244,9 @@ public abstract class ServiceProviderBase<T>
         try {
             lock.lock();
             this.currentPhase = phase;
-            this.serviceInstance = instance;
+            if (this.serviceInstance == null) {
+                this.serviceInstance = ServiceInstance.create(source, instance);
+            }
         } finally {
             lock.unlock();
         }
@@ -252,15 +254,6 @@ public abstract class ServiceProviderBase<T>
 
     protected ServiceSource<T> source() {
         return source;
-    }
-
-    protected void instance(T instance) {
-        Lock lock = rwLock.writeLock();
-        try {
-            this.serviceInstance = instance;
-        } finally {
-            lock.unlock();
-        }
     }
 
     protected void phase(Phase phase) {
@@ -370,7 +363,7 @@ public abstract class ServiceProviderBase<T>
         stateTransitionStart(res, Phase.POST_CONSTRUCTING);
 
         if (serviceInstance != null) {
-            source.postConstruct(serviceInstance);
+            serviceInstance.postConstruct();
         }
     }
 
@@ -378,18 +371,17 @@ public abstract class ServiceProviderBase<T>
         stateTransitionStart(res, Phase.INJECTING);
 
         if (serviceInstance != null) {
-            source.injectFields(injectionContext, interceptionMetadata, serviceInstance);
-            source.injectMethods(injectionContext, serviceInstance);
+            serviceInstance.inject();
         }
     }
 
-    @SuppressWarnings("unchecked") // we have unchecked here, so generated code can be checked
     protected void construct(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.CONSTRUCTING);
 
         // descendant may set an explicit instance, in such a case, we will not re-create it
         if (serviceInstance == null) {
-            serviceInstance = (T) source.instantiate(injectionContext, interceptionMetadata);
+            serviceInstance = ServiceInstance.create(interceptionMetadata, injectionContext, source);
+            serviceInstance.construct();
         }
     }
 
@@ -558,9 +550,9 @@ public abstract class ServiceProviderBase<T>
         this.injectionContext = InjectionContext.create(injectionPlan);
     }
 
-    private void preDestroy(DeActivationRequest req, ActivationResult.Builder res) {
+    protected void preDestroy(DeActivationRequest req, ActivationResult.Builder res) {
         if (serviceInstance != null) {
-            source.preDestroy(serviceInstance);
+            serviceInstance.preDestroy();
             serviceInstance = null;
         }
     }

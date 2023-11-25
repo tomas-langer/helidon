@@ -150,7 +150,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
     }
 
     @Override
-    public void injectMethods(InjectionContext ctx, HelloInjectionWorldImpl instance) {
+    public void injectMethods(InjectionContext ctx, Set<MethodSignature> injected, HelloInjectionWorldImpl instance) {
         instance.world(ctx.param(IP_5));
     }
 

@@ -30,6 +30,7 @@ import java.util.Set;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
@@ -184,6 +185,7 @@ class InterceptorRuntimeTest {
                 .create(TestNamedInterceptor.class,
                         ServiceInfo.<TestNamedInterceptor>builder()
                                 .serviceType(TypeName.create(TestNamedInterceptor.class))
+                                .addScope(InjectTypes.SINGLETON)
                                 .addQualifier(createNamed(TestNamed.class.getName()))
                                 .addQualifier(createNamed(InterceptorBasedAnno.class.getName()))
                                 .addContract(TypeName.create(Interceptor.class))

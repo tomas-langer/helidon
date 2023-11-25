@@ -20,6 +20,7 @@ public final class InjectCodegenTypes {
     public static final TypeName HELIDON_QUALIFIER = TypeName.create("io.helidon.inject.api.Qualifier");
     public static final TypeName HELIDON_IP_ID = TypeName.create("io.helidon.inject.api.IpId");
     public static final TypeName HELIDON_SERVICE_SOURCE = TypeName.create("io.helidon.inject.api.ServiceSource");
+    public static final TypeName HELIDON_SERVICE_SOURCE_METHOD = TypeName.create("io.helidon.inject.api.ServiceSource.MethodSignature");
     public static final TypeName HELIDON_SERVICE_PROVIDER = TypeName.create("io.helidon.inject.api.ServiceProvider");
     public static final TypeName HELIDON_INJECTION_POINT_PROVIDER = TypeName.create("io.helidon.inject.api.InjectionPointProvider");
     public static final TypeName HELIDON_CONTRACT = TypeName.create("io.helidon.inject.api.Contract");
@@ -30,6 +31,7 @@ public final class InjectCodegenTypes {
     public static final TypeName HELIDON_MODULE_COMPONENT = TypeName.create("io.helidon.inject.api.ModuleComponent");
     public static final TypeName HELIDON_APPLICATION = TypeName.create("io.helidon.inject.api.Application");
     public static final TypeName HELIDON_DESCRIBE = TypeName.create("io.helidon.inject.api.Describe");
+    public static final TypeName HELIDON_CLASS_NAMED = TypeName.create("io.helidon.inject.api.ClassNamed");
 
     private InjectCodegenTypes() {
     }

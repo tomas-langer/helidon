@@ -1,7 +1,9 @@
 package io.helidon.inject.maven.plugin;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -12,6 +14,7 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
+import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.codegen.InjectCodegen;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 import io.helidon.inject.codegen.InjectOptions;
@@ -24,6 +27,7 @@ import io.github.classgraph.ClassInfo;
 class HelidonScanProcessor {
     private static final Annotation DESCRIBE = Annotation.create(InjectCodegenTypes.HELIDON_DESCRIBE);
     private static final TypeName GENERATOR = TypeName.create(HelidonScanProcessor.class);
+    private static final Annotation QUALIFIER_ANNOTATION = Annotation.create(InjectCodegenTypes.INJECT_QUALIFIER);
 
     private final InjectCodegen codegen;
     private final MavenScanContext ctx;
@@ -38,10 +42,11 @@ class HelidonScanProcessor {
     /**
      * Process the currently scanned result and only handle types that match the provided predicate.
      *
-     * @param candidates candidate types
+     * @param candidates              candidate types
+     * @param serviceTypeToQualifiers additional qualifiers
      * @return whether anything was generated
      */
-    boolean process(Set<ClassInfo> candidates) {
+    boolean process(Set<ClassInfo> candidates, Map<TypeName, Set<Qualifier>> serviceTypeToQualifiers) {
         // there will be just one round when using maven, as we generate sources, the rest should be handled by compiler
 
         // now we have a list of types that we want to process, we just need to make sure they are from the same module
@@ -50,6 +55,9 @@ class HelidonScanProcessor {
                 .flatMap(it -> ScanTypeInfoFactory.create(ctx, it).stream())
                 .toList();
 
+        if (!serviceTypeToQualifiers.isEmpty()) {
+            typesToProcess = addQualifiers(typesToProcess, serviceTypeToQualifiers);
+        }
         if (strictJsr330) {
             typesToProcess = jsr330Types(typesToProcess);
         }
@@ -60,6 +68,44 @@ class HelidonScanProcessor {
         codegen.processingOver();
 
         return ctx.filer().generatedSources();
+    }
+
+    private List<TypeInfo> addQualifiers(List<TypeInfo> typesToProcess, Map<TypeName, Set<Qualifier>> serviceTypeToQualifiers) {
+        List<TypeInfo> result = new ArrayList<>();
+
+        for (TypeInfo toProcess : typesToProcess) {
+            Set<Qualifier> qualifiers = serviceTypeToQualifiers.get(toProcess.typeName());
+            if (qualifiers != null) {
+                result.add(addQualifiers(toProcess, qualifiers));
+            } else {
+                result.add(toProcess);
+            }
+        }
+
+        return result;
+    }
+
+    private TypeInfo addQualifiers(TypeInfo toProcess, Set<Qualifier> qualifiers) {
+        // and we also need to add the meta annotation for this annotation, so it is identified as a qualifier
+        Map<TypeName, List<Annotation>> refs = new LinkedHashMap<>(toProcess.referencedTypeNamesToAnnotations());
+
+        TypeInfo.Builder builder = TypeInfo.builder(toProcess);
+        for (Qualifier qualifier : qualifiers) {
+            builder.addAnnotation(Annotation.builder()
+                                          .typeName(qualifier.typeName())
+                                          .values(qualifier.values())
+                                          .build());
+
+            refs.compute(qualifier.typeName(), (it, list) -> {
+                if (list == null) {
+                    return new ArrayList<>();
+                }
+                return new ArrayList<>(list);
+            }).add(QUALIFIER_ANNOTATION);
+        }
+
+        builder.referencedTypeNamesToAnnotations(refs);
+        return builder.build();
     }
 
     private List<TypeInfo> jsr330Types(List<TypeInfo> typesToProcess) {

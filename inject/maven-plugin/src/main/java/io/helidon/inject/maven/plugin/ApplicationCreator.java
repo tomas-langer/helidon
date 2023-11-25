@@ -383,38 +383,6 @@ public class ApplicationCreator {
         List<ServiceProvider<?>> qualifiedProviders = services.lookupAll(dependencyTo, false);
         List<ServiceProvider<?>> unqualifiedProviders = List.of();
 
-        if (qualifiedProviders.isEmpty() && !qualifiers.isEmpty() && strictJsr330) {
-            // maybe the qualifier qualifies type name
-            if (qualifiers.size() == 1) {
-                Qualifier q = qualifiers.iterator().next();
-                // if named
-                String name;
-                if (q.typeName().equals(InjectCodegenTypes.INJECT_NAMED)) {
-                    name = q.value().orElse("");
-                } else {
-                    if (q.values().isEmpty()) {
-                        name = q.typeName().className();
-                    } else {
-                        name = "";
-                    }
-                }
-                if (!name.isBlank()) {
-                    // try to discover by type
-
-                    // so let's say this is Seat, and qualifier is @Drivers
-                    TypeName typeName = dependency.contract();
-                    // we would look for `DriversSeat`
-                    typeName = TypeName.builder(typeName)
-                            .className(name + typeName.className())
-                            .build();
-                    qualifiedProviders = services.lookupAll(ServiceInfoCriteria.builder()
-                                                                    .serviceTypeName(typeName)
-                                                                    .build(),
-                                                            false);
-                }
-            }
-        }
-
         if (qualifiedProviders.isEmpty()) {
             if (dependency.typeName().isOptional()) {
                 return new InjectionPlan(List.of(), List.of());

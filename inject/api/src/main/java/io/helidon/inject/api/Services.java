@@ -194,6 +194,20 @@ public interface Services {
     <T> List<ServiceProvider<T>> lookupAll(Class<T> type);
 
     /**
+     * Retrieve all services that implement a given contract type and that are not qualified.
+     *
+     * @param type the type criteria to find
+     * @param name additional {@link jakarta.inject.Named} qualifier
+     * @param <T> the type of the service being managed
+     * @return the list of service providers matching criteria
+     */
+    default <T> List<ServiceProvider<T>> lookupAll(Class<T> type, String name) {
+        return lookupAll(type, ServiceInfoCriteria.builder()
+                .addQualifier(Qualifier.createNamed(name))
+                .build());
+    }
+
+    /**
      * Retrieve all services that match the criteria.
      *
      * @param criteria the criteria to find

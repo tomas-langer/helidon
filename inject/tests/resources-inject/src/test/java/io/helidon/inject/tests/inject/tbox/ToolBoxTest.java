@@ -113,12 +113,12 @@ class ToolBoxTest {
         desc = allTools.stream().map(Object::toString).collect(Collectors.toList());
         assertThat(desc,
                    contains("SledgeHammer:INIT",
-                            "BigHammer:INIT",
                             "TableSaw:INIT",
                             "AwlImpl:INIT",
                             "HandSaw:INIT",
-                            "LittleHammer:INIT",
-                            "Screwdriver:ACTIVE"));
+                            "Screwdriver:ACTIVE",
+                            "BigHammer:INIT",
+                            "LittleHammer:INIT"));
         assertThat(mtb.screwdriver(), notNullValue());
 
         Provider<Hammer> hammer = Objects.requireNonNull(toolBox.preferredHammer());
@@ -128,12 +128,12 @@ class ToolBoxTest {
         desc = allTools.stream().map(Object::toString).collect(Collectors.toList());
         assertThat(desc,
                    contains("SledgeHammer:INIT",
-                            "BigHammer:ACTIVE",
                             "TableSaw:INIT",
                             "AwlImpl:INIT",
                             "HandSaw:INIT",
-                            "LittleHammer:INIT",
-                            "Screwdriver:ACTIVE"));
+                            "Screwdriver:ACTIVE",
+                            "BigHammer:ACTIVE",
+                            "LittleHammer:INIT"));
 
         desc = (((MainToolBox) toolBox).allHammers()).stream().map(Object::toString).collect(Collectors.toList());
         assertThat(desc,

@@ -39,15 +39,27 @@ public final class Qualifiers {
     public static boolean matchesQualifiers(Collection<Qualifier> src,
                                             Collection<Qualifier> criteria) {
         if (criteria.isEmpty()) {
+            // the criteria does not care about qualifiers at all
             return true;
         }
 
         if (src.isEmpty()) {
+            // neither defines qualifiers
             return false;
         }
 
-        if (src.contains(CommonQualifiers.WILDCARD_NAMED)) {
+        // criteria has a qualifier while service does not
+        // only return true if criteria contains ONLY wildcard named qualifier
+        if (criteria.size() == 1 && criteria.contains(CommonQualifiers.WILDCARD_NAMED)) {
             return true;
+        }
+
+        if (src.contains(CommonQualifiers.WILDCARD_NAMED)) {
+            // if provider has any name, and criteria ONLY asks for named, we match
+            if (criteria.stream()
+                    .allMatch(it -> it.typeName().equals(InjectTypes.JAKARTA_NAMED))) {
+                return true;
+            }
         }
 
         for (Qualifier criteriaQualifier : criteria) {

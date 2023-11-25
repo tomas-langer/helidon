@@ -17,5 +17,6 @@ module io.helidon.inject.codegen {
 
     provides io.helidon.codegen.spi.AnnotationMapperProvider
             with io.helidon.inject.codegen.MapJavaxProvider,
-                    io.helidon.inject.codegen.MapApplicationScopedProvider;
+                    io.helidon.inject.codegen.MapApplicationScopedProvider,
+                    io.helidon.inject.codegen.MapClassNamedProvider;
 }

@@ -39,6 +39,10 @@ public final class CommonQualifiers {
      * Represents a wildcard {@link #NAMED} qualifier.
      */
     public static final Qualifier WILDCARD_NAMED = Qualifier.createNamed(WILDCARD);
+    /**
+     * Represents an instance named with the default name: {@code @default}.
+     */
+    public static final Qualifier DEFAULT_NAMED = Qualifier.createNamed("@default");
 
     private CommonQualifiers() {
     }

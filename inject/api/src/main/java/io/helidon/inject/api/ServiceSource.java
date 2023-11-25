@@ -2,6 +2,7 @@ package io.helidon.inject.api;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import io.helidon.common.types.ElementKind;
 
@@ -25,23 +26,15 @@ public interface ServiceSource<T> extends ServiceDescriptor<T> {
     }
 
     /**
-     * Inject methods.
+     * Inject fields and methods.
      *
      * @param ctx      injection context
+     * @param interceptionMetadata interception metadata to support interception of field injection
+     * @param injected mutable set of already injected methods from subtypes
      * @param instance instance to update
      */
 
-    default void injectMethods(InjectionContext ctx, T instance) {
-    }
-
-    /**
-     * Inject fields.
-     *
-     * @param ctx      injection context
-     * @param instance instance to update
-     */
-
-    default void injectFields(InjectionContext ctx, InterceptionMetadata interceptionMetadata, T instance) {
+    default void inject(InjectionContext ctx, InterceptionMetadata interceptionMetadata, Set<MethodSignature> injected, T instance) {
     }
 
     /**
@@ -72,5 +65,11 @@ public interface ServiceSource<T> extends ServiceDescriptor<T> {
                               .toList());
 
         return List.copyOf(result);
+    }
+
+    record MethodSignature(String name, List<String> parameterTypes) {
+        public MethodSignature(String name) {
+            this(name, List.of());
+        }
     }
 }

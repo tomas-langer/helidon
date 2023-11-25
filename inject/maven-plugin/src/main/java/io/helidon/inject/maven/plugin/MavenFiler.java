@@ -36,7 +36,7 @@ class MavenFiler implements CodegenFiler {
                 .resolve(fileName);
         mkdirs(path.getParent());
 
-        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW)) {
+        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
             classModel.write(writer, "    ");
             generatedSources = true;
         } catch (IOException e) {
@@ -49,7 +49,7 @@ class MavenFiler implements CodegenFiler {
     public Path writeResource(byte[] resource, String location, Object... originatingElements) {
         Path path = outputDirectory.resolve(location);
         mkdirs(path.getParent());
-        try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.CREATE_NEW)) {
+        try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
             out.write(resource);
         } catch (IOException e) {
             throw new CodegenException("Failed to write new resource file: " + path.toAbsolutePath(), location);

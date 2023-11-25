@@ -6,6 +6,8 @@ Services that do not have @Singleton are automatically providers that always cre
     a. Interfaces `ServiceSource` and `ServiceDescriptor`
 2.
 
+Criteria.serviceTypeName -> Criteria.serviceType
+Services.lookupFirst and Services.lookup do the same thing
 
 External module build using maven (process a jar file)
 Remove <T> from ServiceDescriptor

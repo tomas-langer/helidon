@@ -43,11 +43,6 @@ import jakarta.inject.Singleton;
 @ExternalContracts(value = Closeable.class, moduleNames = {"test1", "test2"})
 @SuppressWarnings("unused")
 public class YImpl implements IB, Closeable {
-
-    // intentionally w/o a default constructor - do not uncomment
-//    YImpl() {
-//    }
-
     @Inject
     // will be intercepted
     YImpl(Optional<IA> optionalIA) {
