@@ -16,28 +16,21 @@
 
 /**
  * Helidon Injection Integrations for OCI SDK.
+ *
+ * @deprecated replaced with codegen module
  */
+@Deprecated(forRemoval = true)
 module io.helidon.integrations.oci.sdk.processor {
-
-    requires java.compiler;
-    requires io.helidon.common.processor.classmodel;
-    requires io.helidon.common.processor;
-    requires io.helidon.common.processor.helidon.copyright;
-
-    requires static jakarta.inject;
-    requires static jdk.jfr;
+    requires io.helidon.codegen;
+    requires io.helidon.codegen.classmodel;
+    requires io.helidon.inject.codegen;
 
     requires transitive io.helidon.common.types;
     requires transitive io.helidon.inject.processor;
 
     exports io.helidon.integrations.oci.sdk.processor;
 
-    uses io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
-    uses io.helidon.inject.tools.spi.ModuleComponentNamer;
-
-    provides io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver with
-            io.helidon.integrations.oci.sdk.processor.OciInjectionProcessorObserver;
-    provides io.helidon.inject.tools.spi.ModuleComponentNamer with
-            io.helidon.integrations.oci.sdk.processor.OciModuleComponentNamer;
+    provides io.helidon.inject.codegen.spi.InjectCodegenObserverProvider
+            with io.helidon.integrations.oci.sdk.processor.OciInjectProcessorObserverProvider;
 
 }

@@ -89,12 +89,12 @@ public class ApplicationCreator {
         this.permittedProviderType = options.option(ApplicationOptions.PERMITTED_PROVIDER_TYPE,
                                                     PermittedProviderType.NAMED,
                                                     PermittedProviderType.class);
-        this.permittedProviderTypes = options.listOption(ApplicationOptions.PERMITTED_PROVIDER_TYPE_NAMES)
+        this.permittedProviderTypes = options.asList(ApplicationOptions.PERMITTED_PROVIDER_TYPE_NAMES)
                 .stream()
                 .map(TypeName::create)
                 .collect(Collectors.toSet());
 
-        permittedProviderQualifierTypes = options.listOption(ApplicationOptions.PERMITTED_PROVIDER_QUALIFIER_TYPE_NAMES)
+        permittedProviderQualifierTypes = options.asList(ApplicationOptions.PERMITTED_PROVIDER_QUALIFIER_TYPE_NAMES)
                 .stream()
                 .map(TypeName::create)
                 .collect(Collectors.toSet());

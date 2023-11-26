@@ -1,7 +1,3 @@
-
-Services that do not have @Singleton are automatically providers that always create a new instace
-- maybe add a custom annotation so we can force annotation processing on such types?
-
 1. Using service source instead of activators/service providers
     a. Interfaces `ServiceSource` and `ServiceDescriptor`
 2.
@@ -9,8 +5,6 @@ Services that do not have @Singleton are automatically providers that always cre
 Criteria.serviceTypeName -> Criteria.serviceType
 Services.lookupFirst and Services.lookup do the same thing
 
-External module build using maven (process a jar file)
-Remove <T> from ServiceDescriptor
 Maybe rename ServiceSource to ServiceDescriptor and ServiceDescriptor to ServiceInfo?
 Use ServiceProvider as a parameter to exception again?
 Static method inject
@@ -23,8 +17,6 @@ Prepare dependencies same way from application creator as from injection itself
 
     InjectServiceActivator - gather dependencies
     InjectServiceProvider - requires implementation
-
-External module request - remove inner classes switch, as it does not make sense. We always want to process non-private inner classes
 
 What can be used:
 

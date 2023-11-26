@@ -238,7 +238,7 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     }
 
     List<String> getCompilerArgs() {
-        return compilerArgs;
+        return compilerArgs == null ? List.of() : compilerArgs;
     }
 
     /**

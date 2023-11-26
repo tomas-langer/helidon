@@ -18,46 +18,32 @@ package io.helidon.integrations.oci.sdk.processor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
-import java.io.Writer;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.processing.Filer;
-import javax.annotation.processing.FilerException;
-import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.TypeElement;
-import javax.tools.JavaFileObject;
-
-import io.helidon.common.LazyValue;
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenFiler;
+import io.helidon.codegen.CodegenOptions;
+import io.helidon.codegen.CopyrightHandler;
+import io.helidon.codegen.GeneratedAnnotationHandler;
+import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.common.Weight;
-import io.helidon.common.processor.CopyrightHandler;
-import io.helidon.common.processor.GeneratedAnnotationHandler;
-import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.common.Weighted;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.Activator;
-import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.ExternalContracts;
-import io.helidon.inject.api.InjectTypes;
-import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.processor.ProcessingEvent;
-import io.helidon.inject.processor.spi.InjectionAnnotationProcessorObserver;
-import io.helidon.inject.tools.ToolsException;
-import io.helidon.inject.tools.TypeNames;
+import io.helidon.inject.codegen.InjectCodegenTypes;
+import io.helidon.inject.codegen.InjectUtil;
+import io.helidon.inject.codegen.InjectionCodegenContext;
+import io.helidon.inject.codegen.RoundContext;
+import io.helidon.inject.codegen.spi.InjectCodegenObserver;
 
-import static io.helidon.inject.processor.GeneralProcessorUtils.isProviderType;
-import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.function.Predicate.not;
 
 /**
@@ -82,49 +68,49 @@ import static java.util.function.Predicate.not;
  * {@code target/generated-sources} directory. This is the case for any artifact that is attempted to be injected unless there is
  * found a configuration signaling an exception to avoid the code generation for the activator.
  * <p>
- * The processor will allows exceptions in one of three ways:
+ * The processor will allow exceptions in one of three ways:
  * <ul>
  *     <li>via the code directly here - see the {@link #shouldProcess} method.</li>
- *     <li>via resources on the classpath - the implementation looks for files named {@link #TAG_TYPENAME_EXCEPTIONS} in the same
- *     package name as this class, and will read those resources during initialization. Each line of this file would be a fully
- *     qualified type name to avoid processing that type name.</li>
+ *     <li>via resources on the classpath - the implementation looks for files named {@link #TYPENAME_EXCEPTIONS_FILENAME}
+ *     in {@code META-INF/helidon/oci/sdk/codegen}, and will read those resources during initialization.
+ *     Each line of this file would be a fully qualified type name to avoid processing that type name.</li>
  *     <li>via {@code -A} directives on the compiler command line. Using the same tag as referenced above. The line can be
  *     comma-delimited, and each token will be treated as a fully qualified type name to signal that the type should be
  *     not be processed.</li>
  * </ul>
  */
-public class OciInjectionProcessorObserver implements InjectionAnnotationProcessorObserver {
+class OciInjectionProcessorObserver implements InjectCodegenObserver {
     static final String OCI_ROOT_PACKAGE_NAME_PREFIX = "com.oracle.bmc.";
 
     // all generated sources will have this package prefix
     static final String GENERATED_PREFIX = "io.helidon.integrations.generated.";
-
     // all generated sources will have this class name suffix
     static final String GENERATED_CLIENT_SUFFIX = "__Oci_Client";
     static final String GENERATED_CLIENT_BUILDER_SUFFIX = GENERATED_CLIENT_SUFFIX + "Builder";
     static final String GENERATED_OCI_ROOT_PACKAGE_NAME_PREFIX = GENERATED_PREFIX + OCI_ROOT_PACKAGE_NAME_PREFIX;
-
-    static final String TAG_TEMPLATE_SERVICE_CLIENT_PROVIDER_NAME = "service-client-provider.hbs";
-    static final String TAG_TEMPLATE_SERVICE_CLIENT_BUILDER_PROVIDER_NAME = "service-client-builder-provider.hbs";
-
-    // note that these can be used as -A values also
-    static final String TAG_TYPENAME_EXCEPTIONS = "codegen-exclusions";
-    static final String TAG_NO_DOT_EXCEPTIONS = "builder-name-exceptions";
-
-    static final LazyValue<Set<String>> TYPENAME_EXCEPTIONS = LazyValue
-            .create(OciInjectionProcessorObserver::loadTypeNameExceptions);
-    static final LazyValue<Set<String>> NO_DOT_EXCEPTIONS = LazyValue
-            .create(OciInjectionProcessorObserver::loadNoDotExceptions);
-
+    private static final double DEFAULT_INJECT_WEIGHT = Weighted.DEFAULT_WEIGHT - 1;
     private static final TypeName PROCESSOR_TYPE = TypeName.create(OciInjectionProcessorObserver.class);
+    private static final String TYPENAME_EXCEPTIONS_FILENAME = "codegen-exclusions.txt";
+    private static final String NO_DOT_EXCEPTIONS_FILENAME = "builder-name-exceptions.txt";
 
-    /**
-     * Service loader based constructor.
-     *
-     * @deprecated this is a Java ServiceLoader implementation and the constructor should not be used directly
-     */
-    @Deprecated
-    public OciInjectionProcessorObserver() {
+    private final Set<String> typenameExceptions;
+    private final Set<String> noDotExceptions;
+    private final InjectionCodegenContext ctx;
+
+    OciInjectionProcessorObserver(InjectionCodegenContext ctx) {
+        this.ctx = ctx;
+
+        CodegenOptions options = ctx.options();
+
+        Set<String> typenameExceptions = new HashSet<>();
+        typenameExceptions.addAll(options.asSet(OciInjectProcessorObserverProvider.OPTION_TYPENAME_EXCEPTIONS));
+        typenameExceptions.addAll(loadMetaConfig(TYPENAME_EXCEPTIONS_FILENAME));
+        this.typenameExceptions = typenameExceptions;
+
+        Set<String> noDotExceptions = new HashSet<>();
+        noDotExceptions.addAll(options.asSet(OciInjectProcessorObserverProvider.OPTION_NO_DOT_EXCEPTIONS));
+        noDotExceptions.addAll(loadMetaConfig(NO_DOT_EXCEPTIONS_FILENAME));
+        this.noDotExceptions = noDotExceptions;
     }
 
     static TypeName toGeneratedServiceClientTypeName(TypeName typeName) {
@@ -141,9 +127,24 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                 .build();
     }
 
-    static ClassModel toBuilderBody(TypeName ociServiceTypeName,
-                                    TypeName generatedOciService,
-                                    TypeName generatedOciServiceBuilderTypeName) {
+    @Override
+    public void onProcessingEvent(RoundContext roundContext, Set<TypedElementInfo> elements) {
+        elements.stream()
+                .filter(this::shouldProcess)
+                .forEach(this::process);
+    }
+
+    Set<String> typenameExceptions() {
+        return typenameExceptions;
+    }
+
+    Set<String> noDotExceptions() {
+        return noDotExceptions;
+    }
+
+    ClassModel toBuilderBody(TypeName ociServiceTypeName,
+                             TypeName generatedOciService,
+                             TypeName generatedOciServiceBuilderTypeName) {
         boolean usesRegion = usesRegion(ociServiceTypeName);
 
         String maybeDot = maybeDot(ociServiceTypeName);
@@ -161,7 +162,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                                                                  ""))
                 .type(generatedOciServiceBuilderTypeName)
                 .addInterface(ipProvider(ociServiceTypeName, builderSuffix))
-                .addAnnotation(Annotation.create(TypeNames.JAKARTA_SINGLETON_TYPE))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON))
                 .addAnnotation(Annotation.builder()
                                        .typeName(TypeName.create(Weight.class))
                                        .putValue("value", DEFAULT_INJECT_WEIGHT)
@@ -177,7 +178,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                     .type(regionProviderType));
             // constructor
             classModel.addConstructor(ctor -> ctor
-                    .addAnnotation(Annotation.create(TypeNames.JAKARTA_INJECT_TYPE))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
                     .addAnnotation(Annotation.create(Deprecated.class))
                     .addParameter(regionProvider -> regionProvider.name("regionProvider")
                             .type(regionProviderType))
@@ -185,7 +186,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
         } else {
             // constructor
             classModel.addConstructor(ctor -> ctor
-                    .addAnnotation(Annotation.create(TypeNames.JAKARTA_INJECT_TYPE))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
                     .addAnnotation(Annotation.create(Deprecated.class)));
         }
 
@@ -197,7 +198,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                 .addAnnotation(Annotation.create(Override.class))
                 .returnType(optional(ociServiceTypeName, builderSuffix))
                 .addParameter(query -> query.name("query")
-                        .type(TypeName.create(ContextualServiceQuery.class)))
+                        .type(InjectCodegenTypes.HELIDON_CONTEXT_QUERY))
                 .update(it -> {
                     if (usesRegion) {
                         it.addLine("var builder = " + clientType + ".builder();")
@@ -211,8 +212,8 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
         return classModel.build();
     }
 
-    static ClassModel toBody(TypeName ociServiceTypeName,
-                             TypeName generatedOciService) {
+    ClassModel toBody(TypeName ociServiceTypeName,
+                      TypeName generatedOciService) {
         ClassModel.Builder classModel = ClassModel.builder()
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .copyright(CopyrightHandler.copyright(PROCESSOR_TYPE,
@@ -225,13 +226,13 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                                                                  ""))
                 .type(generatedOciService)
                 .addInterface(ipProvider(ociServiceTypeName, "Client"))
-                .addAnnotation(Annotation.create(TypeNames.JAKARTA_SINGLETON_TYPE))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
                 .addAnnotation(Annotation.builder()
                                        .typeName(TypeName.create(Weight.class))
                                        .putValue("value", DEFAULT_INJECT_WEIGHT)
                                        .build())
                 .addAnnotation(Annotation.builder()
-                                       .typeName(TypeName.create(ExternalContracts.class))
+                                       .typeName(InjectCodegenTypes.HELIDON_EXTERNAL_CONTRACTS)
                                        .putValue("value", ociServiceTypeName)
                                        .build());
 
@@ -253,8 +254,8 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
 
         // constructor
         classModel.addConstructor(ctor -> ctor
-                .addAnnotation(Annotation.create(TypeNames.JAKARTA_INJECT_TYPE))
-                .addAnnotation(Annotation.create(Deprecated.class))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
+                .addAnnotation(Annotations.DEPRECATED)
                 .addParameter(authProvider -> authProvider.name("authProvider")
                         .type(authProviderType))
                 .addParameter(builderProvider -> builderProvider.name("builderProvider")
@@ -268,7 +269,7 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
                 .addAnnotation(Annotation.create(Override.class))
                 .returnType(optional(ociServiceTypeName, "Client"))
                 .addParameter(query -> query.name("query")
-                        .type(TypeName.create(ContextualServiceQuery.class)))
+                        .type(InjectCodegenTypes.HELIDON_CONTEXT_QUERY))
                 .addLine(
                         "return @java.util.Optional@.of(builderProvider.first(query).orElseThrow().build(authProvider.first"
                                 + "(query).orElseThrow()));"));
@@ -276,131 +277,31 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
         return classModel.build();
     }
 
-    static String maybeDot(TypeName ociServiceTypeName) {
-        return NO_DOT_EXCEPTIONS.get().contains(ociServiceTypeName.name()) ? "" : ".";
-    }
-
-    static boolean usesRegion(TypeName ociServiceTypeName) {
+    boolean usesRegion(TypeName ociServiceTypeName) {
         // it turns out that the same exceptions used for dotting the builder also applies to whether it uses region
-        return !NO_DOT_EXCEPTIONS.get().contains(ociServiceTypeName.name());
+        return noDotExceptions.contains(ociServiceTypeName.name());
     }
 
-    static String loadTemplate(String name) {
-        String path = "io/helidon/integrations/oci/sdk/processor/templates/" + name;
+    private static Set<String> loadMetaConfig(String fileName) {
+        String path = "META-INF/helidon/oci/sdk/codegen/" + fileName;
+
+        Set<String> result = new HashSet<>();
         try {
-            InputStream in = OciInjectionProcessorObserver.class.getClassLoader().getResourceAsStream(path);
-            if (in == null) {
-                throw new IOException("Could not find template " + path + " on classpath.");
-            }
-            try (in) {
-                return new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            }
-        } catch (Exception e) {
-            throw new ToolsException(e.getMessage(), e);
-        }
-    }
-
-    static Set<String> loadTypeNameExceptions() {
-        return loadSet(TAG_TYPENAME_EXCEPTIONS);
-    }
-
-    static Set<String> loadNoDotExceptions() {
-        return loadSet(TAG_NO_DOT_EXCEPTIONS);
-    }
-
-    static void layerInManualOptions(ProcessingEnvironment processingEnv) {
-        Map<String, String> opts = processingEnv.getOptions();
-        TYPENAME_EXCEPTIONS.get().addAll(splitToSet(opts.get(TAG_TYPENAME_EXCEPTIONS)));
-        NO_DOT_EXCEPTIONS.get().addAll(splitToSet(opts.get(TAG_NO_DOT_EXCEPTIONS)));
-    }
-
-    static Set<String> splitToSet(String val) {
-        if (val == null) {
-            return Set.of();
-        }
-        List<String> list = Arrays.stream(val.split(","))
-                .map(String::trim)
-                .filter(not(String::isEmpty))
-                .filter(not(s -> s.startsWith("#")))
-                .toList();
-        return new LinkedHashSet<>(list);
-    }
-
-    static Set<String> loadSet(String name) {
-        // note that we need to keep this mutable for later when we process the env options passed manually in
-        Set<String> result = new LinkedHashSet<>();
-
-        name = OciInjectionProcessorObserver.class.getPackageName().replace(".", "/") + "/" + name + ".txt";
-        try {
-            Enumeration<URL> resources = OciInjectionProcessorObserver.class.getClassLoader().getResources(name);
+            Enumeration<URL> resources = OciInjectionProcessorObserver.class.getClassLoader().getResources(path);
             while (resources.hasMoreElements()) {
                 URL url = resources.nextElement();
-                try (
-                        InputStream in = url.openStream();
-                        BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
-                ) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), UTF_8))) {
                     reader.lines()
-                            .map(String::trim)
-                            .filter(not(String::isEmpty))
-                            .filter(not(s -> s.startsWith("#")))
+                            .map(String::trim) // trim to text
+                            .filter(not(String::isEmpty)) // filter empty lines
+                            .filter(not(s -> s.startsWith("#"))) // ignore comments
                             .forEach(result::add);
                 }
             }
         } catch (IOException e) {
-            throw new UncheckedIOException(e);
+            throw new CodegenException("Failed to load " + path + " from classpath", e);
         }
-
         return result;
-    }
-
-    static boolean shouldProcess(TypedElementInfo element,
-                                 ProcessingEnvironment processingEnv) {
-        if (!element.hasAnnotation(TypeNames.JAKARTA_INJECT_TYPE)) {
-            return false;
-        }
-
-        return switch (element.elementTypeKind()) {
-            case FIELD -> shouldProcess(element.typeName(), processingEnv);
-            case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
-                    .anyMatch(it -> shouldProcess(it.typeName(), processingEnv));
-            default -> false;
-        };
-    }
-
-    static boolean shouldProcess(TypeName typeName,
-                                 ProcessingEnvironment processingEnv) {
-        if (!typeName.typeArguments().isEmpty()
-                && isProviderType(typeName) || typeName.isOptional()) {
-            typeName = typeName.typeArguments().get(0);
-        }
-
-        String name = typeName.resolvedName();
-        if (!name.startsWith(OCI_ROOT_PACKAGE_NAME_PREFIX)
-                || name.endsWith(".Builder")
-                || name.endsWith("Client")
-                || name.endsWith("ClientBuilder")
-                || TYPENAME_EXCEPTIONS.get().contains(name)) {
-            return false;
-        }
-
-        if (processingEnv != null) {
-            // check to see if we already generated it before, and if so we can skip creating it again
-            String generatedTypeName = toGeneratedServiceClientTypeName(typeName).name();
-            TypeElement typeElement = processingEnv.getElementUtils()
-                    .getTypeElement(generatedTypeName);
-            return (typeElement == null);
-        }
-
-        return true;
-    }
-
-    @Override
-    public void onProcessingEvent(ProcessingEvent event) {
-        ProcessingEnvironment processingEnv = event.processingEnvironment().orElseThrow();
-        layerInManualOptions(processingEnv);
-        event.elementsOfInterest().stream()
-                .filter(it -> shouldProcess(it, processingEnv))
-                .forEach(it -> process(it, processingEnv));
     }
 
     private static TypeName optional(TypeName typeName, String suffix) {
@@ -410,28 +311,63 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
     }
 
     private static TypeName ipProvider(TypeName provided, String suffix) {
-        return TypeName.builder(InjectTypes.INJECTION_POINT_PROVIDER)
+        return TypeName.builder(InjectCodegenTypes.HELIDON_INJECTION_POINT_PROVIDER)
                 .addTypeArgument(TypeName.create(provided.fqName() + suffix))
                 .build();
     }
 
-    private void process(TypedElementInfo element,
-                         ProcessingEnvironment processingEnv) {
+    String maybeDot(TypeName ociServiceTypeName) {
+        return noDotExceptions.contains(ociServiceTypeName.name()) ? "" : ".";
+    }
+
+    private boolean shouldProcess(TypedElementInfo element) {
+        if (!element.hasAnnotation(InjectCodegenTypes.INJECT_INJECT)) {
+            return false;
+        }
+
+        return switch (element.elementTypeKind()) {
+            case FIELD -> shouldProcess(element.typeName());
+            case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
+                    .anyMatch(it -> shouldProcess(it.typeName()));
+            default -> false;
+        };
+    }
+
+    boolean shouldProcess(TypeName typeName) {
+        if (!typeName.typeArguments().isEmpty()
+                && InjectUtil.isProvider(typeName) || typeName.isOptional()) {
+            typeName = typeName.typeArguments().get(0);
+        }
+
+        String name = typeName.resolvedName();
+        if (!name.startsWith(OCI_ROOT_PACKAGE_NAME_PREFIX)
+                || name.endsWith(".Builder")
+                || name.endsWith("Client")
+                || name.endsWith("ClientBuilder")
+                || typenameExceptions.contains(name)) {
+            return false;
+        }
+
+        // check to see if we already generated it before, and if so we can skip creating it again
+        TypeName generatedTypeName = toGeneratedServiceClientTypeName(typeName);
+        return ctx.typeInfo(generatedTypeName).isEmpty();
+    }
+
+    private void process(TypedElementInfo element) {
         switch (element.elementTypeKind()) {
-        case FIELD -> process(element.typeName(), processingEnv);
+        case FIELD -> process(element.typeName());
         case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
-                .filter(it -> shouldProcess(it.typeName(), processingEnv))
-                .forEach(it -> process(it.typeName(), processingEnv));
+                .filter(it -> shouldProcess(it.typeName()))
+                .forEach(it -> process(it.typeName()));
         default -> {
         }
         }
     }
 
-    private void process(TypeName ociServiceTypeName,
-                         ProcessingEnvironment processingEnv) {
-        if (isProviderType(ociServiceTypeName)
+    private void process(TypeName ociServiceTypeName) {
+        if (InjectUtil.isProvider(ociServiceTypeName)
                 || ociServiceTypeName.isOptional()) {
-            ociServiceTypeName = ociServiceTypeName.typeArguments().get(0);
+            ociServiceTypeName = ociServiceTypeName.typeArguments().getFirst();
         }
         assert (!ociServiceTypeName.generic()) : ociServiceTypeName.name();
         assert (ociServiceTypeName.name().startsWith(OCI_ROOT_PACKAGE_NAME_PREFIX)) : ociServiceTypeName.name();
@@ -439,30 +375,19 @@ public class OciInjectionProcessorObserver implements InjectionAnnotationProcess
         TypeName generatedOciServiceClientTypeName = toGeneratedServiceClientTypeName(ociServiceTypeName);
         ClassModel serviceClient = toBody(ociServiceTypeName,
                                           generatedOciServiceClientTypeName);
-        codegen(generatedOciServiceClientTypeName, serviceClient, processingEnv);
+        codegen(serviceClient);
 
         TypeName generatedOciServiceClientBuilderTypeName = toGeneratedServiceClientBuilderTypeName(ociServiceTypeName);
         ClassModel serviceClientBuilder = toBuilderBody(ociServiceTypeName,
                                                         generatedOciServiceClientTypeName,
                                                         generatedOciServiceClientBuilderTypeName);
-        codegen(generatedOciServiceClientBuilderTypeName, serviceClientBuilder, processingEnv);
+        codegen(serviceClientBuilder);
     }
 
-    private void codegen(TypeName typeName,
-                         ClassModel classModel,
-                         ProcessingEnvironment processingEnv) {
-        Filer filer = processingEnv.getFiler();
-        try {
-            JavaFileObject javaSrc = filer.createSourceFile(typeName.name());
-            try (Writer os = javaSrc.openWriter()) {
-                classModel.write(os, "    ");
-            }
-        } catch (FilerException x) {
-            processingEnv.getMessager().printWarning("Failed to write java file: " + x);
-        } catch (Exception x) {
-            System.getLogger(getClass().getName()).log(System.Logger.Level.ERROR, "Failed to write java file: " + x, x);
-            processingEnv.getMessager().printError("Failed to write java file: " + x);
-        }
+    private void codegen(ClassModel classModel) {
+        CodegenFiler filer = ctx.filer();
+
+        filer.writeSourceFile(classModel);
     }
 
 }

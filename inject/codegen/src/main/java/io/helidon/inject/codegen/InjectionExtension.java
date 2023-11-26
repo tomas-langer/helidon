@@ -41,6 +41,7 @@ import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 import io.helidon.inject.codegen.spi.InjectCodegenObserver;
+import io.helidon.inject.codegen.spi.InjectCodegenObserverProvider;
 
 import static io.helidon.codegen.CodegenUtil.capitalize;
 import static io.helidon.codegen.CodegenUtil.toConstantName;
@@ -90,8 +91,11 @@ class InjectionExtension implements InjectCodegenExtension {
         this.autoAddContracts = InjectOptions.autoAddNonContractInterfaces(options);
         this.interceptionStrategy = InjectOptions.interceptionStrategy(options);
         this.scopeMetaAnnotations = InjectOptions.scopeMetaAnnotations(options);
-        this.observers = HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenObserver.class))
-                .asList();
+        this.observers = HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenObserverProvider.class,
+                                                                        InjectionExtension.class.getClassLoader()))
+                .stream()
+                .map(it -> it.create(codegenContext))
+                .toList();
     }
 
     @Override
@@ -270,7 +274,7 @@ class InjectionExtension implements InjectCodegenExtension {
         }
         // if not found in current list, try checking existing types
         return ctx.typeInfo(expectedSuperDescriptor)
-                .map(it -> new SuperType(true, expectedSuperDescriptor, superType))
+                .map(it -> new SuperType(true, superTypeToExtend, superType))
                 .orElseGet(SuperType::noSuperType);
     }
 
@@ -900,6 +904,7 @@ class InjectionExtension implements InjectCodegenExtension {
 
     /**
      * {@link io.helidon.inject.codegen.InjectionExtension#InjectionExtension(String)}
+     *
      * @param service
      * @param param
      * @return
@@ -1614,7 +1619,7 @@ class InjectionExtension implements InjectCodegenExtension {
             Set<TypedElementInfo> elements = descriptorsRequired.stream()
                     .flatMap(it -> it.elementInfo().stream())
                     .collect(Collectors.toSet());
-            observers.forEach(it -> it.onProcessingEvent(ctx, roundContext, elements));
+            observers.forEach(it -> it.onProcessingEvent(roundContext, elements));
         }
     }
 

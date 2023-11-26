@@ -48,16 +48,20 @@
             <artifactId>slf4j-jdk14</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.common.processor</groupId>
-            <artifactId>helidon-common-processor</artifactId>
+            <groupId>io.helidon.codegen</groupId>
+            <artifactId>helidon-codegen-apt</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.common.processor</groupId>
-            <artifactId>helidon-common-processor-class-model</artifactId>
+            <groupId>io.helidon.codegen</groupId>
+            <artifactId>helidon-codegen-class-model</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.common.processor</groupId>
-            <artifactId>helidon-common-processor-helidon-copyright</artifactId>
+            <groupId>io.helidon.codegen</groupId>
+            <artifactId>helidon-codegen-helidon-copyright</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.inject</groupId>
+            <artifactId>helidon-inject-codegen</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.common.testing</groupId>

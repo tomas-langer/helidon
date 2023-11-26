@@ -43,7 +43,7 @@ public final class InjectOptions {
     }
 
     public static Set<TypeName> scopeMetaAnnotations(CodegenOptions options) {
-        return Stream.concat(options.listOption(SCOPE_META_ANNOTATIONS)
+        return Stream.concat(options.asList(SCOPE_META_ANNOTATIONS)
                                      .stream()
                                      .map(TypeName::create),
                              Stream.of(InjectCodegenTypes.INJECT_SCOPE))

@@ -21,16 +21,33 @@ import java.io.InputStream;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
-import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.codegen.ClassCode;
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenFiler;
+import io.helidon.codegen.CodegenLogger;
+import io.helidon.codegen.CodegenOptions;
+import io.helidon.codegen.CodegenScope;
+import io.helidon.codegen.ModuleInfo;
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.spi.AnnotationMapper;
+import io.helidon.codegen.spi.ElementMapper;
+import io.helidon.codegen.spi.TypeMapper;
+import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.tools.ToolsException;
+import io.helidon.common.types.TypedElementInfo;
+import io.helidon.inject.codegen.InjectionCodegenContext;
 
 import com.oracle.bmc.objectstorage.ObjectStorage;
 import com.oracle.bmc.streaming.Stream;
 import com.oracle.bmc.streaming.StreamAdmin;
 import com.oracle.bmc.streaming.StreamAsync;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
@@ -39,30 +56,38 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 
 class OciInjectionProcessorObserverTest {
+    private static OciInjectionProcessorObserver observer;
+
+    @BeforeAll
+    static void initTest() {
+        observer = new OciInjectionProcessorObserver(new TestCodegenContext());
+    }
 
     @Test
     void generatedInjectionArtifactsForTypicalOciServices() throws IOException {
         TypeName ociServiceType = TypeName.create(ObjectStorage.class);
 
-        TypeName generatedOciServiceClientTypeName = OciInjectionProcessorObserver.toGeneratedServiceClientTypeName(ociServiceType);
+        TypeName generatedOciServiceClientTypeName =
+                OciInjectionProcessorObserver.toGeneratedServiceClientTypeName(ociServiceType);
         assertThat(generatedOciServiceClientTypeName.name(),
                    equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "__Oci_Client"));
 
-        ClassModel classModel = OciInjectionProcessorObserver.toBody(ociServiceType,
-                                                                            generatedOciServiceClientTypeName);
+        ClassModel classModel = observer.toBody(ociServiceType,
+                                                generatedOciServiceClientTypeName);
         StringWriter sw = new StringWriter();
         classModel.write(sw);
         String stringBody = sw.toString();
         assertThat(stringBody.trim(),
                    equalTo(loadStringFromResource("expected/Objectstorage__Oci_Client._java_")));
 
-        TypeName generatedOciServiceClientBuilderTypeName = OciInjectionProcessorObserver.toGeneratedServiceClientBuilderTypeName(ociServiceType);
+        TypeName generatedOciServiceClientBuilderTypeName = OciInjectionProcessorObserver.toGeneratedServiceClientBuilderTypeName(
+                ociServiceType);
         assertThat(generatedOciServiceClientBuilderTypeName.name(),
                    equalTo("io.helidon.integrations.generated." + ociServiceType.name() + "__Oci_ClientBuilder"));
 
-        classModel = OciInjectionProcessorObserver.toBuilderBody(ociServiceType,
-                                                                               generatedOciServiceClientTypeName,
-                                                                                          generatedOciServiceClientBuilderTypeName);
+        classModel = observer.toBuilderBody(ociServiceType,
+                                            generatedOciServiceClientTypeName,
+                                            generatedOciServiceClientBuilderTypeName);
         sw = new StringWriter();
         classModel.write(sw);
         stringBody = sw.toString();
@@ -73,56 +98,58 @@ class OciInjectionProcessorObserverTest {
     @Test
     void oddballServiceTypeNames() {
         TypeName ociServiceType = TypeName.create(Stream.class);
-        assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
-                                 equalTo(""));
-        assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
-                                 equalTo(false));
+        assertThat(observer.maybeDot(ociServiceType),
+                   equalTo(""));
+        assertThat(observer.usesRegion(ociServiceType),
+                   equalTo(false));
 
         ociServiceType = TypeName.create(StreamAsync.class);
-        assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
-                                 equalTo(""));
-        assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
-                                 equalTo(false));
+        assertThat(observer.maybeDot(ociServiceType),
+                   equalTo(""));
+        assertThat(observer.usesRegion(ociServiceType),
+                   equalTo(false));
 
         ociServiceType = TypeName.create(StreamAdmin.class);
-        assertThat(OciInjectionProcessorObserver.maybeDot(ociServiceType),
-                                 equalTo("."));
-        assertThat(OciInjectionProcessorObserver.usesRegion(ociServiceType),
-                                 equalTo(true));
+        assertThat(observer.maybeDot(ociServiceType),
+                   equalTo("."));
+        assertThat(observer.usesRegion(ociServiceType),
+                   equalTo(true));
     }
 
     @Test
     void testShouldProcess() {
         TypeName typeName = TypeName.create(ObjectStorage.class);
-        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
-                                 is(true));
+        assertThat(observer.shouldProcess(typeName),
+                   is(true));
 
         typeName = TypeName.create("com.oracle.bmc.circuitbreaker.OciCircuitBreaker");
-        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
-                                 is(false));
+        assertThat(observer.shouldProcess(typeName),
+                   is(false));
 
         typeName = TypeName.create("com.oracle.another.Service");
-        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
-                                 is(false));
+        assertThat(observer.shouldProcess(typeName),
+                   is(false));
 
         typeName = TypeName.create("com.oracle.bmc.Service");
-        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
-                                 is(true));
+        assertThat(observer.shouldProcess(typeName),
+                   is(true));
 
         typeName = TypeName.create("com.oracle.bmc.ServiceClient");
-        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
-                                 is(false));
+        assertThat(observer.shouldProcess(typeName),
+                   is(false));
 
         typeName = TypeName.create("com.oracle.bmc.ServiceClientBuilder");
-        assertThat(OciInjectionProcessorObserver.shouldProcess(typeName, null),
-                                 is(false));
+        assertThat(observer.shouldProcess(typeName),
+                   is(false));
     }
 
     @Test
     void loadTypeNameExceptions() {
-        Set<String> set = OciInjectionProcessorObserver.TYPENAME_EXCEPTIONS.get();
-        set.addAll(OciInjectionProcessorObserver.splitToSet(" M1,  M2,,, "));
-        assertThat(set,
+        Map<String, String> options = Map.of(OciInjectProcessorObserverProvider.OPTION_TYPENAME_EXCEPTIONS,
+                                             "M1, M2");
+        OciInjectionProcessorObserver observer = new OciInjectionProcessorObserver(new TestCodegenContext(options));
+
+        assertThat(observer.typenameExceptions(),
                    containsInAnyOrder("M1",
                                       "M2",
                                       "test1",
@@ -134,9 +161,11 @@ class OciInjectionProcessorObserverTest {
 
     @Test
     void loadNoDotExceptions() {
-        Set<String> set = OciInjectionProcessorObserver.NO_DOT_EXCEPTIONS.get();
-        set.addAll(OciInjectionProcessorObserver.splitToSet("Manual1, Manual2 "));
-        assertThat(set,
+        Map<String, String> options = Map.of(OciInjectProcessorObserverProvider.OPTION_NO_DOT_EXCEPTIONS,
+                                             "Manual1, Manual2 ");
+        OciInjectionProcessorObserver observer = new OciInjectionProcessorObserver(new TestCodegenContext(options));
+
+        assertThat(observer.noDotExceptions(),
                    containsInAnyOrder("Manual1",
                                       "Manual2",
                                       "test2",
@@ -145,16 +174,131 @@ class OciInjectionProcessorObserverTest {
                    ));
     }
 
-    static String loadStringFromResource(String resourceNamePath) {
+    private static String loadStringFromResource(String resourceNamePath) {
         try {
-            try (InputStream in = OciInjectionProcessorObserverTest.class.getClassLoader().getResourceAsStream(resourceNamePath)) {
+            try (InputStream in = OciInjectionProcessorObserverTest.class.getClassLoader()
+                    .getResourceAsStream(resourceNamePath)) {
                 String result = new String(in.readAllBytes(), StandardCharsets.UTF_8).trim();
                 return result.replaceAll("\\{\\{YEAR}}", String.valueOf(Calendar.getInstance().get(Calendar.YEAR)))
                         .trim(); // remove leading and trailing whitespaces
             }
         } catch (Exception e) {
-            throw new ToolsException("Failed to load: " + resourceNamePath, e);
+            throw new CodegenException("Failed to load: " + resourceNamePath, e);
         }
     }
 
+    private static class TestCodegenContext implements InjectionCodegenContext {
+        private final Map<String, String> options;
+
+        TestCodegenContext() {
+            this(Map.of());
+        }
+
+        TestCodegenContext(Map<String, String> options) {
+            this.options = options;
+        }
+
+        @Override
+        public Optional<ModuleInfo> module() {
+            return Optional.empty();
+        }
+
+        @Override
+        public CodegenFiler filer() {
+            return null;
+        }
+
+        @Override
+        public CodegenLogger logger() {
+            return null;
+        }
+
+        @Override
+        public CodegenScope scope() {
+            return null;
+        }
+
+        @Override
+        public CodegenOptions options() {
+            return option -> Optional.ofNullable(options.get(options));
+        }
+
+        @Override
+        public Optional<TypeInfo> typeInfo(TypeName typeName) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<TypeInfo> typeInfo(TypeName typeName, Predicate<TypedElementInfo> elementPredicate) {
+            return Optional.empty();
+        }
+
+        @Override
+        public List<ElementMapper> elementMappers() {
+            return null;
+        }
+
+        @Override
+        public List<TypeMapper> typeMappers() {
+            return null;
+        }
+
+        @Override
+        public List<AnnotationMapper> annotationMappers() {
+            return null;
+        }
+
+        @Override
+        public Set<TypeName> mapperSupportedAnnotations() {
+            return null;
+        }
+
+        @Override
+        public Set<String> mapperSupportedAnnotationPackages() {
+            return null;
+        }
+
+        @Override
+        public Set<String> supportedOptions() {
+            return null;
+        }
+
+        @Override
+        public Optional<ClassModel.Builder> descriptor(TypeName serviceType) {
+            return Optional.empty();
+        }
+
+        @Override
+        public void addDescriptor(TypeName serviceType,
+                                  TypeName descriptorType,
+                                  ClassModel.Builder descriptor,
+                                  Object... originatingElements) {
+
+        }
+
+        @Override
+        public void addType(TypeName type, ClassModel.Builder newClass, TypeName mainTrigger, Object... originatingElements) {
+
+        }
+
+        @Override
+        public Optional<ClassModel.Builder> type(TypeName type) {
+            return Optional.empty();
+        }
+
+        @Override
+        public TypeName descriptorType(TypeName serviceType) {
+            return null;
+        }
+
+        @Override
+        public List<ClassCode> types() {
+            return null;
+        }
+
+        @Override
+        public List<ClassCode> descriptors() {
+            return null;
+        }
+    }
 }

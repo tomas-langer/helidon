@@ -19,19 +19,18 @@ package io.helidon.inject.codegen.spi;
 import java.util.Set;
 
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.codegen.InjectionCodegenContext;
 import io.helidon.inject.codegen.RoundContext;
 
 /**
- * Implementations of these are service-loaded by the {@link java.util.ServiceLoader}, and will be
- * called to be able to observe processing events.
+ * Processes events from inject extension.
  */
 public interface InjectCodegenObserver {
 
     /**
-     * Called after a processing event that occurred in the.
+     * Called after a processing event that occurred in the codegen extension.
      *
-     * @param event the event
+     * @param roundContext context of the current processing round
+     * @param elements all elements of interest
      */
-    void onProcessingEvent(InjectionCodegenContext event, RoundContext roundContext, Set<TypedElementInfo> elements);
+    void onProcessingEvent(RoundContext roundContext, Set<TypedElementInfo> elements);
 }

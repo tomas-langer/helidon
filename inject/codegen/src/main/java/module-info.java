@@ -8,7 +8,7 @@ module io.helidon.inject.codegen {
     exports io.helidon.inject.codegen;
     exports io.helidon.inject.codegen.spi;
 
-    uses io.helidon.inject.codegen.spi.InjectCodegenObserver;
+    uses io.helidon.inject.codegen.spi.InjectCodegenObserverProvider;
     uses io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
     provides io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider
