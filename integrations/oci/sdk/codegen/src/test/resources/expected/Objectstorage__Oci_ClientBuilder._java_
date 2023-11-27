@@ -28,7 +28,7 @@ import com.oracle.bmc.objectstorage.ObjectStorageClient;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
-@Generated(value = "io.helidon.integrations.oci.sdk.processor.OciInjectionProcessorObserver", trigger = "com.oracle.bmc.objectstorage.ObjectStorage")
+@Generated(value = "io.helidon.integrations.oci.sdk.codegen.OciInjectionCodegenObserver", trigger = "com.oracle.bmc.objectstorage.ObjectStorage")
 @Singleton
 @Weight(99.0)
 class ObjectStorage__Oci_ClientBuilder implements InjectionPointProvider<ObjectStorageClient.Builder> {
@@ -37,7 +37,7 @@ class ObjectStorage__Oci_ClientBuilder implements InjectionPointProvider<ObjectS
 
     @Inject
     @Deprecated
-    public ObjectStorage__Oci_ClientBuilder(InjectionPointProvider<Region> regionProvider) {
+    ObjectStorage__Oci_ClientBuilder(InjectionPointProvider<Region> regionProvider) {
         this.regionProvider = regionProvider;
     }
 

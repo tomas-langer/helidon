@@ -222,7 +222,7 @@ class OciInjectionProcessorObserverTest {
 
         @Override
         public CodegenOptions options() {
-            return option -> Optional.ofNullable(options.get(options));
+            return option -> Optional.ofNullable(options.get(option)).map(String::trim);
         }
 
         @Override

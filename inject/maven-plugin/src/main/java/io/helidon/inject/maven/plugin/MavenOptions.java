@@ -24,7 +24,7 @@ class MavenOptions implements CodegenOptions {
 
     @Override
     public Optional<String> option(String option) {
-        return Optional.ofNullable(options.get(option));
+        return Optional.ofNullable(options.get(option)).map(String::trim);
     }
 
     private static void addInjectOption(Map<String, String> options, String option) {

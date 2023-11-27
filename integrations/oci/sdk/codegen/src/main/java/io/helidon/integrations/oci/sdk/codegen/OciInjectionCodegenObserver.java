@@ -255,6 +255,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
 
         // constructor
         classModel.addConstructor(ctor -> ctor
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
                 .addAnnotation(Annotations.DEPRECATED)
                 .addParameter(authProvider -> authProvider.name("authProvider")
