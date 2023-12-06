@@ -24,10 +24,7 @@ import io.helidon.common.types.TypeName;
 
 /**
  * Handle copyright for generated types.
- *
- * @deprecated replaced with similar type in codegen module
  */
-@Deprecated(forRemoval = true, since = "4.5.0")
 public final class CopyrightHandler {
     private static final CopyrightProvider PROVIDER =
             HelidonServiceLoader.builder(ServiceLoader.load(CopyrightProvider.class,

@@ -1,5 +1,3 @@
-import io.helidon.inject.codegen.InjectionExtensionProvider;
-
 module io.helidon.inject.codegen {
     requires transitive io.helidon.builder.api;
     requires transitive io.helidon.codegen.classmodel;
@@ -11,8 +9,11 @@ module io.helidon.inject.codegen {
     uses io.helidon.inject.codegen.spi.InjectCodegenObserverProvider;
     uses io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
+    provides io.helidon.codegen.spi.CodegenExtensionProvider
+            with io.helidon.inject.codegen.InjectCodegenProvider;
+
     provides io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider
-            with InjectionExtensionProvider,
+            with io.helidon.inject.codegen.InjectionExtensionProvider,
                     io.helidon.inject.codegen.UnsupportedTypesExtensionProvider;
 
     provides io.helidon.codegen.spi.AnnotationMapperProvider

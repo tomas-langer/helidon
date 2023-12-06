@@ -138,7 +138,7 @@ final class ContentSupport {
 
     static void addCreateTypeName(ContentBuilder<?> builder, TypeName typeName) {
         // TypeName.create("my.type.Name<my.type.TypeArgument>")
-        builder.addContent(TypeNames.TYPE_NAME)
+        builder.addContent(TypeNames.HELIDON_TYPE_NAME)
                 .addContent(".create(\"")
                 .addContent(typeName.resolvedName())
                 .addContent("\")");

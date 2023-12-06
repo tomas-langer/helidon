@@ -2,13 +2,14 @@ package io.helidon.inject.codegen;
 
 import java.util.Set;
 
+import io.helidon.codegen.Option;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
 public class InjectionExtensionProvider implements InjectCodegenExtensionProvider {
     @Override
-    public Set<String> supportedOptions() {
+    public Set<Option<?>> supportedOptions() {
         return Set.of(InjectOptions.AUTO_ADD_NON_CONTRACT_INTERFACES,
                       InjectOptions.INTERCEPTION_STRATEGY,
                       InjectOptions.SCOPE_META_ANNOTATIONS);

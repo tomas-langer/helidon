@@ -113,7 +113,7 @@
                     <annotationProcessorPaths>
                         <path>
                             <groupId>io.helidon.inject.configdriven</groupId>
-                            <artifactId>helidon-inject-configdriven-processor</artifactId>
+                            <artifactId>helidon-inject-configdriven-codegen</artifactId>
                             <version>${helidon.version}</version>
                         </path>
                         <path>
@@ -141,7 +141,7 @@
                 <dependencies>
                     <dependency>
                         <groupId>io.helidon.inject.configdriven</groupId>
-                        <artifactId>helidon-inject-configdriven-processor</artifactId>
+                        <artifactId>helidon-inject-configdriven-codegen</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
                     <dependency>
@@ -154,11 +154,11 @@
                         <artifactId>helidon-builder-codegen</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
-                    <path>
+                    <dependency>
                         <groupId>io.helidon.inject</groupId>
                         <artifactId>helidon-inject-codegen</artifactId>
                         <version>${helidon.version}</version>
-                    </path>
+                    </dependency>
                     <dependency>
                         <groupId>io.helidon.codegen</groupId>
                         <artifactId>helidon-codegen-helidon-copyright</artifactId>

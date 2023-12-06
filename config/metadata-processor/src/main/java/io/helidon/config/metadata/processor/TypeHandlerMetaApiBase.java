@@ -19,7 +19,8 @@ package io.helidon.config.metadata.processor;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import io.helidon.common.processor.ProcessingContext;
+import javax.annotation.processing.ProcessingEnvironment;
+
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
@@ -29,8 +30,8 @@ import static io.helidon.config.metadata.processor.UsedTypes.META_OPTIONS;
 
 // base for types using config metadata annotations
 abstract class TypeHandlerMetaApiBase extends TypeHandlerBase {
-    TypeHandlerMetaApiBase(ProcessingContext ctx) {
-        super(ctx);
+    TypeHandlerMetaApiBase(ProcessingEnvironment aptEnv) {
+        super(aptEnv);
     }
 
     List<ConfiguredOptionData> findConfiguredOptionAnnotations(TypedElementInfo elementInfo) {

@@ -22,22 +22,21 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import io.helidon.codegen.classmodel.Field;
-import io.helidon.codegen.classmodel.InnerClass;
-import io.helidon.codegen.classmodel.Javadoc;
-import io.helidon.codegen.classmodel.Method;
+import io.helidon.common.processor.classmodel.Field;
+import io.helidon.common.processor.classmodel.InnerClass;
+import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.common.processor.classmodel.Method;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 
-import static io.helidon.builder.processor.BlueprintProcessor.createTypeArgumentString;
 import static io.helidon.builder.processor.Types.ARRAY_LIST_TYPE;
 import static io.helidon.builder.processor.Types.CHAR_ARRAY_TYPE;
 import static io.helidon.builder.processor.Types.DURATION_TYPE;
 import static io.helidon.builder.processor.Types.LINKED_HASH_MAP_TYPE;
 import static io.helidon.builder.processor.Types.LINKED_HASH_SET_TYPE;
 import static io.helidon.builder.processor.Types.STRING_TYPE;
-import static io.helidon.codegen.classmodel.ClassModel.TYPE_TOKEN;
+import static io.helidon.common.processor.classmodel.ClassModel.TYPE_TOKEN;
 
 class TypeHandler {
     private final String name;
@@ -466,18 +465,12 @@ class TypeHandler {
                                        Javadoc blueprintJavadoc,
                                        FactoryMethods.FactoryMethod factoryMethod) {
         TypeName builderType;
-        TypeName factoryReturnType = factoryMethod.factoryMethodReturnType();
-        if (factoryReturnType.className().equals("Builder")) {
-            builderType = factoryReturnType;
-        } else if (factoryReturnType.className().endsWith(".Builder")) {
-            builderType = factoryReturnType;
+        if (factoryMethod.factoryMethodReturnType().className().equals("Builder")) {
+            builderType = factoryMethod.factoryMethodReturnType();
+        } else if (factoryMethod.factoryMethodReturnType().className().endsWith(".Builder")) {
+            builderType = factoryMethod.factoryMethodReturnType();
         } else {
-            if (factoryReturnType.typeArguments().isEmpty()) {
-                builderType = TypeName.create(factoryReturnType.fqName() + ".Builder");
-            } else {
-                builderType = TypeName.create(factoryReturnType.declaredName()
-                + ".Builder" + createTypeArgumentString(factoryReturnType.typeArguments()));
-            }
+            builderType = TypeName.create(factoryMethod.factoryMethodReturnType().fqName() + ".Builder");
         }
 
         String argumentName = "consumer";
@@ -505,9 +498,8 @@ class TypeHandler {
                 .typeName(Objects.class)
                 .addLine(".requireNonNull(" + argumentName + ");")
                 .add("var builder = ")
-                .typeName(factoryMethod.typeWithFactoryMethod().declaredName())
-                .addLine("." + createTypeArgumentString(builderType.typeArguments())
-                                 + factoryMethod.createMethodName() + "();")
+                .typeName(factoryMethod.typeWithFactoryMethod().genericTypeName())
+                .addLine("." + factoryMethod.createMethodName() + "();")
                 .addLine("consumer.accept(builder);")
                 .addLine("this." + name() + "(builder.build());")
                 .addLine("return self();");

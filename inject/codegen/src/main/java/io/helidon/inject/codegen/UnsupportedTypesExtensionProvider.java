@@ -2,6 +2,7 @@ package io.helidon.inject.codegen;
 
 import java.util.Set;
 
+import io.helidon.codegen.Option;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
@@ -37,7 +38,7 @@ public class UnsupportedTypesExtensionProvider implements InjectCodegenExtension
     );
 
     @Override
-    public Set<String> supportedOptions() {
+    public Set<Option<?>> supportedOptions() {
         return Set.of(InjectOptions.MAP_APPLICATION_TO_SINGLETON_SCOPE,
                       InjectOptions.IGNORE_UNSUPPORTED_ANNOTATIONS);
     }

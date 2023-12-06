@@ -212,7 +212,6 @@
         <module>webclient</module>
         <module>webserver</module>
         <module>websocket</module>
-        <module>codegen</module>
     </modules>
 
     <build>

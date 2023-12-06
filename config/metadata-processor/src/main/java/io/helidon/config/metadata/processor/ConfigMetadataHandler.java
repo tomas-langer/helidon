@@ -37,7 +37,6 @@ import javax.tools.Diagnostic;
 import javax.tools.StandardLocation;
 
 import io.helidon.common.processor.ElementInfoPredicates;
-import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -61,11 +60,15 @@ class ConfigMetadataHandler {
     // map of module name to list of classes that belong to it
     private final Map<String, List<TypeName>> moduleTypes = new HashMap<>();
     private final Set<Element> classesToHandle = new LinkedHashSet<>();
+    /*
+     * Compiler utilities for annotation processing
+     */
+    private Elements elementUtils;
     private Messager messager;
     private TypeElement configuredElement;
     private Filer filer;
     private TypeElement metaConfiguredElement;
-    private ProcessingContext ctx;
+    private ProcessingEnvironment processingEnv;
 
     /**
      * Public constructor required for service loader.
@@ -75,13 +78,10 @@ class ConfigMetadataHandler {
 
     synchronized void init(ProcessingEnvironment processingEnv) {
         // get compiler utilities
-        this.ctx = ProcessingContext.create(processingEnv);
+        this.processingEnv = processingEnv;
         this.messager = processingEnv.getMessager();
         this.filer = processingEnv.getFiler();
-        /*
-         * Compiler utilities for annotation processing
-         */
-        Elements elementUtils = processingEnv.getElementUtils();
+        this.elementUtils = processingEnv.getElementUtils();
 
         // get the types
         this.configuredElement = elementUtils.getTypeElement(CONFIGURED.fqName());
@@ -124,7 +124,7 @@ class ConfigMetadataHandler {
      */
     private void processClass(Element aClass) {
         if (aClass instanceof TypeElement typeElement) {
-            Optional<TypeInfo> typeInfo = TypeInfoFactory.create(ctx,
+            Optional<TypeInfo> typeInfo = TypeInfoFactory.create(processingEnv,
                                                                  typeElement,
                                                                  ElementInfoPredicates::isMethod);
             if (typeInfo.isEmpty()) {
@@ -138,16 +138,16 @@ class ConfigMetadataHandler {
             if (configuredType.hasAnnotation(META_CONFIGURED)) {
                 if (configuredType.hasAnnotation(BLUEPRINT)) {
                     // old style - if using config meta annotation on class, expecting config meta annotations on options
-                    handler = new TypeHandlerMetaApiBlueprint(ctx, configuredType);
+                    handler = new TypeHandlerMetaApiBlueprint(processingEnv, configuredType);
                 } else {
                     // only new style of annotations (we expect that if class annotation is changed to Prototype.Configured)
                     // all other annotations are migrated as well
-                    handler = new TypeHandlerMetaApi(ctx, configuredType);
+                    handler = new TypeHandlerMetaApi(processingEnv, configuredType);
                 }
             } else if (configuredType.hasAnnotation(CONFIGURED)) {
                 if (configuredType.hasAnnotation(BLUEPRINT)) {
                     // this is a blueprint (annotation @Prototype.Blueprint)
-                    handler = new TypeHandlerBuilderApi(ctx, configuredType);
+                    handler = new TypeHandlerBuilderApi(processingEnv, configuredType);
                 } else {
                     messager.printMessage(Diagnostic.Kind.ERROR,
                                           "Requested to process type: " + aClass + ", annotated with @"

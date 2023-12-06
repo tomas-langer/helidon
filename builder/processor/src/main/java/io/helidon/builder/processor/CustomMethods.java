@@ -22,8 +22,8 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.common.Errors;
+import io.helidon.common.processor.ElementInfoPredicates;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -33,7 +33,7 @@ import static io.helidon.builder.processor.Types.CUSTOM_METHODS_TYPE;
 import static io.helidon.builder.processor.Types.FACTORY_METHOD_TYPE;
 import static io.helidon.builder.processor.Types.PROTOTYPE_CUSTOM_METHOD_TYPE;
 import static io.helidon.builder.processor.Types.VOID_TYPE;
-import static io.helidon.codegen.classmodel.ClassModel.TYPE_TOKEN;
+import static io.helidon.common.processor.classmodel.ClassModel.TYPE_TOKEN;
 
 record CustomMethods(List<CustomMethod> factoryMethods,
                      List<CustomMethod> builderMethods,
@@ -43,7 +43,7 @@ record CustomMethods(List<CustomMethod> factoryMethods,
         this(List.of(), List.of(), List.of());
     }
 
-    static CustomMethods create(BlueprintProcessingContext ctx, TypeContext.TypeInformation typeInformation) {
+    static CustomMethods create(ProcessingContext ctx, TypeContext.TypeInformation typeInformation) {
         Optional<Annotation> annotation = typeInformation.blueprintType().findAnnotation(CUSTOM_METHODS_TYPE);
         if (annotation.isEmpty()) {
             return new CustomMethods();

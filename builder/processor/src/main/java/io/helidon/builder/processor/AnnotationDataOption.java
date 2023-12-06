@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import io.helidon.codegen.classmodel.Javadoc;
+import io.helidon.common.processor.classmodel.Javadoc;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
@@ -371,7 +371,7 @@ record AnnotationDataOption(Javadoc javadoc,
 
     /*
     Method name is camel case (such as maxInitialLineLength)
-    result is snake case (dash separated and lower cased - such as max-initial-line-length).
+    result is dash separated and lower cased (such as max-initial-line-length).
     Note that this same method was created in ConfigUtils in common-config, but since this
     module should not have any dependencies in it a copy was left here as well.
     */

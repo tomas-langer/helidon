@@ -14,24 +14,31 @@
  * limitations under the License.
  */
 
+package io.helidon.common.processor;
+
 /**
- * Utilities for annotation processors.
+ * Tools for generating code.
  *
  * @deprecated use {@code helidon-codegen} instead.
  */
 @Deprecated(forRemoval = true, since = "4.1.0")
-module io.helidon.common.processor {
+public final class GeneratorTools {
+    private GeneratorTools() {
 
-    requires io.helidon.common.processor.classmodel;
-    requires jdk.compiler;
+    }
 
-    requires transitive io.helidon.common.types;
-    requires transitive java.compiler;
-
-    exports io.helidon.common.processor;
-    exports io.helidon.common.processor.spi;
-
-    uses io.helidon.common.processor.spi.CopyrightProvider;
-    uses io.helidon.common.processor.spi.GeneratedAnnotationProvider;
-
+    /**
+     * Capitalize the first letter of the provided string.
+     *
+     * @param name string to capitalize
+     * @return name with the first character as capital letter
+     */
+    public static String capitalize(String name) {
+        if (name.isBlank() || name.isEmpty()) {
+            return name;
+        }
+        char first = name.charAt(0);
+        first = Character.toUpperCase(first);
+        return first + name.substring(1);
+    }
 }

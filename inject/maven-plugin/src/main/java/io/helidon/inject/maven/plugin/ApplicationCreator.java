@@ -19,6 +19,7 @@ package io.helidon.inject.maven.plugin;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -32,9 +33,7 @@ import java.util.stream.Stream;
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenScope;
-import io.helidon.codegen.CopyrightHandler;
-import io.helidon.codegen.GeneratedAnnotationHandler;
-import io.helidon.codegen.ModuleInfo;
+import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.codegen.classmodel.Method;
@@ -53,7 +52,6 @@ import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
-import io.helidon.inject.codegen.InjectOptions;
 import io.helidon.inject.spi.InjectionResolver;
 
 import jakarta.inject.Provider;
@@ -83,9 +81,7 @@ public class ApplicationCreator {
         this.failOnError = failOnError;
 
         CodegenOptions options = scanContext.options();
-        this.moduleName = options.option(InjectOptions.MODULE_NAME)
-                .or(() -> scanContext.module().map(ModuleInfo::name))
-                .orElse(null);
+        this.moduleName = scanContext.moduleName().orElse(null);
         this.permittedProviderType = options.option(ApplicationOptions.PERMITTED_PROVIDER_TYPE,
                                                     PermittedProviderType.NAMED,
                                                     PermittedProviderType.class);
@@ -136,16 +132,16 @@ public class ApplicationCreator {
                  TypeName typeName,
                  CompilerOptions compilerOptions) {
         ClassModel.Builder classModel = ClassModel.builder()
-                .copyright(CopyrightHandler.copyright(CREATOR,
-                                                      CREATOR,
-                                                      typeName))
+                .copyright(CodegenUtil.copyright(CREATOR,
+                                                 CREATOR,
+                                                 typeName))
                 .description("Generated Application to provide explicit bindings for known services.")
                 .type(typeName)
-                .addAnnotation(GeneratedAnnotationHandler.create(CREATOR,
-                                                                 CREATOR,
-                                                                 typeName,
-                                                                 "1",
-                                                                 ""))
+                .addAnnotation(CodegenUtil.generatedAnnotation(CREATOR,
+                                                               CREATOR,
+                                                               typeName,
+                                                               "1",
+                                                               ""))
                 .addInterface(InjectCodegenTypes.HELIDON_APPLICATION);
 
         // deprecated default constructor - application should always be service loaded
@@ -164,7 +160,7 @@ public class ApplicationCreator {
                 .addAnnotation(Annotations.OVERRIDE)
                 .returnType(io.helidon.common.types.TypeNames.STRING)
                 .name("name")
-                .addLine("return \"" + applicationName + "\";"));
+                .addContentLine("return \"" + applicationName + "\";"));
 
         // public void configure(ServiceInjectionPlanBinder binder)
         classModel.addMethod(configureMethod -> configureMethod
@@ -447,8 +443,10 @@ public class ApplicationCreator {
         boolean supportNulls = false;
         // we group all bindings by descriptor they belong to
         injectionPlan.forEach((descriptorType, bindings) -> {
-            method.addLine("binder.bindTo(@" + descriptorType.fqName() + "@.INSTANCE)")
-                    .increasePadding();
+            method.addContent("binder.bindTo(")
+                    .addContent(descriptorType.genericTypeName())
+                    .addContentLine(".INSTANCE)")
+                    .increaseContentPadding();
 
             for (Binding binding : bindings) {
                 String ipId = "@" + binding.ipInfo().descriptor().fqName() + "@." + binding.ipInfo().field();
@@ -458,59 +456,69 @@ public class ApplicationCreator {
                     switch (binding.type()) {
                     case SINGLE -> {
                         if (supportNulls) {
-                            method.add(".runtimeBindNullable");
+                            method.addContent(".runtimeBindNullable");
                         } else {
-                            method.add(".runtimeBind");
+                            method.addContent(".runtimeBind");
                         }
                     }
-                    case OPTIONAL -> method.add(".runtimeBindOptional");
-                    case MANY -> method.add(".runtimeBindMany");
+                    case OPTIONAL -> method.addContent(".runtimeBindOptional");
+                    case MANY -> method.addContent(".runtimeBindMany");
                     }
                     // such as .runtimeBind(MyDescriptor.IP_ID_0, false, ConfigBean.class)
-                    method.add("(")
-                            .add(ipId + ", ")
-                            .add(binding.useProvider + ", ")
-                            .addLine("@" + binding.typeNames().getFirst().fqName() + "@.class)");
+                    method.addContent("(")
+                            .addContent(ipId + ", ")
+                            .addContent(binding.useProvider + ", ")
+                            .addContent(binding.typeNames.getFirst().genericTypeName())
+                            .addContentLine(".class)");
                 }
                 case BUILD -> {
                     switch (binding.type()) {
                     case SINGLE -> {
                         if (binding.typeNames().isEmpty()) {
                             if (supportNulls) {
-                                method.addLine(".bindNull(" + ipId + ")");
+                                method.addContentLine(".bindNull(" + ipId + ")");
                             } else {
                                 throw new CodegenException("Injection point requires a value, but no provider discovered: "
                                                                    + binding.ipInfo() + " for "
                                                                    + binding.ipInfo().service().fqName());
                             }
                         } else {
-                            method.add(".bind(")
-                                    .add(ipId + ",")
-                                    .add(binding.useProvider() + ", ")
-                                    .addLine("@" + binding.typeNames.getFirst().fqName() + "@.INSTANCE)");
+                            method.addContent(".bind(")
+                                    .addContent(ipId + ",")
+                                    .addContent(binding.useProvider() + ", ")
+                                    .addContent(binding.typeNames.getFirst().genericTypeName())
+                                    .addContentLine(".INSTANCE)");
                         }
                     }
                     case OPTIONAL -> {
-                        method.add(".bindOptional(" + ipId + ", ")
-                                .add(String.valueOf(binding.useProvider()));
+                        method.addContent(".bindOptional(" + ipId + ", ")
+                                .addContent(String.valueOf(binding.useProvider()));
                         if (binding.typeNames.isEmpty()) {
-                            method.addLine(")");
+                            method.addContentLine(")");
                         } else {
-                            method.addLine(", @" + binding.typeNames.getFirst().fqName() + "@.INSTANCE)");
+                            method.addContent(", ")
+                                    .addContent(binding.typeNames.getFirst().genericTypeName())
+                                    .addContentLine(".INSTANCE)");
                         }
                     }
                     case MANY -> {
-                        method.add(".bindMany(" + ipId + ", ")
-                                .add(String.valueOf(binding.useProvider()));
+                        method.addContent(".bindMany(" + ipId + ", ")
+                                .addContent(String.valueOf(binding.useProvider()));
                         if (binding.typeNames.isEmpty()) {
-                            method.addLine(")");
+                            method.addContentLine(")");
                         } else {
-                            method.add(", ")
-                                    .add(binding.typeNames.stream()
-                                                 .map(targetDescriptor -> "@" + targetDescriptor.fqName()
-                                                         + "@.INSTANCE")
-                                                 .collect(Collectors.joining(", ")))
-                                    .addLine(")");
+                            method.addContent(", ")
+                                    .update(it -> {
+                                        Iterator<TypeName> iterator = binding.typeNames.iterator();
+                                        while (iterator.hasNext()) {
+                                            it.addContent(iterator.next())
+                                                    .addContent(".INSTANCE");
+                                            if (iterator.hasNext()) {
+                                                it.addContent(", ");
+                                            }
+                                        }
+                                    })
+                                    .addContentLine(")");
                         }
                     }
                     }
@@ -521,9 +529,9 @@ public class ApplicationCreator {
             /*
             Commit the dependencies
              */
-            method.addLine(".commit();")
-                    .decreasePadding()
-                    .addLine("");
+            method.addContentLine(".commit();")
+                    .decreaseContentPadding()
+                    .addContentLine("");
         });
     }
 

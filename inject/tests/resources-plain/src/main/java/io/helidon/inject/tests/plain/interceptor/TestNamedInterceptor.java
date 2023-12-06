@@ -58,7 +58,7 @@ public class TestNamedInterceptor implements Interceptor {
             throw new IllegalStateException("Invoked an interceptor without annotation being present on element: " + elementInfo);
         }
 
-        INVOCATIONS.add(new Invocation(elementInfo.elementTypeKind(), elementInfo.elementName(), annotation.value().orElse("")));
+        INVOCATIONS.add(new Invocation(elementInfo.kind(), elementInfo.elementName(), annotation.value().orElse("")));
 
         if (elementInfo.typeName().equals(PRIMITIVE_LONG)) {
             V result = chain.proceed(args);

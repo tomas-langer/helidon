@@ -33,6 +33,7 @@ public final class InjectCodegenTypes {
     public static final TypeName HELIDON_DESCRIBE = TypeName.create("io.helidon.inject.api.Describe");
     public static final TypeName HELIDON_CLASS_NAMED = TypeName.create("io.helidon.inject.api.ClassNamed");
     public static final TypeName HELIDON_CONTEXT_QUERY = TypeName.create("io.helidon.inject.api.ContextualServiceQuery");
+    public static final TypeName HELIDON_INVOCATION = TypeName.create("io.helidon.inject.runtime.Invocation");
 
     private InjectCodegenTypes() {
     }

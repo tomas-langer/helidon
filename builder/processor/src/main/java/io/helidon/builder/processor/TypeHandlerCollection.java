@@ -44,16 +44,16 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import io.helidon.codegen.classmodel.Field;
-import io.helidon.codegen.classmodel.InnerClass;
-import io.helidon.codegen.classmodel.Javadoc;
-import io.helidon.codegen.classmodel.Method;
+import io.helidon.common.processor.GeneratorTools;
+import io.helidon.common.processor.classmodel.Field;
+import io.helidon.common.processor.classmodel.InnerClass;
+import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.common.processor.classmodel.Method;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 
 import static io.helidon.builder.processor.Types.CONFIG_TYPE;
-import static io.helidon.codegen.CodegenUtil.capitalize;
-import static io.helidon.codegen.classmodel.ClassModel.TYPE_TOKEN;
+import static io.helidon.common.processor.classmodel.ClassModel.TYPE_TOKEN;
 
 abstract class TypeHandlerCollection extends TypeHandler.OneTypeHandler {
     private static final Set<TypeName> BUILT_IN_MAPPERS = Set.of(
@@ -323,7 +323,7 @@ abstract class TypeHandlerCollection extends TypeHandler.OneTypeHandler {
             classBuilder.addMethod(builder);
         } else if (configured.singular()) {
             String singularName = configured.singularName();
-            String methodName = "add" + capitalize(singularName);
+            String methodName = "add" + GeneratorTools.capitalize(singularName);
             builder.name(methodName)
                     .addLine("this." + name() + ".add(builder.build());")
                     .addLine("return self();");
@@ -335,7 +335,7 @@ abstract class TypeHandlerCollection extends TypeHandler.OneTypeHandler {
                                 TypeName returnType,
                                 Javadoc blueprintJavadoc,
                                 String singularName) {
-        String methodName = "add" + capitalize(singularName);
+        String methodName = "add" + GeneratorTools.capitalize(singularName);
 
         Method.Builder builder = Method.builder()
                 .name(methodName)
@@ -405,7 +405,7 @@ abstract class TypeHandlerCollection extends TypeHandler.OneTypeHandler {
                 .addLine("return self();");
         classBuilder.addMethod(builder);
 
-        builder.name("add" + capitalize(name()))
+        builder.name("add" + GeneratorTools.capitalize(name()))
                 .clearContent()
                 .addLine("Objects.requireNonNull(" + name() + ");") //Overwrites existing content
                 .addLine("this." + name() + ".addAll(" + name() + ");")

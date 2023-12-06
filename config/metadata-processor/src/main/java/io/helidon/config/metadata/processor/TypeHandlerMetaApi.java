@@ -23,15 +23,15 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 
 import io.helidon.common.processor.ElementInfoPredicates;
-import io.helidon.common.processor.ProcessingContext;
-import io.helidon.common.types.Modifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
+import io.helidon.common.types.TypeValues;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.config.metadata.processor.ConfiguredType.ProducerMethod;
 
@@ -48,8 +48,8 @@ class TypeHandlerMetaApi extends TypeHandlerMetaApiBase implements TypeHandler {
     private final TypeInfo typeInfo;
     private final TypeName typeName;
 
-    TypeHandlerMetaApi(ProcessingContext ctx, TypeInfo typeInfo) {
-        super(ctx);
+    TypeHandlerMetaApi(ProcessingEnvironment aptEnv, TypeInfo typeInfo) {
+        super(aptEnv);
 
         this.typeInfo = typeInfo;
         this.typeName = typeInfo.typeName();
@@ -63,7 +63,7 @@ class TypeHandlerMetaApi extends TypeHandlerMetaApiBase implements TypeHandler {
         Optional<TypeName> foundTarget = findBuilderTarget(new HashSet<>(), typeInfo);
         ConfiguredAnnotation configured = ConfiguredAnnotation.createMeta(typeInfo.annotation(META_CONFIGURED));
         if (!configured.ignoreBuildMethod()
-                && !typeInfo.modifiers().contains(Modifier.ABSTRACT)
+                && !typeInfo.modifiers().contains(TypeValues.MODIFIER_ABSTRACT)
                 && foundTarget.isPresent()) {
             // this is a builder, we need the target type Builder<Builder, TargetType>
             TypeName targetTypeName = foundTarget.get();

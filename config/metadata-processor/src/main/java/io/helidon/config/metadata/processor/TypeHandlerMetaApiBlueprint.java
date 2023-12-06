@@ -18,7 +18,8 @@ package io.helidon.config.metadata.processor;
 
 import java.util.List;
 
-import io.helidon.common.processor.ProcessingContext;
+import javax.annotation.processing.ProcessingEnvironment;
+
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
@@ -33,8 +34,8 @@ class TypeHandlerMetaApiBlueprint extends TypeHandlerMetaApiBase implements Type
     private final TypeInfo blueprint;
     private final TypeName blueprintType;
 
-    TypeHandlerMetaApiBlueprint(ProcessingContext ctx, TypeInfo blueprint) {
-        super(ctx);
+    TypeHandlerMetaApiBlueprint(ProcessingEnvironment aptEnv, TypeInfo blueprint) {
+        super(aptEnv);
 
         this.blueprint = blueprint;
         this.blueprintType = blueprint.typeName();

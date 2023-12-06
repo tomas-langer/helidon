@@ -35,10 +35,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-codegen</artifactId>
-        </dependency>
-        <dependency>
             <!-- required as handlebars use slf4j -->
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
@@ -104,4 +100,15 @@
         </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <compilerArgument>-proc:none</compilerArgument>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

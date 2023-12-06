@@ -17,6 +17,7 @@
 package io.helidon.codegen;
 
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import io.helidon.common.GenericType;
@@ -68,13 +69,13 @@ public interface Option<T> {
     /**
      * Create a new option with a custom mapper.
      *
-     * @param name name of the option
-     * @param description description of the option
+     * @param name         name of the option
+     * @param description  description of the option
      * @param defaultValue default value
-     * @param mapper mapper from string
-     * @param type type of the option
+     * @param mapper       mapper from string
+     * @param type         type of the option
+     * @param <T>          type of the option
      * @return a new option that can be used to load value from {@link io.helidon.codegen.CodegenOptions}
-     * @param <T> type of the option
      */
     static <T> Option<T> create(String name,
                                 String description,
@@ -82,6 +83,22 @@ public interface Option<T> {
                                 Function<String, T> mapper,
                                 GenericType<T> type) {
         return new OptionImpl<>(name, description, defaultValue, mapper, type);
+    }
+
+    static <T> Option<Set<T>> createSet(String name,
+                                        String description,
+                                        Set<T> defaultValue,
+                                        Function<String, T> mapper,
+                                        GenericType<Set<T>> type) {
+        return new SetOptionImpl<>(name, description, defaultValue, mapper, type);
+    }
+
+    static <T> Option<Set<T>> createList(String name,
+                                         String description,
+                                         Set<T> defaultValue,
+                                         Function<String, T> mapper,
+                                         GenericType<Set<T>> type) {
+        return new SetOptionImpl<>(name, description, defaultValue, mapper, type);
     }
 
     /**

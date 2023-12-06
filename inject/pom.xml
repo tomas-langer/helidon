@@ -37,7 +37,6 @@
         <module>api</module>
         <module>codegen</module>
         <module>configdriven</module>
-        <module>processor</module>
         <module>maven-plugin</module>
         <module>testing</module>
         <module>runtime</module>

@@ -38,14 +38,143 @@ import io.helidon.inject.tests.plain.interceptor.IA;
 @Generated(value = "io.helidon.inject.codegen.InterceptedTypeGenerator", trigger = "io.helidon.inject.tests.inject.interceptor.XImpl")
 public class XImpl__Intercepted extends XImpl {
 
-    private static final TypedElementInfo METHOD_0_CLOSE = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("void")).elementName("close").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).accessModifier(AccessModifier.PUBLIC).build();
-    private static final TypedElementInfo METHOD_1_METHOD_I_A2 = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("void")).elementName("methodIA2").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "IA2").build()).accessModifier(AccessModifier.PUBLIC).build();
-    private static final TypedElementInfo METHOD_2_METHOD_I_B = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("void")).elementName("methodIB").addAnnotation(Annotation.builder().typeName(TypeName.create("jakarta.inject.Named")).putValue("value", "methodIB").build()).addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "IBSubAnno").build()).accessModifier(AccessModifier.PUBLIC).addParameterArgument(TypedElementInfo.builder().elementTypeKind(ElementKind.PARAMETER).typeName(TypeName.create("java.lang.String")).elementName("val").addAnnotation(Annotation.builder().typeName(TypeName.create("jakarta.inject.Named")).putValue("value", "arg1").build()).build()).build();
-    private static final TypedElementInfo METHOD_3_METHOD_I_B2 = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("java.lang.String")).elementName("methodIB2").addAnnotation(Annotation.builder().typeName(TypeName.create("jakarta.inject.Named")).putValue("value", "methodIB2").build()).addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "IBSubAnno").build()).accessModifier(AccessModifier.PUBLIC).addParameterArgument(TypedElementInfo.builder().elementTypeKind(ElementKind.PARAMETER).typeName(TypeName.create("java.lang.String")).elementName("val").addAnnotation(Annotation.builder().typeName(TypeName.create("jakarta.inject.Named")).putValue("value", "arg1").build()).build()).build();
-    private static final TypedElementInfo METHOD_4_METHOD_X = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("long")).elementName("methodX").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).accessModifier(AccessModifier.PUBLIC).addParameterArgument(TypedElementInfo.builder().elementTypeKind(ElementKind.PARAMETER).typeName(TypeName.create("java.lang.String")).elementName("arg1").build()).addParameterArgument(TypedElementInfo.builder().elementTypeKind(ElementKind.PARAMETER).typeName(TypeName.create("int")).elementName("arg2").build()).addParameterArgument(TypedElementInfo.builder().elementTypeKind(ElementKind.PARAMETER).typeName(TypeName.create("boolean")).elementName("arg3").build()).build();
-    private static final TypedElementInfo METHOD_5_METHOD_Y = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("java.lang.String")).elementName("methodY").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).build();
-    private static final TypedElementInfo METHOD_6_METHOD_Z = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("java.lang.String")).elementName("methodZ").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).accessModifier(AccessModifier.PROTECTED).build();
-    private static final TypedElementInfo METHOD_7_THROW_RUNTIME_EXCEPTION = TypedElementInfo.builder().elementTypeKind(ElementKind.METHOD).typeName(TypeName.create("void")).elementName("throwRuntimeException").addAnnotation(Annotation.builder().typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno")).putValue("value", "").build()).accessModifier(AccessModifier.PROTECTED).build();
+    private static final TypedElementInfo METHOD_0_CLOSE = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("void"))
+            .elementName("close")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PUBLIC)
+            .build();
+    private static final TypedElementInfo METHOD_1_METHOD_IA2 = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("void"))
+            .elementName("methodIA2")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "IA2")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PUBLIC)
+            .build();
+    private static final TypedElementInfo METHOD_2_METHOD_IB = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("void"))
+            .elementName("methodIB")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("jakarta.inject.Named"))
+                    .putValue("value", "methodIB")
+                    .build()
+            )
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "IBSubAnno")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PUBLIC)
+            .addParameterArgument(TypedElementInfo.builder()
+                    .kind(ElementKind.PARAMETER)
+                    .typeName(TypeName.create("java.lang.String"))
+                    .elementName("val")
+                    .addAnnotation(Annotation.builder()
+                            .typeName(TypeName.create("jakarta.inject.Named"))
+                            .putValue("value", "arg1")
+                            .build()
+                    )
+                    .build()
+            )
+            .build();
+    private static final TypedElementInfo METHOD_3_METHOD_IB2 = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("java.lang.String"))
+            .elementName("methodIB2")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("jakarta.inject.Named"))
+                    .putValue("value", "methodIB2")
+                    .build()
+            )
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "IBSubAnno")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PUBLIC)
+            .addParameterArgument(TypedElementInfo.builder()
+                    .kind(ElementKind.PARAMETER)
+                    .typeName(TypeName.create("java.lang.String"))
+                    .elementName("val")
+                    .addAnnotation(Annotation.builder()
+                            .typeName(TypeName.create("jakarta.inject.Named"))
+                            .putValue("value", "arg1")
+                            .build()
+                    )
+                    .build()
+            )
+            .build();
+    private static final TypedElementInfo METHOD_4_METHOD_X = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("long"))
+            .elementName("methodX")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PUBLIC)
+            .addParameterArgument(TypedElementInfo.builder()
+                    .kind(ElementKind.PARAMETER)
+                    .typeName(TypeName.create("java.lang.String"))
+                    .elementName("arg1")
+                    .build()
+            )
+            .addParameterArgument(TypedElementInfo.builder()
+                    .kind(ElementKind.PARAMETER)
+                    .typeName(TypeName.create("int"))
+                    .elementName("arg2")
+                    .build()
+            )
+            .addParameterArgument(TypedElementInfo.builder()
+                    .kind(ElementKind.PARAMETER)
+                    .typeName(TypeName.create("boolean"))
+                    .elementName("arg3")
+                    .build()
+            )
+            .build();
+    private static final TypedElementInfo METHOD_5_METHOD_Y = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("java.lang.String"))
+            .elementName("methodY")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "")
+                    .build()
+            )
+            .build();
+    private static final TypedElementInfo METHOD_6_METHOD_Z = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("java.lang.String"))
+            .elementName("methodZ")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PROTECTED)
+            .build();
+    private static final TypedElementInfo METHOD_7_THROW_RUNTIME_EXCEPTION = TypedElementInfo.builder()
+            .kind(ElementKind.METHOD)
+            .typeName(TypeName.create("void"))
+            .elementName("throwRuntimeException")
+            .addAnnotation(Annotation.builder()
+                    .typeName(TypeName.create("io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno"))
+                    .putValue("value", "")
+                    .build()
+            )
+            .accessModifier(AccessModifier.PROTECTED)
+            .build();
 
     private final Invoker<Long> methodX_4_invoker;
     private final Invoker<String> methodIB2_3_invoker;
@@ -72,7 +201,7 @@ public class XImpl__Intercepted extends XImpl {
             helidonInject__serviceDescriptor,
             helidonInject__typeQualifiers,
             helidonInject__typeAnnotations,
-            METHOD_1_METHOD_I_A2,
+            METHOD_1_METHOD_IA2,
             helidonInject__params -> {
                 super.methodIA2();
                 return null;
@@ -81,13 +210,13 @@ public class XImpl__Intercepted extends XImpl {
             helidonInject__serviceDescriptor,
             helidonInject__typeQualifiers,
             helidonInject__typeAnnotations,
-            METHOD_3_METHOD_I_B2,
+            METHOD_3_METHOD_IB2,
             helidonInject__params -> super.methodIB2((java.lang.String) helidonInject__params[0]), Set.of());
         this.methodIB_2_invoker = helidonInject__interceptMeta.createInvoker(
             helidonInject__serviceDescriptor,
             helidonInject__typeQualifiers,
             helidonInject__typeAnnotations,
-            METHOD_2_METHOD_I_B,
+            METHOD_2_METHOD_IB,
             helidonInject__params -> {
                 super.methodIB((java.lang.String) helidonInject__params[0]);
                 return null;
@@ -128,7 +257,7 @@ public class XImpl__Intercepted extends XImpl {
         } catch (IOException helidonInject__e) {
              throw helidonInject__e;
         } catch (RuntimeException helidonInject__e) {
-             throw helidonInject__e;
+            throw helidonInject__e;
         } catch (Exception helidonInject__e) {
             throw new RuntimeException(helidonInject__e);
         }
@@ -174,7 +303,7 @@ public class XImpl__Intercepted extends XImpl {
         } catch (IOException helidonInject__e) {
              throw helidonInject__e;
         } catch (RuntimeException helidonInject__e) {
-             throw helidonInject__e;
+            throw helidonInject__e;
         } catch (Exception helidonInject__e) {
             throw new RuntimeException(helidonInject__e);
         }

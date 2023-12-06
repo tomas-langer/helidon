@@ -28,6 +28,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenScope;
 import io.helidon.codegen.ModuleInfo;
 import io.helidon.codegen.scan.ScanModuleInfo;
@@ -204,10 +205,10 @@ public class ExternalModuleCreatorMojo extends AbstractCreatorMojo {
 
     private Set<String> toOptions() {
         Set<String> options = new HashSet<>(getCompilerArgs());
-        options.add("-A" + InjectOptions.JSR_330_STRICT + "=" + isSupportsJsr330InStrictMode());
+        options.add("-A" + InjectOptions.JSR_330_STRICT.name() + "=" + isSupportsJsr330InStrictMode());
         String moduleName = moduleName();
         if (moduleName != null) {
-            options.add("-A" + InjectOptions.MODULE_NAME + "=" + moduleName);
+            options.add("-A" + CodegenOptions.CODEGEN_MODULE.name() + "=" + moduleName);
         }
 
         return options;

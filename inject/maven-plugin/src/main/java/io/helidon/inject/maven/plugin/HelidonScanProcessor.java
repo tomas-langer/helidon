@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import io.helidon.codegen.Codegen;
 import io.helidon.codegen.scan.ScanTypeInfoFactory;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
@@ -15,7 +16,6 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.codegen.InjectCodegen;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 import io.helidon.inject.codegen.InjectOptions;
 
@@ -29,13 +29,13 @@ class HelidonScanProcessor {
     private static final TypeName GENERATOR = TypeName.create(HelidonScanProcessor.class);
     private static final Annotation QUALIFIER_ANNOTATION = Annotation.create(InjectCodegenTypes.INJECT_QUALIFIER);
 
-    private final InjectCodegen codegen;
+    private final Codegen codegen;
     private final MavenScanContext ctx;
     private final boolean strictJsr330;
 
     HelidonScanProcessor(MavenScanContext ctx) {
         this.ctx = ctx;
-        this.codegen = InjectCodegen.create(ctx, GENERATOR);
+        this.codegen = Codegen.create(ctx, GENERATOR);
         this.strictJsr330 = ctx.options().enabled(InjectOptions.JSR_330_STRICT);
     }
 
@@ -112,7 +112,7 @@ class HelidonScanProcessor {
         List<TypeInfo> result = new ArrayList<>();
 
         Set<TypeName> supportedAnnotations = codegen.supportedAnnotations();
-        Set<String> supportedAnnotationPackages = codegen.supportedAnnotationPackages();
+        Set<String> supportedAnnotationPackages = codegen.supportedAnnotationPackagePrefixes();
         for (TypeInfo toProcess : typesToProcess) {
             if (noRelevantAnnotation(supportedAnnotations, supportedAnnotationPackages, toProcess)) {
                 jsr330Type(result, toProcess);
@@ -137,7 +137,7 @@ class HelidonScanProcessor {
         // must have an accessible to args constructor
         Optional<TypedElementInfo> constructor = toProcess.elementInfo()
                 .stream()
-                .filter(it -> it.elementTypeKind() == ElementKind.CONSTRUCTOR)
+                .filter(it -> it.kind() == ElementKind.CONSTRUCTOR)
                 .filter(it -> it.parameterArguments().isEmpty())
                 .filter(it -> it.accessModifier() != AccessModifier.PRIVATE)
                 .findFirst();
@@ -170,8 +170,8 @@ class HelidonScanProcessor {
             if (hasIt) {
                 return false;
             }
-            if (typedElementInfo.elementTypeKind() == ElementKind.METHOD
-                    || typedElementInfo.elementTypeKind() == ElementKind.CONSTRUCTOR) {
+            if (typedElementInfo.kind() == ElementKind.METHOD
+                    || typedElementInfo.kind() == ElementKind.CONSTRUCTOR) {
                 for (TypedElementInfo param : typedElementInfo.parameterArguments()) {
                     hasIt = hasAnnotation(annotations, annotationPackages, param.annotations());
                     if (hasIt) {

@@ -18,9 +18,9 @@ package io.helidon.builder.processor;
 
 import java.util.List;
 
-import io.helidon.codegen.classmodel.ClassModel;
-import io.helidon.codegen.classmodel.TypeArgument;
 import io.helidon.common.Builder;
+import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.common.processor.classmodel.TypeArgument;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;

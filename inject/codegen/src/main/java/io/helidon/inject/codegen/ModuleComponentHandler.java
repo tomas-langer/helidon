@@ -4,8 +4,7 @@ import java.util.Set;
 
 import io.helidon.codegen.ClassCode;
 import io.helidon.codegen.CodegenScope;
-import io.helidon.codegen.CopyrightHandler;
-import io.helidon.codegen.GeneratedAnnotationHandler;
+import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.common.types.AccessModifier;
@@ -38,16 +37,16 @@ class ModuleComponentHandler {
                 .description("Generated ModuleComponent, loaded by ServiceLoader.");
 
         // copyright
-        builder.copyright(CopyrightHandler.copyright(GENERATOR,
-                                                     GENERATOR,
-                                                     newType));
+        builder.copyright(CodegenUtil.copyright(GENERATOR,
+                                                GENERATOR,
+                                                newType));
 
         // @Generated
-        builder.addAnnotation(GeneratedAnnotationHandler.create(GENERATOR,
-                                                                GENERATOR,
-                                                                newType,
-                                                                "1",
-                                                                ""));
+        builder.addAnnotation(CodegenUtil.generatedAnnotation(GENERATOR,
+                                                              GENERATOR,
+                                                              newType,
+                                                              "1",
+                                                              ""));
 
         // constructor
         builder.addConstructor(constructor -> constructor.addAnnotation(it -> it.type(Deprecated.class))
@@ -66,13 +65,13 @@ class ModuleComponentHandler {
         builder.addMethod(named -> named.name("name")
                 .addAnnotation(Annotations.OVERRIDE)
                 .returnType(TypeNames.STRING)
-                .addLine("return NAME;"));
+                .addContentLine("return NAME;"));
 
         // to String
         builder.addMethod(named -> named.name("toString")
                 .addAnnotation(Annotations.OVERRIDE)
                 .returnType(TypeNames.STRING)
-                .addLine("return NAME + \":\" + getClass().getName();"));
+                .addContentLine("return NAME + \":\" + getClass().getName();"));
 
         // configure
         builder.addMethod(configure -> configure.name("configure")
@@ -81,7 +80,9 @@ class ModuleComponentHandler {
                         .type(SERVICE_BINDER_TYPE))
                 .update(methodBody -> {
                     for (TypeName generatedServiceDescriptor : generatedServiceDescriptors) {
-                        methodBody.addLine("binder.bind(@" + generatedServiceDescriptor.declaredName() + "@.INSTANCE);");
+                        methodBody.addContent("binder.bind(")
+                                .addContent(generatedServiceDescriptor.genericTypeName())
+                                .addContentLine(".INSTANCE);");
                     }
                 }));
 

@@ -35,7 +35,6 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.codegen.InjectOptions;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;
@@ -77,7 +76,7 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     /**
      * The module name to apply. If not found the module name will be inferred.
      */
-    @Parameter(property = InjectOptions.MODULE_NAME, readonly = true)
+    @Parameter(property = "helidon.codegen.module-name", readonly = true)
     private String moduleName;
 
     // ----------------------------------------------------------------------

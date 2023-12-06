@@ -129,7 +129,6 @@ interface TypedElementInfoBlueprint extends Annotated {
      * @return access modifier
      */
     @Option.Redundant
-    @Option.Default("PACKAGE_PRIVATE")
     AccessModifier accessModifier();
 
     /**

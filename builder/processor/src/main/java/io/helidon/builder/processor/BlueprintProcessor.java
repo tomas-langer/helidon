@@ -40,17 +40,16 @@ import javax.tools.Diagnostic;
 import javax.tools.JavaFileObject;
 
 import io.helidon.builder.processor.ValidationTask.ValidateConfiguredType;
-import io.helidon.codegen.CopyrightHandler;
-import io.helidon.codegen.GeneratedAnnotationHandler;
-import io.helidon.codegen.apt.AptContext;
-import io.helidon.codegen.apt.AptTypeInfoFactory;
-import io.helidon.codegen.classmodel.Annotation;
-import io.helidon.codegen.classmodel.ClassModel;
-import io.helidon.codegen.classmodel.ClassType;
-import io.helidon.codegen.classmodel.Javadoc;
-import io.helidon.codegen.classmodel.Method;
-import io.helidon.codegen.classmodel.TypeArgument;
 import io.helidon.common.Errors;
+import io.helidon.common.processor.CopyrightHandler;
+import io.helidon.common.processor.GeneratedAnnotationHandler;
+import io.helidon.common.processor.TypeInfoFactory;
+import io.helidon.common.processor.classmodel.Annotation;
+import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.common.processor.classmodel.ClassType;
+import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.common.processor.classmodel.Method;
+import io.helidon.common.processor.classmodel.TypeArgument;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -76,8 +75,8 @@ public class BlueprintProcessor extends AbstractProcessor {
     private TypeElement runtimePrototypeAnnotationType;
     private Messager messager;
     private Filer filer;
+    private ProcessingEnvironment env;
     private Elements elementUtils;
-    private AptContext ctx;
 
     @Override
     public Set<String> getSupportedAnnotationTypes() {
@@ -100,7 +99,7 @@ public class BlueprintProcessor extends AbstractProcessor {
         this.blueprintAnnotationType = elementUtils.getTypeElement(PROTOTYPE_BLUEPRINT);
         this.runtimePrototypeAnnotationType = elementUtils.getTypeElement(RUNTIME_PROTOTYPE);
         this.filer = processingEnv.getFiler();
-        this.ctx = AptContext.create(processingEnv);
+        this.env = processingEnv;
 
         if (blueprintAnnotationType == null || runtimePrototypeAnnotationType == null) {
             throw new IllegalStateException("Bug in BlueprintProcessor code, cannot find required types, probably wrong"
@@ -121,7 +120,7 @@ public class BlueprintProcessor extends AbstractProcessor {
 
         // collect interfaces annotated with supported annotations
         List<TypeElement> blueprintInterfaces = collectInterfaces(blueprints);
-        BlueprintProcessingContext processingContext = BlueprintProcessingContext.create(ctx);
+        ProcessingContext processingContext = ProcessingContext.create(processingEnv);
 
         // now process the interfaces
         for (TypeElement blueprint : blueprintInterfaces) {
@@ -159,8 +158,8 @@ public class BlueprintProcessor extends AbstractProcessor {
         return annotations.size() == 1;
     }
 
-    private void process(TypeElement definitionTypeElement, BlueprintProcessingContext processingContext) throws IOException {
-        TypeInfo typeInfo = AptTypeInfoFactory.create(ctx, definitionTypeElement)
+    private void process(TypeElement definitionTypeElement, ProcessingContext processingContext) throws IOException {
+        TypeInfo typeInfo = TypeInfoFactory.create(env, definitionTypeElement)
                 .orElseThrow(() -> new IllegalArgumentException("Could not process " + definitionTypeElement
                                                                         + ", no type info generated"));
 
@@ -173,10 +172,10 @@ public class BlueprintProcessor extends AbstractProcessor {
                                      typeContext);
     }
 
-    private void addBlueprintsForValidation(BlueprintProcessingContext processingContext, Set<Element> blueprintElements) {
+    private void addBlueprintsForValidation(ProcessingContext processingContext, Set<Element> blueprintElements) {
         for (Element element : blueprintElements) {
             TypeElement typeElement = (TypeElement) element;
-            TypeInfo typeInfo = AptTypeInfoFactory.create(ctx, typeElement)
+            TypeInfo typeInfo = TypeInfoFactory.create(processingEnv, typeElement)
                     .orElse(null);
             if (typeInfo == null) {
                 continue;
@@ -202,7 +201,7 @@ public class BlueprintProcessor extends AbstractProcessor {
     private void addRuntimeTypesForValidation(Set<? extends Element> runtimeTypes) {
         runtimeTypes.stream()
                 .map(TypeElement.class::cast)
-                .map(it -> AptTypeInfoFactory.create(ctx, it))
+                .map(it -> TypeInfoFactory.create(processingEnv, it))
                 .flatMap(Optional::stream)
                 .forEach(it -> {
                     validationTasks.add(new ValidateConfiguredType(it,
@@ -220,7 +219,7 @@ public class BlueprintProcessor extends AbstractProcessor {
 
     private TypeInfo toTypeInfo(TypeInfo typeInfo, TypeName typeName) {
         TypeElement element = elementUtils.getTypeElement(typeName.genericTypeName().fqName());
-        return AptTypeInfoFactory.create(ctx, element)
+        return TypeInfoFactory.create(processingEnv, element)
                 .orElseThrow(() -> new IllegalArgumentException("Type " + typeName.fqName() + " is not a valid type for Factory"
                                                                         + " declared on type " + typeInfo.typeName()
                         .fqName()));
@@ -247,6 +246,7 @@ public class BlueprintProcessor extends AbstractProcessor {
         return result;
     }
 
+    @SuppressWarnings("checkstyle:MethodLength") // will be fixed when we switch to model
     private void generatePrototypeWithBuilder(TypeElement builderInterface,
                                               TypeContext typeContext) throws IOException {
 
@@ -261,6 +261,8 @@ public class BlueprintProcessor extends AbstractProcessor {
         String ifaceName = prototype.className();
         List<TypeName> typeGenericArguments = blueprintDef.typeArguments();
         String typeArgumentString = createTypeArgumentString(typeGenericArguments);
+
+        JavaFileObject generatedIface = filer.createSourceFile(prototype.name(), builderInterface);
 
         // prototype interface (with inner class Builder)
         ClassModel.Builder classModel = ClassModel.builder()
@@ -415,7 +417,6 @@ public class BlueprintProcessor extends AbstractProcessor {
                                  typeContext.blueprintData().isFactory(),
                                  typeContext);
 
-        JavaFileObject generatedIface = filer.createSourceFile(prototype.name(), builderInterface);
         try (PrintWriter pw = new PrintWriter(generatedIface.openWriter())) {
             classModel.build()
                     .write(pw, SOURCE_SPACING);

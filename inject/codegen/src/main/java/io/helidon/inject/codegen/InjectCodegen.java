@@ -8,10 +8,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import io.helidon.codegen.ClassCode;
 import io.helidon.codegen.CodegenContext;
@@ -19,7 +17,7 @@ import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenFiler;
 import io.helidon.codegen.ModuleInfo;
 import io.helidon.codegen.classmodel.ClassModel;
-import io.helidon.common.HelidonServiceLoader;
+import io.helidon.codegen.spi.CodegenExtension;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -30,37 +28,21 @@ import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 /**
  * Handles processing of all extensions, creates context and writes types.
  */
-public class InjectCodegen {
-    private static final List<InjectCodegenExtensionProvider> EXTENSIONS =
-            HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenExtensionProvider.class,
-                                                           InjectCodegen.class.getClassLoader()))
-                    .asList();
-    private static final Set<String> SUPPORTED_APT_OPTIONS;
-
-    static {
-        Set<String> supportedOptions = EXTENSIONS.stream()
-                .flatMap(it -> it.supportedOptions().stream())
-                .collect(Collectors.toSet());
-        supportedOptions.add(CodegenContext.OPTION_INJECT_SCOPE);
-        SUPPORTED_APT_OPTIONS = Set.copyOf(supportedOptions);
-    }
-
+class InjectCodegen implements CodegenExtension {
     private final Map<TypeName, List<InjectCodegenExtension>> typeToExtensions = new HashMap<>();
     private final Map<InjectCodegenExtension, Predicate<TypeName>> extensionPredicates = new IdentityHashMap<>();
     private final Set<TypeName> generatedServiceDescriptors = new HashSet<>();
     private final TypeName generator;
     private final InjectionCodegenContext ctx;
     private final List<InjectCodegenExtension> extensions;
-    private final Set<TypeName> supportedAnnotations;
-    private final Set<String> supportedPackagePrefixes;
     private final String module;
 
-    private InjectCodegen(CodegenContext ctx, TypeName generator) {
+    private InjectCodegen(CodegenContext ctx, TypeName generator, List<InjectCodegenExtensionProvider> extensions) {
         this.ctx = InjectionCodegenContext.create(ctx);
         this.generator = generator;
-        this.module = ctx.options().option(InjectOptions.MODULE_NAME).orElse(null);
+        this.module = ctx.moduleName().orElse(null);
 
-        this.extensions = EXTENSIONS.stream()
+        this.extensions = extensions.stream()
                 .map(it -> {
                     InjectCodegenExtension extension = it.create(this.ctx);
 
@@ -76,38 +58,15 @@ public class InjectCodegen {
                     return extension;
                 })
                 .toList();
-
-        // handle supported annotations and package prefixes
-        Set<String> packagePrefixes = new HashSet<>();
-        Set<TypeName> annotations = new HashSet<>(ctx.mapperSupportedAnnotations());
-
-        for (InjectCodegenExtensionProvider extension : EXTENSIONS) {
-            annotations.addAll(extension.supportedAnnotations());
-
-            ctx.mapperSupportedAnnotationPackages()
-                    .stream()
-                    .map(InjectCodegen::toPackagePrefix)
-                    .forEach(packagePrefixes::add);
-        }
-        ctx.mapperSupportedAnnotationPackages()
-                .stream()
-                .map(InjectCodegen::toPackagePrefix)
-                .forEach(packagePrefixes::add);
-        packagePrefixes.add("jakarta.");
-
-        this.supportedAnnotations = Set.copyOf(annotations);
-        this.supportedPackagePrefixes = Set.copyOf(packagePrefixes);
     }
 
-    public static InjectCodegen create(CodegenContext ctx, TypeName generator) {
-        return new InjectCodegen(ctx, generator);
+    static InjectCodegen create(CodegenContext ctx, TypeName generator, List<InjectCodegenExtensionProvider> extensions) {
+        return new InjectCodegen(ctx, generator, extensions);
     }
 
-    public static Set<String> supportedOptions() {
-        return SUPPORTED_APT_OPTIONS;
-    }
-
-    public void process(List<TypeInfo> allTypes) {
+    @Override
+    public void process(io.helidon.codegen.RoundContext roundContext) {
+        Collection<TypeInfo> allTypes = roundContext.types();
         if (allTypes.isEmpty()) {
             extensions.forEach(it -> it.process(createRoundContext(List.of(), it)));
             return;
@@ -127,7 +86,8 @@ public class InjectCodegen {
         writeNewTypes();
     }
 
-    public void processingOver() {
+    @Override
+    public void processingOver(io.helidon.codegen.RoundContext roundContext) {
         // do processing over in each extension
         extensions.forEach(InjectCodegenExtension::processingOver);
 
@@ -137,24 +97,6 @@ public class InjectCodegen {
         if (!generatedServiceDescriptors.isEmpty()) {
             generateModuleComponent();
         }
-    }
-
-    public Set<TypeName> supportedAnnotations() {
-        return supportedAnnotations;
-    }
-
-    public Set<String> supportedAnnotationPackages() {
-        return supportedPackagePrefixes;
-    }
-
-    private static String toPackagePrefix(String configured) {
-        if (configured.endsWith(".*")) {
-            return configured.substring(0, configured.length() - 1);
-        }
-        if (configured.endsWith(".")) {
-            return configured;
-        }
-        return configured + ".";
     }
 
     private static Predicate<TypeName> discoveryPredicate(Collection<String> packages) {
@@ -248,7 +190,7 @@ public class InjectCodegen {
         builders.clear();
     }
 
-    private List<TypeInfoAndAnnotations> annotatedTypes(List<TypeInfo> allTypes) {
+    private List<TypeInfoAndAnnotations> annotatedTypes(Collection<TypeInfo> allTypes) {
         List<TypeInfoAndAnnotations> result = new ArrayList<>();
 
         for (TypeInfo typeInfo : allTypes) {

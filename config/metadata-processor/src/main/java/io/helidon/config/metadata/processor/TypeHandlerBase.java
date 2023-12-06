@@ -28,7 +28,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
-import io.helidon.common.processor.ProcessingContext;
 import io.helidon.common.processor.TypeInfoFactory;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
@@ -41,10 +40,10 @@ abstract class TypeHandlerBase {
     static final String UNCONFIGURED_OPTION = "io.helidon.config.metadata.ConfiguredOption.UNCONFIGURED";
     private static final Pattern JAVADOC_CODE = Pattern.compile("\\{@code (.*?)}");
     private static final Pattern JAVADOC_LINK = Pattern.compile("\\{@link (.*?)}");
-    private final ProcessingContext ctx;
+    private final ProcessingEnvironment aptEnv;
 
-    TypeHandlerBase(ProcessingContext ctx) {
-        this.ctx = ctx;
+    TypeHandlerBase(ProcessingEnvironment aptEnv) {
+        this.aptEnv = aptEnv;
     }
 
     static Predicate<TypedElementInfo> isMine(TypeName type) {
@@ -58,7 +57,7 @@ abstract class TypeHandlerBase {
         if (arguments.size() != 1) {
             return false;
         }
-        TypeName argumentType = arguments.getFirst().typeName();
+        TypeName argumentType = arguments.get(0).typeName();
         return CONFIG.equals(argumentType) || COMMON_CONFIG.equals(argumentType);
     }
 
@@ -143,19 +142,19 @@ abstract class TypeHandlerBase {
     }
 
     Optional<TypeInfo> typeInfo(TypeName typeName, Predicate<TypedElementInfo> predicate) {
-        return TypeInfoFactory.create(ctx, typeName);
+        return TypeInfoFactory.create(aptEnv, typeName);
     }
 
     ProcessingEnvironment aptEnv() {
-        return ctx.aptEnv();
+        return aptEnv;
     }
 
     Messager aptMessager() {
-        return ctx.aptEnv().getMessager();
+        return aptEnv.getMessager();
     }
 
     Elements aptElements() {
-        return ctx.aptEnv().getElementUtils();
+        return aptEnv.getElementUtils();
     }
 
     List<TypeName> params(TypedElementInfo info) {

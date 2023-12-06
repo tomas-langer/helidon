@@ -21,19 +21,16 @@ import io.helidon.common.types.TypeName;
 
 /**
  * Service provider interface to provide customization of generated annotation.
- *
- * @deprecated replaced with provider in codegen module
  */
-@Deprecated(forRemoval = true, since = "4.5.0")
 public interface GeneratedAnnotationProvider {
     /**
      * Create a generated annotation.
      *
-     * @param generator     type of the generator (annotation processor)
-     * @param trigger       type of the class that caused this type to be generated
+     * @param generator type of the generator (annotation processor)
+     * @param trigger type of the class that caused this type to be generated
      * @param generatedType type that is going to be generated
-     * @param versionId     version of the generator
-     * @param comments      additional comments, never use null (use empty string so they do not appear in annotation)
+     * @param versionId version of the generator
+     * @param comments additional comments, never use null (use empty string so they do not appear in annotation)
      * @return a new annotation to add to the generated type
      */
     Annotation create(TypeName generator,

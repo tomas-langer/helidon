@@ -28,9 +28,9 @@ import java.util.function.Predicate;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
-import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.common.Errors;
 import io.helidon.common.Severity;
+import io.helidon.common.processor.ElementInfoPredicates;
 import io.helidon.common.types.Annotated;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Modifier;
@@ -67,7 +67,7 @@ record TypeContext(
     );
 
     @SuppressWarnings("checkstyle:MethodLength") // use a lot of lines for parameter formatting
-    static TypeContext create(BlueprintProcessingContext processingContext,
+    static TypeContext create(ProcessingContext processingContext,
                               Elements elementUtils,
                               TypeElement blueprintElement,
                               TypeInfo blueprint) {
@@ -315,7 +315,7 @@ record TypeContext(
     }
 
     @SuppressWarnings("checkstyle:ParameterNumber") // we need all of them
-    private static void gatherBuilderProperties(BlueprintProcessingContext processingContext,
+    private static void gatherBuilderProperties(ProcessingContext processingContext,
                                                 TypeInfo typeInfo,
                                                 Errors.Collector errors,
                                                 List<PrototypeProperty> properties,
@@ -326,8 +326,7 @@ record TypeContext(
 
         // we are only interested in getter methods
         TypeName typeName = typeInfo.typeName();
-        properties.addAll(typeInfo.elementInfo()
-                                  .stream()
+        properties.addAll(typeInfo.elementInfo().stream()
                                   .filter(ElementInfoPredicates::isMethod)
                                   .filter(Predicate.not(ElementInfoPredicates::isStatic))
                                   .filter(Predicate.not(ElementInfoPredicates::isPrivate))

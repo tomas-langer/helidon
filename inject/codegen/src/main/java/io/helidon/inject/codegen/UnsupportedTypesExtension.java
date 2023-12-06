@@ -39,7 +39,7 @@ class UnsupportedTypesExtension implements InjectCodegenExtension {
                 .map(TypeName::fqName)
                 .collect(Collectors.joining(", "));
 
-        if (ctx.options().enabled(InjectOptions.IGNORE_UNSUPPORTED_ANNOTATIONS)) {
+        if (InjectOptions.IGNORE_UNSUPPORTED_ANNOTATIONS.value(ctx.options())) {
             // not interested
             ctx.logger().log(System.Logger.Level.TRACE, "Ignoring unsupported annotations: " + unsupported);
             return;

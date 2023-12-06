@@ -22,8 +22,8 @@ module io.helidon.builder.processor {
     requires jdk.compiler;
 
     requires io.helidon.common.types;
-    requires io.helidon.codegen.apt;
-    requires io.helidon.codegen.classmodel;
+    requires io.helidon.common.processor;
+    requires io.helidon.common.processor.classmodel;
 
     exports io.helidon.builder.processor;
 

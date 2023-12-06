@@ -70,17 +70,32 @@
                     <forceJavacCompilerUse>true</forceJavacCompilerUse>
                     <compilerArgs>
                         <arg>-Ainject.autoAddNonContractInterfaces=true</arg> <!-- this setting can be used to avoid the need for @Contract -->
-                        <arg>-Ainject.debug=false</arg>
-                        <arg>-Ainject.acceptPreview=true</arg>
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
+                            <groupId>io.helidon.codegen</groupId>
+                            <artifactId>helidon-codegen-apt</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
                             <groupId>io.helidon.inject</groupId>
-                            <artifactId>helidon-inject-processor</artifactId>
+                            <artifactId>helidon-inject-codegen</artifactId>
                             <version>${helidon.version}</version>
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.helidon.codegen</groupId>
+                        <artifactId>helidon-codegen-apt</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.helidon.inject</groupId>
+                        <artifactId>helidon-inject-codegen</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>

@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
-import io.helidon.codegen.ElementInfoPredicates;
+import io.helidon.common.processor.ElementInfoPredicates;
 import io.helidon.common.types.Modifier;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;

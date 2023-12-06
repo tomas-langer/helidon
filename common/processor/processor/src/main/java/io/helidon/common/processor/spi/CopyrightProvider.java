@@ -20,10 +20,7 @@ import io.helidon.common.types.TypeName;
 
 /**
  * Extension point to customize copyright headers for generated types.
- *
- * @deprecated replaced with provider in codegen module
  */
-@Deprecated(forRemoval = true, since = "4.5.0")
 public interface CopyrightProvider {
     /**
      * Create a copyright header, including comment begin/end, or line comments.

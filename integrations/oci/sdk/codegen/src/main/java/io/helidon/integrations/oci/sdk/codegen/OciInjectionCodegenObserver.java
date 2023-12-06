@@ -22,12 +22,12 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenOptions;
-import io.helidon.codegen.CopyrightHandler;
-import io.helidon.codegen.GeneratedAnnotationHandler;
+import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
@@ -151,14 +151,14 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
 
         ClassModel.Builder classModel = ClassModel.builder()
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                .copyright(CopyrightHandler.copyright(PROCESSOR_TYPE,
-                                                      ociServiceTypeName,
-                                                      generatedOciService))
-                .addAnnotation(GeneratedAnnotationHandler.create(PROCESSOR_TYPE,
-                                                                 ociServiceTypeName,
-                                                                 generatedOciService,
-                                                                 "1",
-                                                                 ""))
+                .copyright(CodegenUtil.copyright(PROCESSOR_TYPE,
+                                                 ociServiceTypeName,
+                                                 generatedOciService))
+                .addAnnotation(CodegenUtil.generatedAnnotation(PROCESSOR_TYPE,
+                                                               ociServiceTypeName,
+                                                               generatedOciService,
+                                                               "1",
+                                                               ""))
                 .type(generatedOciServiceBuilderTypeName)
                 .addInterface(ipProvider(ociServiceTypeName, builderSuffix))
                 .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON))
@@ -182,7 +182,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                     .addAnnotation(Annotation.create(Deprecated.class))
                     .addParameter(regionProvider -> regionProvider.name("regionProvider")
                             .type(regionProviderType))
-                    .addLine("this.regionProvider = regionProvider;"));
+                    .addContentLine("this.regionProvider = regionProvider;"));
         } else {
             // constructor
             classModel.addConstructor(ctor -> ctor
@@ -202,11 +202,11 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                         .type(InjectCodegenTypes.HELIDON_CONTEXT_QUERY))
                 .update(it -> {
                     if (usesRegion) {
-                        it.addLine("var builder = " + clientType + ".builder();")
-                                .addLine("regionProvider.first(query).ifPresent(builder::region);")
-                                .addLine("return Optional.of(builder);");
+                        it.addContentLine("var builder = " + clientType + ".builder();")
+                                .addContentLine("regionProvider.first(query).ifPresent(builder::region);")
+                                .addContentLine("return Optional.of(builder);");
                     } else {
-                        it.addLine("return @java.util.Optional@.of(" + clientType + ".builder());");
+                        it.addContentLine("return @java.util.Optional@.of(" + clientType + ".builder());");
                     }
                 }));
 
@@ -217,14 +217,14 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                               TypeName generatedOciService) {
         ClassModel.Builder classModel = ClassModel.builder()
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                .copyright(CopyrightHandler.copyright(PROCESSOR_TYPE,
-                                                      ociServiceTypeName,
-                                                      generatedOciService))
-                .addAnnotation(GeneratedAnnotationHandler.create(PROCESSOR_TYPE,
-                                                                 ociServiceTypeName,
-                                                                 generatedOciService,
-                                                                 "1",
-                                                                 ""))
+                .copyright(CodegenUtil.copyright(PROCESSOR_TYPE,
+                                                 ociServiceTypeName,
+                                                 generatedOciService))
+                .addAnnotation(CodegenUtil.generatedAnnotation(PROCESSOR_TYPE,
+                                                               ociServiceTypeName,
+                                                               generatedOciService,
+                                                               "1",
+                                                               ""))
                 .type(generatedOciService)
                 .addInterface(ipProvider(ociServiceTypeName, "Client"))
                 .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON))
@@ -262,8 +262,8 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                         .type(authProviderType))
                 .addParameter(builderProvider -> builderProvider.name("builderProvider")
                         .type(builderProviderType))
-                .addLine("this.authProvider = authProvider;")
-                .addLine("this.builderProvider = builderProvider;"));
+                .addContentLine("this.authProvider = authProvider;")
+                .addContentLine("this.builderProvider = builderProvider;"));
 
         // method(s)
         classModel.addMethod(first -> first
@@ -272,8 +272,9 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                 .returnType(optional(ociServiceTypeName, "Client"))
                 .addParameter(query -> query.name("query")
                         .type(InjectCodegenTypes.HELIDON_CONTEXT_QUERY))
-                .addLine(
-                        "return @java.util.Optional@.of(builderProvider.first(query).orElseThrow().build(authProvider.first"
+                .addContent("return ")
+                .addContent(Optional.class)
+                .addContentLine(".of(builderProvider.first(query).orElseThrow().build(authProvider.first"
                                 + "(query).orElseThrow()));"));
 
         return classModel;
@@ -347,7 +348,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
             return false;
         }
 
-        return switch (element.elementTypeKind()) {
+        return switch (element.kind()) {
             case FIELD -> shouldProcess(element.typeName());
             case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
                     .anyMatch(it -> shouldProcess(it.typeName()));
@@ -356,7 +357,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
     }
 
     private void process(TypedElementInfo element) {
-        switch (element.elementTypeKind()) {
+        switch (element.kind()) {
         case FIELD -> process(element.typeName());
         case METHOD, CONSTRUCTOR -> element.parameterArguments().stream()
                 .filter(it -> shouldProcess(it.typeName()))

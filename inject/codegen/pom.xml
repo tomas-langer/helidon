@@ -94,7 +94,7 @@
                             <version>${helidon.version}</version>
                         </path>
                         <path>
-                            <groupId>io.helidon.codegen</groupId>
+                            <groupId>io.helidon.builder</groupId>
                             <artifactId>helidon-builder-codegen</artifactId>
                             <version>${helidon.version}</version>
                         </path>

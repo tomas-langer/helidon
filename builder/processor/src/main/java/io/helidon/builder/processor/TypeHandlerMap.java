@@ -22,16 +22,16 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import io.helidon.codegen.classmodel.ClassModel;
-import io.helidon.codegen.classmodel.Field;
-import io.helidon.codegen.classmodel.InnerClass;
-import io.helidon.codegen.classmodel.Javadoc;
-import io.helidon.codegen.classmodel.Method;
-import io.helidon.codegen.classmodel.TypeArgument;
+import io.helidon.common.processor.GeneratorTools;
+import io.helidon.common.processor.classmodel.ClassModel;
+import io.helidon.common.processor.classmodel.Field;
+import io.helidon.common.processor.classmodel.InnerClass;
+import io.helidon.common.processor.classmodel.Javadoc;
+import io.helidon.common.processor.classmodel.Method;
+import io.helidon.common.processor.classmodel.TypeArgument;
 import io.helidon.common.types.TypeName;
 
 import static io.helidon.builder.processor.Types.STRING_TYPE;
-import static io.helidon.codegen.CodegenUtil.capitalize;
 import static io.helidon.common.types.TypeNames.LIST;
 import static io.helidon.common.types.TypeNames.MAP;
 import static io.helidon.common.types.TypeNames.OBJECT;
@@ -168,7 +168,7 @@ class TypeHandlerMap extends TypeHandler {
 
             setterAddValuesToCollection(classBuilder,
                                         configured,
-                                        "add" + capitalize(name()),
+                                        "add" + GeneratorTools.capitalize(name()),
                                         keyType,
                                         returnType,
                                         blueprintJavadoc);
@@ -176,7 +176,7 @@ class TypeHandlerMap extends TypeHandler {
         if (configured.singular()) {
             // Builder putValue(String key, String value)
             String singularName = configured.singularName();
-            String methodName = "put" + capitalize(singularName);
+            String methodName = "put" + GeneratorTools.capitalize(singularName);
 
             Method.Builder method = Method.builder()
                     .name(methodName)
@@ -359,7 +359,7 @@ class TypeHandlerMap extends TypeHandler {
                                             TypeName valueType,
                                             TypeName returnType,
                                             Javadoc blueprintJavadoc) {
-        String methodName = "add" + capitalize(singularName);
+        String methodName = "add" + GeneratorTools.capitalize(singularName);
         TypeName implType = collectionImplType(actualType());
 
         classBuilder.addMethod(builder -> builder.name(methodName)
@@ -433,7 +433,7 @@ class TypeHandlerMap extends TypeHandler {
                                    TypeName returnType,
                                    Javadoc blueprintJavadoc) {
         // declared type - add content
-        classBuilder.addMethod(builder -> builder.name("add" + capitalize(name()))
+        classBuilder.addMethod(builder -> builder.name("add" + GeneratorTools.capitalize(name()))
                 .returnType(returnType, "updated builder instance")
                 .description(blueprintJavadoc.content())
                 .addDescriptionLine("This method keeps existing values, then puts all new values into the map.")

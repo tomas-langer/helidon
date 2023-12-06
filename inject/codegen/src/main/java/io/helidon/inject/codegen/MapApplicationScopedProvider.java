@@ -5,6 +5,7 @@ import java.util.Set;
 
 import io.helidon.codegen.CodegenContext;
 import io.helidon.codegen.CodegenOptions;
+import io.helidon.codegen.Option;
 import io.helidon.codegen.spi.AnnotationMapper;
 import io.helidon.codegen.spi.AnnotationMapperProvider;
 import io.helidon.common.Weight;
@@ -18,7 +19,7 @@ public class MapApplicationScopedProvider implements AnnotationMapperProvider {
     private static final Annotation SINGLETON = Annotation.create(InjectCodegenTypes.INJECT_SINGLETON);
 
     @Override
-    public Set<String> supportedOptions() {
+    public Set<Option<?>> supportedOptions() {
         return Set.of(InjectOptions.MAP_APPLICATION_TO_SINGLETON_SCOPE);
     }
 
@@ -29,7 +30,7 @@ public class MapApplicationScopedProvider implements AnnotationMapperProvider {
 
     @Override
     public AnnotationMapper create(CodegenOptions options) {
-        return new ApplicationScopedMapper(options.option(InjectOptions.MAP_APPLICATION_TO_SINGLETON_SCOPE, false));
+        return new ApplicationScopedMapper(InjectOptions.MAP_APPLICATION_TO_SINGLETON_SCOPE.value(options));
     }
 
     private static class ApplicationScopedMapper implements AnnotationMapper {

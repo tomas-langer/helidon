@@ -56,7 +56,7 @@ class InvocationTest {
                 .serviceDescriptor(new DummyServiceDescriptor())
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
-                                     .elementTypeKind(ElementKind.METHOD)
+                                     .kind(ElementKind.METHOD)
                                      .typeName(TypeName.create(InvocationTest.class)))
                 .interceptors(List.of(first.provider, second.provider))
                 .build();
@@ -83,7 +83,7 @@ class InvocationTest {
                 .serviceDescriptor(new DummyServiceDescriptor())
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
-                                     .elementTypeKind(ElementKind.METHOD)
+                                     .kind(ElementKind.METHOD)
                                      .typeName(TypeName.create(InvocationTest.class))
                                      .build())
                 .interceptors(List.of())

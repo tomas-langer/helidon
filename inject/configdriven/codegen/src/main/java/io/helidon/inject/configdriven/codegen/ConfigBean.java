@@ -51,11 +51,11 @@ record ConfigBean(TypeName typeName,
             // this type must have a "static Type create(Config config)"
             boolean hasConfigFactoryMethod = configBeanTypeInfo.elementInfo()
                     .stream()
-                    .filter(it -> it.modifiers().contains(Modifier.STATIC))
+                    .filter(it -> it.elementModifiers().contains(Modifier.STATIC))
                     .filter(it -> it.elementName().equals("create"))
                     .filter(it -> it.typeName().equals(configBeanTypeInfo.typeName()))
                     .filter(it -> it.parameterArguments().size() == 1)
-                    .anyMatch(it -> it.parameterArguments().get(0).typeName().equals(CONFIG));
+                    .anyMatch(it -> it.parameterArguments().getFirst().typeName().equals(CONFIG));
             if (!hasConfigFactoryMethod) {
                 throw new IllegalArgumentException("ConfigBean type must have a \"static "
                                                            + configBeanTypeInfo.typeName().resolvedName()

@@ -34,6 +34,7 @@ import io.helidon.codegen.CodegenLogger;
 import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenScope;
 import io.helidon.codegen.ModuleInfo;
+import io.helidon.codegen.Option;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.spi.AnnotationMapper;
 import io.helidon.codegen.spi.ElementMapper;
@@ -261,7 +262,7 @@ class OciInjectionProcessorObserverTest {
         }
 
         @Override
-        public Set<String> supportedOptions() {
+        public Set<Option<?>> supportedOptions() {
             return null;
         }
 

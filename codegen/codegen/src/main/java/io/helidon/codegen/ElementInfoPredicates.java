@@ -59,16 +59,6 @@ public final class ElementInfoPredicates {
     }
 
     /**
-     * Predicate for field element kind.
-     *
-     * @param element typed element info to test
-     * @return whether the element represents a field
-     */
-    public static boolean isField(TypedElementInfo element) {
-        return ElementKind.FIELD == element.elementTypeKind();
-    }
-
-    /**
      * Predicate for static modifier.
      *
      * @param element typed element info to test

@@ -156,6 +156,14 @@ public final class TypeNames {
      */
     public static final TypeName HELIDON_ANNOTATION = TypeName.create(Annotation.class);
     /**
+     * Helidon element kind (enum).
+     */
+    public static final TypeName HELIDON_ELEMENT_KIND = TypeName.create(ElementKind.class);
+    /**
+     * Helidon access modifier (enum).
+     */
+    public static final TypeName HELIDON_ACCESS_MODIFIER = TypeName.create(AccessModifier.class);
+    /**
      * Type name for {@link java.lang.annotation.Retention}.
      */
     public static final TypeName RETENTION = TypeName.create("java.lang.annotation.Retention");

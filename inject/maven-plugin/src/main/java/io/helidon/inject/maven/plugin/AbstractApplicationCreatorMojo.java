@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenScope;
 import io.helidon.codegen.ModuleInfo;
 import io.helidon.codegen.ModuleInfoSourceParser;
@@ -47,7 +48,6 @@ import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.codegen.InjectOptions;
 import io.helidon.inject.runtime.ServiceBinderDefault;
 
 import org.apache.maven.model.Build;
@@ -375,7 +375,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
 
         String moduleName = moduleName();
         if (moduleName != null) {
-            options.add("-A" + InjectOptions.MODULE_NAME + "=" + moduleName);
+            options.add("-A" + CodegenOptions.CODEGEN_MODULE.name() + "=" + moduleName);
         }
 
         options.add("-A" + ApplicationOptions.PERMITTED_PROVIDER_TYPE + "=" + permittedProviderType);

@@ -6,9 +6,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.helidon.codegen.CopyrightHandler;
-import io.helidon.codegen.GeneratedAnnotationHandler;
-import io.helidon.codegen.TypesCodeGen;
+import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.Constructor;
 import io.helidon.common.types.AccessModifier;
@@ -44,14 +42,14 @@ class InterceptedTypeGenerator {
     ClassModel.Builder generate() {
         ClassModel.Builder classModel = ClassModel.builder();
 
-        classModel.copyright(CopyrightHandler.copyright(GENERATOR,
-                                                        serviceType,
-                                                        interceptedType))
-                .addAnnotation(GeneratedAnnotationHandler.create(GENERATOR,
-                                                                 serviceType,
-                                                                 interceptedType,
-                                                                 "1",
-                                                                 ""))
+        classModel.copyright(CodegenUtil.copyright(GENERATOR,
+                                                   serviceType,
+                                                   interceptedType))
+                .addAnnotation(CodegenUtil.generatedAnnotation(GENERATOR,
+                                                               serviceType,
+                                                               interceptedType,
+                                                               "1",
+                                                               ""))
                 .description("Intercepted sub-type for {@link " + serviceType.fqName() + "}.")
                 .type(interceptedType)
                 .superType(serviceType);
@@ -100,24 +98,32 @@ class InterceptedTypeGenerator {
                                 .collect(Collectors.joining(", "))
                                 + ");";
                         // body of the method
-                        it.addLine("try {")
-                                .add(interceptedMethod.isVoid() ? "" : "return ")
-                                .addLine(invokeLine)
-                                .add("}");
+                        it.addContentLine("try {")
+                                .addContent(interceptedMethod.isVoid() ? "" : "return ")
+                                .addContentLine(invokeLine)
+                                .addContent("}");
                         for (TypeName exceptionType : interceptedMethod.exceptionTypes()) {
-                            it.addLine(" catch (@" + exceptionType.fqName() + "@ helidonInject__e) {")
-                                    .addLine(" throw helidonInject__e;")
-                                    .add("}");
+                            it.addContent(" catch (")
+                                    .addContent(exceptionType)
+                                    .addContentLine(" helidonInject__e) {")
+                                    .addContentLine(" throw helidonInject__e;")
+                                    .addContent("}");
 
                         }
                         if (!interceptedMethod.exceptionTypes().contains(RUNTIME_EXCEPTION_TYPE)) {
-                            it.addLine(" catch (@" + RuntimeException.class.getName() + "@ helidonInject__e) {")
-                                    .addLine("throw helidonInject__e;")
-                                    .add("}");
+                            it.addContent(" catch (")
+                                    .addContent(RuntimeException.class)
+                                    .addContentLine(" helidonInject__e) {")
+                                    .addContentLine("throw helidonInject__e;")
+                                    .addContent("}");
                         }
-                        it.addLine(" catch (@" + Exception.class.getName() + "@ helidonInject__e) {")
-                                .addLine("throw new @" + RuntimeException.class.getName() + "@(helidonInject__e);")
-                                .addLine("}");
+                        it.addContent(" catch (")
+                                .addContent(Exception.class)
+                                .addContentLine(" helidonInject__e) {")
+                                .addContent("throw new ")
+                                .addContent(RuntimeException.class)
+                                .addContentLine("(helidonInject__e);")
+                                .addContentLine("}");
 
                     }));
 
@@ -142,22 +148,22 @@ class InterceptedTypeGenerator {
 
     private void createInvokers(Constructor.Builder cModel) {
         for (MethodDefinition interceptedMethod : interceptedMethods) {
-            cModel.add("this.")
-                    .add(interceptedMethod.invokerName)
-                    .addLine(" = helidonInject__interceptMeta.createInvoker(")
-                    .increasePadding()
-                    .addLine("helidonInject__serviceDescriptor,")
-                    .addLine("helidonInject__typeQualifiers,")
-                    .addLine("helidonInject__typeAnnotations,")
-                    .add(interceptedMethod.constantName())
-                    .addLine(",")
-                    .add("helidonInject__params -> ");
+            cModel.addContent("this.")
+                    .addContent(interceptedMethod.invokerName)
+                    .addContentLine(" = helidonInject__interceptMeta.createInvoker(")
+                    .increaseContentPadding()
+                    .addContentLine("helidonInject__serviceDescriptor,")
+                    .addContentLine("helidonInject__typeQualifiers,")
+                    .addContentLine("helidonInject__typeAnnotations,")
+                    .addContent(interceptedMethod.constantName())
+                    .addContentLine(",")
+                    .addContent("helidonInject__params -> ");
             if (interceptedMethod.isVoid()) {
-                cModel.addLine("{");
+                cModel.addContentLine("{");
             }
-            cModel.add("super.")
-                    .add(interceptedMethod.info().elementName())
-                    .add("(");
+            cModel.addContent("super.")
+                    .addContent(interceptedMethod.info().elementName())
+                    .addContent("(");
 
             List<String> allArgs = new ArrayList<>();
             List<TypedElementInfo> args = interceptedMethod.info().parameterArguments();
@@ -165,32 +171,34 @@ class InterceptedTypeGenerator {
                 TypedElementInfo arg = args.get(i);
                 allArgs.add("(" + arg.typeName().resolvedName() + ") helidonInject__params[" + i + "]");
             }
-            cModel.add(String.join(", ", allArgs));
-            cModel.add(")");
+            cModel.addContent(String.join(", ", allArgs));
+            cModel.addContent(")");
 
             if (interceptedMethod.isVoid()) {
-                cModel.addLine(";");
-                cModel.addLine("return null;");
-                cModel.add("}");
+                cModel.addContentLine(";");
+                cModel.addContentLine("return null;");
+                cModel.addContent("}");
             }
-            cModel.add(", @java.util.Set@.of(")
-                    .add(interceptedMethod.exceptionTypes()
-                                 .stream()
-                                 .map(it -> it.fqName() + ".class")
-                                 .collect(Collectors.joining(", ")))
-                    .addLine("));")
-                    .decreasePadding();
+            cModel.addContent(", ")
+                    .addContent(Set.class)
+                    .addContent(".of(")
+                    .addContent(interceptedMethod.exceptionTypes()
+                                        .stream()
+                                        .map(it -> it.fqName() + ".class")
+                                        .collect(Collectors.joining(", ")))
+                    .addContentLine("));")
+                    .decreaseContentPadding();
         }
     }
 
     private void callSuperConstructor(Constructor.Builder cModel) {
-        cModel.add("super(");
-        cModel.add(this.constructor.parameterArguments()
-                           .stream()
-                           .map(TypedElementInfo::elementName)
-                           .collect(Collectors.joining(", ")));
-        cModel.addLine(");");
-        cModel.addLine("");
+        cModel.addContent("super(");
+        cModel.addContent(this.constructor.parameterArguments()
+                                  .stream()
+                                  .map(TypedElementInfo::elementName)
+                                  .collect(Collectors.joining(", ")));
+        cModel.addContentLine(");");
+        cModel.addContentLine("");
     }
 
     private void addConstructorParameters(Constructor.Builder cModel) {
@@ -221,7 +229,7 @@ class InterceptedTypeGenerator {
                     .isFinal(true)
                     .type(TypeNames.HELIDON_TYPED_ELEMENT_INFO)
                     .name(interceptedMethod.constantName())
-                    .defaultValueContent(TypesCodeGen.toCreate(interceptedMethod.info())));
+                    .addContentCreate(interceptedMethod.info()));
         }
     }
 

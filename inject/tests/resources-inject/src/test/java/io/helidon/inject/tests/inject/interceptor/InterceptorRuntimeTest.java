@@ -287,7 +287,8 @@ class InterceptorRuntimeTest {
                 fail("Source file: " + description + " contains line [" + sourceLineNumber + "] \"" + sourceLine + "\", "
                              + "where nothing is expected.");
             }
-            assertThat("Source file: " + description + ", line number " + sourceLine, sourceLine, is(expectedLine));
+            assertThat("Source file: " + description + ", lineNumber: " + (i + 1)
+                               + ", line " + sourceLine, sourceLine, is(expectedLine));
         }
     }
 

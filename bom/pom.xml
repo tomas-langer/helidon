@@ -1344,11 +1344,6 @@
             </dependency>
             <dependency>
                 <groupId>io.helidon.inject</groupId>
-                <artifactId>helidon-inject-processor</artifactId>
-                <version>${helidon.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.helidon.inject</groupId>
                 <artifactId>helidon-inject-maven-plugin</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
