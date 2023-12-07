@@ -18,11 +18,11 @@ package io.helidon.inject.runtime;
 
 import java.util.Optional;
 
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.ServiceInfo;
 
 class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceInjectionPlanBinder.Binder {
 
@@ -33,7 +33,7 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bindTo(ServiceDescriptor<?> untrustedSp) {
+    public Binder bindTo(ServiceInfo<?> untrustedSp) {
         // don't trust what we get, but instead lookup the service provider that we carry in our services registry
         ServiceProvider<?> serviceProvider = services.serviceProvider(untrustedSp);
         Optional<? extends ServiceProviderBindable<?>> bindable = serviceProvider.serviceProviderBindable();
@@ -59,17 +59,17 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bind(IpId id, boolean useProvider, ServiceDescriptor<?> descriptor) {
+    public Binder bind(IpId id, boolean useProvider, ServiceInfo<?> descriptor) {
         return this;
     }
 
     @Override
-    public Binder bindOptional(IpId id, boolean useProvider, ServiceDescriptor<?>... descriptor) {
+    public Binder bindOptional(IpId id, boolean useProvider, ServiceInfo<?>... descriptor) {
         return this;
     }
 
     @Override
-    public Binder bindMany(IpId id, boolean useProvider, ServiceDescriptor<?>... serviceProviders) {
+    public Binder bindMany(IpId id, boolean useProvider, ServiceInfo<?>... serviceProviders) {
         return this;
     }
 

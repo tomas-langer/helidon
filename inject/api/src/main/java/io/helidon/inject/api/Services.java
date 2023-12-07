@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Optional;
 
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * The service registry. The service registry generally has knowledge about all the services that are available within your
@@ -30,18 +33,20 @@ import io.helidon.common.types.TypeName;
  * wrapper
  * provides lifecycle management on the underlying service instances that each provider "manages" in terms of activation, scoping,
  * etc. The service providers are typically created during compile-time processing when the Injection APT processor is applied to your
- * module (i.e., any service annotated using {@link jakarta.inject.Singleton},
- * {@link Contract}, {@link jakarta.inject.Inject}, etc.) during compile time. Additionally, they can be built
+ * module (i.e., any service annotated using {@link io.helidon.inject.service.Inject.Singleton},
+ * {@link io.helidon.inject.service.Inject.Contract},
+ * {@link io.helidon.inject.service.Inject.Point}, etc.) during compile time. Additionally, they can be built
  * using the Injection <i>maven-plugin</i>. Note also that the maven-plugin can be used to "compute" your applications entire DI model
  * at compile time, generating an {@link Application} class that will be used at startup when found by the
  * Injection framework.
  * <p>
  * This Services interface exposes a read-only set of methods providing access to these "managed service" providers, and available
  * via one of the lookup methods provided. Once you resolve the service provider(s), the service provider can be activated by
- * calling one of its get() methods. This is equivalent to the declarative form just using {@link jakarta.inject.Inject} instead.
+ * calling one of its get() methods. This is equivalent to the declarative form just using
+ * {@link io.helidon.inject.service.Inject.Point} instead.
  * Note that activation of a service might result in activation chaining. For example, service A injects service B, etc. When
  * service A is activated then service A's dependencies (i.e., injection points) need to be activated as well. To avoid long
- * activation chaining, it is recommended to that users strive to use {@link jakarta.inject.Provider} injection whenever possible.
+ * activation chaining, it is recommended to that users strive to use {@link java.util.function.Supplier} injection whenever possible.
  * Provider injection (a) breaks long activation chains from occurring by deferring activation until when those services are
  * really
  * needed, and (b) breaks circular references that lead to {@link ServiceProviderInjectionException} during activation (i.e.,
@@ -49,7 +54,7 @@ import io.helidon.common.types.TypeName;
  * <p>
  * The services are ranked according to the provider's comparator. The Injection framework will rank according to a strategy that
  * first looks for
- * {@link io.helidon.common.Weighted}, then {@link jakarta.annotation.Priority}, and finally by the alphabetic ordering according
+ * {@link io.helidon.common.Weighted}, and finally by the alphabetic ordering according
  * to the type name (package and class canonical name).
  */
 public interface Services {
@@ -197,7 +202,7 @@ public interface Services {
      * Retrieve all services that implement a given contract type and that are not qualified.
      *
      * @param type the type criteria to find
-     * @param name additional {@link jakarta.inject.Named} qualifier
+     * @param name additional {@link io.helidon.inject.service.Inject.Named} qualifier
      * @param <T> the type of the service being managed
      * @return the list of service providers matching criteria
      */
@@ -250,7 +255,7 @@ public interface Services {
      * @param <T> type of the service
      * @throws java.util.NoSuchElementException in case the descriptor is not part of this registry
      */
-    <T> ServiceProvider<T> serviceProvider(ServiceDescriptor<T> descriptor);
+    <T> ServiceProvider<T> serviceProvider(ServiceInfo<T> descriptor);
 
     /**
      * Implementors can provide a means to use a "special" services registry that better applies to the target injection

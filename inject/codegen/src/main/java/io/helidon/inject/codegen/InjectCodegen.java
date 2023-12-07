@@ -141,7 +141,7 @@ class InjectCodegen implements CodegenExtension {
 
             try {
                 filer.services(generator,
-                               InjectCodegenTypes.HELIDON_MODULE_COMPONENT,
+                               InjectCodegenTypes.MODULE_COMPONENT,
                                List.of(classModel.typeName()),
                                moduleComponent.originatingElements());
             } catch (Exception e) {
@@ -153,7 +153,7 @@ class InjectCodegen implements CodegenExtension {
             // check if we have `provider ModuleComponent with OurModuleComponent`
             ModuleInfo moduleInfo = currentModule.get();
             List<TypeName> typeNames = moduleInfo.provides()
-                    .get(InjectCodegenTypes.HELIDON_MODULE_COMPONENT);
+                    .get(InjectCodegenTypes.MODULE_COMPONENT);
             boolean found = false;
             if (typeNames != null) {
                 TypeName moduleComponentType = moduleComponent.newType();
@@ -162,8 +162,8 @@ class InjectCodegen implements CodegenExtension {
             }
 
             if (!found) {
-                throw new CodegenException("Please add \"provides " + InjectCodegenTypes.HELIDON_MODULE_COMPONENT.fqName()
-                                                   + "\" with " + moduleComponent.newType().fqName() + ";\" "
+                throw new CodegenException("Please add \"provides " + InjectCodegenTypes.MODULE_COMPONENT.fqName()
+                                                   + " with " + moduleComponent.newType().fqName() + ";\" "
                                                    + "to your module-info.java");
             }
         }

@@ -19,13 +19,14 @@ package io.helidon.inject.runtime.testsubjects;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionContext;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.api.InjectTypes;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.InterceptionMetadata;
 
 import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 
-public class InjectionWorldImpl__ServiceDescriptor implements ServiceSource<InjectionWorldImpl> {
+public class InjectionWorldImpl__ServiceDescriptor implements Descriptor<InjectionWorldImpl> {
     public static final InjectionWorldImpl__ServiceDescriptor INSTANCE = new InjectionWorldImpl__ServiceDescriptor();
     private static final TypeName TYPE_NAME = TypeName.create(InjectionWorldImpl.class);
     private static final Set<TypeName> CONTRACTS = Set.of(TypeName.create(InjectionWorld.class));
@@ -51,5 +52,10 @@ public class InjectionWorldImpl__ServiceDescriptor implements ServiceSource<Inje
     @Override
     public double weight() {
         return DEFAULT_INJECT_WEIGHT;
+    }
+
+    @Override
+    public Set<TypeName> scopes() {
+        return Set.of(InjectTypes.SINGLETON);
     }
 }

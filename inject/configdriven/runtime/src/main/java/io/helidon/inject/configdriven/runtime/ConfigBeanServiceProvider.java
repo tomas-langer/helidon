@@ -5,8 +5,8 @@ import java.util.Optional;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.ServiceInfo;
 
 class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
     private final ConfigBeanServiceDescriptor<CB> serviceDescriptor;
@@ -35,7 +35,7 @@ class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
     }
 
     @Override
-    public ServiceDescriptor<CB> descriptor() {
+    public ServiceInfo<CB> descriptor() {
         return serviceDescriptor;
     }
 

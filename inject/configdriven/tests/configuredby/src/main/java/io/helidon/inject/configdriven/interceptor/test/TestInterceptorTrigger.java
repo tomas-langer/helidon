@@ -19,7 +19,7 @@ package io.helidon.inject.configdriven.interceptor.test;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import io.helidon.inject.api.InterceptedTrigger;
+import io.helidon.inject.service.InterceptedTrigger;
 
 @InterceptedTrigger
 @Retention(RetentionPolicy.CLASS)

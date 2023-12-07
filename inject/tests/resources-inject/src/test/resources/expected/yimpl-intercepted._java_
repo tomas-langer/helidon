@@ -27,9 +27,9 @@ import io.helidon.common.types.Annotation;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.Invoker;
-import io.helidon.inject.api.Qualifier;
+import io.helidon.inject.service.InterceptionMetadata;
+import io.helidon.inject.service.Invoker;
+import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.tests.plain.interceptor.IA;
 
 /**
@@ -54,7 +54,7 @@ public class YImpl__Intercepted extends YImpl {
             .typeName(TypeName.create("void"))
             .elementName("methodIB")
             .addAnnotation(Annotation.builder()
-                    .typeName(TypeName.create("jakarta.inject.Named"))
+                    .typeName(TypeName.create("io.helidon.inject.service.Inject.Named"))
                     .putValue("value", "methodIB")
                     .build()
             )
@@ -69,7 +69,7 @@ public class YImpl__Intercepted extends YImpl {
                     .typeName(TypeName.create("java.lang.String"))
                     .elementName("val")
                     .addAnnotation(Annotation.builder()
-                            .typeName(TypeName.create("jakarta.inject.Named"))
+                            .typeName(TypeName.create("io.helidon.inject.service.Inject.Named"))
                             .putValue("value", "arg1")
                             .build()
                     )
@@ -81,7 +81,7 @@ public class YImpl__Intercepted extends YImpl {
             .typeName(TypeName.create("java.lang.String"))
             .elementName("methodIB2")
             .addAnnotation(Annotation.builder()
-                    .typeName(TypeName.create("jakarta.inject.Named"))
+                    .typeName(TypeName.create("io.helidon.inject.service.Inject.Named"))
                     .putValue("value", "methodIB2")
                     .build()
             )
@@ -96,7 +96,7 @@ public class YImpl__Intercepted extends YImpl {
                     .typeName(TypeName.create("java.lang.String"))
                     .elementName("val")
                     .addAnnotation(Annotation.builder()
-                            .typeName(TypeName.create("jakarta.inject.Named"))
+                            .typeName(TypeName.create("io.helidon.inject.service.Inject.Named"))
                             .putValue("value", "arg1")
                             .build()
                     )

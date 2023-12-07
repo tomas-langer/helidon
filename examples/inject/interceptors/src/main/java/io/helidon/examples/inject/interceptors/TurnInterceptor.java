@@ -17,8 +17,8 @@
 package io.helidon.examples.inject.interceptors;
 
 import io.helidon.inject.api.ClassNamed;
-import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.InvocationContext;
+import io.helidon.inject.service.Interceptor;
 
 import jakarta.inject.Singleton;
 

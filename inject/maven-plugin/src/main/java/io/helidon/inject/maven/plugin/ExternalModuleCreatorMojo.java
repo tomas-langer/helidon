@@ -34,9 +34,9 @@ import io.helidon.codegen.ModuleInfo;
 import io.helidon.codegen.scan.ScanModuleInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Activator;
-import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.codegen.InjectOptions;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.Qualifier;
 
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;

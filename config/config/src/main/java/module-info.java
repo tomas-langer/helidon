@@ -27,13 +27,12 @@ import io.helidon.common.features.api.HelidonFlavor;
         in = HelidonFlavor.SE
 )
 module io.helidon.config {
-
-    requires io.helidon.inject.api;
+    // this cannot be requires static, as we provide a service from this module
+    requires io.helidon.inject.service;
 
     requires static io.helidon.common.features.api;
-
-    requires static jakarta.inject;
-    requires static jakarta.annotation;
+    // only required for generated code that can only be used from modules that bring this dependency in
+    requires static io.helidon.common.types;
 
     requires transitive io.helidon.common.config;
     requires transitive io.helidon.common.media.type;
@@ -55,7 +54,7 @@ module io.helidon.config {
             with io.helidon.config.PropertiesConfigParser;
     provides io.helidon.common.config.spi.ConfigProvider
             with io.helidon.config.HelidonConfigProvider;
-    provides io.helidon.inject.api.ModuleComponent
+    provides io.helidon.inject.service.ModuleComponent
             with io.helidon.config.HelidonInjection__ModuleComponent;
 
     // needed when running with modules - to make private methods accessible

@@ -16,13 +16,13 @@
 
 package io.helidon.inject.tests.inject.tbox;
 
-import io.helidon.inject.api.Contract;
 import io.helidon.inject.api.OptionallyNamed;
+import io.helidon.inject.service.Inject;
 
 /**
  * Testing.
  */
-@Contract
+@Inject.Contract
 public interface Hammer extends Tool, OptionallyNamed {
 
     @Override

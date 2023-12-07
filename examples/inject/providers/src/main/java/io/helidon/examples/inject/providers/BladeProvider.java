@@ -25,9 +25,9 @@ import io.helidon.examples.inject.basics.Big;
 import io.helidon.examples.inject.basics.Little;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 
 import jakarta.inject.Singleton;
 

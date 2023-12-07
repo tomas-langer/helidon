@@ -24,11 +24,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
-
-import jakarta.inject.Inject;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Qualifier;
 
 /**
  * Implementation of {@code Async}. Default executor accessed from {@link FaultTolerance#executor()}.
@@ -41,7 +40,7 @@ class AsyncImpl implements Async {
     private final AsyncConfig config;
 
     // this must only be invoked when within Pico, so we can use pico services
-    @Inject
+    @Inject.Point
     AsyncImpl(AsyncConfig config) {
         this.executor = config.executor()
                 .or(() -> config.executorName().flatMap(AsyncImpl::executorService))

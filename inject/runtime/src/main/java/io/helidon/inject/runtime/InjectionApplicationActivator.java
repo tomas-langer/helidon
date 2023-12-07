@@ -20,10 +20,11 @@ import java.util.Set;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Application;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.Qualifier;
 
 /**
  * Basic {@link Application} implementation. An application is-a service provider also.
@@ -31,7 +32,7 @@ import io.helidon.inject.api.ServiceSource;
 class InjectionApplicationActivator extends ServiceProviderBase<Application> {
 
     private InjectionApplicationActivator(InjectionServices injectionServices,
-                                          ServiceSource<Application> descriptor) {
+                                          Descriptor<Application> descriptor) {
         super(injectionServices, descriptor);
     }
 
@@ -39,7 +40,7 @@ class InjectionApplicationActivator extends ServiceProviderBase<Application> {
                                                 Application app) {
 
         Set<Qualifier> qualifiers = Set.of(Qualifier.createNamed(app.name()));
-        ServiceSource<Application> descriptor = new AppServiceDescriptor(app.getClass(), qualifiers);
+        Descriptor<Application> descriptor = new AppServiceDescriptor(app.getClass(), qualifiers);
         InjectionApplicationActivator activator = new InjectionApplicationActivator(injectionServices,
                                                                                     descriptor);
 
@@ -47,7 +48,7 @@ class InjectionApplicationActivator extends ServiceProviderBase<Application> {
         return activator;
     }
 
-    private static class AppServiceDescriptor implements ServiceSource<Application> {
+    private static class AppServiceDescriptor implements Descriptor<Application> {
         private static final TypeName APP_TYPE = TypeName.create(Application.class);
         private final TypeName appType;
         private final Set<Qualifier> qualifiers;
@@ -70,6 +71,11 @@ class InjectionApplicationActivator extends ServiceProviderBase<Application> {
         @Override
         public Set<Qualifier> qualifiers() {
             return qualifiers;
+        }
+
+        @Override
+        public Set<TypeName> scopes() {
+            return Set.of(InjectTypes.SINGLETON);
         }
     }
 }

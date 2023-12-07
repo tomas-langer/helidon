@@ -136,6 +136,13 @@
                         </serviceTypeQualifier>
                     </serviceTypeQualifiers>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.helidon.inject</groupId>
+                        <artifactId>helidon-inject-codegen-jakarta</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

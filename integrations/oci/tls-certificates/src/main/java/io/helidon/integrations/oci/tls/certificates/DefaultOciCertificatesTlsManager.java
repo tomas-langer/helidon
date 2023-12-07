@@ -27,6 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.TrustManagerFactory;
@@ -43,8 +44,6 @@ import io.helidon.inject.api.Services;
 import io.helidon.integrations.oci.tls.certificates.spi.OciCertificatesDownloader;
 import io.helidon.integrations.oci.tls.certificates.spi.OciPrivateKeyDownloader;
 
-import jakarta.inject.Provider;
-
 /**
  * The default implementation (service loader and provider-driven) implementation of {@link OciCertificatesTlsManager}.
  *
@@ -58,8 +57,8 @@ class DefaultOciCertificatesTlsManager extends ConfiguredTlsManager implements O
     private final AtomicReference<String> lastVersionDownloaded = new AtomicReference<>("");
 
     // these will only be non-null when enabled
-    private Provider<OciPrivateKeyDownloader> pkDownloader;
-    private Provider<OciCertificatesDownloader> certDownloader;
+    private Supplier<OciPrivateKeyDownloader> pkDownloader;
+    private Supplier<OciCertificatesDownloader> certDownloader;
     private ScheduledExecutorService asyncExecutor;
     private Async async;
     private TlsConfig tlsConfig;

@@ -8,7 +8,7 @@ The declarative API is small and based upon annotations. This is because most of
 * [@ExteralContracts](src/main/java/io/helidon/inject/api/ExternalContracts.java)
 * [@RunLevel](src/main/java/io/helidon/inject/api/RunLevel.java)
 
-The programmatic API is typically used to manually lookup and activate services (those that are typically annotated with <i>@jakarta.inject.Singleton</i> for example) directly. The main entry points for programmatic access can start from one of these two types:
+The programmatic API is typically used to manually lookup and activate services (those that are typically annotated with <i>@io.helidon.inject.service.Inject.Singleton</i> for example) directly. The main entry points for programmatic access can start from one of these two types:
 
 * [InjectionServices](src/main/java/io/helidon/inject/api/InjectionServices.java)
 * [Services](src/main/java/io/helidon/inject/api/Services.java)
@@ -21,7 +21,7 @@ Note that this module only contains the common types for a Helidon Injection ser
 In this example the service is declared to be one-per JVM. Also note that <i>ApplicationScoped</i> is effectively the same as <i>Singleton</i> scoped services in a (micro)services framework such as Helidon.
 
 ```java
-@jakarta.inject.Singleton
+@io.helidon.inject.service.Inject.Singleton
 class MySingletonService implements ServiceContract {
 }
 
@@ -31,10 +31,13 @@ Also note that in the above example <i>ServiceContract</i> is typically the <i>C
 
 ### Provider
 Provider extends the <i>Singleton</i> to delegate dynamic behavior to service creation. In other frameworks this would typically be called a <i>Factory</i>, <i>Producer</i>, or <i>PerLookup</i>.
+We use the function `Supplier` interface instead, as it is part of the JDK and does not require additional interface.
 
 ```java
-@jakarta.inject.Singleton
-class MySingletonProvider implements jakarta.inject.Provider<ServiceContract> {
+import java.util.function.Supplier;
+
+@io.helidon.inject.service.Inject.Singleton
+class MySingletonProvider implements Supplier<ServiceContract> {
     @Override
     ServiceContract get() {
         ...
@@ -45,11 +48,11 @@ class MySingletonProvider implements jakarta.inject.Provider<ServiceContract> {
 Helidon Injection delegates the cardinality of to the provider implementation for which instance to return to the caller. However, note that the instances returned are not "owned" by the Injection framework - unless those instances are looked up out of the <i>Services</i> registry.
 
 ### InjectionPointProvider
-Here the standard <i>jakarta.inject.Provider<></i> from above is extended to support contextual knowledge of "who is asking" to be injected with the service. In this way the provider implementation can provide the "right" instance based upon the caller's context.
+Here the standard <i>Supplier<></i> from above is extended to support contextual knowledge of "who is asking" to be injected with the service. In this way the provider implementation can provide the "right" instance based upon the caller's context.
 
 ```java
-@Singleton
-@Named("*")
+@Inject.Singleton
+@Inject.Named("*")
 public class BladeProvider implements InjectionPointProvider<AbstractBlade> {
     @Override
     public Optional<AbstractBlade> first(
@@ -110,3 +113,21 @@ public class MainToolBox implements ToolBox {
 }
 
 ```
+
+## Jakarta and Javax interoperability
+
+Helidon inject supports both Jakarta and Javax annotations to define services, and to provide injections, including
+`Provider` injections.
+This is achieved through mapping annotation to Helidon annotations at annotation processing time (or when analyzing code from a Maven plugin).
+Provider mapping is added as needed. In case you decide to use Javax or Jakarta `Provider` type, please
+make sure it is available both at compilation time and at runtime, as the generated code needs to map Helidon `Supplier` to appropriate `Provider` instance.
+
+Supported annotations and types (both from `javax` and `jakarta` namespaces):
+
+- `@Inject`
+- `@Singleton`
+- `@PostConstruct`
+- `@PreDestroy`
+- `@Qualifier`
+- `@Named`
+- `Provider<?>`

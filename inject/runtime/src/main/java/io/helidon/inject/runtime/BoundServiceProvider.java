@@ -5,10 +5,11 @@ import java.util.Optional;
 
 import io.helidon.common.LazyValue;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.Phase;
+import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
+import io.helidon.inject.service.IpId;
 
 class BoundServiceProvider<T> extends DescribedServiceProvider<T> implements ServiceProvider<T> {
     private final ServiceProvider<T> binding;
@@ -21,7 +22,7 @@ class BoundServiceProvider<T> extends DescribedServiceProvider<T> implements Ser
         this.binding = binding;
         ContextualServiceQuery query = ContextualServiceQuery.builder()
                 .injectionPointInfo(ipId)
-                .serviceInfoCriteria(ipId.toCriteria())
+                .serviceInfoCriteria(ServiceInfoCriteria.create(ipId))
                 .expected(false)
                 .build();
         this.instance = LazyValue.create(() -> binding.first(query).orElse(null));

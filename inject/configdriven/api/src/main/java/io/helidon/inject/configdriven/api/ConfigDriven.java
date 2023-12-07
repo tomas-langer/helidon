@@ -21,7 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import jakarta.inject.Qualifier;
+import io.helidon.inject.service.Inject;
 
 /**
  * A config driven service is based on a prototype that is configured from the root of configuration
@@ -45,7 +45,7 @@ import jakarta.inject.Qualifier;
 @Documented
 @Retention(RetentionPolicy.CLASS)
 @Target(java.lang.annotation.ElementType.TYPE)
-@Qualifier
+@Inject.Qualifier
 public @interface ConfigDriven {
     /**
      * The prototype class that drives this config driven.

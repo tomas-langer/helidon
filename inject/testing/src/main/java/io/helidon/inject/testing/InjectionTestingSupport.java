@@ -29,11 +29,10 @@ import io.helidon.inject.api.Bootstrap;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.InjectionServicesHolder;
-import io.helidon.inject.api.ServiceBinder;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.ServiceBinderDefault;
+import io.helidon.inject.service.Descriptor;
 
 /**
  * Supporting helper utilities unit-testing Injection Services.
@@ -56,10 +55,10 @@ public class InjectionTestingSupport {
      *
      * @param injectionServices the services instance to bind into
      * @param serviceProvider   the service provider to bind
-     * @see ServiceBinder
+     * @see io.helidon.inject.service.ServiceBinder
      */
     public static void bind(InjectionServices injectionServices,
-                            ServiceSource<?> serviceProvider) {
+                            Descriptor<?> serviceProvider) {
         ServiceBinderDefault binder = ServiceBinderDefault.create(injectionServices, InjectionTestingSupport.class.getSimpleName(), true);
         binder.bind(serviceProvider);
     }

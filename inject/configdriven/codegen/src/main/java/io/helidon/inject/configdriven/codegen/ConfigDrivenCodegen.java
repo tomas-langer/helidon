@@ -11,6 +11,7 @@ import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
+import io.helidon.inject.codegen.InjectCodegenTypes;
 import io.helidon.inject.codegen.InjectionCodegenContext;
 import io.helidon.inject.codegen.RoundContext;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
@@ -148,7 +149,7 @@ class ConfigDrivenCodegen implements InjectCodegenExtension {
                     .addContentLine(".create(")
                     .addContent(CONFIG_TYPE)
                     .addContent(".empty()), ")
-                    .addContent(NAMED_INSTANCE_TYPE)
+                    .addContent(InjectCodegenTypes.INJECT_NAMED)
                     .addContentLine(".DEFAULT_NAME));");
         } else {
             method.addContent("return ")
@@ -179,7 +180,7 @@ class ConfigDrivenCodegen implements InjectCodegenExtension {
                     .addContent("<>(")
                     .addContent(configBean.typeName())
                     .addContent(".create(beanConfig), ")
-                    .addContent(NAMED_INSTANCE_TYPE)
+                    .addContent(InjectCodegenTypes.INJECT_NAMED)
                     .addContentLine(".DEFAULT_NAME));");
         }
     }

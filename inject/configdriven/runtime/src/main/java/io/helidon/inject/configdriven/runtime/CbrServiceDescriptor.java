@@ -3,16 +3,17 @@ package io.helidon.inject.configdriven.runtime;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionContext;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.api.InjectTypes;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.InterceptionMetadata;
 
 /**
  * A descriptor for config driven registry. Must be public, as other services that inject to it may need to
  * use this type.
  * For most services, such a type is code generated.
  */
-public class CbrServiceDescriptor implements ServiceSource<ConfigBeanRegistryImpl> {
+public class CbrServiceDescriptor implements Descriptor<ConfigBeanRegistryImpl> {
     /**
      * Singleton instance bound to binder.
      */
@@ -46,5 +47,10 @@ public class CbrServiceDescriptor implements ServiceSource<ConfigBeanRegistryImp
     @Override
     public Object instantiate(InjectionContext ctx, InterceptionMetadata interceptionMetadata) {
         return ConfigBeanRegistry.instance();
+    }
+
+    @Override
+    public Set<TypeName> scopes() {
+        return Set.of(InjectTypes.SINGLETON);
     }
 }

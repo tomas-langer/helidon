@@ -21,8 +21,8 @@ import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
-import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.IpId;
 
 /**
  * Represents the injection plan targeting a given {@link io.helidon.inject.api.ServiceProvider}.
@@ -42,7 +42,7 @@ interface InjectionPlanBlueprint {
      *
      * @return the injection point info for this element
      */
-    @Option.Type("io.helidon.inject.api.IpId")
+    @Option.Type("io.helidon.inject.service.IpId")
     IpId injectionPointInfo();
 
     /**

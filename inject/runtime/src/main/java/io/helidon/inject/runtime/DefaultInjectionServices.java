@@ -54,12 +54,12 @@ import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.InjectorOptions;
 import io.helidon.inject.api.Metrics;
-import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.Resettable;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.ServiceInfo;
 
 import static io.helidon.inject.runtime.DefaultInjectionServicesConfig.PROVIDER;
 
@@ -516,7 +516,7 @@ class DefaultInjectionServices implements InjectionServices, Resettable {
             serviceProviders = serviceProviders.stream()
                     .filter(sp -> sp.currentActivationPhase().eligibleForDeactivation())
                     .collect(Collectors.toList()); // must be a mutable list, as we sort it in next step
-            serviceProviders.sort(Comparator.comparingInt(ServiceDescriptor::runLevel));
+            serviceProviders.sort(Comparator.comparingInt(ServiceInfo::runLevel));
             doFinalShutdown(serviceProviders);
 
             // finally, clear everything

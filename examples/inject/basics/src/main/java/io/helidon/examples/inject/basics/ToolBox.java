@@ -22,7 +22,6 @@ import java.util.Optional;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.api.RunLevel;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
@@ -36,7 +35,7 @@ import jakarta.inject.Singleton;
  * Here {@link Weight} is used that is higher than the default, making it more preferred in weighted rankings.
  */
 @Singleton
-@RunLevel(RunLevel.STARTUP)
+@io.helidon.inject.service.Inject.RunLevel(io.helidon.inject.service.Inject.RunLevel.STARTUP)
 @Weight(Weighted.DEFAULT_WEIGHT + 1)
 public class ToolBox {
 

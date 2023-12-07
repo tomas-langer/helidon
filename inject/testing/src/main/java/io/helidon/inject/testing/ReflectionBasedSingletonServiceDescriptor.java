@@ -22,19 +22,20 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionContext;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProviderInjectionException;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.InterceptionMetadata;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * Creates a simple reflection based service provider - for testing purposes only!
  *
  * @param <T> the service type
  */
-public class ReflectionBasedSingletonServiceDescriptor<T> implements ServiceSource<T> {
+public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<T> {
     private final Class<T> serviceType;
     private final ServiceInfo<T> serviceInfo;
 
@@ -47,7 +48,7 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements ServiceSour
     /**
      * Generates a service provider eligible for binding into the service registry with the following proviso:
      * <ul>
-     * <li>The service type will be of {@code jakarta.inject.Singleton} scope</li>
+     * <li>The service type will be of {@code io.helidon.inject.service.Inject.Singleton} scope</li>
      * <li>The service type will be created reflectively, and will expect to have an empty constructor</li>
      * <li>The service type will not be able to provide its dependencies, nor will it be able to accept injection</li>
      * <li>The service type will not be able to participate in lifecycle -
@@ -62,10 +63,10 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements ServiceSour
      * @param serviceInfo the service info basic descriptor, or null to generate a default (empty) placeholder
      * @param <T>         the class of the service type
      * @return the service provider capable of being bound to the services registry
-     * @see InjectionTestingSupport#bind(io.helidon.inject.api.InjectionServices, io.helidon.inject.api.ServiceSource)
+     * @see InjectionTestingSupport#bind(io.helidon.inject.api.InjectionServices, io.helidon.inject.service.Descriptor)
      */
-    public static <T> ServiceSource<T> create(Class<T> serviceType,
-                                                  ServiceInfo<T> serviceInfo) {
+    public static <T> Descriptor<T> create(Class<T> serviceType,
+                                           ServiceInfo<T> serviceInfo) {
         Objects.requireNonNull(serviceType);
         Objects.requireNonNull(serviceInfo);
 

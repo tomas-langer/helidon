@@ -17,7 +17,7 @@
 package io.helidon.inject.api;
 
 /**
- * Represents the {@link jakarta.annotation.PostConstruct} method.
+ * Represents the {@link io.helidon.inject.service.Inject.PostConstruct} method.
  *
  * @see Activator
  */

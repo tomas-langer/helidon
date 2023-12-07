@@ -35,6 +35,6 @@ module io.helidon.inject.tests.inject {
     exports io.helidon.inject.tests.inject.stacking;
     exports io.helidon.inject.tests.inject.tbox;
 
-    provides io.helidon.inject.api.ModuleComponent with io.helidon.inject.tests.inject.HelidonInjection__ModuleComponent;
+    provides io.helidon.inject.service.ModuleComponent with io.helidon.inject.tests.inject.HelidonInjection__ModuleComponent;
 	
 }

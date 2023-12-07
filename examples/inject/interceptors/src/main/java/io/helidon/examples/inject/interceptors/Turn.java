@@ -16,7 +16,7 @@
 
 package io.helidon.examples.inject.interceptors;
 
-import io.helidon.inject.api.InterceptedTrigger;
+import io.helidon.inject.service.InterceptedTrigger;
 
 @InterceptedTrigger
 public @interface Turn {

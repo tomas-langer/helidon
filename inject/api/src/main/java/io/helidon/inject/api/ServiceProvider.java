@@ -21,15 +21,16 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * Provides management lifecycle around services.
  *
  * @param <T> the type that this service provider manages
  */
-public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPointProvider<T> {
+public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvider<T> {
 
     /**
      * Identifies the service provider physically and uniquely.
@@ -53,7 +54,8 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
      * Does the service provide singletons, does it always produce the same result for every call to {@link #get()}.
      * I.e., if the managed service implements Provider or
      * {@link InjectionPointProvider} then this typically is considered not a singleton provider.
-     * I.e., If the managed services is NOT {@link Singleton}, then it will be treated as per request / dependent
+     * I.e., If the managed services is NOT {@link io.helidon.inject.service.Inject.Singleton},
+     * then it will be treated as per request / dependent
      * scope.
      * Note that this is similar in nature to RequestScope, except the "official" request scope is bound to the
      * web request. Here, we are speaking about contextually any caller asking for a new instance of the service in
@@ -74,7 +76,7 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
      *
      * @return descriptor of this service
      */
-    ServiceDescriptor<T> descriptor();
+    ServiceInfo<T> descriptor();
 
     /**
      * The current activation phase for this service provider.
@@ -87,8 +89,8 @@ public interface ServiceProvider<T> extends ServiceDescriptor<T>, InjectionPoint
      * The agent/instance to be used for binding this service provider to the injectable application that was code generated.
      *
      * @return the service provider that should be used for binding, or empty if this provider does not support binding
-     * @see ModuleComponent
-     * @see ServiceBinder
+     * @see io.helidon.inject.service.ModuleComponent
+     * @see io.helidon.inject.service.ServiceBinder
      * @see ServiceProviderBindable
      */
     default Optional<ServiceProviderBindable<T>> serviceProviderBindable() {

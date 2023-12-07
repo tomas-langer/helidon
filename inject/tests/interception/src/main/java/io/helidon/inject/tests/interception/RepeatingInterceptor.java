@@ -19,9 +19,9 @@ package io.helidon.inject.tests.interception;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.helidon.inject.api.Interceptor;
-import io.helidon.inject.api.InvocationContext;
 import io.helidon.inject.api.InvocationException;
+import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.InvocationContext;
 
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;

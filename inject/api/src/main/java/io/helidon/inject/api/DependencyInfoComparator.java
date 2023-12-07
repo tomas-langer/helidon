@@ -19,6 +19,8 @@ package io.helidon.inject.api;
 import java.io.Serializable;
 import java.util.Comparator;
 
+import io.helidon.inject.service.IpId;
+
 /**
  * Comparator appropriate for {@link DependencyInfo}.
  */

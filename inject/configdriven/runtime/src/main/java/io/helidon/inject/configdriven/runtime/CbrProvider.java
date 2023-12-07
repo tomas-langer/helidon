@@ -9,8 +9,8 @@ import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.runtime.ServiceProviderBase;
+import io.helidon.inject.service.Descriptor;
 
 class CbrProvider extends ServiceProviderBase<ConfigBeanRegistryImpl>
         implements ServiceProvider<ConfigBeanRegistryImpl>,
@@ -21,7 +21,7 @@ class CbrProvider extends ServiceProviderBase<ConfigBeanRegistryImpl>
     private final InjectionServices injectionServices;
 
     protected CbrProvider(InjectionServices injectionServices,
-                          ServiceSource<ConfigBeanRegistryImpl> serviceSource) {
+                          Descriptor<ConfigBeanRegistryImpl> serviceSource) {
         super(injectionServices, serviceSource);
         this.injectionServices = injectionServices;
     }

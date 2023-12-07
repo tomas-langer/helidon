@@ -20,9 +20,8 @@ public class InjectionExtensionProvider implements InjectCodegenExtensionProvide
         return Set.of(InjectCodegenTypes.INJECT_SINGLETON,
                       InjectCodegenTypes.INJECT_PRE_DESTROY,
                       InjectCodegenTypes.INJECT_POST_CONSTRUCT,
-                      InjectCodegenTypes.INJECT_INJECT,
-                      InjectCodegenTypes.HELIDON_INTERCEPTED,
-                      InjectCodegenTypes.HELIDON_DESCRIBE);
+                      InjectCodegenTypes.INJECT_POINT,
+                      InjectCodegenTypes.INJECT_SERVICE);
     }
 
     @Override

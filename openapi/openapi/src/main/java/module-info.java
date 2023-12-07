@@ -33,7 +33,6 @@ module io.helidon.openapi {
     requires io.helidon.servicecommon;
 
     requires org.yaml.snakeyaml;
-    requires io.helidon.inject.api;
 
     exports io.helidon.openapi;
     exports io.helidon.openapi.spi;

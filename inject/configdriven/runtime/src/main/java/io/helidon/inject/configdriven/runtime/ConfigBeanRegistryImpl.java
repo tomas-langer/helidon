@@ -35,11 +35,11 @@ import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesHolder;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.Resettable;
 import io.helidon.inject.configdriven.api.ConfigBean;
 import io.helidon.inject.configdriven.api.ConfigBeanFactory;
 import io.helidon.inject.configdriven.api.NamedInstance;
+import io.helidon.inject.service.Qualifier;
 
 /**
  * The default implementation for {@link ConfigBeanRegistry}.

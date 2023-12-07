@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+import io.helidon.inject.service.IpId;
 
 /**
  * Log entry for lifecycle related events (i.e., activation startup and deactivation shutdown).

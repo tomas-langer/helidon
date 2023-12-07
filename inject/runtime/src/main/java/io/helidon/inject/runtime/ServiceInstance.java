@@ -5,21 +5,21 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.helidon.inject.api.InjectTypes;
-import io.helidon.inject.api.InjectionContext;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.InterceptionMetadata;
 
 interface ServiceInstance<T> extends Supplier<T> {
     static <T> ServiceInstance<T> create(InterceptionMetadata interceptionMetadata,
                                          InjectionContext ctx,
-                                         ServiceSource<T> source) {
+                                         Descriptor<T> source) {
         if (source.scopes().contains(InjectTypes.SINGLETON)) {
             return new SingletonInstance<>(ctx, interceptionMetadata, source);
         }
         return new OnDemandInstance<>(ctx, interceptionMetadata, source);
     }
 
-    static <T> ServiceInstance<T> create(ServiceSource<T> source, T instance) {
+    static <T> ServiceInstance<T> create(Descriptor<T> source, T instance) {
         return new ExplicitInstance<>(source, instance);
     }
 
@@ -36,22 +36,22 @@ interface ServiceInstance<T> extends Supplier<T> {
 
     }
 
-    private static <T> T inject(ServiceSource<T> source,
+    private static <T> T inject(Descriptor<T> source,
                                 InjectionContext ctx,
                                 InterceptionMetadata interceptionMetadata,
                                 T instance) {
 
         // using linked set, so we can see in debugging what was injected first
-        Set<ServiceSource.MethodSignature> injected = new LinkedHashSet<>();
+        Set<Descriptor.MethodSignature> injected = new LinkedHashSet<>();
         source.inject(ctx, interceptionMetadata, injected, instance);
         return instance;
     }
 
     class ExplicitInstance<T> implements ServiceInstance<T> {
-        private final ServiceSource<T> source;
+        private final Descriptor<T> source;
         private final T instance;
 
-        ExplicitInstance(ServiceSource<T> source, T instance) {
+        ExplicitInstance(Descriptor<T> source, T instance) {
             this.source = source;
             this.instance = instance;
         }
@@ -70,11 +70,11 @@ interface ServiceInstance<T> extends Supplier<T> {
     class SingletonInstance<T> implements ServiceInstance<T> {
         private final InjectionContext ctx;
         private final InterceptionMetadata interceptionMetadata;
-        private final ServiceSource<T> source;
+        private final Descriptor<T> source;
 
         private volatile T instance;
 
-        private SingletonInstance(InjectionContext ctx, InterceptionMetadata interceptionMetadata, ServiceSource<T> source) {
+        private SingletonInstance(InjectionContext ctx, InterceptionMetadata interceptionMetadata, Descriptor<T> source) {
             this.ctx = ctx;
             this.interceptionMetadata = interceptionMetadata;
             this.source = source;
@@ -110,9 +110,9 @@ interface ServiceInstance<T> extends Supplier<T> {
     class OnDemandInstance<T> implements ServiceInstance<T> {
         private final InjectionContext ctx;
         private final InterceptionMetadata interceptionMetadata;
-        private final ServiceSource<T> source;
+        private final Descriptor<T> source;
 
-        OnDemandInstance(InjectionContext ctx, InterceptionMetadata interceptionMetadata, ServiceSource<T> source) {
+        OnDemandInstance(InjectionContext ctx, InterceptionMetadata interceptionMetadata, Descriptor<T> source) {
             this.ctx = ctx;
             this.interceptionMetadata = interceptionMetadata;
             this.source = source;

@@ -23,7 +23,7 @@ import java.util.Optional;
  * and thereby works in conjunction with the {@link ServiceBinder} during injection service registry
  * initialization.
  * <p>
- * The only guarantee the provider implementation has is ensuring that {@link ModuleComponent} instances
+ * The only guarantee the provider implementation has is ensuring that {@link io.helidon.inject.service.ModuleComponent} instances
  * are bound to the <i>Services</i> instances, as well as informed on the module name.
  * <p>
  * Generally this class should be called internally by the framework, and typically occurs only during initialization sequences.
@@ -34,7 +34,7 @@ import java.util.Optional;
  */
 public interface ServiceProviderBindable<T> extends ServiceProvider<T> {
     /**
-     * Returns true if this service provider instance is an {@link Interceptor}.
+     * Returns true if this service provider instance is an {@link io.helidon.inject.service.Interceptor}.
      *
      * @return true if this service provider is an interceptor
      */

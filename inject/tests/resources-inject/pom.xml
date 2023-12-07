@@ -42,15 +42,9 @@
             <artifactId>helidon-config</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.config</groupId>
-            <artifactId>helidon-config-metadata</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
             <groupId>io.helidon.inject</groupId>
             <artifactId>helidon-inject-maven-plugin</artifactId>
-            <scope>provided</scope> <!-- reactor dependency ordering only -->
-            <optional>true</optional>
+            <optional>true</optional>  <!-- reactor dependency ordering only -->
         </dependency>
         <dependency>
             <groupId>io.helidon.inject.tests</groupId>
@@ -108,6 +102,11 @@
                             <version>${helidon.version}</version>
                         </path>
                         <path>
+                            <groupId>io.helidon.inject</groupId>
+                            <artifactId>helidon-inject-codegen-jakarta</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
                             <groupId>io.helidon.codegen</groupId>
                             <artifactId>helidon-codegen-helidon-copyright</artifactId>
                             <version>${helidon.version}</version>
@@ -123,6 +122,11 @@
                     <dependency>
                         <groupId>io.helidon.inject</groupId>
                         <artifactId>helidon-inject-codegen</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.helidon.inject</groupId>
+                        <artifactId>helidon-inject-codegen-jakarta</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
                     <dependency>
@@ -154,14 +158,13 @@
                 </executions>
                 <configuration>
                     <compilerArgs>
-                        <arg>-Ainject.debug=${inject.debug}</arg>
                         <arg>-Ainject.autoAddNonContractInterfaces=true</arg>
                     </compilerArgs>
                     <permittedProviderTypes>NAMED</permittedProviderTypes>
                     <permittedProviderTypeNames>
                         <permittedProviderTypeName>io.helidon.inject.tests.inject.provider.MyServices.MyConcreteClassContractPerRequestIPProvider</permittedProviderTypeName>
-                        <permittedProviderTypeName>io.helidon.inject.tests.inject.provider.MyServices.MyConcreteClassContractPerRequestProvider</permittedProviderTypeName>
-                        <permittedProviderTypeName>io.helidon.inject.tests.inject.ASerialProviderImpl</permittedProviderTypeName>
+                        <permittedProviderTypeName>io.helidon.inject.tests.inject.provider.MyConcreteClassContractPerRequestProvider__InjectSupplier</permittedProviderTypeName>
+                        <permittedProviderTypeName>io.helidon.inject.tests.inject.ASerialProviderImpl__InjectSupplier</permittedProviderTypeName>
                         <permittedProviderTypeName>io.helidon.inject.tests.inject.tbox.impl.BladeProvider</permittedProviderTypeName>
                     </permittedProviderTypeNames>
                 </configuration>

@@ -20,7 +20,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.helidon.inject.api.Resettable;
-import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.tests.inject.stacking.CommonContract;
 import io.helidon.inject.tests.inject.tbox.Awl;
 
@@ -31,7 +30,7 @@ import jakarta.inject.Named;
 import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
-@RunLevel(RunLevel.STARTUP)
+@io.helidon.inject.service.Inject.RunLevel(io.helidon.inject.service.Inject.RunLevel.STARTUP)
 @Singleton
 @Named("testing")
 public class TestingSingleton implements Resettable, CommonContract {

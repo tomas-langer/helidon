@@ -100,9 +100,9 @@ The Injection API provides types that are generally useful at compile time to as
 ----
 
 
- * {@link io.helidon.inject.api.Contract} - signifies that the type can be used for lookup in the service registry.
- * {@link io.helidon.inject.api.ExternalContracts} - same as Contract, but applied to the implementation class instead.
- * {@link io.helidon.inject.api.RunLevel} - ascribes meaning for when the service should start.
+ * {@link io.helidon.inject.service.Inject.Contract} - signifies that the type can be used for lookup in the service registry.
+ * {@link io.helidon.inject.service.Inject.ExternalContracts} - same as Contract, but applied to the implementation class instead.
+ * {@link io.helidon.inject.service.Inject.RunLevel} - ascribes meaning for when the service should start.
 
 
 

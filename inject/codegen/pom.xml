@@ -53,10 +53,6 @@
             <artifactId>helidon-codegen-class-model</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.codegen</groupId>
-            <artifactId>helidon-codegen-helidon-copyright</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.helidon.common</groupId>
             <artifactId>helidon-common-config</artifactId>
         </dependency>

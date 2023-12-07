@@ -38,7 +38,7 @@ package io.helidon.inject.api;
  *  <li>Responsible to logging to the {@link ActivationLog} - see {@link InjectionServices#activationLog()}.</li>
  * </ol>
  *
- * The activator also supports the inverse process of deactivation, where any {@link jakarta.annotation.PreDestroy}
+ * The activator also supports the inverse process of deactivation, where any {@link io.helidon.inject.service.Inject.PreDestroy}
  * methods may be called, and which moves the service to a terminal {@link io.helidon.inject.api.Phase#DESTROYED phase}.
  */
 public interface Activator<T> {
@@ -52,7 +52,7 @@ public interface Activator<T> {
     ActivationResult activate(ActivationRequest activationRequest);
 
     /**
-     * Deactivate a managed service. This will trigger any {@link jakarta.annotation.PreDestroy} method on the
+     * Deactivate a managed service. This will trigger any {@link io.helidon.inject.service.Inject.PreDestroy} method on the
      * underlying service type instance. The service will read terminal {@link io.helidon.inject.api.Phase#DESTROYED}
      * phase, regardless of its activation status.
      *

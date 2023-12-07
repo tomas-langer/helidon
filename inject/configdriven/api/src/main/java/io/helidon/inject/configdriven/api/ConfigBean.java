@@ -21,7 +21,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import jakarta.inject.Qualifier;
+import io.helidon.inject.service.Inject;
 
 /**
  * This configured prototype should be acting as a config bean. This means that if appropriate configuration
@@ -31,7 +31,7 @@ import jakarta.inject.Qualifier;
 @Documented
 @Retention(RetentionPolicy.CLASS)
 @Target(java.lang.annotation.ElementType.TYPE)
-@Qualifier
+@Inject.Qualifier
 public @interface ConfigBean {
     /**
      * An instance of this bean will be created if there are no instances discovered by the configuration provider(s) post

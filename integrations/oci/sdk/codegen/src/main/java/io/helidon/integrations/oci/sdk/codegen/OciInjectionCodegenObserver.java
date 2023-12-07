@@ -37,7 +37,6 @@ import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.inject.codegen.InjectCodegenTypes;
-import io.helidon.inject.codegen.InjectUtil;
 import io.helidon.inject.codegen.InjectionCodegenContext;
 import io.helidon.inject.codegen.RoundContext;
 import io.helidon.inject.codegen.spi.InjectCodegenObserver;
@@ -102,12 +101,12 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
         CodegenOptions options = ctx.options();
 
         Set<String> typenameExceptions = new HashSet<>();
-        typenameExceptions.addAll(options.asSet(OciInjectCodegenObserverProvider.OPTION_TYPENAME_EXCEPTIONS));
+        typenameExceptions.addAll(OciInjectCodegenObserverProvider.OPTION_TYPENAME_EXCEPTIONS.value(options));
         typenameExceptions.addAll(loadMetaConfig(TYPENAME_EXCEPTIONS_FILENAME));
         this.typenameExceptions = typenameExceptions;
 
         Set<String> noDotExceptions = new HashSet<>();
-        noDotExceptions.addAll(options.asSet(OciInjectCodegenObserverProvider.OPTION_NO_DOT_EXCEPTIONS));
+        noDotExceptions.addAll(OciInjectCodegenObserverProvider.OPTION_NO_DOT_EXCEPTIONS.value(options));
         noDotExceptions.addAll(loadMetaConfig(NO_DOT_EXCEPTIONS_FILENAME));
         this.noDotExceptions = noDotExceptions;
     }
@@ -178,7 +177,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
             // constructor
             classModel.addConstructor(ctor -> ctor
                     .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
                     .addAnnotation(Annotation.create(Deprecated.class))
                     .addParameter(regionProvider -> regionProvider.name("regionProvider")
                             .type(regionProviderType))
@@ -187,7 +186,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
             // constructor
             classModel.addConstructor(ctor -> ctor
                     .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
                     .addAnnotation(Annotation.create(Deprecated.class)));
         }
 
@@ -199,7 +198,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                 .addAnnotation(Annotation.create(Override.class))
                 .returnType(optional(ociServiceTypeName, builderSuffix))
                 .addParameter(query -> query.name("query")
-                        .type(InjectCodegenTypes.HELIDON_CONTEXT_QUERY))
+                        .type(InjectCodegenTypes.CONTEXT_QUERY))
                 .update(it -> {
                     if (usesRegion) {
                         it.addContentLine("var builder = " + clientType + ".builder();")
@@ -233,7 +232,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                                        .putValue("value", DEFAULT_INJECT_WEIGHT)
                                        .build())
                 .addAnnotation(Annotation.builder()
-                                       .typeName(InjectCodegenTypes.HELIDON_EXTERNAL_CONTRACTS)
+                                       .typeName(InjectCodegenTypes.INJECT_EXTERNAL_CONTRACTS)
                                        .putValue("value", ociServiceTypeName)
                                        .build());
 
@@ -256,7 +255,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
         // constructor
         classModel.addConstructor(ctor -> ctor
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_INJECT))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
                 .addAnnotation(Annotations.DEPRECATED)
                 .addParameter(authProvider -> authProvider.name("authProvider")
                         .type(authProviderType))
@@ -271,7 +270,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                 .addAnnotation(Annotation.create(Override.class))
                 .returnType(optional(ociServiceTypeName, "Client"))
                 .addParameter(query -> query.name("query")
-                        .type(InjectCodegenTypes.HELIDON_CONTEXT_QUERY))
+                        .type(InjectCodegenTypes.CONTEXT_QUERY))
                 .addContent("return ")
                 .addContent(Optional.class)
                 .addContentLine(".of(builderProvider.first(query).orElseThrow().build(authProvider.first"
@@ -291,7 +290,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
 
     boolean shouldProcess(TypeName typeName) {
         if (!typeName.typeArguments().isEmpty()
-                && InjectUtil.isProvider(typeName) || typeName.isOptional()) {
+                && ctx.isProvider(typeName) || typeName.isOptional()) {
             typeName = typeName.typeArguments().get(0);
         }
 
@@ -338,13 +337,13 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
     }
 
     private static TypeName ipProvider(TypeName provided, String suffix) {
-        return TypeName.builder(InjectCodegenTypes.HELIDON_INJECTION_POINT_PROVIDER)
+        return TypeName.builder(InjectCodegenTypes.INJECTION_POINT_PROVIDER)
                 .addTypeArgument(TypeName.create(provided.fqName() + suffix))
                 .build();
     }
 
     private boolean shouldProcess(TypedElementInfo element) {
-        if (!element.hasAnnotation(InjectCodegenTypes.INJECT_INJECT)) {
+        if (!element.hasAnnotation(InjectCodegenTypes.INJECT_POINT)) {
             return false;
         }
 
@@ -368,7 +367,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
     }
 
     private void process(TypeName ociServiceTypeName) {
-        if (InjectUtil.isProvider(ociServiceTypeName)
+        if (ctx.isProvider(ociServiceTypeName)
                 || ociServiceTypeName.isOptional()) {
             ociServiceTypeName = ociServiceTypeName.typeArguments().getFirst();
         }

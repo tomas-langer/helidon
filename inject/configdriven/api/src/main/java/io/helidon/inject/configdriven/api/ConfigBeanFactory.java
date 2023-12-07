@@ -24,6 +24,7 @@ import java.util.function.Function;
 
 import io.helidon.common.config.Config;
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.service.Inject;
 
 /**
  * Used from generated code.
@@ -81,9 +82,9 @@ public interface ConfigBeanFactory<T> {
             instances.put(name, new NamedInstance<>(factory.apply(childNode), name));
         }
 
-        if (wantDefault && !instances.containsKey(NamedInstance.DEFAULT_NAME)) {
-            instances.put(NamedInstance.DEFAULT_NAME,
-                          new NamedInstance<>(factory.apply(Config.empty()), NamedInstance.DEFAULT_NAME));
+        if (wantDefault && !instances.containsKey(Inject.Named.DEFAULT_NAME)) {
+            instances.put(Inject.Named.DEFAULT_NAME,
+                          new NamedInstance<>(factory.apply(Config.empty()), Inject.Named.DEFAULT_NAME));
         }
 
         return List.copyOf(instances.values());

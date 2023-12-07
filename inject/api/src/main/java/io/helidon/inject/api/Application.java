@@ -16,6 +16,8 @@
 
 package io.helidon.inject.api;
 
+import io.helidon.inject.service.Inject;
+
 /**
  * An Application instance, if available at runtime, will be expected to provide a blueprint for all service provider's injection
  * points.
@@ -25,9 +27,9 @@ package io.helidon.inject.api;
  * <p>
  * Note: instances of this type are not eligible for injection.
  *
- * @see ModuleComponent
+ * @see io.helidon.inject.service.ModuleComponent
  */
-@Contract
+@Inject.Contract
 public interface Application {
 
     /**

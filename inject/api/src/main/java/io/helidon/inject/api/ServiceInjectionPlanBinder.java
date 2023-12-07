@@ -16,6 +16,9 @@
 
 package io.helidon.inject.api;
 
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.ServiceInfo;
+
 /**
  * Responsible for registering the injection plan to the services in the service registry.
  */
@@ -27,12 +30,12 @@ public interface ServiceInjectionPlanBinder {
      * @param serviceDescriptor the service to receive the injection plan.
      * @return the binder to use for binding the injection plan to the service provider
      */
-    Binder bindTo(ServiceDescriptor<?> serviceDescriptor);
+    Binder bindTo(ServiceInfo<?> serviceDescriptor);
 
     /**
      * The binder builder for the service plan.
      *
-     * @see InjectionPointInfo
+     * @see io.helidon.inject.service.IpId
      */
     interface Binder {
 
@@ -47,7 +50,7 @@ public interface ServiceInjectionPlanBinder {
          */
         Binder bind(IpId id,
                     boolean useProvider,
-                    ServiceDescriptor<?> descriptor);
+                    ServiceInfo<?> descriptor);
 
         /**
          * Bind to an optional field, with zero or one descriptors.
@@ -59,7 +62,7 @@ public interface ServiceInjectionPlanBinder {
          */
         Binder bindOptional(IpId id,
                             boolean useProvider,
-                            ServiceDescriptor<?>... descriptor);
+                            ServiceInfo<?>... descriptor);
 
         /**
          * Binds a list of service providers to the injection point identified by the id.
@@ -72,7 +75,7 @@ public interface ServiceInjectionPlanBinder {
          */
         Binder bindMany(IpId id,
                         boolean useProvider,
-                        ServiceDescriptor<?>... serviceProviders);
+                        ServiceInfo<?>... serviceProviders);
 
         /**
          * Represents a null bind.

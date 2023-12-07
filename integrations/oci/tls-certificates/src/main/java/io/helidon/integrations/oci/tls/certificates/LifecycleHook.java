@@ -18,11 +18,11 @@ package io.helidon.integrations.oci.tls.certificates;
 
 import java.util.function.Consumer;
 
-import io.helidon.inject.api.Contract;
+import io.helidon.inject.service.Inject;
 
 // consider making this public and relocating this to somewhere under common or inject
 // it is here to ensure proper shutdown (decoupled from mp) and presenting non-intermittent test failures
-@Contract
+@Inject.Contract
 interface LifecycleHook {
 
     void registerStartupConsumer(Consumer<Object> consumer);

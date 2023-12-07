@@ -18,7 +18,6 @@
  * Injection maven-plugin module.
  */
 module io.helidon.inject.maven.plugin {
-    uses io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
     requires io.helidon.builder.api;
     requires io.helidon.common;
@@ -28,8 +27,6 @@ module io.helidon.inject.maven.plugin {
     requires io.helidon.codegen.scan;
     requires io.helidon.codegen.compiler;
     requires io.helidon.inject.codegen;
-
-    requires jakarta.inject;
 
     requires maven.artifact;
     requires maven.model;
@@ -41,4 +38,6 @@ module io.helidon.inject.maven.plugin {
     requires io.github.classgraph;
 
     exports io.helidon.inject.maven.plugin;
+
+    uses io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 }

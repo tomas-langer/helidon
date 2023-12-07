@@ -535,7 +535,7 @@ public final class AptTypeInfoFactory extends TypeInfoFactoryBase {
                     boolean fromCache = true;
                     if (meta == null) {
                         fromCache = false;
-                        TypeElement typeElement = elements.getTypeElement(it.name());
+                        TypeElement typeElement = elements.getTypeElement(it.fqName());
                         if (typeElement != null) {
                             List<Annotation> metaAnnotations = createAnnotations(ctx, typeElement, elements);
                             result.put(it, new ArrayList<>(metaAnnotations));

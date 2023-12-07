@@ -23,10 +23,10 @@ import io.helidon.config.Config;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 
 import com.oracle.bmc.Region;
 import org.junit.jupiter.api.AfterAll;

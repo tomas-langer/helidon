@@ -20,9 +20,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
-import io.helidon.inject.api.ClassNamed;
-import io.helidon.inject.api.ExternalContracts;
-import io.helidon.inject.api.InterceptedTrigger;
+import io.helidon.inject.service.InterceptedTrigger;
 import io.helidon.inject.tests.inject.ClassNamedX;
 import io.helidon.inject.tests.plain.interceptor.IA;
 import io.helidon.inject.tests.plain.interceptor.IB;
@@ -38,9 +36,9 @@ import jakarta.inject.Singleton;
  * Also note that interception was triggered by the presence of the {@link TestNamed} and {@link InterceptorBasedAnno} triggers.
  */
 @Singleton
-@ClassNamed(ClassNamedX.class)
+@io.helidon.inject.service.Inject.ClassNamed(ClassNamedX.class)
 @TestNamed("TestNamed-ClassX")
-@ExternalContracts(value = Closeable.class, moduleNames = {"test1", "test2"})
+@io.helidon.inject.service.Inject.ExternalContracts(value = Closeable.class)
 @SuppressWarnings("unused")
 public class XImpl implements IA, IB, Closeable {
     @Inject

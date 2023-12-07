@@ -15,9 +15,9 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 import io.helidon.inject.codegen.InjectOptions;
+import io.helidon.inject.service.Qualifier;
 
 import io.github.classgraph.ClassInfo;
 
@@ -25,7 +25,7 @@ import io.github.classgraph.ClassInfo;
  * An equivalent of inject annotation processor that takes care of all extensions, and provides only valid annotations.
  */
 class HelidonScanProcessor {
-    private static final Annotation DESCRIBE = Annotation.create(InjectCodegenTypes.HELIDON_DESCRIBE);
+    private static final Annotation DESCRIBE = Annotation.create(InjectCodegenTypes.INJECT_SERVICE);
     private static final TypeName GENERATOR = TypeName.create(HelidonScanProcessor.class);
     private static final Annotation QUALIFIER_ANNOTATION = Annotation.create(InjectCodegenTypes.INJECT_QUALIFIER);
 

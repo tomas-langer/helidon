@@ -13,14 +13,24 @@ import io.helidon.codegen.spi.CodegenExtensionProvider;
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
+import io.helidon.inject.codegen.spi.InjectCodegenObserverProvider;
 
 public class InjectCodegenProvider implements CodegenExtensionProvider {
     private static final List<InjectCodegenExtensionProvider> EXTENSIONS =
             HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenExtensionProvider.class,
                                                            InjectCodegen.class.getClassLoader()))
                     .asList();
-    private static final Set<Option<?>> SUPPORTED_OPTIONS = EXTENSIONS.stream()
-            .flatMap(it -> it.supportedOptions().stream())
+
+    private static final List<InjectCodegenObserverProvider> OBSERVER_PROVIDERS =
+            HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenObserverProvider.class,
+                                                           InjectionExtension.class.getClassLoader()))
+                    .asList();
+
+    private static final Set<Option<?>> SUPPORTED_OPTIONS = Stream.concat(
+                    EXTENSIONS.stream()
+                            .flatMap(it -> it.supportedOptions().stream()),
+                    OBSERVER_PROVIDERS.stream()
+                            .flatMap(it -> it.supportedOptions().stream()))
             .collect(Collectors.toUnmodifiableSet());
 
     private static final Set<TypeName> SUPPORTED_ANNOTATIONS = EXTENSIONS.stream()
@@ -31,7 +41,7 @@ public class InjectCodegenProvider implements CodegenExtensionProvider {
             Stream.concat(EXTENSIONS.stream()
                                   .flatMap(it -> it.supportedAnnotationPackages()
                                           .stream()),
-                          Stream.of("jakarta."))
+                          Stream.of("io.helidon.inject.service."))
                     .collect(Collectors.toUnmodifiableSet());
 
     @Override

@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import io.helidon.common.types.Annotation;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Qualifier;
 
 /**
  * Utility methods for qualifiers.
@@ -50,14 +52,14 @@ public final class Qualifiers {
 
         // criteria has a qualifier while service does not
         // only return true if criteria contains ONLY wildcard named qualifier
-        if (criteria.size() == 1 && criteria.contains(CommonQualifiers.WILDCARD_NAMED)) {
+        if (criteria.size() == 1 && criteria.contains(Qualifier.WILDCARD_NAMED)) {
             return true;
         }
 
-        if (src.contains(CommonQualifiers.WILDCARD_NAMED)) {
+        if (src.contains(Qualifier.WILDCARD_NAMED)) {
             // if provider has any name, and criteria ONLY asks for named, we match
             if (criteria.stream()
-                    .allMatch(it -> it.typeName().equals(InjectTypes.JAKARTA_NAMED))) {
+                    .allMatch(it -> it.typeName().equals(InjectTypes.NAMED))) {
                 return true;
             }
         }
@@ -66,8 +68,8 @@ public final class Qualifiers {
             if (src.contains(criteriaQualifier)) {
                 // NOP;
                 continue;
-            } else if (criteriaQualifier.typeName().equals(CommonQualifiers.NAMED)) {
-                if (criteriaQualifier.equals(CommonQualifiers.WILDCARD_NAMED)
+            } else if (criteriaQualifier.typeName().equals(Inject.Named.TYPE_NAME)) {
+                if (criteriaQualifier.equals(Qualifier.WILDCARD_NAMED)
                         || criteriaQualifier.value().isEmpty()) {
                     // any Named qualifier will match ...
                     boolean hasSameTypeAsCriteria = src.stream()
@@ -75,7 +77,7 @@ public final class Qualifiers {
                     if (hasSameTypeAsCriteria) {
                         continue;
                     }
-                } else if (src.contains(CommonQualifiers.WILDCARD_NAMED)) {
+                } else if (src.contains(Qualifier.WILDCARD_NAMED)) {
                     continue;
                 }
                 return false;

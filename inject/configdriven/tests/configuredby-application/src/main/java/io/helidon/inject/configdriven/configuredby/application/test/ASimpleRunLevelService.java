@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Objects;
 
 import io.helidon.inject.api.Resettable;
-import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.configdriven.configuredby.test.ASingletonServiceContract;
 import io.helidon.inject.configdriven.tests.config.FakeWebServerContract;
 
@@ -31,7 +30,7 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 @Singleton
-@RunLevel(RunLevel.STARTUP)
+@io.helidon.inject.service.Inject.RunLevel(io.helidon.inject.service.Inject.RunLevel.STARTUP)
 public class ASimpleRunLevelService implements Resettable {
 
     static int postConstructCount;

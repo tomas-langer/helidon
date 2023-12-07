@@ -18,14 +18,14 @@ package io.helidon.inject.tests.inject.tbox;
 
 import java.util.List;
 
-import io.helidon.inject.api.Contract;
+import io.helidon.inject.service.Inject;
 
 import jakarta.inject.Provider;
 
 /**
  * Testing.
  */
-@Contract
+@Inject.Contract
 public interface ToolBox {
 
     /**

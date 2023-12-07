@@ -20,7 +20,6 @@ import java.util.Optional;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.api.RunLevel;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
@@ -28,7 +27,7 @@ import jakarta.inject.Singleton;
 
 @Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 1)
-@RunLevel(1)
+@io.helidon.inject.service.Inject.RunLevel(1)
 @Named("InterceptedImpl")
 public class CommonContractImpl implements CommonContract {
 

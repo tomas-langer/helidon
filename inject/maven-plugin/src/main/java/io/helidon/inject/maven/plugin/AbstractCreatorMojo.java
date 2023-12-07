@@ -33,8 +33,8 @@ import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.ModuleInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.ModuleComponent;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.plugin.AbstractMojo;

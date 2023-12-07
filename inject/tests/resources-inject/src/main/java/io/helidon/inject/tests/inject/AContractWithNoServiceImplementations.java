@@ -16,8 +16,8 @@
 
 package io.helidon.inject.tests.inject;
 
-import io.helidon.inject.api.Contract;
+import io.helidon.inject.service.Inject;
 
-@Contract
+@Inject.Contract
 interface AContractWithNoServiceImplementations {
 }

@@ -29,13 +29,12 @@ import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.LazyValue;
 import io.helidon.http.Method;
 import io.helidon.inject.configdriven.api.ConfigDriven;
+import io.helidon.inject.service.Inject;
 import io.helidon.webclient.spi.ClientProtocolProvider;
 import io.helidon.webclient.spi.HttpClientSpi;
 import io.helidon.webclient.spi.HttpClientSpiProvider;
 import io.helidon.webclient.spi.Protocol;
 import io.helidon.webclient.spi.ProtocolConfig;
-
-import jakarta.inject.Inject;
 
 /**
  * Base class for HTTP implementations of {@link WebClient}.
@@ -75,7 +74,7 @@ class LoomClient implements WebClient {
      * @param config builder the subclass is built from
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
-    @Inject
+    @Inject.Point
     protected LoomClient(WebClientConfig config) {
         this.config = config;
         this.protocolConfigs = ProtocolConfigs.create(config.protocolConfigs());

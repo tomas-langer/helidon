@@ -26,12 +26,12 @@ import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.inject.api.ActivationResult;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.testing.InjectionTestingSupport;
 import io.helidon.inject.tests.inject.ASerialProviderImpl;
 import io.helidon.inject.tests.inject.ClassNamedY;
@@ -233,7 +233,7 @@ class ToolBoxTest {
                    injectionServices.metrics().orElseThrow().lookupCount().orElseThrow(),
                    equalTo(1));
         List<ServiceProvider<?>> runLevelServices = services
-                .lookupAll(ServiceInfoCriteria.builder().runLevel(RunLevel.STARTUP).build(), true);
+                .lookupAll(ServiceInfoCriteria.builder().runLevel(Inject.RunLevel.STARTUP).build(), true);
         List<String> desc = runLevelServices.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat(desc,
                    contains("TestingSingleton:INIT"));

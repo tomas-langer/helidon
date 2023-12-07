@@ -21,17 +21,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.Interceptor;
-import io.helidon.inject.api.InvocationContext;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InvocationException;
-import io.helidon.inject.api.Invoker;
-import io.helidon.inject.api.ServiceDescriptor;
+import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.InvocationContext;
+import io.helidon.inject.service.Invoker;
+import io.helidon.inject.service.ServiceInfo;
 
-import jakarta.inject.Provider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -275,7 +276,7 @@ class InvocationTest {
         assertThat(calls.size(), equalTo(1));
     }
 
-    static class ConcreteProvider<T> implements Provider<T> {
+    static class ConcreteProvider<T> implements Supplier<T> {
         private final T delegate;
 
         ConcreteProvider(T delegate) {
@@ -356,10 +357,15 @@ class InvocationTest {
         }
     }
 
-    private static class DummyServiceDescriptor implements ServiceDescriptor<DummyServiceDescriptor> {
+    private static class DummyServiceDescriptor implements ServiceInfo<DummyServiceDescriptor> {
         @Override
         public TypeName serviceType() {
             return TypeName.create(DummyServiceDescriptor.class);
+        }
+
+        @Override
+        public Set<TypeName> scopes() {
+            return Set.of(InjectTypes.SINGLETON);
         }
     }
 }

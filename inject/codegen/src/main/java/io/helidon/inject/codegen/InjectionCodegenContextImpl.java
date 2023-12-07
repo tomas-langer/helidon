@@ -4,19 +4,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ServiceLoader;
 
 import io.helidon.codegen.ClassCode;
 import io.helidon.codegen.CodegenContext;
 import io.helidon.codegen.CodegenContextDelegate;
 import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.codegen.spi.InjectAssignmentProvider;
+import io.helidon.inject.codegen.spi.ProviderSupport;
 
 class InjectionCodegenContextImpl extends CodegenContextDelegate implements InjectionCodegenContext {
     private final List<ClassCode> descriptors = new ArrayList<>();
     private final List<ClassCode> nonDescriptors = new ArrayList<>();
+    private final List<ProviderSupport> providerSupports;
 
     InjectionCodegenContextImpl(CodegenContext context) {
         super(context);
+
+        this.providerSupports = HelidonServiceLoader.create(ServiceLoader.load(InjectAssignmentProvider.class,
+                                                                               InjectionCodegenContextImpl.class.getClassLoader()))
+                .stream()
+                .map(it -> it.create(context))
+                .toList();
     }
 
     @Override
@@ -81,6 +92,19 @@ class InjectionCodegenContextImpl extends CodegenContextDelegate implements Inje
     @Override
     public List<ClassCode> descriptors() {
         return descriptors;
+    }
+
+    @Override
+    public Assignment assignment(TypeName typeName, String valueSource) {
+        for (ProviderSupport providerSupport : providerSupports) {
+
+            Optional<Assignment> assignment = providerSupport.assignment(typeName, valueSource);
+            if (assignment.isPresent()) {
+                return assignment.get();
+            }
+
+        }
+        return new Assignment(typeName, it -> it.addContent(valueSource));
     }
 
     private static String descriptorClassName(TypeName typeName) {

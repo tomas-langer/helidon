@@ -21,6 +21,7 @@ import java.util.Set;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+import io.helidon.inject.service.IpId;
 
 /**
  * Aggregates the set of {@link InjectionPointInfo}'s that are dependent upon a specific and common

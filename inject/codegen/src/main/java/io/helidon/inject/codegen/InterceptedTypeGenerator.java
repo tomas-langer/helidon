@@ -19,7 +19,6 @@ import static io.helidon.codegen.CodegenUtil.toConstantName;
 
 class InterceptedTypeGenerator {
     private static final TypeName GENERATOR = TypeName.create(InterceptedTypeGenerator.class);
-    private static final TypeName INVOKER_TYPE = TypeName.create("io.helidon.inject.api.Invoker");
     private static final TypeName RUNTIME_EXCEPTION_TYPE = TypeName.create(RuntimeException.class);
     private final TypeName serviceType;
     private final TypeName descriptorType;
@@ -65,7 +64,7 @@ class InterceptedTypeGenerator {
     }
 
     private static TypeName invokerType(TypeName type) {
-        return TypeName.builder(INVOKER_TYPE)
+        return TypeName.builder(InjectCodegenTypes.INVOKER)
                 .addTypeArgument(type.boxed())
                 .build();
     }
@@ -132,7 +131,7 @@ class InterceptedTypeGenerator {
 
     private void generateConstructor(ClassModel.Builder classModel) {
         classModel.addConstructor(constructor -> constructor
-                .addParameter(interceptMeta -> interceptMeta.type(InjectCodegenTypes.HELIDON_INTERCEPTION_METADATA)
+                .addParameter(interceptMeta -> interceptMeta.type(InjectCodegenTypes.INTERCEPTION_METADATA)
                         .name("helidonInject__interceptMeta"))
                 .addParameter(descriptor -> descriptor.type(descriptorType)
                         .name("helidonInject__serviceDescriptor"))

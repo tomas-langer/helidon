@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.Qualifier;
+import io.helidon.inject.service.Qualifier;
 
 import org.apache.maven.plugins.annotations.Parameter;
 

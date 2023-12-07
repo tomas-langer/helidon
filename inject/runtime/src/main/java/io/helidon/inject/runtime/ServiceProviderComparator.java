@@ -18,18 +18,17 @@ package io.helidon.inject.runtime;
 
 import java.io.Serializable;
 import java.util.Comparator;
+import java.util.function.Supplier;
 
 import io.helidon.common.Weights;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ServiceProvider;
 
-import jakarta.inject.Provider;
-
 /**
  * A comparator appropriate for service providers, first using its {@link io.helidon.common.Weight} and then service type name
  * to determine its natural ordering.
  */
-public class ServiceProviderComparator implements Comparator<Provider<?>>, Serializable {
+public class ServiceProviderComparator implements Comparator<Supplier<?>>, Serializable {
     private static final ServiceProviderComparator INSTANCE = new ServiceProviderComparator();
 
     private ServiceProviderComparator() {
@@ -45,8 +44,8 @@ public class ServiceProviderComparator implements Comparator<Provider<?>>, Seria
     }
 
     @Override
-    public int compare(Provider<?> p1,
-                       Provider<?> p2) {
+    public int compare(Supplier<?> p1,
+                       Supplier<?> p2) {
         if (p1 == p2) {
             return 0;
         }

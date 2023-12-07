@@ -16,18 +16,20 @@
 
 package io.helidon.inject.api;
 
+import io.helidon.inject.service.Inject;
+
 /**
  * Some components may require start when Helidon is bootstrapped, such as WebServer (to open server sockets).
  * This interface is a Helidon Injection contract, that allows us to discover all startable services and start them
  * on boot when desired.
  * <p>
  * This contract should be used for cases where the construction of the object (using constructor, and maybe
- * {@link jakarta.annotation.PostConstruct} - where we create a fully configured instance) is different from its start
- * transition (such as opening sockets, connecting to remote messaging queues, streams, topics, etc.).
+ * {@link io.helidon.inject.service.Inject.PostConstruct} - where we create a fully configured instance) is different from
+ * its start transition (such as opening sockets, connecting to remote messaging queues, streams, topics, etc.).
  *
- * @see Helidon#start()
+ * @see io.helidon.inject.api.Helidon#start()
  */
-@Contract
+@Inject.Contract
 public interface Startable {
     /**
      * Start this service.

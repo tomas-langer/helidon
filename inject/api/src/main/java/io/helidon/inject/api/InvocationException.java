@@ -17,7 +17,7 @@
 package io.helidon.inject.api;
 
 /**
- * Wraps any checked exceptions that are thrown during the {@link Interceptor} invocations.
+ * Wraps any checked exceptions that are thrown during the {@link io.helidon.inject.service.Interceptor} invocations.
  */
 public class InvocationException extends InjectionServiceProviderException {
 

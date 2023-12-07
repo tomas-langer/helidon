@@ -1,0 +1,34 @@
+package io.helidon.inject.runtime;
+
+import java.util.Map;
+import java.util.NoSuchElementException;
+import java.util.function.Supplier;
+
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.IpId;
+
+public class HelidonInjectionContext implements InjectionContext {
+    private final Map<IpId, Supplier<?>> injectionPlans;
+
+    HelidonInjectionContext(Map<IpId, Supplier<?>> injectionPlans) {
+        this.injectionPlans = injectionPlans;
+    }
+
+    public static InjectionContext create(Map<IpId, Supplier<?>> injectionPLan) {
+        return new HelidonInjectionContext(injectionPLan);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked") // we have a map, and that cannot have type to instance values
+    public <T> T param(IpId paramId) {
+        Supplier<?> injectionSupplier = injectionPlans.get(paramId);
+        if (injectionSupplier == null) {
+            throw new NoSuchElementException("Cannot resolve injection id " + paramId + " for service "
+                                                     + paramId.service().fqName()
+                                                     + ", this dependency was not declared in "
+                                                     + "the service descriptor");
+        }
+
+        return (T) injectionSupplier.get();
+    }
+}

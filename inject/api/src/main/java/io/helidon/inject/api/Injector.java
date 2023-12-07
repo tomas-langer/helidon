@@ -16,6 +16,8 @@
 
 package io.helidon.inject.api;
 
+import io.helidon.inject.service.Descriptor;
+
 /**
  * Used to perform programmatic activation and injection.
  * <p>
@@ -35,19 +37,19 @@ public interface Injector {
      * @throws InjectionServiceProviderException if an injection or activation problem occurs
      * @see Activator
      */
-    ActivationResult activateInject(ServiceSource<?> serviceOrServiceProvider,
+    ActivationResult activateInject(Descriptor<?> serviceOrServiceProvider,
                                     InjectorOptions opts) throws InjectionServiceProviderException;
 
     /**
      * Called to deactivate a managed service or service provider, putting it into {@link Phase#DESTROYED}.
-     * If a managed service has a {@link jakarta.annotation.PreDestroy} annotated method then it will be called during
+     * If a managed service has a {@link io.helidon.inject.service.Inject.PreDestroy} annotated method then it will be called during
      * this lifecycle event.
      *
      * @param serviceOrServiceProvider the service provider or instance registered and being managed
      * @param opts                     the injector options
      * @return the result of the deactivation
      * @throws InjectionServiceProviderException if a problem occurs
-     * @see DeActivator
+     * @see io.helidon.inject.api.Activator
      */
     ActivationResult deactivate(ServiceProvider<?> serviceOrServiceProvider,
                                 InjectorOptions opts) throws InjectionServiceProviderException;

@@ -22,11 +22,10 @@ import java.util.Set;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
-
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * A proxy service provider created internally by the framework.
@@ -55,8 +54,8 @@ public class VoidServiceProvider extends DescribedServiceProvider<Void> {
         return Optional.empty();
     }
 
-    private static class VoidDescriptor implements ServiceDescriptor<Void> {
-        static final Set<TypeName> SCOPES = Set.of(TypeName.create(Singleton.class));
+    private static class VoidDescriptor implements ServiceInfo<Void> {
+        static final Set<TypeName> SCOPES = Set.of(InjectTypes.SINGLETON);
         private static final Set<TypeName> CONTRACTS = Set.of(TYPE_NAME);
 
         @Override

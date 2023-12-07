@@ -16,15 +16,14 @@
 
 package io.helidon.inject.runtime.testsubjects;
 
-import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.api.ServiceBinder;
-
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.ServiceBinder;
 
 /**
  * For testing.
  */
-@Singleton
+@Inject.Singleton
 public final class EmptyModule implements ModuleComponent {
     @Override
     public String name() {

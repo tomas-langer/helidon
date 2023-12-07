@@ -23,9 +23,9 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import io.helidon.common.Weight;
+import io.helidon.inject.service.Inject;
 
 import com.oracle.bmc.Region;
-import jakarta.inject.Singleton;
 
 import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 
@@ -33,7 +33,7 @@ import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
  * This (overridable) implementation will check the {@link OciConfig} for {@code IMDS} availability. And if it is found to be
  * available, will also perform a secondary check on {@link Region#getRegionFromImds()} to ensure it returns a non-null value.
  */
-@Singleton
+@Inject.Singleton
 @Weight(DEFAULT_INJECT_WEIGHT)
 class OciAvailabilityDefault implements OciAvailability {
 

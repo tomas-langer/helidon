@@ -1,37 +1,25 @@
 package io.helidon.inject.api;
 
 import io.helidon.common.types.TypeName;
-
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.Inject;
 
 public final class InjectTypes {
-
     /**
-     * Jakarta legacy {@code javax.inject.Provider} type.
+     * Helidon {@link io.helidon.inject.service.Inject.Singleton}.
      */
-    public static final TypeName JAVAX_PROVIDER = TypeName.create("javax.inject.Provider");
+    public static final TypeName SINGLETON = TypeName.create(Inject.Singleton.class);
     /**
-     * Jakarta {@link jakarta.inject.Provider} type.
+     * Helidon {@link io.helidon.inject.service.Inject.Named}.
      */
-    public static final TypeName JAKARTA_PROVIDER = TypeName.create(Provider.class);
+    public static final TypeName NAMED = TypeName.create(Inject.Named.class);
     /**
-     * Jakarta {@link jakarta.inject.Singleton} type.
-     */
-    public static final TypeName SINGLETON = TypeName.create(Singleton.class);
-    /**
-     * Jakarta {@link jakarta.inject.Named} type
-     */
-    public static final TypeName JAKARTA_NAMED = TypeName.create(Named.class);
-    /**
-     * Injection {@link io.helidon.inject.api.InjectionPointProvider} type.
+     * Helidon {link io.helidon.inject.api.InjectionPointProvider}.
      */
     public static final TypeName INJECTION_POINT_PROVIDER = TypeName.create(InjectionPointProvider.class);
     /**
-     * Injection {@link io.helidon.inject.api.ServiceProvider} type.
+     * Helidon {@link io.helidon.inject.api.ServiceProvider}.
      */
-    public static final TypeName INJECTION_SERVICE_PROVIDER = TypeName.create(ServiceProvider.class);
+    public static final TypeName SERVICE_PROVIDER = TypeName.create(ServiceProvider.class);
 
     private InjectTypes() {
     }

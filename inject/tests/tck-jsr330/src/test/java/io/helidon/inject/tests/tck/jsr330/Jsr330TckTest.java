@@ -18,11 +18,11 @@ package io.helidon.inject.tests.tck.jsr330;
 
 import java.util.Enumeration;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
 
-import jakarta.inject.Provider;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import org.atinject.tck.Tck;
@@ -47,7 +47,7 @@ public class Jsr330TckTest {
     public void testItAll() {
         InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
         InjectionServicesConfig cfg = injectionServices.config();
-        Provider<Car> carProvider = injectionServices.services().lookupFirst(Car.class);
+        Supplier<Car> carProvider = injectionServices.services().lookupFirst(Car.class);
         Objects.requireNonNull(carProvider.get());
         assertThat("sanity", carProvider.get(), not(carProvider.get()));
         junit.framework.Test jsrTest = Tck.testsFor(carProvider.get(),

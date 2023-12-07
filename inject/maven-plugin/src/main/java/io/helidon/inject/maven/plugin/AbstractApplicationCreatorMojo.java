@@ -43,12 +43,12 @@ import io.helidon.inject.api.Application;
 import io.helidon.inject.api.CallingContext;
 import io.helidon.inject.api.CallingContextFactory;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.ServiceBinderDefault;
+import io.helidon.inject.service.ModuleComponent;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.plugins.annotations.Parameter;

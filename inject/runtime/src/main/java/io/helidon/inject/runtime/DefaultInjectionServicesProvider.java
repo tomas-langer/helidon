@@ -25,8 +25,6 @@ import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Resettable;
 import io.helidon.inject.spi.InjectionServicesProvider;
 
-import jakarta.inject.Singleton;
-
 /**
  * The default implementation for {@link InjectionServicesProvider}.
  * The first instance created (or first after calling deep {@link #reset}) will be the global services instance. The global
@@ -34,7 +32,6 @@ import jakarta.inject.Singleton;
  *
  * @see InjectionServices#injectionServices()
  */
-@Singleton
 @Weight(ServiceUtils.DEFAULT_INJECT_WEIGHT)
 public class DefaultInjectionServicesProvider implements InjectionServicesProvider, Resettable {
     private static final AtomicReference<DefaultInjectionServices> INSTANCE = new AtomicReference<>();

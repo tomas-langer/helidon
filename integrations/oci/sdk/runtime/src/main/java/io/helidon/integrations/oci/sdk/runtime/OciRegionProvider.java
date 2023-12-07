@@ -22,16 +22,16 @@ import io.helidon.common.Weight;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
+import io.helidon.inject.service.Inject;
 
 import com.oracle.bmc.Region;
-import jakarta.inject.Singleton;
 
 import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 
 /**
- * Can optionally be used to return a {@link Region} appropriate for the {@link io.helidon.inject.api.IpInfo} context.
+ * Can optionally be used to return a {@link Region} appropriate for the {@link io.helidon.inject.service.IpId} context.
  */
-@Singleton
+@Inject.Singleton
 @Weight(DEFAULT_INJECT_WEIGHT)
 class OciRegionProvider implements InjectionPointProvider<Region> {
 

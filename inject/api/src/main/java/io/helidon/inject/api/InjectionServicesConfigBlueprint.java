@@ -143,12 +143,12 @@ interface InjectionServicesConfigBlueprint {
     boolean usesCompileTimeApplications();
 
     /**
-     * Flag indicating whether compile-time generated {@link ModuleComponent}'s should be used at Injection's startup
+     * Flag indicating whether compile-time generated {@link io.helidon.inject.service.ModuleComponent}'s should be used at Injection's startup
      * initialization. Setting this value to false will have no affect if the underlying provider does not support compile-time
      * generation via {@link #supportsCompileTime()}.
      *
      * @return the flag indicating whether the provider is permitted to use Application generated code from compile-time
-     * @see ModuleComponent
+     * @see io.helidon.inject.service.ModuleComponent
      * @see Activator
      */
     @Option.Configured

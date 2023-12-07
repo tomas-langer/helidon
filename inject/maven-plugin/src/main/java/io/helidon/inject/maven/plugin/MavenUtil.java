@@ -151,7 +151,7 @@ final class MavenUtil {
      * @param sourcePath       the source path
      * @param defaultToUnnamed if true, will return the default name, otherwise empty is returned
      * @return the module name suggested to use, most appropriate for the name of {@link
-     *         io.helidon.inject.api.Application} or {@link io.helidon.inject.api.ModuleComponent}
+     *         io.helidon.inject.api.Application} or {@link io.helidon.inject.service.ModuleComponent}
      */
     static Optional<String> toSuggestedModuleName(Path basePath,
                                                   Path sourcePath,
@@ -222,7 +222,7 @@ final class MavenUtil {
 
     /**
      * Common way for naming a module (generally for use by {@link io.helidon.inject.api.Application} and
-     * {@link io.helidon.inject.api.ModuleComponent}).
+     * {@link io.helidon.inject.service.ModuleComponent}).
      *
      * @param moduleName  the module name (from module-info)
      * @param typeSuffix  "test" for test, or null for normal src classes
@@ -271,9 +271,9 @@ final class MavenUtil {
                                                        String defaultPackageName) {
         String export = null;
         if (descriptor != null) {
-            List<TypeName> provides = descriptor.provides().get(InjectCodegenTypes.HELIDON_APPLICATION);
+            List<TypeName> provides = descriptor.provides().get(InjectCodegenTypes.APPLICATION);
             if (provides == null || provides.isEmpty()) {
-                provides = descriptor.provides().get(InjectCodegenTypes.HELIDON_MODULE_COMPONENT);
+                provides = descriptor.provides().get(InjectCodegenTypes.MODULE_COMPONENT);
             }
             if (provides == null || provides.isEmpty()) {
                 export = descriptor.firstUnqualifiedExport().orElse(null);

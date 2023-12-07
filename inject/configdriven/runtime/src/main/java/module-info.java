@@ -27,9 +27,6 @@ import io.helidon.common.features.api.Preview;
 @Preview
 module io.helidon.inject.configdriven.runtime {
     requires static io.helidon.common.features.api;
-    requires static io.helidon.config.metadata;
-    requires static jakarta.annotation;
-    requires static jakarta.inject;
 
     requires transitive io.helidon.builder.api;
     requires transitive io.helidon.common.types;
@@ -44,6 +41,6 @@ module io.helidon.inject.configdriven.runtime {
             with io.helidon.inject.configdriven.runtime.ConfigDrivenActivatorProvider,
                  io.helidon.inject.configdriven.runtime.CbrActivatorProvider;
 
-    provides io.helidon.inject.api.ModuleComponent
+    provides io.helidon.inject.service.ModuleComponent
             with io.helidon.inject.configdriven.runtime.ConfigDrivenInjectModule;
 }

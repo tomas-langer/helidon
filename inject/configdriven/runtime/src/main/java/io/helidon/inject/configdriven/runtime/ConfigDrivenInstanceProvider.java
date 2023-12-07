@@ -6,22 +6,22 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
-import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.ServiceProviderBase;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
 
 class ConfigDrivenInstanceProvider<T, CB>
         extends ServiceProviderBase<T>
         implements InjectionResolver {
-    private static final System.Logger LOGGER = System.getLogger(ConfigDrivenInstanceProvider.class.getName());
+
     private final CB beanInstance;
     private final String instanceId;
     private final ConfigDrivenServiceProvider<T, CB> root;
@@ -29,7 +29,7 @@ class ConfigDrivenInstanceProvider<T, CB>
     private final Set<Qualifier> qualifiers;
 
     ConfigDrivenInstanceProvider(InjectionServices injectionServices,
-                                 ServiceSource<T> descriptor,
+                                 Descriptor<T> descriptor,
                                  ConfigDrivenServiceProvider<T, CB> root,
                                  String name,
                                  CB instance) {
@@ -59,7 +59,7 @@ class ConfigDrivenInstanceProvider<T, CB>
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
 
-        ServiceInfoCriteria dep = ipInfo.toCriteria();
+        ServiceInfoCriteria dep = ServiceInfoCriteria.create(ipInfo);
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
                 .addContract(configBeanType)
                 .build();

@@ -18,34 +18,31 @@ package io.helidon.inject.runtime.testsubjects;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
-import io.helidon.inject.api.RunLevel;
+import io.helidon.inject.service.Inject;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-@Singleton
-@RunLevel(0)
+@Inject.Singleton
+@io.helidon.inject.service.Inject.RunLevel(0)
 public class HelloInjectionWorldImpl implements HelloInjectionWorld {
 
-    @Inject
+    @Inject.Point
     InjectionWorld world;
 
-    @Inject
-    Provider<InjectionWorld> worldRef;
+    @Inject.Point
+    Supplier<InjectionWorld> worldRef;
 
-    @Inject
-    List<Provider<InjectionWorld>> listOfWorldRefs;
+    @Inject.Point
+    List<Supplier<InjectionWorld>> listOfWorldRefs;
 
-    @Inject
+    @Inject.Point
     List<InjectionWorld> listOfWorlds;
 
-    @Inject @Named("red")
+    @Inject.Point @Inject.Named("red")
     Optional<InjectionWorld> redWorld;
 
     private InjectionWorld setWorld;
@@ -64,7 +61,7 @@ public class HelloInjectionWorldImpl implements HelloInjectionWorld {
         return "Hello " + world.name();
     }
 
-    @Inject
+    @Inject.Point
     void world(InjectionWorld world) {
         this.setWorld = world;
     }

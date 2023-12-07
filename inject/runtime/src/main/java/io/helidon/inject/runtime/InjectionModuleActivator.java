@@ -19,11 +19,12 @@ package io.helidon.inject.runtime;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.Qualifier;
 
 /**
  * Basic {@link ModuleComponent} implementation. A ModuleComponent is-a service provider also.
@@ -31,7 +32,7 @@ import io.helidon.inject.api.ServiceSource;
 class InjectionModuleActivator extends ServiceProviderBase<ModuleComponent> {
 
     InjectionModuleActivator(InjectionServices injectionServices,
-                             ServiceSource<ModuleComponent> descriptor) {
+                             Descriptor<ModuleComponent> descriptor) {
         super(injectionServices, descriptor);
     }
 
@@ -40,7 +41,7 @@ class InjectionModuleActivator extends ServiceProviderBase<ModuleComponent> {
                                            String moduleName) {
 
         Set<Qualifier> qualifiers = Set.of(Qualifier.createNamed(moduleName));
-        ServiceSource<ModuleComponent> descriptor = new ModuleServiceDescriptor(module.getClass(), qualifiers);
+        Descriptor<ModuleComponent> descriptor = new ModuleServiceDescriptor(module.getClass(), qualifiers);
         InjectionModuleActivator activator = new InjectionModuleActivator(injectionServices,
                                                                           descriptor);
 
@@ -49,7 +50,7 @@ class InjectionModuleActivator extends ServiceProviderBase<ModuleComponent> {
         return activator;
     }
 
-    private static class ModuleServiceDescriptor implements ServiceSource<ModuleComponent> {
+    private static class ModuleServiceDescriptor implements Descriptor<ModuleComponent> {
         private static final TypeName MODULE_TYPE = TypeName.create(ModuleComponent.class);
 
         private final TypeName moduleType;
@@ -73,6 +74,11 @@ class InjectionModuleActivator extends ServiceProviderBase<ModuleComponent> {
         @Override
         public Set<Qualifier> qualifiers() {
             return qualifiers;
+        }
+
+        @Override
+        public Set<TypeName> scopes() {
+            return Set.of(InjectTypes.SINGLETON);
         }
     }
 }

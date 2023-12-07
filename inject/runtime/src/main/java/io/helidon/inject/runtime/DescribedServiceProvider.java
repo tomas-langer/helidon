@@ -1,17 +1,17 @@
 package io.helidon.inject.runtime;
 
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.ServiceInfo;
 
 public abstract class DescribedServiceProvider<T> implements ServiceProvider<T> {
-    private final ServiceDescriptor<T> descriptor;
+    private final ServiceInfo<T> descriptor;
 
-    protected DescribedServiceProvider(ServiceDescriptor<T> descriptor) {
+    protected DescribedServiceProvider(ServiceInfo<T> descriptor) {
         this.descriptor = descriptor;
     }
 
     @Override
-    public ServiceDescriptor<T> descriptor() {
+    public ServiceInfo<T> descriptor() {
         return descriptor;
     }
 }

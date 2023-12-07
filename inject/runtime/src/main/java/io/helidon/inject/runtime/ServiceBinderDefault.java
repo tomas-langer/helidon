@@ -25,10 +25,10 @@ import java.util.ServiceLoader;
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.ServiceBinder;
 import io.helidon.inject.spi.ActivatorProvider;
 
 /**
@@ -76,20 +76,14 @@ public class ServiceBinderDefault implements ServiceBinder {
     }
 
     @Override
-    public void bind(ServiceSource<?> serviceDescriptor) {
-        bind(serviceActivator(injectionServices, serviceDescriptor));
-    }
-
-    @Override
-    public void bind(Activator<?> serviceActivator) {
+    public void bind(Descriptor<?> serviceDescriptor) {
         if (!trusted) {
             DefaultServices.assertPermitsDynamic(injectionServices.config());
         }
-
-        serviceRegistry.bind(serviceActivator);
+        serviceRegistry.bind(serviceDescriptor);
     }
 
-    static Activator<?> serviceActivator(InjectionServices injectionServices, ServiceSource<?> serviceSource) {
+    static Activator<?> serviceActivator(InjectionServices injectionServices, Descriptor<?> serviceSource) {
         ActivatorProvider activatorProvider = ACTIVATOR_PROVIDERS.get(serviceSource.runtimeId());
         if (activatorProvider == null) {
             throw new IllegalStateException("Expected an activator provider for runtime id: " + serviceSource.runtimeId()

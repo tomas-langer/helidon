@@ -25,15 +25,15 @@ import io.helidon.common.types.Annotation;
 import io.helidon.config.Config;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 
 import com.oracle.bmc.Region;
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
-import jakarta.inject.Named;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -106,17 +106,17 @@ class OciAuthenticationDetailsProviderTest {
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());
 
-        ipi.addAnnotation(Annotation.create(Named.class));
+        ipi.addAnnotation(Annotation.create(Inject.Named.class));
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());
 
         ipi.qualifiers(Set.of(Qualifier.create(Option.Singular.class),
-                              Qualifier.create(Named.class, "")));
+                              Qualifier.createNamed("")));
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());
 
         ipi.qualifiers(Set.of(Qualifier.create(Option.Singular.class),
-                              Qualifier.create(Named.class, " profileName ")));
+                              Qualifier.createNamed("profileName")));
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    equalTo("profileName"));
     }

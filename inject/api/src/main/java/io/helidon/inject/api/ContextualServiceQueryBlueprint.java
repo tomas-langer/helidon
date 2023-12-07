@@ -21,6 +21,7 @@ import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+import io.helidon.inject.service.IpId;
 
 /**
  * Combines the {@link ServiceInfo} criteria along with the {@link InjectionPointInfo} context
@@ -44,7 +45,7 @@ interface ContextualServiceQueryBlueprint {
      *
      * @return the optional injection point context info
      */
-    @Option.Type("java.util.Optional<io.helidon.inject.api.IpId>")
+    @Option.Type("java.util.Optional<io.helidon.inject.service.IpId>")
     Optional<IpId> injectionPointInfo();
 
     /**
@@ -72,7 +73,7 @@ interface ContextualServiceQueryBlueprint {
             return ContextualServiceQuery.builder()
                     .expected(expected)
                     .injectionPointInfo(ipInfo)
-                    .serviceInfoCriteria(ipInfo.toCriteria())
+                    .serviceInfoCriteria(ServiceInfoCriteria.create(ipInfo))
                     .build();
         }
     }

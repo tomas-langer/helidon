@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-import io.helidon.integrations.oci.sdk.codegen.OciInjectCodegenObserverProvider;
-
 /**
  * Helidon Injection Integrations for OCI SDK.
  */
@@ -29,6 +27,6 @@ module io.helidon.integrations.oci.sdk.codegen {
     exports io.helidon.integrations.oci.sdk.codegen;
 
     provides io.helidon.inject.codegen.spi.InjectCodegenObserverProvider
-            with OciInjectCodegenObserverProvider;
+            with io.helidon.integrations.oci.sdk.codegen.OciInjectCodegenObserverProvider;
 
 }

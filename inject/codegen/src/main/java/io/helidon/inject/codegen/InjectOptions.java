@@ -1,10 +1,7 @@
 package io.helidon.inject.codegen;
 
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.Option;
 import io.helidon.common.GenericType;
 import io.helidon.common.types.TypeName;
@@ -41,13 +38,7 @@ public final class InjectOptions {
                              Set.of(),
                              TypeName::create,
                              new GenericType<Set<TypeName>>() { });
-    /**
-     * Identify whether any application scopes (from ee) is translated to {@code jakarta.inject.Singleton}.
-     */
-    public static final Option<Boolean> MAP_APPLICATION_TO_SINGLETON_SCOPE
-            = Option.create("inject.mapApplicationToSingletonScope",
-                            "Should we map application scoped beans from Jakarta CDI to Singleton services?",
-                            false);
+
     /**
      * Identify whether any unsupported types should trigger annotation processing to keep going.
      */
@@ -55,18 +46,15 @@ public final class InjectOptions {
             "inject.ignoreUnsupportedAnnotations",
             "Identify whether any unsupported types should trigger annotation processing to keep going.",
             false);
+
+    /**
+     * Use JSR-330 strict analysis of types (such as adding POJO if used for injection).
+     */
     public static final Option<Boolean> JSR_330_STRICT = Option.create(
             "inject.supports-jsr330.strict",
             "Use JSR-330 strict analysis of types (such as adding POJO if used for injection)",
             false);
 
     private InjectOptions() {
-    }
-
-    static Set<TypeName> scopeMetaAnnotations(CodegenOptions options) {
-        return Stream.concat(SCOPE_META_ANNOTATIONS.value(options)
-                                     .stream(),
-                             Stream.of(InjectCodegenTypes.INJECT_SCOPE))
-                .collect(Collectors.toSet());
     }
 }

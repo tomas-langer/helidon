@@ -18,12 +18,12 @@ package io.helidon.inject.tests.plain.hello;
 
 import java.io.Serializable;
 
-import io.helidon.inject.api.ExternalContracts;
+import io.helidon.inject.service.Inject;
 
 import jakarta.inject.Named;
 import jakarta.inject.Singleton;
 
-@ExternalContracts(value = World.class, moduleNames = "AnotherModule")
+@Inject.ExternalContracts(World.class)
 @Named("unknown")
 @Singleton
 public class WorldImpl implements World, SomeOtherLocalNonContractInterface2, Serializable {

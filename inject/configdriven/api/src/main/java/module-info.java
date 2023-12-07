@@ -20,10 +20,8 @@
 module io.helidon.inject.configdriven.api {
 
     requires io.helidon.common.config;
+    requires io.helidon.inject.service;
     requires io.helidon.inject.api;
 
-    requires static jakarta.inject;
-
     exports io.helidon.inject.configdriven.api;
-
 }

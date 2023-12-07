@@ -3,8 +3,8 @@ package io.helidon.inject.runtime;
 import io.helidon.common.Weighted;
 import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceDescriptor;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.ServiceInfo;
 import io.helidon.inject.spi.ActivatorProvider;
 
 class InjectActivatorProvider implements ActivatorProvider, Weighted {
@@ -13,11 +13,11 @@ class InjectActivatorProvider implements ActivatorProvider, Weighted {
 
     @Override
     public String id() {
-        return ServiceDescriptor.INJECTION_RUNTIME_ID;
+        return ServiceInfo.INJECTION_RUNTIME_ID;
     }
 
     @Override
-    public <T> Activator<T> activator(InjectionServices injectionServices, ServiceSource<T> descriptor) {
+    public <T> Activator<T> activator(InjectionServices injectionServices, Descriptor<T> descriptor) {
         return InjectServiceProvider.create(injectionServices, descriptor);
     }
 

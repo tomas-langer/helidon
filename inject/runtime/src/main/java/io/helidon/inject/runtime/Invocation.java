@@ -21,17 +21,16 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.Interceptor;
-import io.helidon.inject.api.InvocationContext;
 import io.helidon.inject.api.InvocationException;
-import io.helidon.inject.api.Invoker;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
-
-import jakarta.inject.Provider;
+import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.InvocationContext;
+import io.helidon.inject.service.Invoker;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * Handles the invocation of {@link Interceptor} methods.
@@ -43,7 +42,7 @@ import jakarta.inject.Provider;
  */
 public class Invocation<V> implements Interceptor.Chain<V> {
     private final InvocationContext ctx;
-    private final List<Provider<Interceptor>> interceptors;
+    private final List<Supplier<Interceptor>> interceptors;
     private final Set<Class<? extends Throwable>> checkedExceptions;
     private int interceptorPos;
     private Invoker<V> call;
@@ -111,10 +110,10 @@ public class Invocation<V> implements Interceptor.Chain<V> {
      * @throws InvocationException if there are errors during invocation chain processing
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <V> V createInvokeAndSupply(ServiceDescriptor descriptor,
+    public static <V> V createInvokeAndSupply(ServiceInfo descriptor,
                                               List<Annotation> typeAnnotations,
                                               TypedElementInfo element,
-                                              List<Provider<Interceptor>> interceptors,
+                                              List<Supplier<Interceptor>> interceptors,
                                               Invoker<V> call,
                                               Object... args) {
         Objects.requireNonNull(descriptor);
@@ -155,7 +154,7 @@ public class Invocation<V> implements Interceptor.Chain<V> {
      * @deprecated this method should only be called by generated code
      */
     @Deprecated
-    public static <T> List<Provider<T>> mergeAndCollapse() {
+    public static <T> List<Supplier<T>> mergeAndCollapse() {
         return List.of();
     }
 
@@ -168,15 +167,15 @@ public class Invocation<V> implements Interceptor.Chain<V> {
      * @return the merged result or empty list if there is o interceptor providers
      */
     @SuppressWarnings("unchecked")
-    public static <T> List<Provider<T>> mergeAndCollapse(List<Provider<T>>... lists) {
-        List<Provider<T>> result = null;
+    public static <T> List<Supplier<T>> mergeAndCollapse(List<Supplier<T>>... lists) {
+        List<Supplier<T>> result = null;
 
-        for (List<Provider<T>> list : lists) {
+        for (List<Supplier<T>> list : lists) {
             if (list == null) {
                 continue;
             }
 
-            for (Provider<T> p : list) {
+            for (Supplier<T> p : list) {
                 if (p == null) {
                     continue;
                 }
@@ -209,7 +208,7 @@ public class Invocation<V> implements Interceptor.Chain<V> {
         }
 
         if (interceptorPos < interceptors.size()) {
-            Provider<Interceptor> interceptorProvider =  interceptors.get(interceptorPos);
+            Supplier<Interceptor> interceptorProvider =  interceptors.get(interceptorPos);
             Interceptor interceptor = interceptorProvider.get();
             interceptorPos++;
             try {

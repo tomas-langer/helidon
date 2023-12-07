@@ -17,9 +17,9 @@
 package io.helidon.inject.api;
 
 /**
- * Represents the {@link jakarta.annotation.PreDestroy} method.
+ * Represents the {@link io.helidon.inject.service.Inject.PreDestroy} method.
  *
- * @see DeActivator
+ * @see io.helidon.inject.api.Activator
  */
 @FunctionalInterface
 public interface PreDestroyMethod {

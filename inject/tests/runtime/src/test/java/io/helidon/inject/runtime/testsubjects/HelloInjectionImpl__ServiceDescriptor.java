@@ -22,17 +22,18 @@ import java.util.Set;
 
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionContext;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.runtime.ServiceUtils;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.InterceptionMetadata;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 
 /**
  * Serves as an exemplar of what will is normally code generated.
  */
-public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<HelloInjectionWorldImpl> {
+public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloInjectionWorldImpl> {
     public static final HelloInjectionImpl__ServiceDescriptor INSTANCE = new HelloInjectionImpl__ServiceDescriptor();
 
     private static final TypeName DESCRIPTOR = TypeName.create(HelloInjectionImpl__ServiceDescriptor.class);
@@ -160,5 +161,10 @@ public class HelloInjectionImpl__ServiceDescriptor implements ServiceSource<Hell
     @Override
     public void preDestroy(HelloInjectionWorldImpl instance) {
         instance.preDestroy();
+    }
+
+    @Override
+    public Set<TypeName> scopes() {
+        return Set.of(InjectTypes.SINGLETON);
     }
 }

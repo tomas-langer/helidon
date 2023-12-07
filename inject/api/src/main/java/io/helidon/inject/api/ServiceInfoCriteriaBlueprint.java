@@ -23,6 +23,9 @@ import java.util.Set;
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.TypeName;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * Criteria to discover services.
@@ -58,7 +61,7 @@ interface ServiceInfoCriteriaBlueprint {
 
     /**
      * The managed services advertised types (i.e., typically its interfaces, can be through
-     * {@link io.helidon.inject.api.ExternalContracts}).
+     * {@link io.helidon.inject.service.Inject.ExternalContracts}).
      *
      * @return the service contracts implemented
      */
@@ -66,7 +69,7 @@ interface ServiceInfoCriteriaBlueprint {
     Set<TypeName> contracts();
 
     /**
-     * The optional {@link RunLevel} ascribed to the service.
+     * The optional {@link io.helidon.inject.service.Inject.RunLevel} ascribed to the service.
      *
      * @return the service's run level
      */
@@ -112,7 +115,7 @@ interface ServiceInfoCriteriaBlueprint {
      * @param descriptor to compare with
      * @return true if this criteria matches the service descriptor
      */
-    default boolean matches(ServiceDescriptor<?> descriptor) {
+    default boolean matches(ServiceInfo<?> descriptor) {
         if (this == InjectionServices.EMPTY_CRITERIA) {
             return true;
         }
@@ -156,7 +159,7 @@ interface ServiceInfoCriteriaBlueprint {
         return matches;
     }
 
-    private static boolean matchesWeight(ServiceDescriptor<?> src,
+    private static boolean matchesWeight(ServiceInfo<?> src,
                                          ServiceInfoCriteriaBlueprint criteria) {
         if (criteria.weight().isEmpty()) {
             return true;
@@ -175,6 +178,19 @@ interface ServiceInfoCriteriaBlueprint {
 
     final class CustomMethods {
         private CustomMethods() {
+        }
+
+        /**
+         * Create service info criteria for lookup from this injection point information.
+         *
+         * @return criteria to lookup matching services
+         */
+        @Prototype.FactoryMethod
+        static ServiceInfoCriteria create(IpId ipId) {
+            return ServiceInfoCriteria.builder()
+                    .qualifiers(ipId.qualifiers())
+                    .addContract(ipId.contract())
+                    .build();
         }
 
         /**

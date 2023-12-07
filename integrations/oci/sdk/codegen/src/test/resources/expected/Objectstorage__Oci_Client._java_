@@ -21,7 +21,7 @@ import java.util.Optional;
 import io.helidon.common.Generated;
 import io.helidon.common.Weight;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.ExternalContracts;
+import io.helidon.inject.service.Inject.ExternalContracts;
 import io.helidon.inject.api.InjectionPointProvider;
 
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;

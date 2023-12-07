@@ -19,7 +19,6 @@ package io.helidon.examples.inject.providers;
 import java.util.Objects;
 
 import io.helidon.examples.inject.basics.Tool;
-import io.helidon.inject.api.RunLevel;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
@@ -27,7 +26,7 @@ import jakarta.inject.Provider;
 import jakarta.inject.Singleton;
 
 @Singleton
-@RunLevel(RunLevel.STARTUP)
+@io.helidon.inject.service.Inject.RunLevel(io.helidon.inject.service.Inject.RunLevel.STARTUP)
 class NailGun implements Tool {
 
     private final Provider<Nail> nailProvider;

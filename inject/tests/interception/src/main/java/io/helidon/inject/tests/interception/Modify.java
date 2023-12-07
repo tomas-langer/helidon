@@ -22,7 +22,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import io.helidon.inject.api.InterceptedTrigger;
+import io.helidon.inject.service.InterceptedTrigger;
 
 /**
  * Modify call.

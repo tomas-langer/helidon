@@ -19,8 +19,8 @@ package io.helidon.inject.configdriven.interceptor.test;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import io.helidon.inject.api.InterceptedTrigger;
 import io.helidon.inject.configdriven.tests.config.FakeWebServer;
+import io.helidon.inject.service.InterceptedTrigger;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;

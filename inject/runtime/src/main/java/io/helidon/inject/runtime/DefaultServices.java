@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationRequest;
@@ -40,20 +41,18 @@ import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.InjectionServicesConfig;
 import io.helidon.inject.api.Metrics;
-import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.Resettable;
-import io.helidon.inject.api.ServiceBinder;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
-import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
-
-import jakarta.inject.Provider;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceBinder;
+import io.helidon.inject.service.ServiceInfo;
 
 /**
  * The default reference implementation of {@link Services}.
@@ -150,7 +149,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
     private static boolean hasNamed(Set<Qualifier> qualifiers) {
         return qualifiers.stream()
-                .anyMatch(it -> it.typeName().equals(InjectTypes.JAKARTA_NAMED));
+                .anyMatch(it -> it.typeName().equals(InjectTypes.NAMED));
     }
 
     /**
@@ -159,7 +158,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
      * @return the comparator
      * @see ServiceProviderComparator
      */
-    static Comparator<? super Provider<?>> serviceProviderComparator() {
+    static Comparator<? super Supplier<?>> serviceProviderComparator() {
         return COMPARATOR;
     }
 
@@ -232,8 +231,10 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     @SuppressWarnings({"unchecked", "rawtypes"})
     public <T> Optional<ServiceProvider<T>> lookupFirst(Class<T> type,
                                                         boolean expected) {
+        TypeName desiredType = TypeName.create(type);
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .addContract(TypeName.create(type))
+                .serviceTypeName(desiredType) // try to find exact matches
+                .addContract(desiredType) // and if not found, use as contract
                 .build();
         return (Optional) lookupFirst(criteria, expected);
     }
@@ -276,12 +277,11 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     }
 
     @Override
-    public void bind(ServiceSource<?> serviceDescriptor) {
+    public void bind(Descriptor<?> serviceDescriptor) {
         bind(ServiceBinderDefault.serviceActivator(this.injectionServices, serviceDescriptor));
     }
 
-    @Override
-    public void bind(Activator<?> serviceActivator) {
+    private void bind(Activator<?> serviceActivator) {
         if (currentPhase().ordinal() > Phase.GATHERING_DEPENDENCIES.ordinal()) {
             assertPermitsDynamic(cfg);
         }
@@ -327,7 +327,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> ServiceProvider<T> serviceProvider(ServiceDescriptor<T> descriptor) {
+    public <T> ServiceProvider<T> serviceProvider(ServiceInfo<T> descriptor) {
         return (ServiceProvider<T>) servicesByTypeName.get(descriptor.serviceType());
     }
 

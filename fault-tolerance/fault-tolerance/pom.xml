@@ -44,10 +44,18 @@
         <dependency>
             <!--
             must be in compile & runtime dependencies
-            as we provide services that are in API
+            as we provide service in this module
+            -->
+            <groupId>io.helidon.inject</groupId>
+            <artifactId>helidon-inject-service</artifactId>
+        </dependency>
+        <dependency>
+            <!--
+            we only use inject API when injecting, so it would be on the module path anyway
             -->
             <groupId>io.helidon.inject</groupId>
             <artifactId>helidon-inject-api</artifactId>
+            <optional>true</optional>
         </dependency>
         <dependency>
             <!--

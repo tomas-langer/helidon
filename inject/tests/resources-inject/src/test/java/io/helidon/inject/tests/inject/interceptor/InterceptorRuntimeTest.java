@@ -32,24 +32,23 @@ import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.Interceptor;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 import io.helidon.inject.testing.ReflectionBasedSingletonServiceDescriptor;
-import io.helidon.inject.testing.ServiceInfo;
 import io.helidon.inject.tests.inject.ClassNamedY;
 import io.helidon.inject.tests.plain.interceptor.IB;
 import io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno;
 import io.helidon.inject.tests.plain.interceptor.TestNamedInterceptor;
 
-import jakarta.inject.Named;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static io.helidon.inject.api.Qualifier.create;
-import static io.helidon.inject.api.Qualifier.createNamed;
 import static io.helidon.inject.testing.InjectionTestingSupport.basicTestableConfig;
 import static io.helidon.inject.testing.InjectionTestingSupport.bind;
 import static io.helidon.inject.testing.InjectionTestingSupport.resetAll;
@@ -157,7 +156,7 @@ class InterceptorRuntimeTest {
                 .lookupFirst(
                         ServiceInfoCriteria.builder()
                                 .addContract(Closeable.class)
-                                .qualifiers(Set.of(create(Named.class, ClassNamedY.class.getName())))
+                                .qualifiers(Set.of(Qualifier.create(Inject.Named.class, ClassNamedY.class.getName())))
                                 .build());
         assertThat(toDescription(yimplProvider),
                    equalTo("YImpl:INIT"));
@@ -182,14 +181,7 @@ class InterceptorRuntimeTest {
         tearDown();
         setUp(config);
         bind(injectionServices, ReflectionBasedSingletonServiceDescriptor
-                .create(TestNamedInterceptor.class,
-                        ServiceInfo.<TestNamedInterceptor>builder()
-                                .serviceType(TypeName.create(TestNamedInterceptor.class))
-                                .addScope(InjectTypes.SINGLETON)
-                                .addQualifier(createNamed(TestNamed.class.getName()))
-                                .addQualifier(createNamed(InterceptorBasedAnno.class.getName()))
-                                .addContract(TypeName.create(Interceptor.class))
-                                .build()));
+                .create(TestNamedInterceptor.class, new TestNamedInterceptorServiceInfo()));
         assertThat(TestNamedInterceptor.CONSTRUCTOR_COUNTER.get(),
                    equalTo(0));
 
@@ -292,4 +284,26 @@ class InterceptorRuntimeTest {
         }
     }
 
+    private static class TestNamedInterceptorServiceInfo implements ServiceInfo<TestNamedInterceptor> {
+        @Override
+        public TypeName serviceType() {
+            return TypeName.create(TestNamedInterceptor.class);
+        }
+
+        @Override
+        public Set<TypeName> scopes() {
+            return Set.of(InjectTypes.SINGLETON);
+        }
+
+        @Override
+        public Set<Qualifier> qualifiers() {
+            return Set.of(Qualifier.createNamed(TestNamed.class),
+                          Qualifier.createNamed(InterceptorBasedAnno.class));
+        }
+
+        @Override
+        public Set<TypeName> contracts() {
+            return Set.of(TypeName.create(Interceptor.class));
+        }
+    }
 }

@@ -2,11 +2,14 @@ package io.helidon.inject.codegen;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 import io.helidon.codegen.ClassCode;
 import io.helidon.codegen.CodegenContext;
 import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNames;
 
 public interface InjectionCodegenContext extends CodegenContext {
     static InjectionCodegenContext create(CodegenContext context) {
@@ -74,4 +77,40 @@ public interface InjectionCodegenContext extends CodegenContext {
      * @return list of descriptors and their source class model
      */
     List<ClassCode> descriptors();
+
+    /**
+     * This provides support for replacements of types.
+     *
+     * @param typeName type name as required by the injection point
+     * @param valueSource code with the source of the parameter as Helidon provides it (such as Supplier of type)
+     * @return assignment to use for this instance, what type to use in Helidon inject, and code generator to transform to
+     *          desired type
+     */
+    Assignment assignment(TypeName typeName, String valueSource);
+
+    /**
+     * Checks whether this type is a {@code ServiceProvider}, {@code InjectionPointProvider}, or a
+     * {@link java.util.function.Supplier}.
+     *
+     * @param typeName type name to test
+     * @return whether the type name is a provider
+     */
+    default boolean isProvider(TypeName typeName) {
+        TypeName generic = typeName.genericTypeName();
+
+        return generic.equals(TypeNames.SUPPLIER)
+                || generic.equals(InjectCodegenTypes.SERVICE_PROVIDER)
+                || generic.equals(InjectCodegenTypes.INJECTION_POINT_PROVIDER);
+    }
+
+    /**
+     * Assignment for code generation. The original intended purpose is to support {@code Provider} from javax and jakarta
+     * without a dependency (or need to understand it) in the generator code.
+     *
+     * @param usedType type to use as the injected type using only Helidon supported types
+     *                 (i.e. {@link java.util.function.Supplier} instead of jakarta {@code Provider}
+     * @param codeGenerator code generator that creates appropriate type required by the target
+     */
+    record Assignment(TypeName usedType, Consumer<ContentBuilder<?>> codeGenerator) {
+    }
 }

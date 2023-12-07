@@ -28,12 +28,11 @@ import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.Application;
 import io.helidon.inject.api.Bootstrap;
 import io.helidon.inject.api.DeActivationRequest;
+import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.InjectorOptions;
-import io.helidon.inject.api.ModuleComponent;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.testsubjects.HelloInjectionImpl__ServiceDescriptor;
@@ -41,8 +40,9 @@ import io.helidon.inject.runtime.testsubjects.HelloInjectionWorld;
 import io.helidon.inject.runtime.testsubjects.HelloInjectionWorldImpl;
 import io.helidon.inject.runtime.testsubjects.HelloInjection__Application;
 import io.helidon.inject.runtime.testsubjects.InjectionWorld;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.ModuleComponent;
 
-import jakarta.inject.Singleton;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -133,11 +133,11 @@ class HelloInjectionWorldSanityTest {
         assertThat(helloProvider1.contracts(),
                    containsInAnyOrder(TypeName.create(HelloInjectionWorld.class)));
         assertThat(helloProvider1.scopes(),
-                   containsInAnyOrder(TypeName.create(Singleton.class)));
+                   containsInAnyOrder(InjectTypes.SINGLETON));
         assertThat(helloProvider1.qualifiers().size(),
                    equalTo(0));
         assertThat(helloProvider1.runLevel(),
-                   equalTo(RunLevel.NORMAL));
+                   equalTo(Inject.RunLevel.NORMAL));
         assertThat(helloProvider1.weight(),
                    equalTo(ServiceUtils.DEFAULT_INJECT_WEIGHT));
 

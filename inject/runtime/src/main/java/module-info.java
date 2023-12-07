@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-
 /**
  * The Injection Runtime Services module.
  */
@@ -25,11 +24,9 @@ module io.helidon.inject.runtime {
     requires io.helidon.common;
     requires io.helidon;
 
-    requires static jakarta.annotation;
-    requires static jakarta.inject;
-
-    requires transitive io.helidon.common.types;// required for compilation of generated types
+    requires transitive io.helidon.common.types;
     requires transitive io.helidon.inject.api;
+    requires transitive io.helidon.inject.service;
 
     exports io.helidon.inject.runtime;
 
@@ -39,7 +36,7 @@ module io.helidon.inject.runtime {
             with io.helidon.inject.runtime.HelidonInjectionStartupProvider;
 
     uses io.helidon.inject.spi.ActivatorProvider;
-    uses io.helidon.inject.api.ModuleComponent;
+    uses io.helidon.inject.service.ModuleComponent;
     uses io.helidon.inject.api.Application;
 
 }

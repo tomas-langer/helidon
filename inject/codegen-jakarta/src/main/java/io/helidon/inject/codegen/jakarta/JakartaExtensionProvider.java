@@ -1,0 +1,116 @@
+package io.helidon.inject.codegen.jakarta;
+
+import java.util.Set;
+
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
+import io.helidon.common.types.TypeInfo;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNames;
+import io.helidon.inject.codegen.InjectCodegenTypes;
+import io.helidon.inject.codegen.InjectionCodegenContext;
+import io.helidon.inject.codegen.RoundContext;
+import io.helidon.inject.codegen.spi.InjectCodegenExtension;
+import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
+
+public class JakartaExtensionProvider implements InjectCodegenExtensionProvider {
+    @Override
+    public Set<TypeName> supportedAnnotations() {
+        return Set.of(InjectCodegenTypes.INJECT_SINGLETON,
+                      InjectCodegenTypes.INJECT_POINT,
+                      InjectCodegenTypes.INJECT_SERVICE);
+    }
+
+    @Override
+    public InjectCodegenExtension create(InjectionCodegenContext codegenContext) {
+        return new JakartaExtension(codegenContext);
+    }
+
+    private static class JakartaExtension implements InjectCodegenExtension {
+        private final InjectionCodegenContext ctx;
+
+        JakartaExtension(InjectionCodegenContext codegenContext) {
+            this.ctx = codegenContext;
+        }
+
+        @Override
+        public void process(RoundContext roundContext) {
+            // we want to generate a new service for each provider that is a supplier
+            for (TypeInfo type : roundContext.types()) {
+                for (TypeInfo typeInfo : type.interfaceTypeInfo()) {
+                    if (typeInfo.typeName().equals(JakartaTypes.INJECT_PROVIDER)) {
+                        process(type);
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void process(TypeInfo typeInfo) {
+            TypeName sourceType = typeInfo.typeName();
+            TypeName type = TypeName.builder()
+                    .packageName(sourceType.packageName())
+                    .className(sourceType.className() + "__InjectSupplier")
+                    .build();
+            TypeName providedType = providedType(typeInfo);
+
+            ClassModel.Builder classModel = ClassModel.builder()
+                    .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                    .type(type)
+                    .addInterface(supplier(providedType))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON));
+
+            for (Annotation annotation : typeInfo.annotations()) {
+                if (annotation.typeName().equals(InjectCodegenTypes.INJECT_SINGLETON)) {
+                    // we do not want it twice
+                    continue;
+                }
+                classModel.addAnnotation(annotation);
+            }
+
+            classModel.addField(provider -> provider
+                    .name("provider")
+                    .type(sourceType)
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .isFinal(true)
+            );
+
+            classModel.addConstructor(ctr -> ctr
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
+                    .addParameter(provider -> provider.name("provider")
+                            .type(sourceType))
+                    .addContentLine("this.provider = provider;")
+            );
+
+            classModel.addMethod(get -> get
+                    .name("get")
+                    .addAnnotation(Annotations.OVERRIDE)
+                    .returnType(providedType)
+                    .addContentLine("return provider.get();")
+            );
+
+            ctx.addType(type, classModel, sourceType, typeInfo.originatingElement().orElse(sourceType));
+        }
+
+        private TypeName providedType(TypeInfo type) {
+            for (TypeInfo typeInfo : type.interfaceTypeInfo()) {
+                if (typeInfo.typeName().equals(JakartaTypes.INJECT_PROVIDER)) {
+                    // we assume this is a Provider<Something>, just Provider will fail, and does not make sense
+                    return typeInfo.typeName()
+                            .typeArguments()
+                            .getFirst();
+                }
+            }
+            throw new IllegalStateException("We should not get here, as we test first that we implement a Provider, and here"
+                                                    + " we just get Provider type argument");
+        }
+
+        private TypeName supplier(TypeName type) {
+            return TypeName.builder(TypeNames.SUPPLIER)
+                    .addTypeArgument(type)
+                    .build();
+        }
+    }
+}

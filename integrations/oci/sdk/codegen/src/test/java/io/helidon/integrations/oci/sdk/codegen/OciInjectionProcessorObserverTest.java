@@ -148,7 +148,7 @@ class OciInjectionProcessorObserverTest {
 
     @Test
     void loadTypeNameExceptions() {
-        Map<String, String> options = Map.of(OciInjectCodegenObserverProvider.OPTION_TYPENAME_EXCEPTIONS,
+        Map<String, String> options = Map.of(OciInjectCodegenObserverProvider.OPTION_TYPENAME_EXCEPTIONS.name(),
                                              "M1, M2");
         OciInjectionCodegenObserver observer = new OciInjectionCodegenObserver(new TestCodegenContext(options));
 
@@ -164,7 +164,7 @@ class OciInjectionProcessorObserverTest {
 
     @Test
     void loadNoDotExceptions() {
-        Map<String, String> options = Map.of(OciInjectCodegenObserverProvider.OPTION_NO_DOT_EXCEPTIONS,
+        Map<String, String> options = Map.of(OciInjectCodegenObserverProvider.OPTION_NO_DOT_EXCEPTIONS.name(),
                                              "Manual1, Manual2 ");
         OciInjectionCodegenObserver observer = new OciInjectionCodegenObserver(new TestCodegenContext(options));
 
@@ -302,6 +302,16 @@ class OciInjectionProcessorObserverTest {
         @Override
         public List<ClassCode> descriptors() {
             return null;
+        }
+
+        @Override
+        public boolean isProvider(TypeName typeName) {
+            return false;
+        }
+
+        @Override
+        public Assignment assignment(TypeName typeName, String valueSource) {
+            return new Assignment(typeName, it -> it.addContent(valueSource));
         }
     }
 }

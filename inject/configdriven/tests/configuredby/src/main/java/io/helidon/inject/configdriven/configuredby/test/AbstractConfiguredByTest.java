@@ -28,7 +28,6 @@ import io.helidon.config.MapConfigSource;
 import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
@@ -39,6 +38,7 @@ import io.helidon.inject.configdriven.tests.config.FakeServerConfig;
 import io.helidon.inject.configdriven.tests.config.FakeTlsWSNotDrivenByCB;
 import io.helidon.inject.configdriven.tests.config.FakeWebServer;
 import io.helidon.inject.configdriven.tests.config.FakeWebServerContract;
+import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.testing.InjectionTestingSupport;
 
 import org.junit.jupiter.api.AfterAll;

@@ -3,10 +3,11 @@ package io.helidon.inject.configdriven.runtime;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceDescriptor;
+import io.helidon.inject.api.InjectTypes;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 
-class ConfigBeanServiceDescriptor<CB> implements ServiceDescriptor<CB> {
+class ConfigBeanServiceDescriptor<CB> implements ServiceInfo<CB> {
     private final TypeName beanType;
     private final Set<Qualifier> qualifiers;
 
@@ -23,5 +24,10 @@ class ConfigBeanServiceDescriptor<CB> implements ServiceDescriptor<CB> {
     @Override
     public Set<Qualifier> qualifiers() {
         return qualifiers;
+    }
+
+    @Override
+    public Set<TypeName> scopes() {
+        return Set.of(InjectTypes.SINGLETON);
     }
 }

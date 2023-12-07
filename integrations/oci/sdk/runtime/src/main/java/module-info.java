@@ -22,17 +22,14 @@ module io.helidon.integrations.oci.sdk.runtime {
     requires io.helidon.builder.api;
     requires oci.java.sdk.common;
 
-    requires static jakarta.annotation;
-    requires static jakarta.inject;
-
     requires transitive io.helidon.common;
     requires transitive io.helidon.config;
     requires transitive io.helidon.inject.runtime;
 
     exports io.helidon.integrations.oci.sdk.runtime;
 
-    uses io.helidon.inject.api.ModuleComponent;
+    uses io.helidon.inject.service.ModuleComponent;
 
-    provides io.helidon.inject.api.ModuleComponent
+    provides io.helidon.inject.service.ModuleComponent
             with io.helidon.integrations.oci.sdk.runtime.HelidonInjection__ModuleComponent;
 }

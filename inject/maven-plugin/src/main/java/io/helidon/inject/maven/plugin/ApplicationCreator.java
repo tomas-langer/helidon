@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -45,16 +46,14 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpId;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
-
-import jakarta.inject.Provider;
 
 import static io.helidon.inject.runtime.ServiceUtils.isQualifiedInjectionTarget;
 
@@ -142,7 +141,7 @@ public class ApplicationCreator {
                                                                typeName,
                                                                "1",
                                                                ""))
-                .addInterface(InjectCodegenTypes.HELIDON_APPLICATION);
+                .addInterface(InjectCodegenTypes.APPLICATION);
 
         // deprecated default constructor - application should always be service loaded
         classModel.addConstructor(ctr -> ctr.javadoc(Javadoc.builder()
@@ -179,7 +178,7 @@ public class ApplicationCreator {
         // now we have the source generated, we add the META-INF/service, and compile the class
         ctx.filer()
                 .services(CREATOR,
-                          InjectCodegenTypes.HELIDON_APPLICATION,
+                          InjectCodegenTypes.APPLICATION,
                           List.of(typeName));
 
         Compiler.compile(compilerOptions, generated);
@@ -314,7 +313,7 @@ public class ApplicationCreator {
                                                Set<TypeName> serviceTypes) {
         Services services = injectionServices.services();
 
-        List<ServiceProvider<Provider>> providers = services.lookupAll(Provider.class);
+        List<ServiceProvider<Supplier>> providers = services.lookupAll(Supplier.class);
         if (providers.isEmpty()) {
             return List.of();
         }
@@ -334,9 +333,10 @@ public class ApplicationCreator {
         if (ipType.isOptional() || ipType.isList() && !ipType.typeArguments().isEmpty()) {
             return isProvider(ipType.typeArguments().getFirst());
         }
-        return InjectTypes.JAKARTA_PROVIDER.equals(ipType)
-                || InjectTypes.JAVAX_PROVIDER.equals(ipType)
-                || InjectTypes.INJECTION_POINT_PROVIDER.equals(ipType);
+
+        return ipType.isSupplier()
+                || InjectTypes.INJECTION_POINT_PROVIDER.equals(ipType)
+                || InjectTypes.SERVICE_PROVIDER.equals(ipType);
     }
 
     private BindingType bindingType(TypeName ipType) {
@@ -352,7 +352,7 @@ public class ApplicationCreator {
     private InjectionPlan injectionPlan(InjectionServices injectionServices,
                                         ServiceProvider<?> self,
                                         IpId dependency) {
-        ServiceInfoCriteria dependencyTo = dependency.toCriteria();
+        ServiceInfoCriteria dependencyTo = ServiceInfoCriteria.create(dependency);
         Set<Qualifier> qualifiers = dependencyTo.qualifiers();
         if (self.contracts().containsAll(dependencyTo.contracts()) && self.qualifiers().equals(qualifiers)) {
             // criteria must have a single contract for each injection point
@@ -422,7 +422,7 @@ public class ApplicationCreator {
         if (ipoint.qualifiers().isEmpty()) {
             return List.of();
         }
-        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(ipoint.toCriteria())
+        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(ServiceInfoCriteria.create(ipoint))
                 .qualifiers(Set.of())
                 .addContract(IP_PROVIDER_TYPE)
                 .build();

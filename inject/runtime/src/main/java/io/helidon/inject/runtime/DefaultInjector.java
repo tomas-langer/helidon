@@ -27,7 +27,7 @@ import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.Injector;
 import io.helidon.inject.api.InjectorOptions;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.ServiceSource;
+import io.helidon.inject.service.Descriptor;
 
 /**
  * Default reference implementation for the {@link Injector}.
@@ -41,7 +41,7 @@ class DefaultInjector implements Injector {
     }
 
     @Override
-    public ActivationResult activateInject(ServiceSource<?> serviceSource,
+    public ActivationResult activateInject(Descriptor<?> serviceSource,
                                            InjectorOptions opts) throws InjectionServiceProviderException {
         Objects.requireNonNull(serviceSource);
         Objects.requireNonNull(opts);

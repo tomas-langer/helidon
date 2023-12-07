@@ -1,7 +1,7 @@
 package io.helidon.inject.configdriven.runtime;
 
-import io.helidon.inject.api.ModuleComponent;
-import io.helidon.inject.api.ServiceBinder;
+import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.ServiceBinder;
 
 /**
  * An explicit and manually implemented module component, as we are doing a bit of unusual work with config bean registry.

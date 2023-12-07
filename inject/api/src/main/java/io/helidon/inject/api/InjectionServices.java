@@ -190,8 +190,8 @@ public interface InjectionServices {
      * The order in which services are deactivated is dependent upon whether the {@link #activationLog()} is available.
      * If the activation log is available, then services will be shutdown in reverse chronological order as how they
      * were started. If the activation log is not enabled or found to be empty then the deactivation will be in reverse
-     * order of {@link RunLevel} from the highest value down to the lowest value. If two services share
-     * the same {@link RunLevel} value then the ordering will be based upon the implementation's comparator.
+     * order of {@link io.helidon.inject.service.Inject.RunLevel} from the highest value down to the lowest value. If two services share
+     * the same {@link io.helidon.inject.service.Inject.RunLevel} value then the ordering will be based upon the implementation's comparator.
      * <p>
      * When shutdown returns, it is guaranteed that all services were shutdown, or failed to achieve shutdown.
      * <p>

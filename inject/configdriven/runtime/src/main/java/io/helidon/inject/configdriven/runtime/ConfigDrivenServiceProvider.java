@@ -26,25 +26,25 @@ import io.helidon.inject.api.Activator;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.DeActivationRequest;
 import io.helidon.inject.api.Event;
-import io.helidon.inject.api.InjectionContext;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
-import io.helidon.inject.api.ServiceSource;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.configdriven.api.ConfigBeanFactory;
 import io.helidon.inject.configdriven.api.ConfigDriven;
 import io.helidon.inject.configdriven.api.NamedInstance;
+import io.helidon.inject.runtime.HelidonInjectionContext;
 import io.helidon.inject.runtime.ServiceProviderBase;
+import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.InjectionContext;
+import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
 
-import static io.helidon.inject.api.CommonQualifiers.WILDCARD_NAMED;
 import static java.lang.System.Logger.Level.DEBUG;
 
 class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
@@ -62,20 +62,20 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             = new ConcurrentHashMap<>();
     private final List<ConfigBeanServiceProvider<CB>> managedConfigBeans = new ArrayList<>();
     private final Set<Qualifier> qualifiers;
-    private final ServiceSource<T> descriptor;
+    private final Descriptor<T> descriptor;
 
     private volatile ConfigDrivenBinderImpl cdInjectionContext;
 
-    ConfigDrivenServiceProvider(InjectionServices injectionServices, ServiceSource<T> descriptor) {
+    ConfigDrivenServiceProvider(InjectionServices injectionServices, Descriptor<T> descriptor) {
         super(injectionServices, descriptor);
 
         this.descriptor = descriptor;
         Set<Qualifier> qualifiers = new LinkedHashSet<>(descriptor.qualifiers());
-        qualifiers.add(WILDCARD_NAMED);
+        qualifiers.add(Qualifier.WILDCARD_NAMED);
         this.qualifiers = Set.copyOf(qualifiers);
     }
 
-    static <T> Activator<T> create(InjectionServices injectionServices, ServiceSource<T> descriptor) {
+    static <T> Activator<T> create(InjectionServices injectionServices, Descriptor<T> descriptor) {
         return new ConfigDrivenServiceProvider<>(injectionServices, descriptor);
     }
 
@@ -96,7 +96,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             return Optional.empty();
         }
 
-        ServiceInfoCriteria dep = ipInfo.toCriteria();
+        ServiceInfoCriteria dep = ServiceInfoCriteria.create(ipInfo);
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
                 .addContract(configBeanType())
                 .build();
@@ -171,7 +171,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
                         managedConfiguredServicesMap.isEmpty()
                                 && (
                                 qualifiers.isEmpty()
-                                        || qualifiers.contains(WILDCARD_NAMED))
+                                        || qualifiers.contains(Qualifier.WILDCARD_NAMED))
                                 || (!hasValue && configuredByQualifier.isPresent())));
 
         boolean serviceTypeMatch = criteria.matches(this);
@@ -224,7 +224,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             return map;
         }
 
-        Map<String, ConfigDrivenInstanceProvider<?, CB>> result = new TreeMap<>(NameComparator.instance());
+        Map<String, ConfigDrivenInstanceProvider<?, CB>> result = new TreeMap<>(NamedInstance.nameComparator());
         result.putAll(map);
         return result;
     }
@@ -493,7 +493,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
                 copy.put(beanInstanceBinding.id(), supplier);
             }
 
-            return InjectionContext.create(copy);
+            return HelidonInjectionContext.create(copy);
         }
 
         private record RuntimeBind(IpId id, boolean provider, boolean optional) {

@@ -18,8 +18,7 @@ package io.helidon.inject.api;
 
 import java.util.List;
 import java.util.Optional;
-
-import jakarta.inject.Provider;
+import java.util.function.Supplier;
 
 /**
  * Provides ability to contextualize the injected service by the target receiver of the injection point dynamically
@@ -32,7 +31,7 @@ import jakarta.inject.Provider;
  *
  * @param <T> the type that the provider produces
  */
-public interface InjectionPointProvider<T> extends Provider<T> {
+public interface InjectionPointProvider<T> extends Supplier<T> {
 
     /**
      * Get (or create) an instance of this service type using default/empty criteria and context.

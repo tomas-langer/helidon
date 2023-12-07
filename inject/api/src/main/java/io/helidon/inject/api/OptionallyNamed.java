@@ -21,7 +21,7 @@ import java.util.Optional;
 /**
  * Provides a means to identify if the instance is optionally named.
  *
- * @see jakarta.inject.Named
+ * @see io.helidon.inject.service.Inject.Named
  */
 public interface OptionallyNamed {
 

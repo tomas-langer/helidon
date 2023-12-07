@@ -16,9 +16,9 @@
 
 package io.helidon.inject.tests.interception;
 
-import io.helidon.inject.api.Contract;
+import io.helidon.inject.service.Inject;
 
-@Contract
+@Inject.Contract
 interface OtherContract {
     @Modify
     @Repeat

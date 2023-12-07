@@ -17,7 +17,7 @@ import io.helidon.common.types.TypeName;
 public class MapClassNamedProvider implements AnnotationMapperProvider {
     @Override
     public Set<TypeName> supportedAnnotations() {
-        return Set.of(InjectCodegenTypes.HELIDON_CLASS_NAMED);
+        return Set.of(InjectCodegenTypes.INJECT_CLASS_NAMED);
     }
 
     @Override
@@ -32,7 +32,7 @@ public class MapClassNamedProvider implements AnnotationMapperProvider {
 
         @Override
         public boolean supportsAnnotation(Annotation annotation) {
-            return annotation.typeName().equals(InjectCodegenTypes.HELIDON_CLASS_NAMED);
+            return annotation.typeName().equals(InjectCodegenTypes.INJECT_CLASS_NAMED);
         }
 
         @Override

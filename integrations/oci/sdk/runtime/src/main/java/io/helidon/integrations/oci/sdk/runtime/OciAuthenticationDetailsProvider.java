@@ -31,7 +31,8 @@ import io.helidon.common.Weight;
 import io.helidon.common.types.Annotation;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
-import io.helidon.inject.api.IpId;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.IpId;
 
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
@@ -42,8 +43,6 @@ import com.oracle.bmc.auth.ResourcePrincipalAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimpleAuthenticationDetailsProvider;
 import com.oracle.bmc.auth.SimplePrivateKeySupplier;
 import com.oracle.bmc.auth.StringPrivateKeySupplier;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 
 import static io.helidon.common.types.Annotations.findFirst;
 import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
@@ -55,7 +54,7 @@ import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
  * @see OciConfigBlueprint
  * @see OciConfig
  */
-@Singleton
+@Inject.Singleton
 @Weight(DEFAULT_INJECT_WEIGHT)
 class OciAuthenticationDetailsProvider implements InjectionPointProvider<AbstractAuthenticationDetailsProvider> {
     static final System.Logger LOGGER = System.getLogger(OciAuthenticationDetailsProvider.class.getName());
@@ -126,7 +125,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
     }
 
     static String toNamedProfile(IpId.Builder ipiBuilder) {
-        Optional<? extends Annotation> named = findFirst(Named.class, ipiBuilder.qualifiers());
+        Optional<? extends Annotation> named = findFirst(Inject.Named.class, ipiBuilder.qualifiers());
         if (named.isEmpty()) {
             return null;
         }
@@ -144,7 +143,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
             return null;
         }
 
-        Optional<? extends Annotation> named = findFirst(Named.class, ipi.qualifiers());
+        Optional<? extends Annotation> named = findFirst(Inject.Named.class, ipi.qualifiers());
         if (named.isEmpty()) {
             return null;
         }

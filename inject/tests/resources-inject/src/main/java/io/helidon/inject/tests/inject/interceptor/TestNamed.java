@@ -19,7 +19,7 @@ package io.helidon.inject.tests.inject.interceptor;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import io.helidon.inject.api.InterceptedTrigger;
+import io.helidon.inject.service.InterceptedTrigger;
 
 /**
  * Used as an {@link InterceptedTrigger} from the maven-plugin call (see pom.xml).

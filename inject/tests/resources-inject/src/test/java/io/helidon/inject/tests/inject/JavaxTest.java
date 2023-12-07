@@ -18,10 +18,10 @@ package io.helidon.inject.tests.inject;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
-import io.helidon.inject.api.Qualifier;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
+import io.helidon.inject.service.Qualifier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.enterprise.inject.Default;
@@ -56,7 +56,7 @@ class JavaxTest {
     }
 
     /**
-     * Uses {@link io.helidon.inject.codegen.InjectOptions#MAP_APPLICATION_TO_SINGLETON_SCOPE}.
+     * Uses {@code inject.mapApplicationToSingletonScope}.
      * This also verifies that the qualifiers were mapped over properly from javax as well.
      */
     @Test

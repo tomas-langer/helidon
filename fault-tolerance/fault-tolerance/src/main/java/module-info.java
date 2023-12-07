@@ -31,17 +31,17 @@ module io.helidon.faulttolerance {
     requires io.helidon.common.types;
     requires io.helidon.common.configurable;
     requires io.helidon.config;
-    requires io.helidon.inject.api;
+    requires io.helidon.inject.service;
     requires io.helidon.builder.api;
 
-    requires static jakarta.inject;
     requires static io.helidon.common.features.api;
     requires static io.helidon.inject.configdriven.api;
+    requires static io.helidon.inject.api;
 
 
     exports io.helidon.faulttolerance;
 
     // inject module
-    provides io.helidon.inject.api.ModuleComponent with io.helidon.faulttolerance.HelidonInjection__ModuleComponent;
+    provides io.helidon.inject.service.ModuleComponent with io.helidon.faulttolerance.HelidonInjection__ModuleComponent;
 
 }

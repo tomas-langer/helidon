@@ -23,12 +23,12 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.helidon.builder.api.RuntimeType;
-import io.helidon.inject.api.Contract;
+import io.helidon.inject.service.Inject;
 
 /**
  * Retry supports retry policies to be applied on an execution of asynchronous tasks.
  */
-@Contract
+@Inject.Contract
 @RuntimeType.PrototypedBy(RetryConfig.class)
 public interface Retry extends FtHandler, RuntimeType.Api<RetryConfig> {
     /**

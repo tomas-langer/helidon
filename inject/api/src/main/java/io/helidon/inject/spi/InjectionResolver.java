@@ -19,8 +19,8 @@ package io.helidon.inject.spi;
 import java.util.Optional;
 
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.IpId;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.IpId;
 
 /**
  * Implementors of this contract can assist with resolving injection points.

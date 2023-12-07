@@ -14,8 +14,6 @@ import io.helidon.common.types.TypeNames;
 
 class ModuleComponentHandler {
     private static final String MODULE_NAME = "HelidonInjection__ModuleComponent";
-    private static final TypeName MODULE_COMPONENT_TYPE = TypeName.create("io.helidon.inject.api.ModuleComponent");
-    private static final TypeName SERVICE_BINDER_TYPE = TypeName.create("io.helidon.inject.api.ServiceBinder");
     private static final TypeName GENERATOR = TypeName.create(ModuleComponentHandler.class);
 
     private ModuleComponentHandler() {
@@ -32,7 +30,7 @@ class ModuleComponentHandler {
 
         ClassModel.Builder builder = ClassModel.builder()
                 .type(newType)
-                .addInterface(MODULE_COMPONENT_TYPE)
+                .addInterface(InjectCodegenTypes.MODULE_COMPONENT)
                 .isFinal(true)
                 .description("Generated ModuleComponent, loaded by ServiceLoader.");
 
@@ -77,7 +75,7 @@ class ModuleComponentHandler {
         builder.addMethod(configure -> configure.name("configure")
                 .addAnnotation(Annotations.OVERRIDE)
                 .addParameter(binder -> binder.name("binder")
-                        .type(SERVICE_BINDER_TYPE))
+                        .type(InjectCodegenTypes.SERVICE_BINDER))
                 .update(methodBody -> {
                     for (TypeName generatedServiceDescriptor : generatedServiceDescriptors) {
                         methodBody.addContent("binder.bind(")

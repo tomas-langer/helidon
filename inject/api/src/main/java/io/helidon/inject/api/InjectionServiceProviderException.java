@@ -19,6 +19,8 @@ package io.helidon.inject.api;
 import java.util.Objects;
 import java.util.Optional;
 
+import io.helidon.inject.service.ServiceInfo;
+
 /**
  * An exception relative to a {@link ServiceProvider}.
  */
@@ -27,7 +29,7 @@ public class InjectionServiceProviderException extends InjectionException {
     /**
      * The service provider this exception pertains.
      */
-    private final ServiceDescriptor<?> serviceProvider;
+    private final ServiceInfo<?> serviceProvider;
 
     /**
      * A general purpose exception from the Injection framework.
@@ -63,7 +65,7 @@ public class InjectionServiceProviderException extends InjectionException {
      * @param serviceDescriptor   the service provider
      */
     public InjectionServiceProviderException(String msg,
-                                             ServiceDescriptor<?> serviceDescriptor) {
+                                             ServiceInfo<?> serviceDescriptor) {
         super(msg);
         Objects.requireNonNull(serviceDescriptor);
         this.serviceProvider = serviceDescriptor;
@@ -78,7 +80,7 @@ public class InjectionServiceProviderException extends InjectionException {
      */
     public InjectionServiceProviderException(String msg,
                                              Throwable cause,
-                                             ServiceDescriptor<?> serviceProvider) {
+                                             ServiceInfo<?> serviceProvider) {
         super(msg, cause);
         Objects.requireNonNull(serviceProvider);
         this.serviceProvider = serviceProvider;
@@ -89,7 +91,7 @@ public class InjectionServiceProviderException extends InjectionException {
      *
      * @return the optional / contextual service provider
      */
-    public Optional<ServiceDescriptor<?>> serviceDescriptor() {
+    public Optional<ServiceInfo<?>> serviceDescriptor() {
         return Optional.ofNullable(serviceProvider);
     }
 

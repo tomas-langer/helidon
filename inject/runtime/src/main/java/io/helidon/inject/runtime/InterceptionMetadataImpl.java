@@ -3,21 +3,20 @@ package io.helidon.inject.runtime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.api.CommonQualifiers;
 import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.InterceptionMetadata;
-import io.helidon.inject.api.Interceptor;
-import io.helidon.inject.api.InvocationContext;
-import io.helidon.inject.api.Invoker;
-import io.helidon.inject.api.Qualifier;
-import io.helidon.inject.api.ServiceDescriptor;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-
-import jakarta.inject.Provider;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.InterceptionMetadata;
+import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.InvocationContext;
+import io.helidon.inject.service.Invoker;
+import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceInfo;
 
 class InterceptionMetadataImpl implements InterceptionMetadata {
     private final Services services;
@@ -27,13 +26,13 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
     }
 
     @Override
-    public List<Provider<Interceptor>> interceptors(Set<Qualifier> typeQualifiers,
+    public List<Supplier<Interceptor>> interceptors(Set<Qualifier> typeQualifiers,
                                                     List<Annotation> typeAnnotations,
                                                     TypedElementInfo element) {
         // need to find all interceptors for the providers (ordered by weight)
-        List<ServiceProvider<Interceptor>> allInterceptors = services.lookupAll(Interceptor.class, CommonQualifiers.WILDCARD);
+        List<ServiceProvider<Interceptor>> allInterceptors = services.lookupAll(Interceptor.class, Inject.Named.WILDCARD_NAME);
 
-        List<Provider<Interceptor>> result = new ArrayList<>();
+        List<Supplier<Interceptor>> result = new ArrayList<>();
 
         for (ServiceProvider<Interceptor> interceptor : allInterceptors) {
             if (applicable(typeAnnotations, interceptor)) {
@@ -49,12 +48,12 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
     }
 
     @Override
-    public <T> Invoker<T> createInvoker(ServiceDescriptor<?> descriptor,
-                                 Set<Qualifier> typeQualifiers,
-                                 List<Annotation> typeAnnotations,
-                                 TypedElementInfo element,
-                                 Invoker<T> targetInvoker,
-                                 Set<Class<? extends Throwable>> checkedExceptions) {
+    public <T> Invoker<T> createInvoker(ServiceInfo<?> descriptor,
+                                        Set<Qualifier> typeQualifiers,
+                                        List<Annotation> typeAnnotations,
+                                        TypedElementInfo element,
+                                        Invoker<T> targetInvoker,
+                                        Set<Class<? extends Throwable>> checkedExceptions) {
         var interceptors = interceptors(typeQualifiers,
                                         typeAnnotations,
                                         element);
@@ -71,6 +70,21 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
                                                               params,
                                                               checkedExceptions);
         }
+    }
+
+    @Override
+    public <V> V invoke(ServiceInfo<?> descriptor,
+                        List<Annotation> typeAnnotations,
+                        TypedElementInfo element,
+                        List<Supplier<Interceptor>> interceptors,
+                        Invoker<V> call,
+                        Object... args) {
+        return Invocation.createInvokeAndSupply(descriptor,
+                                                typeAnnotations,
+                                                element,
+                                                interceptors,
+                                                call,
+                                                args);
     }
 
     private boolean applicable(List<Annotation> typeAnnotations, ServiceProvider<Interceptor> interceptor) {

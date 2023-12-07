@@ -21,12 +21,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import io.helidon.common.config.Config;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Metrics;
-import io.helidon.inject.api.RunLevel;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.configdriven.configuredby.application.test.ASimpleRunLevelService;
+import io.helidon.inject.service.Inject;
 
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
@@ -34,7 +35,6 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.empty;
 
 /**
  * Designed to re-run the same tests from base, but using the application-created DI model instead.
@@ -62,11 +62,11 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
         Set<TypeName> searchLog = new LinkedHashSet<>(contractSearchLog);
         searchLog.addAll(servicesSearchLog);
 
-        // everything is handle by Application class
+        // everything is handled by Application class
         // except for config beans, and these are handled by  ConfigDrivenInstanceProvider itself
         assertThat("Full log: " + searchLog,
                    searchLog,
-                   empty());
+                   contains(TypeName.create(Config.class)));
 
         // there is always a lookup for Config from config bean registry
         // nothing else should be done
@@ -91,7 +91,7 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
                    is(0));
 
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .runLevel(RunLevel.STARTUP)
+                .runLevel(Inject.RunLevel.STARTUP)
                 .build();
         List<ServiceProvider<?>> startups = services.lookupAll(criteria);
         List<String> desc = startups.stream().map(ServiceProvider::description).collect(Collectors.toList());

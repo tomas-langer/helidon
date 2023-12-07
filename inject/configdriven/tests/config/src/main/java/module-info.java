@@ -32,6 +32,6 @@ module io.helidon.builder.config.tests.test.config {
 
     exports io.helidon.inject.configdriven.tests.config;
 
-    provides io.helidon.inject.api.ModuleComponent
+    provides io.helidon.inject.service.ModuleComponent
             with io.helidon.inject.configdriven.tests.config.HelidonInjection__ModuleComponent;
 }
