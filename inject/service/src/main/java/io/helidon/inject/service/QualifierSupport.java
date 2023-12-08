@@ -11,6 +11,18 @@ import io.helidon.common.types.TypeName;
 class QualifierSupport {
     static final class CustomMethods {
         /**
+         * Represents a wildcard {@link io.helidon.inject.service.Inject.Named} qualifier.
+         */
+        @Prototype.Constant
+        static final Qualifier WILDCARD_NAMED = createNamed(Inject.Named.WILDCARD_NAME);
+
+        /**
+         * Represents an instance named with the default name: {@value io.helidon.inject.service.Inject.Named#DEFAULT_NAME}.
+         */
+        @Prototype.Constant
+        static final Qualifier DEFAULT_NAMED = createNamed(Inject.Named.DEFAULT_NAME);
+
+        /**
          * The type name for {@link io.helidon.inject.service.Inject.ClassNamed}.
          */
         private static final TypeName CLASS_NAMED = TypeName.create(Inject.ClassNamed.class);

@@ -18,25 +18,22 @@ package io.helidon.inject.tests.inject.tbox.impl;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.tests.inject.Verification;
 import io.helidon.inject.tests.inject.tbox.AbstractBlade;
 import io.helidon.inject.tests.inject.tbox.AbstractSaw;
 import io.helidon.inject.tests.inject.tbox.Lubricant;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-
 /**
  * Kept intentionally in a different package from {@link AbstractSaw} for testing.
  */
-@Singleton
+@Inject.Singleton
 @SuppressWarnings("unused")
 public class HandSaw extends AbstractSaw {
 
@@ -45,11 +42,11 @@ public class HandSaw extends AbstractSaw {
 
     private int setterInjectedLubricantInSubClassInjectedCount;
 
-    @Inject @Named(FineBlade.NAME) Provider<AbstractBlade> fineBladeFieldInjectedPkgPrivateProviderInSubClass;
-    @Inject @Named(FineBlade.NAME) Optional<AbstractBlade> fineBladeFieldInjectedPkgPrivateOptionalInSubClass;
-    @Inject @Named(FineBlade.NAME) List<AbstractBlade> fineBladeFieldInjectedPkgPrivateListInSubClass;
+    @Inject.Point @Inject.Named(FineBlade.NAME) Supplier<AbstractBlade> fineBladeFieldInjectedPkgPrivateProviderInSubClass;
+    @Inject.Point @Inject.Named(FineBlade.NAME) Optional<AbstractBlade> fineBladeFieldInjectedPkgPrivateOptionalInSubClass;
+    @Inject.Point @Inject.Named(FineBlade.NAME) List<AbstractBlade> fineBladeFieldInjectedPkgPrivateListInSubClass;
 
-    Provider<AbstractBlade> setterInjectedPkgPrivateProviderInSubClass;
+    Supplier<AbstractBlade> setterInjectedPkgPrivateProviderInSubClass;
     Optional<AbstractBlade> setterInjectedPkgPrivateOptionalInSubClass;
     List<AbstractBlade> setterInjectedPkgPrivateListInSubClass;
     List<InjectionPointProvider<AbstractBlade>> setterInjectedAllProviderListInSubClass;
@@ -62,7 +59,7 @@ public class HandSaw extends AbstractSaw {
     HandSaw() {
     }
 
-    @Inject
+    @Inject.Point
     public HandSaw(Optional<Lubricant> lubricant) {
         ctorInjectedLubricantInSubClass = lubricant;
     }
@@ -72,33 +69,33 @@ public class HandSaw extends AbstractSaw {
         return Optional.of(getClass().getSimpleName());
     }
 
-    @Inject
+    @Inject.Point
     protected void injectLubricant(Optional<Lubricant> lubricant) {
         setterInjectedLubricantInSubClass = lubricant;
         setterInjectedLubricantInSubClassInjectedCount++;
     }
 
-    @Inject
-    void setBladeProvider(Provider<AbstractBlade> blade) {
+    @Inject.Point
+    void setBladeProvider(Supplier<AbstractBlade> blade) {
         setterInjectedPkgPrivateProviderInSubClass = blade;
         setterInjectedPkgPrivateProviderInSubClassInjectedCount++;
     }
 
-    @Inject
+    @Inject.Point
     void setBladeOptional(Optional<AbstractBlade> blade) {
         setterInjectedPkgPrivateOptionalInSubClass = blade;
         setterInjectedPkgPrivateOptionalInSubClassInjectedCount++;
     }
 
-    @Inject
+    @Inject.Point
     void setBladeList(List<AbstractBlade> blades) {
         setterInjectedPkgPrivateListInSubClass = blades;
         setterInjectedPkgPrivateListInSubClassInjectedCount++;
     }
 
-    @Inject
+    @Inject.Point
     @SuppressWarnings("unchecked")
-    void setAllBlades(@Named("*") List<Provider<AbstractBlade>> blades) {
+    void setAllBlades(@Inject.Named("*") List<Supplier<AbstractBlade>> blades) {
         setterInjectedAllProviderListInSubClass = (List) blades;
         setterInjectedAllProviderListInSubClassInjectedCount++;
     }

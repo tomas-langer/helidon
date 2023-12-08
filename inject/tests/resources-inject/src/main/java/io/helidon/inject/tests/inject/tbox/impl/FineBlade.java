@@ -18,11 +18,10 @@ package io.helidon.inject.tests.inject.tbox.impl;
 
 import java.util.Optional;
 
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.tests.inject.tbox.AbstractBlade;
 
-import jakarta.inject.Named;
-
-@Named(FineBlade.NAME)
+@Inject.Named(FineBlade.NAME)
 public class FineBlade extends AbstractBlade {
 
     static final String NAME = "fine";

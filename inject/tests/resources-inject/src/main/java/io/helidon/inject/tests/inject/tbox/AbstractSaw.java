@@ -18,55 +18,54 @@ package io.helidon.inject.tests.inject.tbox;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.tests.inject.Verification;
 import io.helidon.inject.tests.inject.tbox.impl.DullBlade;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Provider;
-
 public abstract class AbstractSaw extends Verification implements Tool {
-    @Inject protected Provider<AbstractBlade> fieldInjectedProtectedProviderInAbstractBase;
-    @Inject protected Optional<AbstractBlade> fieldInjectedProtectedOptionalInAbstractBase;
-    @Inject protected List<AbstractBlade> fieldInjectedProtectedListInAbstractBase;
-    @Inject protected List<AbstractBlade> fieldInjectedProtectedProviderListInAbstractBase;
+    @Inject.Point protected Supplier<AbstractBlade> fieldInjectedProtectedProviderInAbstractBase;
+    @Inject.Point protected Optional<AbstractBlade> fieldInjectedProtectedOptionalInAbstractBase;
+    @Inject.Point protected List<AbstractBlade> fieldInjectedProtectedListInAbstractBase;
+    @Inject.Point protected List<AbstractBlade> fieldInjectedProtectedProviderListInAbstractBase;
 
-    @Inject Provider<AbstractBlade> fieldInjectedPkgPrivateProviderInAbstractBase;
-    @Inject Optional<AbstractBlade> fieldInjectedPkgPrivateOptionalInAbstractBase;
-    @Inject List<AbstractBlade> fieldInjectedPkgPrivateListInAbstractBase;
-    @Inject List<Provider<AbstractBlade>> fieldInjectedPkgPrivateProviderListInAbstractBase;
+    @Inject.Point Supplier<AbstractBlade> fieldInjectedPkgPrivateProviderInAbstractBase;
+    @Inject.Point Optional<AbstractBlade> fieldInjectedPkgPrivateOptionalInAbstractBase;
+    @Inject.Point List<AbstractBlade> fieldInjectedPkgPrivateListInAbstractBase;
+    @Inject.Point List<Supplier<AbstractBlade>> fieldInjectedPkgPrivateProviderListInAbstractBase;
 
-    Provider<AbstractBlade> setterInjectedPkgPrivateProviderInAbstractBase;
+    Supplier<AbstractBlade> setterInjectedPkgPrivateProviderInAbstractBase;
     Optional<AbstractBlade> setterInjectedPkgPrivateOptionalInAbstractBase;
     List<AbstractBlade> setterInjectedPkgPrivateListInAbstractBase;
-    List<Provider<AbstractBlade>> setterInjectedPkgPrivateProviderListInAbstractBase;
+    List<Supplier<AbstractBlade>> setterInjectedPkgPrivateProviderListInAbstractBase;
 
     int setterInjectedPkgPrivateProviderInAbstractBaseInjectedCount;
     int setterInjectedPkgPrivateOptionalInAbstractBaseInjectedCount;
     int setterInjectedPkgPrivateListInAbstractBaseInjectedCount;
     int setterInjectedPkgPrivateProviderListInAbstractBaseInjectedCount;
 
-    @Inject
-    void setBladeProvider(Provider<AbstractBlade> blade) {
+    @Inject.Point
+    void setBladeProvider(Supplier<AbstractBlade> blade) {
         setterInjectedPkgPrivateProviderInAbstractBase = blade;
         setterInjectedPkgPrivateProviderInAbstractBaseInjectedCount++;
     }
 
-    @Inject
+    @Inject.Point
     void setBladeOptional(Optional<AbstractBlade> blade) {
         setterInjectedPkgPrivateOptionalInAbstractBase = blade;
         setterInjectedPkgPrivateOptionalInAbstractBaseInjectedCount++;
     }
 
-    @Inject
+    @Inject.Point
     void setBladeList(List<AbstractBlade> blades) {
         setterInjectedPkgPrivateListInAbstractBase = blades;
         setterInjectedPkgPrivateListInAbstractBaseInjectedCount++;
     }
 
-    @Inject
-    public void setBladeProviders(List<Provider<AbstractBlade>> blades) {
+    @Inject.Point
+    public void setBladeProviders(List<Supplier<AbstractBlade>> blades) {
         setterInjectedPkgPrivateProviderListInAbstractBase = blades;
         setterInjectedPkgPrivateProviderListInAbstractBaseInjectedCount++;
     }

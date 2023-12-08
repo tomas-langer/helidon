@@ -17,10 +17,9 @@
 package io.helidon.inject.tests.inject.tbox;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import io.helidon.inject.service.Inject;
-
-import jakarta.inject.Provider;
 
 /**
  * Testing.
@@ -33,13 +32,13 @@ public interface ToolBox {
      *
      * @return for testing
      */
-    List<Provider<Tool>> toolsInBox();
+    List<Supplier<Tool>> toolsInBox();
 
     /**
      * Testing.
      *
      * @return for testing
      */
-    Provider<Hammer> preferredHammer();
+    Supplier<Hammer> preferredHammer();
 
 }

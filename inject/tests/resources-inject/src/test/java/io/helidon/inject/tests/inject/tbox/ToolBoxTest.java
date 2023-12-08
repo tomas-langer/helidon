@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.helidon.common.types.TypeName;
@@ -43,7 +44,6 @@ import io.helidon.inject.tests.inject.tbox.impl.BigHammer;
 import io.helidon.inject.tests.inject.tbox.impl.HandSaw;
 import io.helidon.inject.tests.inject.tbox.impl.MainToolBox;
 
-import jakarta.inject.Provider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -109,7 +109,7 @@ class ToolBoxTest {
         assertThat(mtb.postConstructCallCount, equalTo(1));
         assertThat(mtb.preDestroyCallCount, equalTo(0));
         assertThat(mtb.setterCallCount, equalTo(1));
-        List<Provider<Tool>> allTools = mtb.toolsInBox();
+        List<Supplier<Tool>> allTools = mtb.toolsInBox();
         desc = allTools.stream().map(Object::toString).collect(Collectors.toList());
         assertThat(desc,
                    contains("SledgeHammer:INIT",
@@ -121,7 +121,7 @@ class ToolBoxTest {
                             "LittleHammer:INIT"));
         assertThat(mtb.screwdriver(), notNullValue());
 
-        Provider<Hammer> hammer = Objects.requireNonNull(toolBox.preferredHammer());
+        Supplier<Hammer> hammer = Objects.requireNonNull(toolBox.preferredHammer());
         assertThat(hammer.get(), notNullValue());
         assertThat(hammer.get(), is(hammer.get()));
         assertThat(BigHammer.class, equalTo(hammer.get().getClass()));
@@ -252,16 +252,18 @@ class ToolBoxTest {
      */
     @Test
     void noServiceActivationRequiresLookupWhenApplicationIsPresent() {
+        // there are two lookups - ConfigDrivenRegistry looks for Config, and we look for all services
         List<ServiceProvider<?>> allServices = services
                 .lookupAll(ServiceInfoCriteria.builder().build(), true);
         allServices.stream()
-                .filter(sp -> !(sp instanceof Provider))
+                .filter(it -> !it.isProvider())
                 .forEach(sp -> {
                     sp.get();
                     assertThat("activation should not have triggered any lookups (for singletons): "
-                                       + sp + " triggered lookups", injectionServices.metrics().orElseThrow().lookupCount(),
-                               equalTo(1));
-        });
+                                       + sp + " triggered lookups", injectionServices.metrics()
+                                       .flatMap(metrics -> metrics.lookupCount()).orElseThrow(),
+                               equalTo(2));
+                });
     }
 
     @Test
@@ -293,8 +295,10 @@ class ToolBoxTest {
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.stacking.OuterCommonContractImpl"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.stacking.CommonContractImpl"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.TestingSingleton"), "ACTIVE->DESTROYED"));
-        // 8 above + Config module + ConfigProducer + config driven lifecycle service = 11
-        assertThat(report + " : expected 9 services to be present", report.size(), equalTo(11));
+        assertThat(report, hasEntry(create("io.helidon.inject.configdriven.runtime.ConfigDrivenInjectModule"), "ACTIVE->DESTROYED"));
+        assertThat(report, hasEntry(create("io.helidon.config.HelidonInjection__ModuleComponent"), "ACTIVE->DESTROYED"));
+
+        assertThat(report + " : expected 10 services to be present", report.size(), equalTo(10));
 
         assertThat(TestingSingleton.postConstructCount(), equalTo(1));
         assertThat(TestingSingleton.preDestroyCount(), equalTo(1));
@@ -312,7 +316,7 @@ class ToolBoxTest {
                                           e2 -> e2.getValue().startingActivationPhase().toString()
                                                   + "->" + e2.getValue().finishingActivationPhase()));
         // now contains config as well
-        assertThat(report.toString(), report.size(), is(11));
+        assertThat(report.toString(), report.size(), is(10));
 
         tearDown();
         map = injectionServices.shutdown().orElseThrow();
@@ -322,7 +326,7 @@ class ToolBoxTest {
     @Test
     void knownProviders() {
         List<ServiceProvider<?>> providers = services.lookupAll(
-                ServiceInfoCriteria.builder().addContract(Provider.class).build());
+                ServiceInfoCriteria.builder().addContract(Supplier.class).build());
         List<String> desc = providers.stream().map(ServiceProvider::description).collect(Collectors.toList());
         // note that order matters here (weight ranked)
         assertThat(desc,

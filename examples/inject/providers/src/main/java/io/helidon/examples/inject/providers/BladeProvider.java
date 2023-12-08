@@ -26,14 +26,13 @@ import io.helidon.examples.inject.basics.Little;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.ServiceInfoCriteria;
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.service.IpId;
 import io.helidon.inject.service.Qualifier;
 
-import jakarta.inject.Singleton;
-
 import static io.helidon.common.LazyValue.create;
 
-@Singleton
+@Inject.Singleton
 public class BladeProvider implements InjectionPointProvider<Blade> {
 
     static final LazyValue<Optional<Blade>> LARGE_BLADE = create(() -> Optional.of(new SizedBlade(SizedBlade.Size.LARGE)));

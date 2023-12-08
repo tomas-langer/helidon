@@ -68,7 +68,7 @@ public final class Inject {
      * A qualifier that can restrict injection to specifically named instances, or that qualifies services with that name.
      */
     @Qualifier
-    @Retention(RetentionPolicy.SOURCE)
+    @Retention(RetentionPolicy.CLASS)
     @Documented
     @Target({ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD, TYPE})
     public @interface Named {
@@ -115,15 +115,15 @@ public final class Inject {
      * A singleton instance is guaranteed to have its constructor, post-construct, and pre-destroy methods invoked once within
      * the lifecycle of the service registry.
      */
-    /*
-    Implementation note: we currently do not support custom scopes, so there is no Scope meta annotation.
-    If we decide to support scopes, we may want to introduce such an annotation.
-     */
     @Documented
     @Retention(RetentionPolicy.CLASS)
     @Service
     @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
     public @interface Singleton {
+        /*
+        Implementation note: we currently do not support custom scopes, so there is no Scope meta annotation.
+        If we decide to support scopes, we may want to introduce such an annotation.
+        */
     }
 
     /**

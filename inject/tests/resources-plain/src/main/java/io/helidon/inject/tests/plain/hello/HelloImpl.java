@@ -18,50 +18,43 @@ package io.helidon.inject.tests.plain.hello;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
+import io.helidon.inject.service.Inject;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
-
-@Singleton
+@Inject.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT)
 public class HelloImpl implements Hello {
 
-    @Inject
+    @Inject.Point
     World world;
 
-    @Inject
-    Provider<World> worldRef;
+    @Inject.Point
+    Supplier<World> worldRef;
 
-    @Inject
-    List<Provider<World>> listOfWorldRefs;
+    @Inject.Point
+    List<Supplier<World>> listOfWorldRefs;
 
-    @Inject
+    @Inject.Point
     List<World> listOfWorlds;
 
-    @Inject @Named("red")
+    @Inject.Point
+    @Inject.Named("red")
     Optional<World> redWorld;
-
-    @Inject
+    int postConstructCallCount;
+    int preDestroyCallCount;
+    @Inject.Point
     private Optional<World> privateWorld;
-
     private World setWorld;
     private Optional<World> setRedWorld;
     private World ctorWorld;
 
-    int postConstructCallCount;
-    int preDestroyCallCount;
-
     HelloImpl() {
     }
 
-    @Inject
+    @Inject.Point
     public HelloImpl(World ctorWorld) {
         this();
         this.ctorWorld = ctorWorld;
@@ -77,23 +70,23 @@ public class HelloImpl implements Hello {
         assert (ctorWorld == world) : "world != ctorWorld";
     }
 
-    @Inject
+    @Inject.Point
     public void world(World world) {
         this.setWorld = world;
         assert (world == ctorWorld);
     }
 
-    @Inject
-    public void setRedWorld(@Named("red") Optional<World> redWorld) {
+    @Inject.Point
+    public void setRedWorld(@Inject.Named("red") Optional<World> redWorld) {
         this.setRedWorld = redWorld;
     }
 
-    @PostConstruct
+    @Inject.PostConstruct
     public void postConstruct() {
         postConstructCallCount++;
     }
 
-    @PreDestroy
+    @Inject.PreDestroy
     public void preDestroy() {
         preDestroyCallCount++;
     }

@@ -325,11 +325,11 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
 
     LinkedHashSet<Path> getDependencies(String optionalScopeFilter) {
         MavenProject project = getProject();
-        LinkedHashSet<Path> result = new LinkedHashSet<>(project.getDependencyArtifacts().size());
-        for (Object a : project.getDependencyArtifacts()) {
+        LinkedHashSet<Path> result = new LinkedHashSet<>();
+        for (Object a : project.getCompileArtifacts()) {
             Artifact artifact = (Artifact) a;
             if (optionalScopeFilter == null || optionalScopeFilter.equals(artifact.getScope())) {
-                result.add(((Artifact) a).getFile().toPath());
+                result.add(artifact.getFile().toPath());
             }
         }
         return result;

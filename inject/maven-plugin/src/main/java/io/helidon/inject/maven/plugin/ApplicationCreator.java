@@ -51,6 +51,8 @@ import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Interceptor;
 import io.helidon.inject.service.IpId;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
@@ -430,8 +432,33 @@ public class ApplicationCreator {
     }
 
     private void createConfigureMethodBody(InjectionServices services, Set<TypeName> serviceTypes, Method.Builder method) {
-        // first collect required dependencies by descriptor
 
+        // find all interceptors and bind them
+        List<ServiceProvider<Interceptor>> interceptors = services.services()
+                .lookupAll(Interceptor.class, Inject.Named.WILDCARD_NAME);
+        method.addContent("binder.interceptors(");
+        boolean multiline = interceptors.size() > 2;
+        if (multiline) {
+            method.addContentLine("");
+        }
+
+        Iterator<ServiceProvider<Interceptor>> interceptorIterator = interceptors.iterator();
+        while(interceptorIterator.hasNext()) {
+            method.addContent(interceptorIterator.next().descriptorType().genericTypeName())
+                    .addContent(".INSTANCE");
+            if (interceptorIterator.hasNext()) {
+                method.addContent(",");
+                if (multiline) {
+                    method.addContentLine("");
+                } else {
+                    method.addContent(" ");
+                }
+            }
+        }
+
+        method.addContentLine(");");
+
+        // first collect required dependencies by descriptor
         Map<TypeName, Set<Binding>> injectionPlan = new LinkedHashMap<>();
         for (TypeName serviceType : serviceTypes) {
             BindingPlan plan = bindingPlan(services, serviceType);

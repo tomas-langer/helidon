@@ -19,12 +19,11 @@ package io.helidon.inject.tests.inject.tbox.impl;
 import java.io.Serializable;
 import java.util.Optional;
 
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.tests.inject.SomeOtherLocalNonContractInterface1;
 import io.helidon.inject.tests.inject.tbox.Tool;
 
-import jakarta.inject.Singleton;
-
-@Singleton
+@Inject.Singleton
 public class Screwdriver implements Tool, SomeOtherLocalNonContractInterface1, Serializable {
 
     @Override

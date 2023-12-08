@@ -500,7 +500,7 @@ class InjectionExtension implements InjectCodegenExtension {
         return method.parameterArguments()
                 .stream()
                 .map(param -> {
-                    String constantName = "IP_PARAM_" + paramCounter.get();
+                    String constantName = "IP_PARAM_" + paramCounter.getAndIncrement();
                     InjectionCodegenContext.Assignment assignment = translateParameter(param.typeName(), constantName);
                     return new ParamDefinition(method,
                                                param,
@@ -629,34 +629,34 @@ class InjectionExtension implements InjectCodegenExtension {
                     String constantName = "IP_PARAM_" + paramCounter.getAndIncrement();
                     InjectionCodegenContext.Assignment assignment = translateParameter(param.typeName(), constantName);
                     return new ParamDefinition(constructor,
-                                        param,
-                                        constantName,
-                                        param.typeName(),
-                                        assignment.usedType(),
-                                        assignment.codeGenerator(),
-                                        ElementKind.CONSTRUCTOR,
-                                        constructor.elementName(),
-                                        param.elementName(),
-                                        param.elementName(),
-                                        false,
-                                        param.annotations(),
-                                        qualifiers(service, param),
-                                        contract(service.typeName()
-                                                         .fqName() + " Constructor parameter: " + param.elementName(),
-                                                 assignment.usedType()),
-                                        constructor.accessModifier(),
-                                        "<init>");
+                                               param,
+                                               constantName,
+                                               param.typeName(),
+                                               assignment.usedType(),
+                                               assignment.codeGenerator(),
+                                               ElementKind.CONSTRUCTOR,
+                                               constructor.elementName(),
+                                               param.elementName(),
+                                               param.elementName(),
+                                               false,
+                                               param.annotations(),
+                                               qualifiers(service, param),
+                                               contract(service.typeName()
+                                                                .fqName() + " Constructor parameter: " + param.elementName(),
+                                                        assignment.usedType()),
+                                               constructor.accessModifier(),
+                                               "<init>");
                 })
                 .forEach(result::add);
     }
 
     private void fieldParam(TypeInfo service, List<ParamDefinition> result, AtomicInteger paramCounter, TypedElementInfo field) {
-        String constantName = "IP_PARAM_" + paramCounter.get();
+        String constantName = "IP_PARAM_" + paramCounter.getAndIncrement();
         InjectionCodegenContext.Assignment assignment = translateParameter(field.typeName(), constantName);
 
         result.add(new ParamDefinition(field,
                                        field,
-                                       "IP_PARAM_" + paramCounter.get(),
+                                       constantName,
                                        field.typeName(),
                                        assignment.usedType(),
                                        assignment.codeGenerator(),
@@ -1493,7 +1493,7 @@ class InjectionExtension implements InjectCodegenExtension {
                 // multiline
                 for (int i = 0; i < params.size(); i++) {
                     ParamDefinition param = params.get(i);
-                    methodBuilder.addContent("ctx.param(" + param.constantName() + ")");
+                    param.assignmentHandler().accept(methodBuilder);
                     if (i != params.size() - 1) {
                         // not the last one
                         methodBuilder.addContentLine(",");
@@ -1502,10 +1502,14 @@ class InjectionExtension implements InjectCodegenExtension {
                 methodBuilder.decreaseContentPadding();
                 methodBuilder.decreaseContentPadding();
             } else {
-                methodBuilder.addContent(params.stream()
-                                                 .map(ParamDefinition::constantName)
-                                                 .map(it -> "ctx.param(" + it + ")")
-                                                 .collect(Collectors.joining(", ")));
+                for (int i = 0; i < params.size(); i++) {
+                    ParamDefinition param = params.get(i);
+                    param.assignmentHandler().accept(methodBuilder);
+                    if (i != params.size() - 1) {
+                        // not the last one
+                        methodBuilder.addContent(",");
+                    }
+                }
             }
             // single line
             methodBuilder.addContentLine(");");
@@ -1556,7 +1560,9 @@ class InjectionExtension implements InjectCodegenExtension {
                     .addContentLine(");")
                     .addContentLine("}");
         } else {
-            methodBuilder.addContentLine("instance." + field.ipParamName() + " = ctx.param(" + field.constantName() + ");");
+            methodBuilder.addContent("instance." + field.ipParamName() + " = ")
+                    .update(it -> field.assignmentHandler().accept(it))
+                    .addContentLine(";");
         }
     }
 

@@ -53,6 +53,11 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
+    public void interceptors(ServiceInfo<?>... descriptors) {
+        services.interceptors(descriptors);
+    }
+
+    @Override
     public Binder bindNull(IpId ipIdentity) {
         // NOP
         return this;

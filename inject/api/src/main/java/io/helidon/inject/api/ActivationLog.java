@@ -22,8 +22,7 @@ import java.util.Optional;
  * Tracks the transformations of {@link ServiceProvider}'s {@link ActivationStatus} in lifecycle activity (i.e., activation
  * startup and deactivation shutdown).
  *
- * @see Activator
- * @see DeActivator
+ * @see io.helidon.inject.api.Activator
  */
 public interface ActivationLog {
 

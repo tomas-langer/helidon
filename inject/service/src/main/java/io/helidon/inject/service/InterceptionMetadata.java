@@ -24,6 +24,18 @@ public interface InterceptionMetadata {
                                              List<Annotation> typeAnnotations,
                                              TypedElementInfo element);
 
+    /**
+     * Create an invoker that handles interception if needed.
+     *
+     * @param descriptor        descriptor of the service being intercepted
+     * @param typeQualifiers    qualifiers on the type
+     * @param typeAnnotations   annotations on the type
+     * @param element           element being intercepted
+     * @param targetInvoker     invoker of the element
+     * @param checkedExceptions expected checked exceptions that can be thrown by the invoker
+     * @param <T>               type of the result of the invoker
+     * @return an invoker that handles interception if enabled and if there are matching interceptors
+     */
     <T> Invoker<T> createInvoker(ServiceInfo<?> descriptor,
                                  Set<Qualifier> typeQualifiers,
                                  List<Annotation> typeAnnotations,
@@ -31,10 +43,22 @@ public interface InterceptionMetadata {
                                  Invoker<T> targetInvoker,
                                  Set<Class<? extends Throwable>> checkedExceptions);
 
-    <V> V invoke(ServiceInfo<?> descriptor,
+    /**
+     * Create an intercepted invoker and invoke it.
+     *
+     * @param descriptor      descriptor of the service being intercepted
+     * @param typeAnnotations annotations on the type
+     * @param element         element being intercepted
+     * @param interceptors    list of interceptors that match the element
+     * @param targetInvoker   invoker of the element
+     * @param args            arguments to pass to the first interceptor
+     * @param <T>             type of the result of the invoker
+     * @return result of the intercepted call
+     */
+    <T> T invoke(ServiceInfo<?> descriptor,
                  List<Annotation> typeAnnotations,
                  TypedElementInfo element,
                  List<Supplier<Interceptor>> interceptors,
-                 Invoker<V> call,
+                 Invoker<T> targetInvoker,
                  Object... args);
 }

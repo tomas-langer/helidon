@@ -16,6 +16,7 @@
 
 package io.helidon.common.types;
 
+import java.lang.annotation.Retention;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -64,6 +65,11 @@ public final class TypeNames {
      * Type name for {@link java.time.Duration}.
      */
     public static final TypeName DURATION = TypeName.create(Duration.class);
+    /**
+     * Type name for {@link java.lang.annotation.Retention}.
+     */
+    public static final TypeName RETENTION = TypeName.create(Retention.class);
+
     /*
     Primitive types and their boxed counterparts
      */
@@ -148,7 +154,7 @@ public final class TypeNames {
      */
     public static final TypeName HELIDON_TYPE_NAME = TypeName.create(TypeName.class);
     /**
-     * Helidon typed element info type
+     * Helidon typed element info type.
      */
     public static final TypeName HELIDON_TYPED_ELEMENT_INFO = TypeName.create(TypedElementInfo.class);
     /**
@@ -163,8 +169,7 @@ public final class TypeNames {
      * Helidon access modifier (enum).
      */
     public static final TypeName HELIDON_ACCESS_MODIFIER = TypeName.create(AccessModifier.class);
-    /**
-     * Type name for {@link java.lang.annotation.Retention}.
-     */
-    public static final TypeName RETENTION = TypeName.create("java.lang.annotation.Retention");
+
+    private TypeNames() {
+    }
 }

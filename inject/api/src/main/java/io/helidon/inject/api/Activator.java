@@ -40,6 +40,8 @@ package io.helidon.inject.api;
  *
  * The activator also supports the inverse process of deactivation, where any {@link io.helidon.inject.service.Inject.PreDestroy}
  * methods may be called, and which moves the service to a terminal {@link io.helidon.inject.api.Phase#DESTROYED phase}.
+ *
+ * @param <T> type of the service provided by the activated service provider
  */
 public interface Activator<T> {
 

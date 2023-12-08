@@ -29,6 +29,7 @@ import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ActivationRequest;
@@ -49,6 +50,8 @@ import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.api.ServiceProviderProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Interceptor;
 import io.helidon.inject.service.ModuleComponent;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.service.ServiceBinder;
@@ -71,6 +74,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     // a ma of service provider instances to their activators, so we can correctly handle activation requests
     private final Map<ServiceProvider<?>, Activator<?>> providersToActivators = new IdentityHashMap<>();
     private volatile State stateWatchOnly; // we are watching and not mutating this state - owned by DefaultInjectionServices
+    private volatile List<ServiceProvider<Interceptor>> interceptors;
 
     /**
      * The constructor taking a configuration.
@@ -145,6 +149,22 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         }
 
         return exploded;
+    }
+
+    List<ServiceProvider<Interceptor>> interceptors() {
+        if (interceptors == null) {
+            interceptors = lookupAll(Interceptor.class, Inject.Named.WILDCARD_NAME);
+        }
+        return interceptors;
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void interceptors(ServiceInfo<?>... descriptors) {
+        List interceptors = new ArrayList<>(Stream.of(descriptors)
+                                                    .map(this::serviceProvider)
+                                                    .toList());
+
+        this.interceptors = List.copyOf(interceptors);
     }
 
     private static boolean hasNamed(Set<Qualifier> qualifiers) {
@@ -233,9 +253,9 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                                                         boolean expected) {
         TypeName desiredType = TypeName.create(type);
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .serviceTypeName(desiredType) // try to find exact matches
-                .addContract(desiredType) // and if not found, use as contract
+                .addContract(desiredType)
                 .build();
+
         return (Optional) lookupFirst(criteria, expected);
     }
 
@@ -248,15 +268,17 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 .addContract(TypeName.create(type))
                 .addQualifier(Qualifier.createNamed(name))
                 .build();
+
         return (Optional) lookupFirst(criteria, expected);
     }
 
     @Override
     public Optional<ServiceProvider<?>> lookupFirst(ServiceInfoCriteria criteria,
                                                     boolean expected) {
-        List<ServiceProvider<?>> result = lookup(criteria, expected, 1);
-        assert (!expected || !result.isEmpty());
-        return (result.isEmpty()) ? Optional.empty() : Optional.of(result.getFirst());
+
+        return lookup(criteria, expected, 1)
+                .stream()
+                .findFirst();
     }
 
     @Override
@@ -265,15 +287,14 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
         ServiceInfoCriteria serviceInfo = ServiceInfoCriteria.builder()
                 .addContract(TypeName.create(type))
                 .build();
+
         return (List) lookup(serviceInfo, false, Integer.MAX_VALUE);
     }
 
     @Override
     public List<ServiceProvider<?>> lookupAll(ServiceInfoCriteria criteria,
                                               boolean expected) {
-        List<ServiceProvider<?>> result = lookup(criteria, expected, Integer.MAX_VALUE);
-        assert (!expected || !result.isEmpty());
-        return result;
+        return lookup(criteria, expected, Integer.MAX_VALUE);
     }
 
     @Override
@@ -366,7 +387,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                 .build();
     }
 
-    @SuppressWarnings({"rawtypes"})
+    @SuppressWarnings({"rawtypes", "unchecked"})
     List<ServiceProvider<?>> lookup(ServiceInfoCriteria criteria,
                                     boolean expected,
                                     int limit) {
@@ -394,6 +415,13 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                         .toList();
                 if (!result.isEmpty()) {
                     return explodeFilterAndSort(result, criteria, expected);
+                }
+            }
+            if (criteria.serviceTypeName().isEmpty()) {
+                // we may have a request for service type and not a contract
+                ServiceProvider exact = servicesByTypeName.get(theOnlyContractRequested);
+                if (exact != null) {
+                    return explodeFilterAndSort(List.of(exact), criteria, expected);
                 }
             }
         }

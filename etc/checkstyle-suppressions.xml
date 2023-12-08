@@ -43,6 +43,10 @@ record here.
     <suppress files="integrations/cdi/jpa-cdi/src/main/java/io/helidon/integrations/cdi/jpa/JpaExtension\.java"
             checks="FileLength"/>
 
+    <!-- We code generate additional methods to the Qualifier type, so we need to ignore this check -->
+    <suppress files="inject/service/src/main/java/io/helidon/inject/service/QualifierBlueprint\.java"
+            checks="InterfaceIsType"/>
+
     <!--
     - Module exclusions
     -->

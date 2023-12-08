@@ -25,17 +25,15 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.ServiceInfoCriteria;
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.tests.inject.tbox.AbstractBlade;
-
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
 
 /**
  * Provides contextual injection for blades.
  */
-@Singleton
-@Named("*")
+@Inject.Singleton
+@Inject.Named("*")
 public class BladeProvider implements InjectionPointProvider<AbstractBlade> {
 
     static final Qualifier all = Qualifier.createNamed("*");

@@ -22,9 +22,6 @@ import java.util.function.Supplier;
 
 import io.helidon.inject.service.Inject;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
-
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Inject.Singleton
 @io.helidon.inject.service.Inject.RunLevel(0)
@@ -66,12 +63,12 @@ public class HelloInjectionWorldImpl implements HelloInjectionWorld {
         this.setWorld = world;
     }
 
-    @PostConstruct
+    @Inject.PostConstruct
     public void postConstruct() {
         postConstructCallCount++;
     }
 
-    @PreDestroy
+    @Inject.PreDestroy
     public void preDestroy() {
         preDestroyCallCount++;
     }

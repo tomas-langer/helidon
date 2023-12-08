@@ -20,28 +20,25 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.service.InterceptedTrigger;
 import io.helidon.inject.tests.inject.ClassNamedX;
 import io.helidon.inject.tests.plain.interceptor.IA;
 import io.helidon.inject.tests.plain.interceptor.IB;
 import io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-
 /**
  * This test case is applying {@link InterceptorBasedAnno} (an {@link InterceptedTrigger})
  * <p>
  * Also note that interception was triggered by the presence of the {@link TestNamed} and {@link InterceptorBasedAnno} triggers.
  */
-@Singleton
+@Inject.Singleton
 @io.helidon.inject.service.Inject.ClassNamed(ClassNamedX.class)
 @TestNamed("TestNamed-ClassX")
 @io.helidon.inject.service.Inject.ExternalContracts(value = Closeable.class)
 @SuppressWarnings("unused")
 public class XImpl implements IA, IB, Closeable {
-    @Inject
+    @Inject.Point
     @InterceptorBasedAnno("<init>")
     // will be intercepted
     XImpl(Optional<IA> optionalIA) {
@@ -65,18 +62,18 @@ public class XImpl implements IA, IB, Closeable {
     public void methodIA2() {
     }
 
-    @Named("methodIB")
+    @Inject.Named("methodIB")
     @InterceptorBasedAnno("IBSubAnno")
     @Override
     // will be intercepted
-    public void methodIB(@Named("arg1") String val) {
+    public void methodIB(@Inject.Named("arg1") String val) {
     }
 
-    @Named("methodIB2")
+    @Inject.Named("methodIB2")
     @InterceptorBasedAnno("IBSubAnno")
     @Override
     // will be intercepted
-    public String methodIB2(@Named("arg1") String val) {
+    public String methodIB2(@Inject.Named("arg1") String val) {
         return val;
     }
 

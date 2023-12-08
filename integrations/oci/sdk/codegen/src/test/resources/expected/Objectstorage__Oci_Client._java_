@@ -21,24 +21,22 @@ import java.util.Optional;
 import io.helidon.common.Generated;
 import io.helidon.common.Weight;
 import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.service.Inject.ExternalContracts;
 import io.helidon.inject.api.InjectionPointProvider;
+import io.helidon.inject.service.Inject;
 
 import com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider;
 import com.oracle.bmc.objectstorage.ObjectStorageClient;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 
 @Generated(value = "io.helidon.integrations.oci.sdk.codegen.OciInjectionCodegenObserver", trigger = "com.oracle.bmc.objectstorage.ObjectStorage")
-@Singleton
+@Inject.Singleton
 @Weight(99.0)
-@ExternalContracts(com.oracle.bmc.objectstorage.ObjectStorage.class)
+@Inject.ExternalContracts(com.oracle.bmc.objectstorage.ObjectStorage.class)
 class ObjectStorage__Oci_Client implements InjectionPointProvider<ObjectStorageClient> {
 
     private final InjectionPointProvider<AbstractAuthenticationDetailsProvider> authProvider;
     private final InjectionPointProvider<ObjectStorageClient.Builder> builderProvider;
 
-    @Inject
+    @Inject.Point
     @Deprecated
     ObjectStorage__Oci_Client(InjectionPointProvider<AbstractAuthenticationDetailsProvider> authProvider, InjectionPointProvider<ObjectStorageClient.Builder> builderProvider) {
         this.authProvider = authProvider;

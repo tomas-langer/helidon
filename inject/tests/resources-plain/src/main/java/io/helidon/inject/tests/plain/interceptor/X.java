@@ -20,14 +20,12 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.Inject;
 
-@Singleton
-@Named("ClassX")
+@Inject.Singleton
+@Inject.Named("ClassX")
 public class X implements IA, IB, Closeable {
-    @Inject
+    @Inject.Point
     public X(Optional<IA> optionalIA) {
         assert (optionalIA.isEmpty());
     }
@@ -41,17 +39,17 @@ public class X implements IA, IB, Closeable {
     public void methodIA2() {
     }
 
-    @Named("methodIB2")
+    @Inject.Named("methodIB2")
     @InterceptorBasedAnno("IBSubAnno")
     @Override
-    public String methodIB2(@Named("arg1") String val) {
+    public String methodIB2(@Inject.Named("arg1") String val) {
         return val;
     }
 
-    @Named("methodIB")
+    @Inject.Named("methodIB")
     @InterceptorBasedAnno("IBSubAnno")
     @Override
-    public void methodIB(@Named("arg1") String val) {
+    public void methodIB(@Inject.Named("arg1") String val) {
     }
 
     @InterceptorBasedAnno

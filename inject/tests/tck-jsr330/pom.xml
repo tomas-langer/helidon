@@ -104,7 +104,6 @@
                 </executions>
                 <configuration>
                     <compilerArgs>
-                        <arg>-Ainject.debug=${inject.debug}</arg>
                         <arg>-Ainject.autoAddNonContractInterfaces=true</arg>
                     </compilerArgs>
                     <packageNames>
@@ -121,7 +120,7 @@
                             <serviceTypeName>org.atinject.tck.auto.accessories.SpareTire</serviceTypeName>
                             <qualifiers>
                                 <qualifier>
-                                    <qualifierTypeName>jakarta.inject.Named</qualifierTypeName>
+                                    <qualifierTypeName>io.helidon.inject.service.Inject.Named</qualifierTypeName>
                                     <value>spare</value>
                                 </qualifier>
                             </qualifiers>

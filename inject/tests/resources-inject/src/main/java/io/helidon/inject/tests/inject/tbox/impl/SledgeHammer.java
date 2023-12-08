@@ -20,11 +20,10 @@ import java.util.Optional;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.tests.inject.tbox.Hammer;
 
-import jakarta.inject.Singleton;
-
-@Singleton
+@Inject.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 2)
 //@Named(SledgeHammer.NAME)
 public class SledgeHammer implements Hammer {

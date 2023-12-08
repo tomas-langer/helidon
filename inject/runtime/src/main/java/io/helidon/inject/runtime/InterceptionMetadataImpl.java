@@ -30,7 +30,12 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
                                                     List<Annotation> typeAnnotations,
                                                     TypedElementInfo element) {
         // need to find all interceptors for the providers (ordered by weight)
-        List<ServiceProvider<Interceptor>> allInterceptors = services.lookupAll(Interceptor.class, Inject.Named.WILDCARD_NAME);
+        List<ServiceProvider<Interceptor>> allInterceptors;
+        if (services instanceof DefaultServices ds) {
+            allInterceptors = ds.interceptors();
+        } else {
+            allInterceptors = services.lookupAll(Interceptor.class, Inject.Named.WILDCARD_NAME);
+        }
 
         List<Supplier<Interceptor>> result = new ArrayList<>();
 
@@ -77,13 +82,13 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
                         List<Annotation> typeAnnotations,
                         TypedElementInfo element,
                         List<Supplier<Interceptor>> interceptors,
-                        Invoker<V> call,
+                        Invoker<V> targetInvoker,
                         Object... args) {
         return Invocation.createInvokeAndSupply(descriptor,
                                                 typeAnnotations,
                                                 element,
                                                 interceptors,
-                                                call,
+                                                targetInvoker,
                                                 args);
     }
 

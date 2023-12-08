@@ -20,7 +20,7 @@ import java.util.Optional;
 
 /**
  * An extension to {@link ServiceProvider} that allows for startup binding from a {@code Injection$$Application},
- * and thereby works in conjunction with the {@link ServiceBinder} during injection service registry
+ * and thereby works in conjunction with the {@link io.helidon.inject.service.ServiceBinder} during injection service registry
  * initialization.
  * <p>
  * The only guarantee the provider implementation has is ensuring that {@link io.helidon.inject.service.ModuleComponent} instances

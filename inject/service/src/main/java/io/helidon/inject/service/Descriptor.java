@@ -8,8 +8,10 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 
 /**
- * Usually code generated source of a service. In addition to providing service metadata, this also allows instantiation
- * and injection to the service instance. Methods from this interface are expected to be code generated (if applicable).
+ * A descriptor of a service. In addition to providing service metadata, this also allows instantiation
+ * and injection to the service instance.
+ * <p>
+ * Methods from this interface are expected to be code generated (if applicable).
  *
  * @param <T> type of the service implementation
  */
@@ -17,7 +19,8 @@ public interface Descriptor<T> extends ServiceInfo<T> {
     /**
      * Create a new service instance.
      *
-     * @param ctx injection context with all injection points data
+     * @param ctx                  injection context with all injection points data
+     * @param interceptionMetadata interception metadata to use when the constructor should be intercepted
      * @return a new instance, must be of the type T or a subclass
      */
     // we cannot return T, as it does not allow us to correctly handle inheritance
@@ -29,23 +32,30 @@ public interface Descriptor<T> extends ServiceInfo<T> {
     /**
      * Inject fields and methods.
      *
-     * @param ctx      injection context
+     * @param ctx                  injection context
      * @param interceptionMetadata interception metadata to support interception of field injection
-     * @param injected mutable set of already injected methods from subtypes
-     * @param instance instance to update
+     * @param injected             mutable set of already injected methods from subtypes
+     * @param instance             instance to update
      */
 
-    default void inject(InjectionContext ctx, InterceptionMetadata interceptionMetadata, Set<MethodSignature> injected, T instance) {
+    default void inject(InjectionContext ctx,
+                        InterceptionMetadata interceptionMetadata,
+                        Set<MethodSignature> injected,
+                        T instance) {
     }
 
     /**
      * Invoke {@link io.helidon.inject.service.Inject.PostConstruct} annotated method(s).
+     *
+     * @param instance instance to use
      */
     default void postConstruct(T instance) {
     }
 
     /**
      * Invoke {@link io.helidon.inject.service.Inject.PreDestroy} annotated method(s).
+     *
+     * @param instance instance to use
      */
     default void preDestroy(T instance) {
     }
@@ -72,11 +82,17 @@ public interface Descriptor<T> extends ServiceInfo<T> {
      * Method signature uniquely identifies a method by its signature.
      * The declaring class is the top level class that declares the method. This allows us to identify overridden methods.
      *
-     * @param declaringType top level type that declares the method, may be inaccessible (so cannot use class)
-     * @param name name of the method
+     * @param declaringType  top level type that declares the method, may be inaccessible (so cannot use class)
+     * @param name           name of the method
      * @param parameterTypes string representation of fully qualified (and with generic declaration) parameter types
      */
     record MethodSignature(TypeName declaringType, String name, List<String> parameterTypes) {
+        /**
+         * A simplified constructor for methods with no parameters.
+         *
+         * @param declaringType top level type that declares the method, may be inaccessible (so cannot use class)
+         * @param name name of the method
+         */
         public MethodSignature(TypeName declaringType, String name) {
             this(declaringType, name, List.of());
         }

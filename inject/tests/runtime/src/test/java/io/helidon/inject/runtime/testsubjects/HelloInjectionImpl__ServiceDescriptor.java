@@ -60,7 +60,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .typeName(TYPE_0)
             .build();
     private static final TypeName TYPE_1 = TypeName.create(
-            "jakarta.inject.Provider<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
+            "java.util.function.Supplier<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
     public static final IpId IP_1 = IpId.builder()
             .elementKind(ElementKind.FIELD)
             .name("worldRef")
@@ -71,7 +71,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .contract(TYPE_0)
             .build();
     private static final TypeName TYPE_2 = TypeName.create(
-            "java.util.List<jakarta.inject.Provider<io.helidon.inject.runtime.testsubjects.InjectionWorld>>");
+            "java.util.List<java.util.function.Supplier<io.helidon.inject.runtime.testsubjects.InjectionWorld>>");
     public static final IpId IP_2 = IpId.builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorldRefs")

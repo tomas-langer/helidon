@@ -3,6 +3,11 @@ package io.helidon.inject.api;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.service.Inject;
 
+/**
+ * {@link io.helidon.common.types.TypeName} that are commonly needed at runtime.
+ *
+ * @see io.helidon.common.types.TypeNames
+ */
 public final class InjectTypes {
     /**
      * Helidon {@link io.helidon.inject.service.Inject.Singleton}.

@@ -28,12 +28,4 @@ import io.helidon.common.types.Annotation;
 @Prototype.Blueprint
 @Prototype.CustomMethods(QualifierSupport.CustomMethods.class)
 interface QualifierBlueprint extends Annotation {
-    /**
-     * Represents a wildcard {@link io.helidon.inject.service.Inject.Named} qualifier.
-     */
-    Qualifier WILDCARD_NAMED = Qualifier.createNamed(Inject.Named.WILDCARD_NAME);
-    /**
-     * Represents an instance named with the default name: {@value io.helidon.inject.service.Inject.Named#DEFAULT_NAME}.
-     */
-    Qualifier DEFAULT_NAMED = Qualifier.createNamed(Inject.Named.DEFAULT_NAME);
 }

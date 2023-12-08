@@ -33,6 +33,13 @@ public interface ServiceInjectionPlanBinder {
     Binder bindTo(ServiceInfo<?> serviceDescriptor);
 
     /**
+     * Bind all discovered interceptors.
+     *
+     * @param descriptors interceptor services
+     */
+    void interceptors(ServiceInfo<?>... descriptors);
+
+    /**
      * The binder builder for the service plan.
      *
      * @see io.helidon.inject.service.IpId
@@ -91,6 +98,7 @@ public interface ServiceInjectionPlanBinder {
          * deferred resolver based binding. Typically, this represents some form of dynamic or configurable instance.
          *
          * @param id          the injection point identity
+         * @param useProvider whether to inject provider or service instance
          * @param serviceType the service type needing to be resolved
          * @return the binder builder
          */
@@ -98,14 +106,38 @@ public interface ServiceInjectionPlanBinder {
                            boolean useProvider,
                            Class<?> serviceType);
 
+        /**
+         * Bind an {@link java.util.Optional} injection point at runtime.
+         *
+         * @param id          injection point id
+         * @param useProvider whether to inject provider or service instance
+         * @param serviceType type of service to be discovered at runtime
+         * @return the binder builder
+         */
         Binder runtimeBindOptional(IpId id,
                                    boolean useProvider,
                                    Class<?> serviceType);
 
+        /**
+         * Bind a {@link java.util.List} injection point at runtime.
+         *
+         * @param id          injection point id
+         * @param useProvider whether to inject provider or service instance
+         * @param serviceType type of service to be discovered at runtime
+         * @return the binder builder
+         */
         Binder runtimeBindMany(IpId id,
                                boolean useProvider,
                                Class<?> serviceType);
 
+        /**
+         * Bind a nullable injection point at runtime.
+         *
+         * @param id          injection point id
+         * @param useProvider whether to inject provider or service instance
+         * @param serviceType type of service to be discovered at runtime
+         * @return the binder builder
+         */
         Binder runtimeBindNullable(IpId id,
                                    boolean useProvider,
                                    Class<?> serviceType);

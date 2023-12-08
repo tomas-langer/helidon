@@ -24,8 +24,8 @@ import io.helidon.builder.api.Prototype;
 import io.helidon.inject.service.IpId;
 
 /**
- * Aggregates the set of {@link InjectionPointInfo}'s that are dependent upon a specific and common
- * {@link ServiceInfo} definition.
+ * Aggregates the set of {@link io.helidon.inject.service.IpId}'s that are dependent upon a specific and common
+ * {@link io.helidon.inject.service.Descriptor} definition.
  */
 @Prototype.Blueprint
 interface DependencyInfoBlueprint {

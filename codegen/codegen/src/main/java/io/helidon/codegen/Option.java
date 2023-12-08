@@ -16,6 +16,7 @@
 
 package io.helidon.codegen;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -85,6 +86,17 @@ public interface Option<T> {
         return new OptionImpl<>(name, description, defaultValue, mapper, type);
     }
 
+    /**
+     * Create a new option that has a set of values, with a custom mapper.
+     *
+     * @param name         name of the option
+     * @param description  description of the option
+     * @param defaultValue default value
+     * @param mapper       mapper from string
+     * @param type         type of the option
+     * @param <T>          type of the option
+     * @return a new option that can be used to load value from {@link io.helidon.codegen.CodegenOptions}
+     */
     static <T> Option<Set<T>> createSet(String name,
                                         String description,
                                         Set<T> defaultValue,
@@ -93,12 +105,23 @@ public interface Option<T> {
         return new SetOptionImpl<>(name, description, defaultValue, mapper, type);
     }
 
-    static <T> Option<Set<T>> createList(String name,
-                                         String description,
-                                         Set<T> defaultValue,
-                                         Function<String, T> mapper,
-                                         GenericType<Set<T>> type) {
-        return new SetOptionImpl<>(name, description, defaultValue, mapper, type);
+    /**
+     * Create a new option that has a list of values, with a custom mapper.
+     *
+     * @param name         name of the option
+     * @param description  description of the option
+     * @param defaultValue default value
+     * @param mapper       mapper from string
+     * @param type         type of the option
+     * @param <T>          type of the option
+     * @return a new option that can be used to load value from {@link io.helidon.codegen.CodegenOptions}
+     */
+    static <T> Option<List<T>> createList(String name,
+                                          String description,
+                                          List<T> defaultValue,
+                                          Function<String, T> mapper,
+                                          GenericType<List<T>> type) {
+        return new ListOptionImpl<>(name, description, defaultValue, mapper, type);
     }
 
     /**

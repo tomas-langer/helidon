@@ -20,12 +20,9 @@ import java.io.Serializable;
 
 import io.helidon.inject.service.Inject;
 
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-
 @Inject.ExternalContracts(World.class)
-@Named("unknown")
-@Singleton
+@Inject.Named("unknown")
+@Inject.Singleton
 public class WorldImpl implements World, SomeOtherLocalNonContractInterface2, Serializable {
     private final String name;
 

@@ -29,6 +29,7 @@ import io.helidon.config.spi.ConfigSource;
 import io.helidon.inject.service.Inject;
 
 @Inject.Singleton
+@Inject.ExternalContracts(Config.class)
 class ConfigProducer implements Config {
     private final Config config;
 

@@ -24,10 +24,9 @@ import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
 import io.helidon.common.pki.Keys;
 import io.helidon.config.Config;
+import io.helidon.inject.service.Inject;
 
-import jakarta.inject.Singleton;
-
-@Singleton
+@Inject.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 1)
 class TestOciPrivateKeyDownloader extends DefaultOciPrivateKeyDownloader {
 

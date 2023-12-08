@@ -20,15 +20,13 @@ import java.util.Optional;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
+import io.helidon.inject.service.Inject;
 import io.helidon.inject.tests.inject.tbox.Hammer;
 import io.helidon.inject.tests.inject.tbox.Preferred;
 
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
-
-@Singleton
+@Inject.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 1)
-@Named(BigHammer.NAME)
+@Inject.Named(BigHammer.NAME)
 @Preferred
 public class BigHammer implements Hammer {
 
