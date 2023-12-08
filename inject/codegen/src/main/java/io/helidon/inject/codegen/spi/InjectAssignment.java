@@ -5,7 +5,18 @@ import java.util.Optional;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.InjectionCodegenContext;
 
-public interface ProviderSupport {
+/**
+ * Provides customized assignments for injected types.
+ * <p>
+ * When supporting third party injection frameworks (such as Jakarta Inject - JSR-330), it is quite easy to map annotations
+ * to Helidon equivalents, but we also need to support some prescribed types for injection.
+ * For example in Jakarta we need to support {@code Provider} type (same as {@link java.util.function.Supplier}, just predates
+ * its existence).
+ * As we need to assign the correct type to injection points, and it must behave similar to our Service provider, we need
+ * to provide source code mapping from {@link java.util.function.Supplier} to the type (always three: plain type,
+ * {@link java.util.Optional} type, and a {@link java.util.List} of types).
+ */
+public interface InjectAssignment {
     /**
      * Map the type to the correct one.
      *

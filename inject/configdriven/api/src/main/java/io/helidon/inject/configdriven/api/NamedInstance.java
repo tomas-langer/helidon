@@ -16,6 +16,7 @@
 
 package io.helidon.inject.configdriven.api;
 
+import java.io.Serializable;
 import java.util.Comparator;
 
 import io.helidon.inject.service.Inject;
@@ -40,7 +41,7 @@ public record NamedInstance<T>(T instance, String name) {
         return COMPARATOR_INSTANCE;
     }
 
-    private static class NameComparator implements Comparator<String> {
+    private static class NameComparator implements Comparator<String>, Serializable {
         @Override
         public int compare(String str1, String str2) {
             int result = str1.compareTo(str2);

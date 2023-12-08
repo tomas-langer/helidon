@@ -34,6 +34,11 @@ import io.helidon.inject.service.IpId;
 import io.helidon.inject.service.ServiceInfo;
 import io.helidon.inject.spi.InjectionResolver;
 
+/**
+ * A base of service providers, taking care of the common responsibilities, such as activation, lookup etc.
+ *
+ * @param <T> type of the provided service
+ */
 public abstract class ServiceProviderBase<T>
         extends DescribedServiceProvider<T>
         implements ServiceProviderBindable<T>, ServiceInfo<T>, Activator<T> {
@@ -47,21 +52,27 @@ public abstract class ServiceProviderBase<T>
 
     private final InjectionServices injectionServices;
     private final InterceptionMetadata interceptionMetadata;
-    private final Descriptor<T> source;
     private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+    private final Descriptor<T> descriptor;
 
     private volatile ServiceInstance<T> serviceInstance;
     private volatile Phase currentPhase = Phase.CONSTRUCTED;
     private volatile ServiceProvider<?> interceptor;
     private volatile InjectionContext injectionContext;
 
+    /**
+     * A new service provider base.
+     *
+     * @param injectionServices services this provider belongs to
+     * @param serviceDescriptor service descriptor
+     */
     protected ServiceProviderBase(InjectionServices injectionServices,
-                                  Descriptor<T> serviceSource) {
-        super(serviceSource);
+                                  Descriptor<T> serviceDescriptor) {
+        super(serviceDescriptor);
 
         this.injectionServices = injectionServices;
         this.interceptionMetadata = new InterceptionMetadataImpl(injectionServices);
-        this.source = serviceSource;
+        this.descriptor = serviceDescriptor;
     }
 
     @Override
@@ -215,6 +226,13 @@ public abstract class ServiceProviderBase<T>
         return contracts().contains(SUPPLIER_TYPE);
     }
 
+    /**
+     * Get the value from this service provider.
+     *
+     * @param expected whether the value is expected
+     * @return value, or {@code null} if value is not available and not expected
+     * @throws io.helidon.inject.api.ServiceProviderInjectionException in case the value is not available and expected
+     */
     protected T get(boolean expected) {
         Lock lock = rwLock.readLock();
         try {
@@ -237,23 +255,30 @@ public abstract class ServiceProviderBase<T>
         }
     }
 
+    /**
+     * Set an explicit phase of activation, and possibly an instance of the service.
+     *
+     * @param phase phase to set
+     * @param instance instance to set (nullabe!)
+     */
     protected void state(Phase phase, T instance) {
         Lock lock = rwLock.writeLock();
         try {
             lock.lock();
             this.currentPhase = phase;
             if (this.serviceInstance == null) {
-                this.serviceInstance = ServiceInstance.create(source, instance);
+                this.serviceInstance = ServiceInstance.create(descriptor, instance);
             }
         } finally {
             lock.unlock();
         }
     }
 
-    protected Descriptor<T> source() {
-        return source;
-    }
-
+    /**
+     * Configure current phase.
+     *
+     * @param phase phase to set
+     */
     protected void phase(Phase phase) {
         Lock lock = rwLock.writeLock();
         try {
@@ -263,17 +288,33 @@ public abstract class ServiceProviderBase<T>
         }
     }
 
+    /**
+     * Id of this service provider.
+     *
+     * @param fq use fully qualified name of the service
+     * @return id of this provider
+     */
     protected String id(boolean fq) {
         if (fq) {
-            return descriptor().serviceType().fqName();
+            return serviceInfo().serviceType().fqName();
         }
-        return descriptor().serviceType().classNameWithEnclosingNames();
+        return serviceInfo().serviceType().classNameWithEnclosingNames();
     }
 
+    /**
+     * Injection services this provider belongs to.
+     * @return injection services
+     */
     protected InjectionServices injectionServices() {
         return injectionServices;
     }
 
+    /**
+     * Activate based on an activation request.
+     *
+     * @param req activation request
+     * @return activation result
+     */
     protected ActivationResult doActivate(ActivationRequest req) {
         Phase initialPhase = this.currentPhase;
         Phase startingPhase = req.startingPhase().orElse(initialPhase);
@@ -335,6 +376,12 @@ public abstract class ServiceProviderBase<T>
         return res.build();
     }
 
+    /**
+     * Deactivate based on request.
+     *
+     * @param req request
+     * @return activation result
+     */
     protected ActivationResult doDeactivate(DeActivationRequest req) {
         ActivationResult.Builder res = ActivationResult.builder()
                 .serviceProvider(this)
@@ -378,7 +425,7 @@ public abstract class ServiceProviderBase<T>
 
         // descendant may set an explicit instance, in such a case, we will not re-create it
         if (serviceInstance == null) {
-            serviceInstance = ServiceInstance.create(interceptionMetadata, injectionContext, source);
+            serviceInstance = ServiceInstance.create(interceptionMetadata, injectionContext, descriptor);
             serviceInstance.construct();
         }
     }
@@ -389,8 +436,6 @@ public abstract class ServiceProviderBase<T>
                 .stream()
                 .filter(it -> it != this)
                 .toList();
-
-        // todo: if empty, try to use injection point provider
 
         TypeName ipType = dependency.typeName();
 
@@ -458,7 +503,9 @@ public abstract class ServiceProviderBase<T>
             return;
         }
 
-        if (ipType.equals(SUPPLIER_TYPE) || ipType.equals(SERVICE_PROVIDER_TYPE) || ipType.equals(INJECTION_POINT_PROVIDER_TYPE)) {
+        if (ipType.equals(SUPPLIER_TYPE)
+                || ipType.equals(SERVICE_PROVIDER_TYPE)
+                || ipType.equals(INJECTION_POINT_PROVIDER_TYPE)) {
             // is a provider needed?
             injectionPlan.put(dependency, discovered::getFirst);
             return;
@@ -467,6 +514,12 @@ public abstract class ServiceProviderBase<T>
         injectionPlan.put(dependency, discovered.getFirst()::get);
     }
 
+    /**
+     * Start transitioning to a state.
+     *
+     * @param res activation response builder
+     * @param phase phase to transition to
+     */
     protected void stateTransitionStart(ActivationResult.Builder res, Phase phase) {
         res.finishingActivationPhase(phase);
         this.currentPhase = phase;
@@ -482,6 +535,13 @@ public abstract class ServiceProviderBase<T>
 
     protected void init(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.INIT);
+    }
+
+    protected void preDestroy(DeActivationRequest req, ActivationResult.Builder res) {
+        if (serviceInstance != null) {
+            serviceInstance.preDestroy();
+            serviceInstance = null;
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -548,19 +608,21 @@ public abstract class ServiceProviderBase<T>
         this.injectionContext = new HelidonInjectionContext(injectionPlan);
     }
 
-    protected void preDestroy(DeActivationRequest req, ActivationResult.Builder res) {
-        if (serviceInstance != null) {
-            serviceInstance.preDestroy();
-            serviceInstance = null;
-        }
-    }
-
+    /**
+     * An implementation of a service binder.
+     */
     protected static class ServiceInjectBinderImpl implements ServiceInjectionPlanBinder.Binder {
         private final InjectionServices injectionServices;
         private final ServiceProviderBase<?> self;
         private final Map<IpId, Supplier<?>> injectionPlan = new HashMap<>();
         private final Services services;
 
+        /**
+         * Create a new instance of a binder.
+         *
+         * @param services injection services we are bound to
+         * @param self     service provider responsible for this binding
+         */
         protected ServiceInjectBinderImpl(InjectionServices services, ServiceProviderBase<?> self) {
             this.injectionServices = services;
             this.self = self;
@@ -710,6 +772,11 @@ public abstract class ServiceProviderBase<T>
             return this;
         }
 
+        /**
+         * Current injection plan.
+         *
+         * @return map of injection point ids to a supplier of their values
+         */
         protected Map<IpId, Supplier<?>> injectionPlan() {
             return injectionPlan;
         }

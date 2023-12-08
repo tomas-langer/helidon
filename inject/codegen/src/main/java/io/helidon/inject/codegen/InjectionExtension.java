@@ -26,6 +26,7 @@ import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.codegen.classmodel.Field;
+import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.codegen.classmodel.Method;
 import io.helidon.codegen.classmodel.TypeArgument;
 import io.helidon.common.HelidonServiceLoader;
@@ -164,9 +165,12 @@ class InjectionExtension implements InjectCodegenExtension {
                                                                descriptorType,
                                                                "1",
                                                                ""))
-                .description("Service descriptor for {@link " + serviceType.fqName() + "}.")
                 .type(descriptorType)
                 .addGenericArgument(TypeArgument.create("T extends " + serviceType.fqName()))
+                .javadoc(Javadoc.builder()
+                                 .add("Service descriptor for {@link " + serviceType.fqName() + "}.")
+                                 .addGenericArgument("T", "type of the service, for extensibility")
+                                 .build())
                 // we need to keep insertion order, as constants may depend on each other
                 .sortStaticFields(false);
 
@@ -463,6 +467,7 @@ class InjectionExtension implements InjectCodegenExtension {
         return result;
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber") // there is no sense in creating an object when all are required
     private MethodDefinition toMethodDefinition(TypeInfo service,
                                                 List<ParamDefinition> allParams,
                                                 AtomicInteger methodCounter,
@@ -566,8 +571,8 @@ class InjectionExtension implements InjectCodegenExtension {
             TypedElementInfo superMethod = found.get();
 
             boolean realOverride = true;
-            if (superMethod.accessModifier() == AccessModifier.PACKAGE_PRIVATE && !currentPackage.equals(type.typeName()
-                                                                                                                 .packageName())) {
+            if (superMethod.accessModifier() == AccessModifier.PACKAGE_PRIVATE
+                    && !currentPackage.equals(type.typeName().packageName())) {
                 // method has same signature, but is package local and is in a different package
                 realOverride = false;
             }
@@ -702,19 +707,22 @@ class InjectionExtension implements InjectCodegenExtension {
 
         if (typeName.isOptional()) {
             if (typeName.typeArguments().isEmpty()) {
-                throw new IllegalArgumentException("Injection point with Optional type must have a declared type argument: " + description);
+                throw new IllegalArgumentException("Injection point with Optional type must have a declared type argument: "
+                                                           + description);
             }
             return contract(description, typeName.typeArguments().getFirst());
         }
         if (typeName.isList()) {
             if (typeName.typeArguments().isEmpty()) {
-                throw new IllegalArgumentException("Injection point with List type must have a declared type argument: " + description);
+                throw new IllegalArgumentException("Injection point with List type must have a declared type argument: "
+                                                           + description);
             }
             return contract(description, typeName.typeArguments().getFirst());
         }
         if (typeName.isSupplier()) {
             if (typeName.typeArguments().isEmpty()) {
-                throw new IllegalArgumentException("Injection point with Supplier type must have a declared type argument: " + description);
+                throw new IllegalArgumentException("Injection point with Supplier type must have a declared type argument: "
+                                                           + description);
             }
             return contract(description, typeName.typeArguments().getFirst());
         }

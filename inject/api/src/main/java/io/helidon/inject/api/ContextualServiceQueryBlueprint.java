@@ -24,7 +24,8 @@ import io.helidon.builder.api.Prototype;
 import io.helidon.inject.service.IpId;
 
 /**
- * Combines the {@link ServiceInfo} criteria along with the {@link InjectionPointInfo} context
+ * Combines the {@link io.helidon.inject.api.ServiceInfoCriteria} criteria along with
+ * the {@link io.helidon.inject.service.IpId} context
  * that the query applies to.
  *
  * @see InjectionPointProvider
@@ -62,8 +63,8 @@ interface ContextualServiceQueryBlueprint {
         /**
          * Creates a contextual service query given the injection point info.
          *
-         * @param ipInfo    the injection point info
-         * @param expected  true if the query is expected to at least have a single match
+         * @param ipInfo   the injection point info
+         * @param expected true if the query is expected to at least have a single match
          * @return the query
          */
         @Prototype.FactoryMethod

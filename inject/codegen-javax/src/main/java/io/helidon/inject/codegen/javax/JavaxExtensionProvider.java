@@ -15,7 +15,23 @@ import io.helidon.inject.codegen.RoundContext;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation for
+ * {@link io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider} adding support for Jakarta types in
+ * {@code javax} packages.
+ * <p>
+ * This providers adds a new service that create a {@link java.util.function.Supplier} singleton for any provider discovered.
+ */
 public class JavaxExtensionProvider implements InjectCodegenExtensionProvider {
+    /**
+     * Required default constructor.
+     *
+     * @deprecated required by {@link java.util.ServiceLoader}
+     */
+    @Deprecated
+    public JavaxExtensionProvider() {
+    }
+
     @Override
     public Set<TypeName> supportedAnnotations() {
         return Set.of(InjectCodegenTypes.INJECT_SINGLETON,

@@ -9,6 +9,13 @@ import io.helidon.inject.codegen.InjectionCodegenContext;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation of
+ * {@link io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider} that adds support for checking annotations that are
+ * recognized, yet not supported.
+ * <p>
+ * The default behavior is to fail code generation session if such an annotation is encountered.
+ */
 public class UnsupportedTypesExtensionProvider implements InjectCodegenExtensionProvider {
     private static final Set<TypeName> TYPES = Set.of(
             JakartaTypes.ANNOT_MANAGED_BEAN,
@@ -38,6 +45,15 @@ public class UnsupportedTypesExtensionProvider implements InjectCodegenExtension
             CdiTypes.VETOED,
             CdiTypes.NONBINDING
     );
+
+    /**
+     * Required default constructor.
+     *
+     * @deprecated required by {@link java.util.ServiceLoader}
+     */
+    @Deprecated
+    public UnsupportedTypesExtensionProvider() {
+    }
 
     @Override
     public Set<Option<?>> supportedOptions() {

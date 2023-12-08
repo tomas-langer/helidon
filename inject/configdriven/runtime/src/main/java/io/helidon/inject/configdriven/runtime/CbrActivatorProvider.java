@@ -10,6 +10,12 @@ import io.helidon.inject.spi.ActivatorProvider;
  * Config bean registry.
  */
 public class CbrActivatorProvider implements ActivatorProvider {
+    /**
+     * Required default constructor.
+     *
+     * @deprecated required by {@link java.util.ServiceLoader}
+     */
+    @Deprecated
     public CbrActivatorProvider() {
     }
 

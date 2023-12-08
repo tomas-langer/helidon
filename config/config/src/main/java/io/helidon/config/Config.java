@@ -233,7 +233,6 @@ import io.helidon.inject.service.Inject;
  * throws {@link ConfigMappingException}, unless you use the config beans support,
  * that can handle classes that fulfill some requirements (see documentation), such as a public constructor,
  * static "create(Config)" method etc.
- * <p>
  * <h3><a id="multipleSources">Handling Multiple Configuration
  * Sources</a></h3>
  * A {@code Config} instance, including the default {@code Config} returned by

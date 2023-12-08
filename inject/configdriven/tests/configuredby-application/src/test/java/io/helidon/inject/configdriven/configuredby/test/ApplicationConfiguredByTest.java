@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import io.helidon.common.config.Config;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.Metrics;
 import io.helidon.inject.api.ServiceInfoCriteria;
@@ -35,6 +34,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.empty;
 
 /**
  * Designed to re-run the same tests from base, but using the application-created DI model instead.
@@ -66,7 +66,7 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
         // except for config beans, and these are handled by  ConfigDrivenInstanceProvider itself
         assertThat("Full log: " + searchLog,
                    searchLog,
-                   contains(TypeName.create(Config.class)));
+                   empty());
 
         // there is always a lookup for Config from config bean registry
         // nothing else should be done

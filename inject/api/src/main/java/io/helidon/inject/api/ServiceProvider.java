@@ -38,7 +38,7 @@ public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvid
      * @return the unique identity of the service provider
      */
     default String id() {
-        return descriptor().serviceType().fqName();
+        return serviceInfo().serviceType().fqName();
     }
 
     /**
@@ -76,7 +76,7 @@ public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvid
      *
      * @return descriptor of this service
      */
-    ServiceInfo<T> descriptor();
+    ServiceInfo<T> serviceInfo();
 
     /**
      * The current activation phase for this service provider.
@@ -99,51 +99,51 @@ public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvid
 
     @Override
     default TypeName serviceType() {
-        return descriptor().serviceType();
+        return serviceInfo().serviceType();
     }
 
     @Override
     default double weight() {
-        return descriptor().weight();
+        return serviceInfo().weight();
     }
 
     @Override
     default String runtimeId() {
-        return descriptor().runtimeId();
+        return serviceInfo().runtimeId();
     }
 
     @Override
     default Set<TypeName> contracts() {
-        return descriptor().contracts();
+        return serviceInfo().contracts();
     }
 
     @Override
     default List<IpId> dependencies() {
-        return descriptor().dependencies();
+        return serviceInfo().dependencies();
     }
 
     @Override
     default Set<Qualifier> qualifiers() {
-        return descriptor().qualifiers();
+        return serviceInfo().qualifiers();
     }
 
     @Override
     default int runLevel() {
-        return descriptor().runLevel();
+        return serviceInfo().runLevel();
     }
 
     @Override
     default Set<TypeName> scopes() {
-        return descriptor().scopes();
+        return serviceInfo().scopes();
     }
 
     @Override
     default TypeName descriptorType() {
-        return descriptor().descriptorType();
+        return serviceInfo().descriptorType();
     }
 
     @Override
     default boolean isAbstract() {
-        return descriptor().isAbstract();
+        return serviceInfo().isAbstract();
     }
 }

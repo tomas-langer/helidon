@@ -11,13 +11,18 @@ import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
 import io.helidon.inject.service.IpId;
 
+/**
+ * A service provider bound to another service provider for an injection point.
+ *
+ * @param <T> type of the provided service
+ */
 class BoundServiceProvider<T> extends DescribedServiceProvider<T> implements ServiceProvider<T> {
     private final ServiceProvider<T> binding;
     private final LazyValue<T> instance;
     private final LazyValue<List<T>> instances;
 
-    public BoundServiceProvider(ServiceProvider<T> binding, IpId ipId) {
-        super(binding.descriptor());
+    private BoundServiceProvider(ServiceProvider<T> binding, IpId ipId) {
+        super(binding.serviceInfo());
 
         this.binding = binding;
         ContextualServiceQuery query = ContextualServiceQuery.builder()

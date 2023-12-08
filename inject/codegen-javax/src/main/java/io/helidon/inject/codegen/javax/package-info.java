@@ -15,16 +15,6 @@
  */
 
 /**
- * Code generation for Config Driven beans.
+ * Code generation extension to support Jakarta inject (JSR-330) in {@code javax} packages.
  */
-module io.helidon.inject.configdriven.codegen {
-    requires io.helidon.inject.codegen;
-
-    exports io.helidon.inject.configdriven.codegen;
-
-    provides io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider
-            with io.helidon.inject.configdriven.codegen.ConfigDrivenCodegenProvider;
-
-    provides io.helidon.codegen.spi.AnnotationMapperProvider
-            with io.helidon.inject.configdriven.codegen.MapConfigDrivenProvider;
-}
+package io.helidon.inject.codegen.javax;

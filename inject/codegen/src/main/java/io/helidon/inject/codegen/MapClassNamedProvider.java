@@ -13,8 +13,20 @@ import io.helidon.common.types.Annotation;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation to map class named annotations to named annotations.
+ */
 @Weight(Weighted.DEFAULT_WEIGHT - 10) // lower weight than JavaxAnnotationMapper
 public class MapClassNamedProvider implements AnnotationMapperProvider {
+    /**
+     * Required default constructor.
+     *
+     * @deprecated only for {@link java.util.ServiceLoader}.
+     */
+    @Deprecated
+    public MapClassNamedProvider() {
+    }
+
     @Override
     public Set<TypeName> supportedAnnotations() {
         return Set.of(InjectCodegenTypes.INJECT_CLASS_NAMED);

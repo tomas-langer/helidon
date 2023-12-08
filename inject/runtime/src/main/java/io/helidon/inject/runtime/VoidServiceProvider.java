@@ -16,7 +16,6 @@
 
 package io.helidon.inject.runtime;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -24,7 +23,6 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.service.ServiceInfo;
 
 /**
@@ -32,8 +30,10 @@ import io.helidon.inject.service.ServiceInfo;
  */
 public class VoidServiceProvider extends DescribedServiceProvider<Void> {
     static final TypeName TYPE_NAME = TypeName.create(Void.class);
+    /**
+     * An instance of the service provider representing a void return.
+     */
     public static final VoidServiceProvider INSTANCE = new VoidServiceProvider();
-    public static final List<ServiceProvider<?>> LIST_INSTANCE = List.of(INSTANCE);
 
     private VoidServiceProvider() {
         super(new VoidDescriptor());

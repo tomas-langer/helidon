@@ -9,6 +9,11 @@ import io.helidon.inject.codegen.InjectionCodegenContext;
 import io.helidon.inject.codegen.spi.InjectCodegenObserver;
 import io.helidon.inject.codegen.spi.InjectCodegenObserverProvider;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation
+ * for {@link io.helidon.inject.codegen.spi.InjectCodegenObserverProvider} that creates an observer watching for
+ * injections of OCI types, and that generates appropriate services for them.
+ */
 public class OciInjectCodegenObserverProvider implements InjectCodegenObserverProvider {
     static final Option<Set<String>> OPTION_TYPENAME_EXCEPTIONS =
             Option.createSet("inject.oci.codegenExclusions",
@@ -30,7 +35,6 @@ public class OciInjectCodegenObserverProvider implements InjectCodegenObserverPr
      */
     @Deprecated
     public OciInjectCodegenObserverProvider() {
-        super();
     }
 
     @Override

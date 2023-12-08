@@ -13,6 +13,10 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation of {@link io.helidon.codegen.spi.AnnotationMapperProvider}.
+ * This providers adds mapping from known annotations in {@code jakarta} packages to Helidon Inject specific annotations.
+ */
 public class MapJakartaProvider implements AnnotationMapperProvider {
     private static final Set<TypeName> TYPES = Set.of(JakartaTypes.INJECT_SINGLETON,
                                                       JakartaTypes.INJECT_QUALIFIER,
@@ -28,6 +32,15 @@ public class MapJakartaProvider implements AnnotationMapperProvider {
             JakartaTypes.INJECT_POST_CONSTRUCT, Annotation.create(InjectCodegenTypes.INJECT_POST_CONSTRUCT),
             JakartaTypes.INJECT_PRE_DESTROY, Annotation.create(InjectCodegenTypes.INJECT_PRE_DESTROY)
     );
+
+    /**
+     * Required default constructor.
+     *
+     * @deprecated required by {@link java.util.ServiceLoader}
+     */
+    @Deprecated
+    public MapJakartaProvider() {
+    }
 
     @Override
     public Set<TypeName> supportedAnnotations() {

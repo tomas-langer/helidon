@@ -26,11 +26,11 @@ class InterceptedTypeGenerator {
     private final TypedElementInfo constructor;
     private final List<MethodDefinition> interceptedMethods;
 
-    public InterceptedTypeGenerator(TypeName serviceType,
-                                    TypeName descriptorType,
-                                    TypeName interceptedType,
-                                    TypedElementInfo constructor,
-                                    List<TypedElementInfo> interceptedMethods) {
+    InterceptedTypeGenerator(TypeName serviceType,
+                             TypeName descriptorType,
+                             TypeName interceptedType,
+                             TypedElementInfo constructor,
+                             List<TypedElementInfo> interceptedMethods) {
         this.serviceType = serviceType;
         this.descriptorType = descriptorType;
         this.interceptedType = interceptedType;

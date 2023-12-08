@@ -54,7 +54,7 @@ class MavenLogger implements CodegenLogger {
             errors.add(message);
             log(log::error, log::error, event, message);
         }
-        case ALL, OFF -> {
+        default -> {
         }
         }
     }

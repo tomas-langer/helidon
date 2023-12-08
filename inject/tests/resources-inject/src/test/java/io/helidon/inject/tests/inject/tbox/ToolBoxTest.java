@@ -287,6 +287,7 @@ class ToolBoxTest {
                 .collect(Collectors.toMap(Map.Entry::getKey,
                                           e -> e.getValue().startingActivationPhase().toString()
                                                   + "->" + e.getValue().finishingActivationPhase()));
+
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.HelidonInjection__Application"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.HelidonInjection__ModuleComponent"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.TestHelidonInjection__Application"), "ACTIVE->DESTROYED"));
@@ -297,8 +298,9 @@ class ToolBoxTest {
         assertThat(report, hasEntry(create("io.helidon.inject.tests.inject.TestingSingleton"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.inject.configdriven.runtime.ConfigDrivenInjectModule"), "ACTIVE->DESTROYED"));
         assertThat(report, hasEntry(create("io.helidon.config.HelidonInjection__ModuleComponent"), "ACTIVE->DESTROYED"));
+        assertThat(report, hasEntry(create("io.helidon.config.ConfigProducer"), "ACTIVE->DESTROYED"));
 
-        assertThat(report + " : expected 10 services to be present", report.size(), equalTo(10));
+        assertThat(report + " : expected 10 services to be present", report.size(), equalTo(11));
 
         assertThat(TestingSingleton.postConstructCount(), equalTo(1));
         assertThat(TestingSingleton.preDestroyCount(), equalTo(1));
@@ -316,7 +318,7 @@ class ToolBoxTest {
                                           e2 -> e2.getValue().startingActivationPhase().toString()
                                                   + "->" + e2.getValue().finishingActivationPhase()));
         // now contains config as well
-        assertThat(report.toString(), report.size(), is(10));
+        assertThat(report.toString(), report.size(), is(11));
 
         tearDown();
         map = injectionServices.shutdown().orElseThrow();

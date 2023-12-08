@@ -7,7 +7,21 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation that adds code generation for Helidon Inject.
+ * This extension creates service descriptors, and intercepted types.
+ */
 public class InjectionExtensionProvider implements InjectCodegenExtensionProvider {
+    /**
+     * Required default constructor for {@link java.util.ServiceLoader}.
+     *
+     * @deprecated only for {@link java.util.ServiceLoader}
+     */
+    @Deprecated
+    public InjectionExtensionProvider() {
+        super();
+    }
+
     @Override
     public Set<Option<?>> supportedOptions() {
         return Set.of(InjectOptions.AUTO_ADD_NON_CONTRACT_INTERFACES,

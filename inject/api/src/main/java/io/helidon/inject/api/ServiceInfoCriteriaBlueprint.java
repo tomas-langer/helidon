@@ -183,6 +183,7 @@ interface ServiceInfoCriteriaBlueprint {
         /**
          * Create service info criteria for lookup from this injection point information.
          *
+         * @param ipId injection point id to create criteria for
          * @return criteria to lookup matching services
          */
         @Prototype.FactoryMethod

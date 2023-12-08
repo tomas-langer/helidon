@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,6 +37,7 @@ import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenScope;
 import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.codegen.classmodel.Method;
 import io.helidon.codegen.compiler.Compiler;
@@ -44,7 +46,6 @@ import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.InjectTypes;
-import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
@@ -67,7 +68,6 @@ public class ApplicationCreator {
      * The application class name.
      */
     public static final String APPLICATION_NAME = "HelidonInjection__Application";
-    public static final TypeName IP_PROVIDER_TYPE = TypeName.create(InjectionPointProvider.class);
     private static final TypeName CREATOR = TypeName.create(ApplicationCreator.class);
     private static final TypeName BINDER_TYPE = TypeName.create(ServiceInjectionPlanBinder.class);
     private final MavenCodegenContext ctx;
@@ -367,9 +367,7 @@ public class ApplicationCreator {
 
         if (self instanceof InjectionResolver ir) {
             Optional<Object> resolved = ir.resolve(dependency, injectionServices, self, false);
-            Object target = resolved instanceof Optional<?> opt
-                    ? opt.orElse(null)
-                    : resolved;
+            Object target = resolved.orElse(null);
             if (target != null) {
                 return new InjectionPlan(toUnqualified(target).toList(), toQualified(target).toList());
             }
@@ -389,11 +387,11 @@ public class ApplicationCreator {
 
         // remove current service provider from matches
         qualifiedProviders = qualifiedProviders.stream()
-                .filter(it -> !it.descriptor().equals(self.descriptor()))
+                .filter(it -> !it.serviceInfo().equals(self.serviceInfo()))
                 .toList();
 
         unqualifiedProviders = unqualifiedProviders.stream()
-                .filter(it -> !it.descriptor().equals(self.descriptor()))
+                .filter(it -> !it.serviceInfo().equals(self.serviceInfo()))
                 .toList();
 
         // the list now contains all providers that match the processed injection points
@@ -426,7 +424,7 @@ public class ApplicationCreator {
         }
         ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(ServiceInfoCriteria.create(ipoint))
                 .qualifiers(Set.of())
-                .addContract(IP_PROVIDER_TYPE)
+                .addContract(InjectCodegenTypes.INJECTION_POINT_PROVIDER)
                 .build();
         return services.lookupAll(criteria);
     }
@@ -443,7 +441,7 @@ public class ApplicationCreator {
         }
 
         Iterator<ServiceProvider<Interceptor>> interceptorIterator = interceptors.iterator();
-        while(interceptorIterator.hasNext()) {
+        while (interceptorIterator.hasNext()) {
             method.addContent(interceptorIterator.next().descriptorType().genericTypeName())
                     .addContent(".INSTANCE");
             if (interceptorIterator.hasNext()) {
@@ -476,80 +474,15 @@ public class ApplicationCreator {
                     .increaseContentPadding();
 
             for (Binding binding : bindings) {
-                String ipId = "@" + binding.ipInfo().descriptor().fqName() + "@." + binding.ipInfo().field();
+                Consumer<ContentBuilder<?>> ipId = content -> content
+                        .addContent(binding.ipInfo().descriptor().genericTypeName())
+                        .addContent(".")
+                        .addContent(binding.ipInfo.field());
 
                 switch (binding.time()) {
-                case RUNTIME -> {
-                    switch (binding.type()) {
-                    case SINGLE -> {
-                        if (supportNulls) {
-                            method.addContent(".runtimeBindNullable");
-                        } else {
-                            method.addContent(".runtimeBind");
-                        }
-                    }
-                    case OPTIONAL -> method.addContent(".runtimeBindOptional");
-                    case MANY -> method.addContent(".runtimeBindMany");
-                    }
-                    // such as .runtimeBind(MyDescriptor.IP_ID_0, false, ConfigBean.class)
-                    method.addContent("(")
-                            .addContent(ipId + ", ")
-                            .addContent(binding.useProvider + ", ")
-                            .addContent(binding.typeNames.getFirst().genericTypeName())
-                            .addContentLine(".class)");
-                }
-                case BUILD -> {
-                    switch (binding.type()) {
-                    case SINGLE -> {
-                        if (binding.typeNames().isEmpty()) {
-                            if (supportNulls) {
-                                method.addContentLine(".bindNull(" + ipId + ")");
-                            } else {
-                                throw new CodegenException("Injection point requires a value, but no provider discovered: "
-                                                                   + binding.ipInfo() + " for "
-                                                                   + binding.ipInfo().service().fqName());
-                            }
-                        } else {
-                            method.addContent(".bind(")
-                                    .addContent(ipId + ",")
-                                    .addContent(binding.useProvider() + ", ")
-                                    .addContent(binding.typeNames.getFirst().genericTypeName())
-                                    .addContentLine(".INSTANCE)");
-                        }
-                    }
-                    case OPTIONAL -> {
-                        method.addContent(".bindOptional(" + ipId + ", ")
-                                .addContent(String.valueOf(binding.useProvider()));
-                        if (binding.typeNames.isEmpty()) {
-                            method.addContentLine(")");
-                        } else {
-                            method.addContent(", ")
-                                    .addContent(binding.typeNames.getFirst().genericTypeName())
-                                    .addContentLine(".INSTANCE)");
-                        }
-                    }
-                    case MANY -> {
-                        method.addContent(".bindMany(" + ipId + ", ")
-                                .addContent(String.valueOf(binding.useProvider()));
-                        if (binding.typeNames.isEmpty()) {
-                            method.addContentLine(")");
-                        } else {
-                            method.addContent(", ")
-                                    .update(it -> {
-                                        Iterator<TypeName> iterator = binding.typeNames.iterator();
-                                        while (iterator.hasNext()) {
-                                            it.addContent(iterator.next())
-                                                    .addContent(".INSTANCE");
-                                            if (iterator.hasNext()) {
-                                                it.addContent(", ");
-                                            }
-                                        }
-                                    })
-                                    .addContentLine(")");
-                        }
-                    }
-                    }
-                }
+                case RUNTIME -> runtimeBinding(method, binding, ipId, supportNulls);
+                case BUILD -> buildTimeBinding(method, binding, ipId, supportNulls);
+                default -> throw new IllegalArgumentException("Unsupported binding time: " + binding.time());
                 }
             }
 
@@ -560,6 +493,92 @@ public class ApplicationCreator {
                     .decreaseContentPadding()
                     .addContentLine("");
         });
+    }
+
+    private void buildTimeBinding(Method.Builder method,
+                                  Binding binding,
+                                  Consumer<ContentBuilder<?>> ipId,
+                                  boolean supportNulls) {
+        switch (binding.type()) {
+        case SINGLE -> {
+            if (binding.typeNames().isEmpty()) {
+                if (supportNulls) {
+                    method.addContent(".bindNull(")
+                            .update(ipId::accept)
+                            .addContentLine(")");
+                } else {
+                    throw new CodegenException("Injection point requires a value, but no provider discovered: "
+                                                       + binding.ipInfo() + " for "
+                                                       + binding.ipInfo().service().fqName());
+                }
+            } else {
+                method.addContent(".bind(")
+                        .update(ipId::accept)
+                        .addContent(",")
+                        .addContent(binding.useProvider() + ", ")
+                        .addContent(binding.typeNames.getFirst().genericTypeName())
+                        .addContentLine(".INSTANCE)");
+            }
+        }
+        case OPTIONAL -> {
+            method.addContent(".bindOptional(")
+                    .update(ipId::accept)
+                    .addContent(", ")
+                    .addContent(String.valueOf(binding.useProvider()));
+            if (binding.typeNames.isEmpty()) {
+                method.addContentLine(")");
+            } else {
+                method.addContent(", ")
+                        .addContent(binding.typeNames.getFirst().genericTypeName())
+                        .addContentLine(".INSTANCE)");
+            }
+        }
+        case MANY -> {
+            method.addContent(".bindMany(")
+                    .update(ipId::accept)
+                    .addContent(", ")
+                    .addContent(String.valueOf(binding.useProvider()));
+            if (binding.typeNames.isEmpty()) {
+                method.addContentLine(")");
+            } else {
+                method.addContent(", ")
+                        .update(it -> {
+                            Iterator<TypeName> iterator = binding.typeNames.iterator();
+                            while (iterator.hasNext()) {
+                                it.addContent(iterator.next())
+                                        .addContent(".INSTANCE");
+                                if (iterator.hasNext()) {
+                                    it.addContent(", ");
+                                }
+                            }
+                        })
+                        .addContentLine(")");
+            }
+        }
+        default -> throw new IllegalArgumentException("Unsupported binding type: " + binding.type());
+        }
+    }
+
+    private void runtimeBinding(Method.Builder method, Binding binding, Consumer<ContentBuilder<?>> ipId, boolean supportNulls) {
+        switch (binding.type()) {
+        case SINGLE -> {
+            if (supportNulls) {
+                method.addContent(".runtimeBindNullable");
+            } else {
+                method.addContent(".runtimeBind");
+            }
+        }
+        case OPTIONAL -> method.addContent(".runtimeBindOptional");
+        case MANY -> method.addContent(".runtimeBindMany");
+        default -> throw new IllegalArgumentException("Unsupported binding type: " + binding.type());
+        }
+        // such as .runtimeBind(MyDescriptor.IP_ID_0, false, ConfigBean.class)
+        method.addContent("(")
+                .update(ipId::accept)
+                .addContent(", ")
+                .addContent(binding.useProvider + ", ")
+                .addContent(binding.typeNames.getFirst().genericTypeName())
+                .addContentLine(".class)");
     }
 
     enum BindingType {

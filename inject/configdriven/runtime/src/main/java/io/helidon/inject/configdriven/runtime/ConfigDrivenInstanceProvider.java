@@ -77,7 +77,7 @@ class ConfigDrivenInstanceProvider<T, CB>
 
     @Override
     public String toString() {
-        return "Config Driven Instance for: " + descriptor().serviceType().fqName() + "{" + instanceId
+        return "Config Driven Instance for: " + serviceInfo().serviceType().fqName() + "{" + instanceId
                 + "}[" + currentActivationPhase() + "]";
     }
 

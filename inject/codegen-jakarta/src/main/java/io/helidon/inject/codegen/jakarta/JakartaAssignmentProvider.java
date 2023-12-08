@@ -6,8 +6,8 @@ import io.helidon.codegen.CodegenContext;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.inject.codegen.InjectionCodegenContext.Assignment;
+import io.helidon.inject.codegen.spi.InjectAssignment;
 import io.helidon.inject.codegen.spi.InjectAssignmentProvider;
-import io.helidon.inject.codegen.spi.ProviderSupport;
 
 import static io.helidon.inject.codegen.jakarta.JakartaTypes.INJECT_PROVIDER;
 
@@ -23,15 +23,14 @@ public class JakartaAssignmentProvider implements InjectAssignmentProvider {
      */
     @Deprecated
     public JakartaAssignmentProvider() {
-        super();
     }
 
     @Override
-    public ProviderSupport create(CodegenContext ctx) {
+    public InjectAssignment create(CodegenContext ctx) {
         return new JakartaProviderMapper();
     }
 
-    private static class JakartaProviderMapper implements ProviderSupport {
+    private static class JakartaProviderMapper implements InjectAssignment {
 
         @Override
         public Optional<Assignment> assignment(TypeName typeName, String valueSource) {

@@ -380,12 +380,12 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
 
         options.add("-A" + ApplicationOptions.PERMITTED_PROVIDER_TYPE + "=" + permittedProviderType);
         if (!permittedProviderTypeNames.isEmpty()) {
-            options.add("-A" + ApplicationOptions.PERMITTED_PROVIDER_TYPE_NAMES + "=" + String.join(",",
-                                                                                                    permittedProviderTypeNames));
+            options.add("-A" + ApplicationOptions.PERMITTED_PROVIDER_TYPE_NAMES
+                                + "=" + String.join(",", permittedProviderTypeNames));
         }
         if (!permittedProviderQualifierTypeNames.isEmpty()) {
-            options.add("-A" + ApplicationOptions.PERMITTED_PROVIDER_QUALIFIER_TYPE_NAMES + "=" + String.join(",",
-                                                                                                              permittedProviderQualifierTypeNames));
+            options.add("-A" + ApplicationOptions.PERMITTED_PROVIDER_QUALIFIER_TYPE_NAMES
+                                + "=" + String.join(",", permittedProviderQualifierTypeNames));
         }
 
         return options;

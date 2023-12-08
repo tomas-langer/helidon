@@ -37,10 +37,10 @@ import io.helidon.inject.service.ServiceInfo;
  * Note that upon a successful call to the {@link Interceptor.Chain#proceed(Object[])} or to the ultimate
  * target, the invocation will be prevented from being executed again.
  *
- * @see InvocationContext
  * @param <V> the invocation type
+ * @see InvocationContext
  */
-public class Invocation<V> implements Interceptor.Chain<V> {
+class Invocation<V> implements Interceptor.Chain<V> {
     private final InvocationContext ctx;
     private final List<Supplier<Interceptor>> interceptors;
     private final Set<Class<? extends Throwable>> checkedExceptions;
@@ -48,53 +48,12 @@ public class Invocation<V> implements Interceptor.Chain<V> {
     private Invoker<V> call;
 
     private Invocation(InvocationContext ctx,
-                      Invoker<V> call,
+                       Invoker<V> call,
                        Set<Class<? extends Throwable>> checkedExceptions) {
         this.ctx = ctx;
         this.call = call;
         this.interceptors = List.copyOf(ctx.interceptors());
         this.checkedExceptions = checkedExceptions;
-    }
-
-    @Override
-    public String toString() {
-        return String.valueOf(ctx.elementInfo());
-    }
-
-    /**
-     * Creates an instance of {@link Invocation} and invokes it in this context.
-     *
-     * @param ctx   the invocation context
-     * @param call  the call to the base service provider's method
-     * @param args  the call arguments
-     * @param checkedExceptions expected exception types
-     * @param <V>   the type returned from the method element
-     * @return the invocation instance
-     * @throws InvocationException if there are errors during invocation chain processing
-     * @throws Exception any checked exception declared by the method itself
-     */
-    @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <V> V createInvokeAndSupply(InvocationContext ctx,
-                                              Invoker<V> call,
-                                              Object[] args,
-                                              Set<Class<? extends Throwable>> checkedExceptions) throws Exception {
-        Objects.requireNonNull(ctx);
-        Objects.requireNonNull(call);
-        Objects.requireNonNull(args);
-        Objects.requireNonNull(checkedExceptions);
-
-        if (ctx.interceptors().isEmpty()) {
-            try {
-                return call.invoke(args);
-            } catch (Throwable t) {
-                if (shouldThrow(checkedExceptions, t.getClass())) {
-                    throw t;
-                }
-                throw new InvocationException("Error in interceptor chain processing", t, true);
-            }
-        } else {
-            return (V) new Invocation(ctx, call, checkedExceptions).proceed(args);
-        }
     }
 
     /**
@@ -149,7 +108,7 @@ public class Invocation<V> implements Interceptor.Chain<V> {
      * The degenerate case for {@link #mergeAndCollapse(List[])}. This is here only to eliminate the unchecked varargs compiler
      * warnings that would otherwise be issued in code that does not have any interceptors on a method.
      *
-     * @param <T>   the type of the provider
+     * @param <T> the type of the provider
      * @return an empty list
      * @deprecated this method should only be called by generated code
      */
@@ -201,6 +160,47 @@ public class Invocation<V> implements Interceptor.Chain<V> {
         return (result != null) ? Collections.unmodifiableList(result) : List.of();
     }
 
+    /**
+     * Creates an instance of {@link Invocation} and invokes it in this context.
+     *
+     * @param ctx               the invocation context
+     * @param call              the call to the base service provider's method
+     * @param args              the call arguments
+     * @param checkedExceptions expected exception types
+     * @param <V>               the type returned from the method element
+     * @return the invocation instance
+     * @throws InvocationException if there are errors during invocation chain processing
+     * @throws Exception           any checked exception declared by the method itself
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    static <V> V createInvokeAndSupply(InvocationContext ctx,
+                                       Invoker<V> call,
+                                       Object[] args,
+                                       Set<Class<? extends Throwable>> checkedExceptions) throws Exception {
+        Objects.requireNonNull(ctx);
+        Objects.requireNonNull(call);
+        Objects.requireNonNull(args);
+        Objects.requireNonNull(checkedExceptions);
+
+        if (ctx.interceptors().isEmpty()) {
+            try {
+                return call.invoke(args);
+            } catch (Throwable t) {
+                if (shouldThrow(checkedExceptions, t.getClass())) {
+                    throw t;
+                }
+                throw new InvocationException("Error in interceptor chain processing", t, true);
+            }
+        } else {
+            return (V) new Invocation(ctx, call, checkedExceptions).proceed(args);
+        }
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(ctx.elementInfo());
+    }
+
     @Override
     public V proceed(Object... args) throws Exception {
         if (this.call == null) {
@@ -208,7 +208,7 @@ public class Invocation<V> implements Interceptor.Chain<V> {
         }
 
         if (interceptorPos < interceptors.size()) {
-            Supplier<Interceptor> interceptorProvider =  interceptors.get(interceptorPos);
+            Supplier<Interceptor> interceptorProvider = interceptors.get(interceptorPos);
             Interceptor interceptor = interceptorProvider.get();
             interceptorPos++;
             try {

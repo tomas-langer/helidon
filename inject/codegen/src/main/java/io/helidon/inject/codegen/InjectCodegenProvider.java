@@ -15,6 +15,10 @@ import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.spi.InjectCodegenExtensionProvider;
 import io.helidon.inject.codegen.spi.InjectCodegenObserverProvider;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation for {@link io.helidon.codegen.spi.CodegenExtensionProvider}
+ * that handles Helidon Inject code generation.
+ */
 public class InjectCodegenProvider implements CodegenExtensionProvider {
     private static final List<InjectCodegenExtensionProvider> EXTENSIONS =
             HelidonServiceLoader.create(ServiceLoader.load(InjectCodegenExtensionProvider.class,
@@ -44,6 +48,15 @@ public class InjectCodegenProvider implements CodegenExtensionProvider {
                           Stream.of("io.helidon.inject.service."))
                     .collect(Collectors.toUnmodifiableSet());
 
+    /**
+     * Required default constructor.
+     *
+     * @deprecated required by {@link java.util.ServiceLoader}
+     */
+    @Deprecated
+    public InjectCodegenProvider() {
+    }
+
     @Override
     public Set<Option<?>> supportedOptions() {
         return SUPPORTED_OPTIONS;
@@ -63,5 +76,4 @@ public class InjectCodegenProvider implements CodegenExtensionProvider {
     public CodegenExtension create(CodegenContext ctx, TypeName generatorType) {
         return InjectCodegen.create(ctx, generatorType, EXTENSIONS);
     }
-
 }

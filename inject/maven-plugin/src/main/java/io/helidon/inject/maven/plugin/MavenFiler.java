@@ -18,12 +18,12 @@ class MavenFiler implements CodegenFiler {
     private final Path outputDirectory;
     private boolean generatedSources;
 
-    public MavenFiler(Path generatedSourceDir, Path outputDirectory) {
+    MavenFiler(Path generatedSourceDir, Path outputDirectory) {
         this.generatedSourceDir = generatedSourceDir;
         this.outputDirectory = outputDirectory;
     }
 
-    public static MavenFiler create(Path generatedSourceDir, Path outputDirectory) {
+    static MavenFiler create(Path generatedSourceDir, Path outputDirectory) {
         return new MavenFiler(generatedSourceDir, outputDirectory);
     }
 
@@ -34,9 +34,14 @@ class MavenFiler implements CodegenFiler {
         String fileName = typeName.className() + ".java";
         Path path = generatedSourceDir.resolve(pathToSourceFile)
                 .resolve(fileName);
-        mkdirs(path.getParent());
+        Path parentDir = path.getParent();
+        if (parentDir != null) {
+            mkdirs(parentDir);
+        }
 
-        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
+        try (Writer writer = Files.newBufferedWriter(path,
+                                                     StandardCharsets.UTF_8,
+                                                     StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
             classModel.write(writer, "    ");
             generatedSources = true;
         } catch (IOException e) {
@@ -48,7 +53,10 @@ class MavenFiler implements CodegenFiler {
     @Override
     public Path writeResource(byte[] resource, String location, Object... originatingElements) {
         Path path = outputDirectory.resolve(location);
-        mkdirs(path.getParent());
+        Path parentDir = path.getParent();
+        if (parentDir != null) {
+            mkdirs(parentDir);
+        }
         try (OutputStream out = Files.newOutputStream(path, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE)) {
             out.write(resource);
         } catch (IOException e) {
@@ -57,7 +65,7 @@ class MavenFiler implements CodegenFiler {
         return path;
     }
 
-    public boolean generatedSources() {
+    boolean generatedSources() {
         return generatedSources;
     }
 

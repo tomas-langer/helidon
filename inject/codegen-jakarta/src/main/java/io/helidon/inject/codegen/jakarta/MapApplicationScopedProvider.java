@@ -15,6 +15,10 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 
+/**
+ * A {@link java.util.ServiceLoader} provider implementation of an annotation mapper that maps CDI application scoped beans
+ * to Singleton services.
+ */
 @Weight(Weighted.DEFAULT_WEIGHT - 10) // lower weight than JavaxAnnotationMapper
 public class MapApplicationScopedProvider implements AnnotationMapperProvider {
     /**
@@ -26,6 +30,15 @@ public class MapApplicationScopedProvider implements AnnotationMapperProvider {
                             false);
 
     private static final Annotation SINGLETON = Annotation.create(InjectCodegenTypes.INJECT_SINGLETON);
+
+    /**
+     * Required default constructor.
+     *
+     * @deprecated required by {@link java.util.ServiceLoader}
+     */
+    @Deprecated
+    public MapApplicationScopedProvider() {
+    }
 
     @Override
     public Set<Option<?>> supportedOptions() {

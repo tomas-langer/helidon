@@ -31,11 +31,11 @@ class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
 
     @Override
     public String description() {
-        return description() + "{" + id + "}:ACTIVE";
+        return serviceInfo().serviceType().classNameWithEnclosingNames() + "{" + id + "}:ACTIVE";
     }
 
     @Override
-    public ServiceInfo<CB> descriptor() {
+    public ServiceInfo<CB> serviceInfo() {
         return serviceDescriptor;
     }
 

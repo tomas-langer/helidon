@@ -178,7 +178,7 @@ public interface InjectionServices {
     Optional<Injector> injector();
 
     /**
-     * Attempts to perform a graceful {@link Injector#deactivate(Object, InjectorOptions)} on all managed
+     * Attempts to perform a graceful {@link Injector#deactivate(ServiceProvider, InjectorOptions)} on all managed
      * service instances in the {@link Services} registry.
      * Deactivation is handled within the current thread.
      * <p>

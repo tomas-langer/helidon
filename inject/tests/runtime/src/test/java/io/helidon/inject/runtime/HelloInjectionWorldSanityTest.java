@@ -207,7 +207,7 @@ class HelloInjectionWorldSanityTest {
 
         assertThat(hello1,
                    sameInstance(subversiveProvider.get()));
-        assertThat(subversiveDescriptor, sameInstance(result.serviceProvider().descriptor()));
+        assertThat(subversiveDescriptor, sameInstance(result.serviceProvider().serviceInfo()));
 
         // the above is subversive because it is disconnected from the "real" activator
         Services services = injectionServices.services();

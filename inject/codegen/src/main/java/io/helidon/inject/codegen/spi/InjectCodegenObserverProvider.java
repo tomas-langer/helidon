@@ -6,13 +6,24 @@ import io.helidon.codegen.Option;
 import io.helidon.inject.codegen.InjectionCodegenContext;
 
 /**
- * Implementations of these are service-loaded by the {@link java.util.ServiceLoader}, and will be
- * called to be able to observe processing events.
+ * A {@link java.util.ServiceLoader} provider interface for observers that will be
+ * called for code generation events.
  */
 public interface InjectCodegenObserverProvider {
+    /**
+     * The provider can add supported options.
+     *
+     * @return options supported by this provider
+     */
     default Set<Option<?>> supportedOptions() {
         return Set.of();
     }
 
+    /**
+     * Create a new observer based on the Helidon Inject code generation context.
+     *
+     * @param context code generation context for this code generation session
+     * @return a new observer
+     */
     InjectCodegenObserver create(InjectionCodegenContext context);
 }

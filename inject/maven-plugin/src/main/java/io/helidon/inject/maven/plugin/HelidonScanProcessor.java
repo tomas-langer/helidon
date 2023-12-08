@@ -185,7 +185,9 @@ class HelidonScanProcessor {
         return true;
     }
 
-    private boolean hasAnnotation(Set<TypeName> annotations, Set<String> annotationPackages, List<Annotation> annotationsPresent) {
+    private boolean hasAnnotation(Set<TypeName> annotations,
+                                  Set<String> annotationPackages,
+                                  List<Annotation> annotationsPresent) {
         for (Annotation annotation : annotationsPresent) {
             TypeName typeName = annotation.typeName();
             if (annotations.contains(typeName)) {

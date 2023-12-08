@@ -201,8 +201,6 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             }
         } else if (rootQualifies && (thisAlreadyMatches || criteria.matches(this))) {
             if (!hasValue && managedConfiguredServicesMap.isEmpty()) {
-                // TODO: this used UnconfiguredServiceProvider - is it needed? First should still return nothing if this has no
-                //  beans
                 return List.of(this);
             }
             return List.of(this);
@@ -312,21 +310,21 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     @Override
     public List<NamedInstance<CB>> createConfigBeans(Config config) {
         // we know this is the case, as otherwise the ID would be wrong
-        ConfigBeanFactory<CB> factory = (ConfigBeanFactory<CB>) descriptor();
+        ConfigBeanFactory<CB> factory = (ConfigBeanFactory<CB>) serviceInfo();
         return factory.createConfigBeans(config);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public boolean drivesActivation() {
-        return ((ConfigBeanFactory<CB>) descriptor()).drivesActivation();
+        return ((ConfigBeanFactory<CB>) serviceInfo()).drivesActivation();
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public TypeName configBeanType() {
         // we know this is the case, as otherwise the ID would be wrong
-        ConfigBeanFactory<CB> factory = (ConfigBeanFactory<CB>) descriptor();
+        ConfigBeanFactory<CB> factory = (ConfigBeanFactory<CB>) serviceInfo();
         return factory.configBeanType();
     }
 
@@ -376,7 +374,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         if (registeredWithCbr.compareAndSet(false, true)) {
             ConfigBeanRegistryImpl cbr = ConfigBeanRegistryImpl.CONFIG_BEAN_REGISTRY.get();
             if (cbr != null) {
-                Optional<Qualifier> configuredByQualifier = descriptor().qualifiers().stream()
+                Optional<Qualifier> configuredByQualifier = serviceInfo().qualifiers().stream()
                         .filter(q -> q.typeName().name().equals(ConfigDriven.class.getName()))
                         .findFirst();
                 assert (configuredByQualifier.isPresent());
