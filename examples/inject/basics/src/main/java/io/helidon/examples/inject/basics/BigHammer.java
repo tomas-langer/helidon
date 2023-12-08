@@ -16,10 +16,10 @@
 
 package io.helidon.examples.inject.basics;
 
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.Inject;
 
 @Big
-@Singleton
+@Inject.Singleton
 class BigHammer extends Hammer {
 
     @Override

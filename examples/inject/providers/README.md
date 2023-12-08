@@ -8,6 +8,8 @@ This example shows how providers can be leveraged to develop using Helidon Injec
 * [InjectionPoint Providers](src/main/java/io/helidon/examples/inject/providers/BladeProvider.java).
 * additional lifecycle examples via <b>PostConstruct</b> and <b>RunLevel</b>.
 
+This example is using Jakarta inject and annotation APIs, to show interoperability with Helidon Inject.
+
 ## Build and run
 
 ```bash

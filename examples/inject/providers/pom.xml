@@ -45,9 +45,12 @@
             <version>${helidon.version}</version>
         </dependency>
         <dependency>
+            <groupId>jakarta.inject</groupId>
+            <artifactId>jakarta.inject-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.hamcrest</groupId>
@@ -82,6 +85,11 @@
                             <artifactId>helidon-inject-codegen</artifactId>
                             <version>${helidon.version}</version>
                         </path>
+                        <path>
+                            <groupId>io.helidon.inject</groupId>
+                            <artifactId>helidon-inject-codegen-jakarta</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
                     </annotationProcessorPaths>
                 </configuration>
                 <dependencies>
@@ -93,6 +101,11 @@
                     <dependency>
                         <groupId>io.helidon.inject</groupId>
                         <artifactId>helidon-inject-codegen</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.helidon.inject</groupId>
+                        <artifactId>helidon-inject-codegen-jakarta</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
                 </dependencies>

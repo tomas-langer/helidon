@@ -16,9 +16,9 @@
 
 package io.helidon.examples.inject.interceptors;
 
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.Inject;
 
-@Singleton
+@Inject.Singleton
 class ScrewDriver implements TurningTool {
 
     @Override

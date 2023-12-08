@@ -16,12 +16,12 @@
 
 package io.helidon.examples.inject.basics;
 
-import io.helidon.inject.api.Contract;
+import io.helidon.inject.service.Inject;
 
 /**
  * An example Tool interface contract.
  */
-@Contract
+@Inject.Contract
 public interface Tool {
 
     /**
