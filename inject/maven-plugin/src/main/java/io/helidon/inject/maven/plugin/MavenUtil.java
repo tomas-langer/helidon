@@ -46,7 +46,9 @@ import static io.helidon.inject.maven.plugin.AbstractCreatorMojo.APPLICATION_PAC
 
 final class MavenUtil {
     private static final String SRC_MAIN_JAVA_DIR = "/src/main/java";
+    private static final String SRC_MAIN_JAVA_DIR_WIN = "\\src\\main\\java";
     private static final String SRC_TEST_JAVA_DIR = "/src/test/java";
+    private static final String SRC_TEST_JAVA_DIR_WIN = "\\src\\test\\java";
     private static final System.Logger LOGGER = System.getLogger(MavenUtil.class.getName());
 
     private MavenUtil() {
@@ -56,7 +58,7 @@ final class MavenUtil {
      * Creates a new classloader.
      *
      * @param classPath the classpath to use
-     * @param parent the parent loader
+     * @param parent    the parent loader
      * @return the loader
      */
     public static URLClassLoader createClassLoader(Collection<Path> classPath,
@@ -151,6 +153,12 @@ final class MavenUtil {
         int pos = sourcePath.lastIndexOf(SRC_MAIN_JAVA_DIR);
         if (pos < 0) {
             pos = sourcePath.lastIndexOf(SRC_TEST_JAVA_DIR);
+        }
+        if (pos < 0) {
+            pos = sourcePath.lastIndexOf(SRC_MAIN_JAVA_DIR_WIN);
+        }
+        if (pos < 0) {
+            pos = sourcePath.lastIndexOf(SRC_TEST_JAVA_DIR_WIN);
         }
         if (pos < 0) {
             throw new CodegenException("Invalid source path: " + sourcePath);

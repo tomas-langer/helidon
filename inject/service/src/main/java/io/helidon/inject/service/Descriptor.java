@@ -84,8 +84,8 @@ public interface Descriptor<T> extends ServiceInfo<T> {
      * @param superType super type's dependencies
      * @return a new list without constructor dependencies from super type
      */
-    default List<IpId> combineDependencies(List<IpId> myType, List<IpId> superType) {
-        List<IpId> result = new ArrayList<>(myType);
+    default List<Ip> combineDependencies(List<Ip> myType, List<Ip> superType) {
+        List<Ip> result = new ArrayList<>(myType);
 
         result.addAll(superType.stream()
                               .filter(it -> it.elementKind() != ElementKind.CONSTRUCTOR)

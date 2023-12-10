@@ -21,7 +21,7 @@ import java.util.Optional;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 
 /**
  * Log entry for lifecycle related events (i.e., activation startup and deactivation shutdown).
@@ -65,7 +65,7 @@ interface ActivationLogEntryBlueprint {
      *
      * @return the injection point
      */
-    Optional<IpId> injectionPoint();
+    Optional<Ip> injectionPoint();
 
     /**
      * The time this event was generated.

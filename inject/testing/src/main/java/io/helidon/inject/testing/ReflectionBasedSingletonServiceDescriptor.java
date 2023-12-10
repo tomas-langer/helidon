@@ -26,7 +26,7 @@ import io.helidon.inject.api.ServiceProviderInjectionException;
 import io.helidon.inject.service.Descriptor;
 import io.helidon.inject.service.InjectionContext;
 import io.helidon.inject.service.InterceptionMetadata;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.service.ServiceInfo;
 
@@ -98,7 +98,7 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<
     }
 
     @Override
-    public List<IpId> dependencies() {
+    public List<Ip> dependencies() {
         return serviceInfo.dependencies();
     }
 

@@ -88,9 +88,9 @@ public final class InjectCodegenTypes {
      */
     public static final TypeName QUALIFIER = TypeName.create("io.helidon.inject.service.Qualifier");
     /**
-     * {@link io.helidon.common.types.TypeName} for {@code io.helidon.inject.service.IpId}.
+     * {@link io.helidon.common.types.TypeName} for {@code io.helidon.inject.service.Ip}.
      */
-    public static final TypeName IP_ID = TypeName.create("io.helidon.inject.service.IpId");
+    public static final TypeName IP_ID = TypeName.create("io.helidon.inject.service.Ip");
     /**
      * {@link io.helidon.common.types.TypeName} for {@code io.helidon.inject.service.Descriptor.MethodSignature}.
      */

@@ -25,7 +25,7 @@ import io.helidon.inject.api.InjectionServiceProviderException;
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 
 import com.oracle.bmc.Region;
@@ -70,7 +70,7 @@ class OciRegionProviderTest {
         TypeName regionType = TypeName.create(Region.class);
 
         ContextualServiceQuery query = ContextualServiceQuery.create(
-                IpId.builder()
+                Ip.builder()
                         .contract(regionType)
                         .field("TEST_ONLY")
                         .descriptor(TypeName.create("io.helidon.Whatever"))

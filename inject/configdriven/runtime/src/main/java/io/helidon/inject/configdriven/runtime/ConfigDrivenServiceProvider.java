@@ -57,7 +57,7 @@ import io.helidon.inject.runtime.HelidonInjectionContext;
 import io.helidon.inject.runtime.ServiceProviderBase;
 import io.helidon.inject.service.Descriptor;
 import io.helidon.inject.service.InjectionContext;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
 
@@ -103,7 +103,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
 
     // note that all responsibilities to resolve is delegated to the root provider
     @Override
-    public Optional<Object> resolve(IpId ipInfo,
+    public Optional<Object> resolve(Ip ipInfo,
                                     InjectionServices injectionServices,
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
@@ -176,7 +176,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
                 && !(configuredByQualifier.get().value().orElse("").isBlank());
         boolean blankCriteria = qualifiers.isEmpty()
                 && criteria.qualifiers().isEmpty()
-                && criteria.serviceTypeName().isEmpty()
+                && criteria.serviceType().isEmpty()
                 && criteria.contracts().isEmpty();
         boolean managedQualify = !managedConfiguredServicesMap.isEmpty()
                 && (blankCriteria || hasValue || configuredByQualifier.isEmpty());
@@ -296,7 +296,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         }
 
         throw new ServiceProviderInjectionException("Expected to return a non-null instance for: "
-                                                            + query.injectionPointInfo()
+                                                            + query.injectionPoint()
                                                             + "; with criteria matching: " + query.serviceInfoCriteria(), this);
     }
 
@@ -368,7 +368,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
     }
 
     @Override
-    protected void prepareDependency(Services services, Map<IpId, Supplier<?>> injectionPlan, IpId dependency) {
+    protected void prepareDependency(Services services, Map<Ip, Supplier<?>> injectionPlan, Ip dependency) {
         // do nothing, config driven root service CANNOT be instantiated, as it does not have
         // a config bean to inject
     }
@@ -459,7 +459,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder runtimeBind(IpId id, boolean useProvider, Class<?> serviceType) {
+        public ServiceInjectionPlanBinder.Binder runtimeBind(Ip id, boolean useProvider, Class<?> serviceType) {
 
             if (id.contract().equals(self.configBeanType()) && id.qualifiers().isEmpty()) {
                 beanInstanceBindings.add(new RuntimeBind(id, useProvider, false));
@@ -470,7 +470,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder runtimeBindOptional(IpId id, boolean useProvider, Class<?> serviceType) {
+        public ServiceInjectionPlanBinder.Binder runtimeBindOptional(Ip id, boolean useProvider, Class<?> serviceType) {
 
             if (id.contract().equals(self.configBeanType()) && id.qualifiers().isEmpty()) {
                 beanInstanceBindings.add(new RuntimeBind(id, useProvider, false));
@@ -488,7 +488,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
         }
 
         InjectionContext forInstance(ConfigDrivenInstanceProvider<?, ?> provider) {
-            Map<IpId, Supplier<?>> copy = new HashMap<>(injectionPlan());
+            Map<Ip, Supplier<?>> copy = new HashMap<>(injectionPlan());
             for (RuntimeBind beanInstanceBinding : beanInstanceBindings) {
                 Supplier<?> supplier;
                 if (beanInstanceBinding.optional()) {
@@ -510,7 +510,7 @@ class ConfigDrivenServiceProvider<T, CB> extends ServiceProviderBase<T>
             return HelidonInjectionContext.create(copy);
         }
 
-        private record RuntimeBind(IpId id, boolean provider, boolean optional) {
+        private record RuntimeBind(Ip id, boolean provider, boolean optional) {
         }
     }
 }

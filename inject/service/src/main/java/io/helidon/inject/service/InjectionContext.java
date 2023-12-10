@@ -31,5 +31,5 @@ public interface InjectionContext {
      * @param <T>     type of the parameter, for convenience, the result is cast to this type
      * @return value for the parameter, this may be null
      */
-    <T> T param(IpId paramId);
+    <T> T param(Ip paramId);
 }

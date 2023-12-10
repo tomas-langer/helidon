@@ -29,7 +29,7 @@ import io.helidon.common.types.TypeName;
  * Unique identification of an injection point.
  */
 @Prototype.Blueprint
-interface IpIdBlueprint {
+interface IpBlueprint {
     /**
      * Type name of the service that contains this injection point.
      *
@@ -100,15 +100,6 @@ interface IpIdBlueprint {
     @Option.Redundant
     // kind + service type + name is a unique identification already
     AccessModifier access();
-
-    /**
-     * True if the injection point is static.
-     *
-     * @return true if static receiver
-     */
-    @Option.Redundant // kind + service type + name is a unique identification already
-    @Option.DefaultBoolean(false)
-    boolean isStatic();
 
     /**
      * The annotations on this element.

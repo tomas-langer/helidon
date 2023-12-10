@@ -28,7 +28,7 @@ import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.Services;
 import io.helidon.inject.service.Inject;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 
 import com.oracle.bmc.Region;
@@ -94,10 +94,10 @@ class OciAuthenticationDetailsProviderTest {
 
     @Test
     void testToNamedProfile() {
-        assertThat(OciAuthenticationDetailsProvider.toNamedProfile((IpId) null),
+        assertThat(OciAuthenticationDetailsProvider.toNamedProfile((Ip) null),
                    nullValue());
 
-        IpId.Builder ipi = IpId.builder()
+        Ip.Builder ipi = Ip.builder()
                 .annotations(Set.of());
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());

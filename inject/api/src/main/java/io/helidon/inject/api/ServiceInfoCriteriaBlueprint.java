@@ -23,7 +23,7 @@ import java.util.Set;
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.service.ServiceInfo;
 
@@ -41,7 +41,7 @@ interface ServiceInfoCriteriaBlueprint {
      *
      * @return the service type name
      */
-    Optional<TypeName> serviceTypeName();
+    Optional<TypeName> serviceType();
 
     /**
      * The managed service assigned Scope's.
@@ -49,7 +49,7 @@ interface ServiceInfoCriteriaBlueprint {
      * @return the service scope type name
      */
     @Option.Singular
-    Set<TypeName> scopeTypeNames();
+    Set<TypeName> scopes();
 
     /**
      * The managed service assigned Qualifier's.
@@ -101,7 +101,7 @@ interface ServiceInfoCriteriaBlueprint {
     default boolean matches(ServiceInfoCriteriaBlueprint criteria) {
         return matchesContracts(criteria)
                 && matchesAbstract(includeAbstract(), criteria.includeAbstract())
-                && scopeTypeNames().containsAll(criteria.scopeTypeNames())
+                && scopes().containsAll(criteria.scopes())
                 && Qualifiers.matchesQualifiers(qualifiers(), criteria.qualifiers())
                 && matches(runLevel(), criteria.runLevel());
         //                && matchesWeight(this, criteria) -- intentionally not checking weight here!
@@ -120,14 +120,14 @@ interface ServiceInfoCriteriaBlueprint {
             return true;
         }
 
-        boolean matches = matches(descriptor.serviceType(), this.serviceTypeName());
-        if (matches && this.serviceTypeName().isEmpty()) {
+        boolean matches = matches(descriptor.serviceType(), this.serviceType());
+        if (matches && this.serviceType().isEmpty()) {
             matches = descriptor.contracts().containsAll(this.contracts())
                     || this.contracts().contains(descriptor.serviceType());
         }
         return matches
                 && matchesAbstract(includeAbstract(), descriptor.isAbstract())
-                && descriptor.scopes().containsAll(this.scopeTypeNames())
+                && descriptor.scopes().containsAll(this.scopes())
                 && Qualifiers.matchesQualifiers(descriptor.qualifiers(), this.qualifiers())
                 && matchesWeight(descriptor, this)
                 && matches(descriptor.runLevel(), this.runLevel());
@@ -152,8 +152,8 @@ interface ServiceInfoCriteriaBlueprint {
             return true;
         }
 
-        boolean matches = matches(serviceTypeName(), criteria.serviceTypeName());
-        if (matches && criteria.serviceTypeName().isEmpty()) {
+        boolean matches = matches(serviceType(), criteria.serviceType());
+        if (matches && criteria.serviceType().isEmpty()) {
             matches = contracts().containsAll(criteria.contracts());
         }
         return matches;
@@ -187,7 +187,7 @@ interface ServiceInfoCriteriaBlueprint {
          * @return criteria to lookup matching services
          */
         @Prototype.FactoryMethod
-        static ServiceInfoCriteria create(IpId ipId) {
+        static ServiceInfoCriteria create(Ip ipId) {
             return ServiceInfoCriteria.builder()
                     .qualifiers(ipId.qualifiers())
                     .addContract(ipId.contract())

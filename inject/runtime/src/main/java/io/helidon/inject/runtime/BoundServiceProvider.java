@@ -25,7 +25,7 @@ import io.helidon.inject.api.Phase;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 
 /**
  * A service provider bound to another service provider for an injection point.
@@ -37,7 +37,7 @@ class BoundServiceProvider<T> extends DescribedServiceProvider<T> implements Ser
     private final LazyValue<T> instance;
     private final LazyValue<List<T>> instances;
 
-    private BoundServiceProvider(ServiceProvider<T> binding, IpId ipId) {
+    private BoundServiceProvider(ServiceProvider<T> binding, Ip ipId) {
         super(binding.serviceInfo());
 
         this.binding = binding;
@@ -58,7 +58,7 @@ class BoundServiceProvider<T> extends DescribedServiceProvider<T> implements Ser
      * @return the service provider created, wrapping the binding delegate provider
      */
     static <V> ServiceProvider<V> create(ServiceProvider<V> binding,
-                                         IpId ipId) {
+                                         Ip ipId) {
 
         if (binding instanceof ServiceProviderBase<V> base) {
             if (!base.isProvider()) {

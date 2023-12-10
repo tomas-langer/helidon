@@ -30,7 +30,7 @@ import io.helidon.inject.api.Services;
 import io.helidon.inject.runtime.ServiceProviderBase;
 import io.helidon.inject.service.Descriptor;
 import io.helidon.inject.service.InjectionContext;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
 
@@ -70,7 +70,7 @@ class ConfigDrivenInstanceProvider<T, CB>
 
     // note that all responsibilities to resolve is delegated to the root provider
     @Override
-    public Optional<Object> resolve(IpId ipInfo,
+    public Optional<Object> resolve(Ip ipInfo,
                                     InjectionServices injectionServices,
                                     ServiceProvider<?> serviceProvider,
                                     boolean resolveIps) {
@@ -108,7 +108,7 @@ class ConfigDrivenInstanceProvider<T, CB>
     }
 
     @Override
-    protected void prepareDependency(Services services, Map<IpId, Supplier<?>> injectionPlan, IpId dependency) {
+    protected void prepareDependency(Services services, Map<Ip, Supplier<?>> injectionPlan, Ip dependency) {
         // it the type is this bean's type and it does not have any additional qualifier,
         // inject instance
 

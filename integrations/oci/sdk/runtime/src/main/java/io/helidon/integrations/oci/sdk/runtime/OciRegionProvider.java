@@ -29,7 +29,7 @@ import com.oracle.bmc.Region;
 import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 
 /**
- * Can optionally be used to return a {@link Region} appropriate for the {@link io.helidon.inject.service.IpId} context.
+ * Can optionally be used to return a {@link Region} appropriate for the {@link io.helidon.inject.service.Ip} context.
  */
 @Inject.Singleton
 @Weight(DEFAULT_INJECT_WEIGHT)
@@ -49,7 +49,7 @@ class OciRegionProvider implements InjectionPointProvider<Region> {
 
     @Override
     public Optional<Region> first(ContextualServiceQuery query) {
-        String requestedNamedProfile = query.injectionPointInfo()
+        String requestedNamedProfile = query.injectionPoint()
                 .map(OciAuthenticationDetailsProvider::toNamedProfile)
                 .orElse(null);
         Region region = toRegionFromNamedProfile(requestedNamedProfile);

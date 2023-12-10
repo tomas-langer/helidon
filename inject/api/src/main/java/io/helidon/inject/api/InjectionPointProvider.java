@@ -67,8 +67,8 @@ public interface InjectionPointProvider<T> extends Supplier<T> {
     }
 
     private InjectionException couldNotFindMatch() {
-        if (this instanceof ServiceProvider) {
-            return new InjectionServiceProviderException("Expected to find a match", (ServiceProvider<?>) this);
+        if (this instanceof ServiceProvider<?> sp) {
+            return new InjectionServiceProviderException("Expected to find a match", sp);
         }
         return new InjectionException("Expected to find a match for " + this);
     }

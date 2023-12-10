@@ -54,7 +54,7 @@ import io.helidon.inject.api.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 import io.helidon.inject.service.Inject;
 import io.helidon.inject.service.Interceptor;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.spi.InjectionResolver;
 
@@ -197,13 +197,13 @@ public class ApplicationCreator {
             return new BindingPlan(serviceDescriptorType, Set.of());
         }
 
-        List<IpId> dependencies = sp.dependencies();
+        List<Ip> dependencies = sp.dependencies();
         if (dependencies.isEmpty()) {
             return new BindingPlan(serviceDescriptorType, Set.of());
         }
 
         Set<Binding> bindings = new LinkedHashSet<>();
-        for (IpId dependency : dependencies) {
+        for (Ip dependency : dependencies) {
             // type of the result that satisfies the injection point (full generic type)
             TypeName ipType = dependency.typeName();
 
@@ -353,7 +353,7 @@ public class ApplicationCreator {
 
     private InjectionPlan injectionPlan(InjectionServices injectionServices,
                                         ServiceProvider<?> self,
-                                        IpId dependency) {
+                                        Ip dependency) {
         ServiceInfoCriteria dependencyTo = ServiceInfoCriteria.create(dependency);
         Set<Qualifier> qualifiers = dependencyTo.qualifiers();
         if (self.contracts().containsAll(dependencyTo.contracts()) && self.qualifiers().equals(qualifiers)) {
@@ -418,7 +418,7 @@ public class ApplicationCreator {
                 : Stream.of(target);
     }
 
-    private List<ServiceProvider<?>> injectionPointProvidersFor(Services services, IpId ipoint) {
+    private List<ServiceProvider<?>> injectionPointProvidersFor(Services services, Ip ipoint) {
         if (ipoint.qualifiers().isEmpty()) {
             return List.of();
         }
@@ -602,7 +602,7 @@ public class ApplicationCreator {
 
     record Binding(BindingTime time,
                    BindingType type,
-                   IpId ipInfo,
+                   Ip ipInfo,
                    boolean useProvider,
                    List<TypeName> typeNames) {
     }

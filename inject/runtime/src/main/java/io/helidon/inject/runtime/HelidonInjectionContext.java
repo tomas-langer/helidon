@@ -21,7 +21,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 import io.helidon.inject.service.InjectionContext;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 
 /**
  * A context for obtaining injection point values in a {@link io.helidon.inject.service.Descriptor}.
@@ -31,9 +31,9 @@ import io.helidon.inject.service.IpId;
  * @see io.helidon.inject.service.InjectionContext
  */
 public class HelidonInjectionContext implements InjectionContext {
-    private final Map<IpId, Supplier<?>> injectionPlans;
+    private final Map<Ip, Supplier<?>> injectionPlans;
 
-    HelidonInjectionContext(Map<IpId, Supplier<?>> injectionPlans) {
+    HelidonInjectionContext(Map<Ip, Supplier<?>> injectionPlans) {
         this.injectionPlans = injectionPlans;
     }
 
@@ -43,13 +43,13 @@ public class HelidonInjectionContext implements InjectionContext {
      * @param injectionPlan map of injection ids to provider that satisfies that injection point
      * @return a new injection context
      */
-    public static InjectionContext create(Map<IpId, Supplier<?>> injectionPlan) {
+    public static InjectionContext create(Map<Ip, Supplier<?>> injectionPlan) {
         return new HelidonInjectionContext(injectionPlan);
     }
 
     @Override
     @SuppressWarnings("unchecked") // we have a map, and that cannot have type to instance values
-    public <T> T param(IpId paramId) {
+    public <T> T param(Ip paramId) {
         Supplier<?> injectionSupplier = injectionPlans.get(paramId);
         if (injectionSupplier == null) {
             throw new NoSuchElementException("Cannot resolve injection id " + paramId + " for service "

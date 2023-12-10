@@ -27,7 +27,7 @@ import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.api.ServiceInfoCriteria;
 import io.helidon.inject.service.Inject;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 
 import static io.helidon.common.LazyValue.create;
@@ -61,7 +61,7 @@ public class BladeProvider implements InjectionPointProvider<Blade> {
 
     static Optional<Blade> logAndReturn(Optional<Blade> result,
                                         ContextualServiceQuery query) {
-        IpId ip = query.injectionPointInfo().orElse(null);
+        Ip ip = query.injectionPoint().orElse(null);
         // note: a "regular" service lookup via Injection will not have an injection point associated with it
         if (ip != null) {
             System.out.println(ip.service() + "::" + ip.name() + " will be injected with " + result);

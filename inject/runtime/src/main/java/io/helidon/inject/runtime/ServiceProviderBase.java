@@ -46,7 +46,7 @@ import io.helidon.inject.api.Services;
 import io.helidon.inject.service.Descriptor;
 import io.helidon.inject.service.InjectionContext;
 import io.helidon.inject.service.InterceptionMetadata;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.ServiceInfo;
 import io.helidon.inject.spi.InjectionResolver;
 
@@ -446,7 +446,7 @@ public abstract class ServiceProviderBase<T>
         }
     }
 
-    protected void prepareDependency(Services services, Map<IpId, Supplier<?>> injectionPlan, IpId dependency) {
+    protected void prepareDependency(Services services, Map<Ip, Supplier<?>> injectionPlan, Ip dependency) {
         ServiceInfoCriteria criteria = ServiceInfoCriteria.create(dependency);
         List<ServiceProvider<?>> discovered = services.lookupAll(criteria, false)
                 .stream()
@@ -603,7 +603,7 @@ public abstract class ServiceProviderBase<T>
     private void gatherDependencies(ActivationRequest req, ActivationResult.Builder res) {
         stateTransitionStart(res, Phase.GATHERING_DEPENDENCIES);
 
-        List<IpId> servicesDeps = dependencies();
+        List<Ip> servicesDeps = dependencies();
 
         if (servicesDeps.isEmpty()) {
             return;
@@ -614,10 +614,10 @@ public abstract class ServiceProviderBase<T>
             return;
         }
 
-        Map<IpId, Supplier<?>> injectionPlan = new HashMap<>();
+        Map<Ip, Supplier<?>> injectionPlan = new HashMap<>();
 
         Services services = injectionServices.services();
-        for (IpId ipInfo : servicesDeps) {
+        for (Ip ipInfo : servicesDeps) {
             prepareDependency(services, injectionPlan, ipInfo);
         }
 
@@ -630,7 +630,7 @@ public abstract class ServiceProviderBase<T>
     protected static class ServiceInjectBinderImpl implements ServiceInjectionPlanBinder.Binder {
         private final InjectionServices injectionServices;
         private final ServiceProviderBase<?> self;
-        private final Map<IpId, Supplier<?>> injectionPlan = new HashMap<>();
+        private final Map<Ip, Supplier<?>> injectionPlan = new HashMap<>();
         private final Services services;
 
         /**
@@ -651,7 +651,7 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder bind(IpId id, boolean useProvider, ServiceInfo<?> descriptor) {
+        public ServiceInjectionPlanBinder.Binder bind(Ip id, boolean useProvider, ServiceInfo<?> descriptor) {
             ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(descriptor), id);
             if (useProvider) {
                 injectionPlan.put(id, () -> serviceProvider);
@@ -667,7 +667,7 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder bindOptional(IpId id,
+        public ServiceInjectionPlanBinder.Binder bindOptional(Ip id,
                                                               boolean useProvider,
                                                               ServiceInfo<?>... descriptor) {
 
@@ -689,7 +689,7 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder bindMany(IpId id,
+        public ServiceInjectionPlanBinder.Binder bindMany(Ip id,
                                                           boolean useProvider,
                                                           ServiceInfo<?>... descriptors) {
 
@@ -714,15 +714,15 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder bindNull(IpId id) {
+        public ServiceInjectionPlanBinder.Binder bindNull(Ip id) {
             injectionPlan.put(id, () -> null);
             return this;
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder runtimeBind(IpId id, boolean useProvider, Class<?> serviceType) {
+        public ServiceInjectionPlanBinder.Binder runtimeBind(Ip id, boolean useProvider, Class<?> serviceType) {
             if (self instanceof InjectionResolver ir) {
-                Optional<IpId> foundIp = self.dependencies()
+                Optional<Ip> foundIp = self.dependencies()
                         .stream()
                         .filter(it -> it == id)
                         .findFirst();
@@ -738,9 +738,9 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder runtimeBindOptional(IpId id, boolean useProvider, Class<?> serviceType) {
+        public ServiceInjectionPlanBinder.Binder runtimeBindOptional(Ip id, boolean useProvider, Class<?> serviceType) {
             if (self instanceof InjectionResolver ir) {
-                Optional<IpId> foundIp = self.dependencies()
+                Optional<Ip> foundIp = self.dependencies()
                         .stream()
                         .filter(it -> it == id)
                         .findFirst();
@@ -761,7 +761,7 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder runtimeBindMany(IpId id, boolean useProvider, Class<?> serviceType) {
+        public ServiceInjectionPlanBinder.Binder runtimeBindMany(Ip id, boolean useProvider, Class<?> serviceType) {
             List<? extends ServiceProvider<?>> providers = services.lookupAll(serviceType);
 
             if (useProvider) {
@@ -776,7 +776,7 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder runtimeBindNullable(IpId id, boolean useProvider, Class<?> serviceType) {
+        public ServiceInjectionPlanBinder.Binder runtimeBindNullable(Ip id, boolean useProvider, Class<?> serviceType) {
             Optional<? extends ServiceProvider<?>> serviceProvider = services.lookupFirst(serviceType, false);
 
             if (serviceProvider.isEmpty()) {
@@ -793,7 +793,7 @@ public abstract class ServiceProviderBase<T>
          *
          * @return map of injection point ids to a supplier of their values
          */
-        protected Map<IpId, Supplier<?>> injectionPlan() {
+        protected Map<Ip, Supplier<?>> injectionPlan() {
             return injectionPlan;
         }
 

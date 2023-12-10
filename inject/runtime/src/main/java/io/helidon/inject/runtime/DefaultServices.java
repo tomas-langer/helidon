@@ -396,9 +396,9 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
         lookupCount.incrementAndGet();
 
-        if (criteria.serviceTypeName().isPresent()) {
+        if (criteria.serviceType().isPresent()) {
             // when a specific service type is requested, we go for it
-            ServiceProvider exact = servicesByTypeName.get(criteria.serviceTypeName().get());
+            ServiceProvider exact = servicesByTypeName.get(criteria.serviceType().get());
             if (exact != null) {
                 return explodeFilterAndSort(List.of(exact), criteria, expected);
             }
@@ -417,7 +417,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
                     return explodeFilterAndSort(result, criteria, expected);
                 }
             }
-            if (criteria.serviceTypeName().isEmpty()) {
+            if (criteria.serviceType().isEmpty()) {
                 // we may have a request for service type and not a contract
                 ServiceProvider exact = servicesByTypeName.get(theOnlyContractRequested);
                 if (exact != null) {

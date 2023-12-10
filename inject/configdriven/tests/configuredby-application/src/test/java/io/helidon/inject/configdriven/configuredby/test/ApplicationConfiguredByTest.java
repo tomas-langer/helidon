@@ -57,7 +57,7 @@ class ApplicationConfiguredByTest extends AbstractConfiguredByTest {
                 .flatMap(it -> it.contracts().stream())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Set<TypeName> servicesSearchLog = criteriaSearchLog.stream()
-                .flatMap(it -> it.serviceTypeName().stream())
+                .flatMap(it -> it.serviceType().stream())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Set<TypeName> searchLog = new LinkedHashSet<>(contractSearchLog);
         searchLog.addAll(servicesSearchLog);

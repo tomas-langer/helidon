@@ -27,7 +27,7 @@ import io.helidon.inject.runtime.ServiceUtils;
 import io.helidon.inject.service.Descriptor;
 import io.helidon.inject.service.InjectionContext;
 import io.helidon.inject.service.InterceptionMetadata;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 
 /**
@@ -41,7 +41,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
 
     private static final Set<TypeName> CONTRACTS = Set.of(TypeName.create(HelloInjectionWorld.class));
     private static final TypeName TYPE_0 = TypeName.create("io.helidon.inject.runtime.testsubjects.InjectionWorld");
-    public static final IpId IP_0 = IpId.<InjectionWorld>builder()
+    public static final Ip IP_0 = Ip.<InjectionWorld>builder()
             .elementKind(ElementKind.FIELD)
             .name("world")
             .service(TYPE_NAME)
@@ -50,7 +50,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .contract(TYPE_0)
             .typeName(TYPE_0)
             .build();
-    public static final IpId IP_5 = IpId.builder()
+    public static final Ip IP_5 = Ip.builder()
             .elementKind(ElementKind.METHOD)
             .service(TYPE_NAME)
             .descriptor(DESCRIPTOR)
@@ -61,7 +61,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .build();
     private static final TypeName TYPE_1 = TypeName.create(
             "java.util.function.Supplier<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
-    public static final IpId IP_1 = IpId.builder()
+    public static final Ip IP_1 = Ip.builder()
             .elementKind(ElementKind.FIELD)
             .name("worldRef")
             .service(TYPE_NAME)
@@ -72,7 +72,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .build();
     private static final TypeName TYPE_2 = TypeName.create(
             "java.util.List<java.util.function.Supplier<io.helidon.inject.runtime.testsubjects.InjectionWorld>>");
-    public static final IpId IP_2 = IpId.builder()
+    public static final Ip IP_2 = Ip.builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorldRefs")
             .service(TYPE_NAME)
@@ -83,7 +83,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .build();
     private static final TypeName TYPE_3 = TypeName.create("java.util.List<io.helidon.inject.runtime.testsubjects"
                                                                    + ".InjectionWorld>");
-    public static final IpId IP_3 = IpId.<List<InjectionWorld>>builder()
+    public static final Ip IP_3 = Ip.<List<InjectionWorld>>builder()
             .elementKind(ElementKind.FIELD)
             .name("listOfWorlds")
             .service(TYPE_NAME)
@@ -94,7 +94,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .build();
     private static final TypeName TYPE_4 = TypeName.create(
             "java.util.Optional<io.helidon.inject.runtime.testsubjects.InjectionWorld>");
-    public static final IpId IP_4 = IpId.<Optional<InjectionWorld>>builder()
+    public static final Ip IP_4 = Ip.<Optional<InjectionWorld>>builder()
             .elementKind(ElementKind.FIELD)
             .name("redWorld")
             .service(TYPE_NAME)
@@ -104,12 +104,12 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
             .typeName(TYPE_4)
             .qualifiers(Set.of(Qualifier.createNamed("red")))
             .build();
-    private static final List<IpId> DEPENDENCIES = List.of(IP_0,
-                                                           IP_1,
-                                                           IP_2,
-                                                           IP_3,
-                                                           IP_4,
-                                                           IP_5);
+    private static final List<Ip> DEPENDENCIES = List.of(IP_0,
+                                                         IP_1,
+                                                         IP_2,
+                                                         IP_3,
+                                                         IP_4,
+                                                         IP_5);
 
     public HelloInjectionImpl__ServiceDescriptor() {
     }
@@ -130,7 +130,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
     }
 
     @Override
-    public List<IpId> dependencies() {
+    public List<Ip> dependencies() {
         return DEPENDENCIES;
     }
 

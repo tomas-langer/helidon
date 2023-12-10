@@ -16,7 +16,7 @@
 
 package io.helidon.inject.api;
 
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.ServiceInfo;
 
 /**
@@ -42,7 +42,7 @@ public interface ServiceInjectionPlanBinder {
     /**
      * The binder builder for the service plan.
      *
-     * @see io.helidon.inject.service.IpId
+     * @see io.helidon.inject.service.Ip
      */
     interface Binder {
 
@@ -55,7 +55,7 @@ public interface ServiceInjectionPlanBinder {
          * @param descriptor  the service provider to bind to this identity.
          * @return the binder builder
          */
-        Binder bind(IpId id,
+        Binder bind(Ip id,
                     boolean useProvider,
                     ServiceInfo<?> descriptor);
 
@@ -67,7 +67,7 @@ public interface ServiceInjectionPlanBinder {
          * @param descriptor  the descriptor to bind (zero or one)
          * @return the binder builder
          */
-        Binder bindOptional(IpId id,
+        Binder bindOptional(Ip id,
                             boolean useProvider,
                             ServiceInfo<?>... descriptor);
 
@@ -80,7 +80,7 @@ public interface ServiceInjectionPlanBinder {
          * @param serviceProviders service descriptors to bind to this identity (zero or more)
          * @return the binder builder
          */
-        Binder bindMany(IpId id,
+        Binder bindMany(Ip id,
                         boolean useProvider,
                         ServiceInfo<?>... serviceProviders);
 
@@ -91,7 +91,7 @@ public interface ServiceInjectionPlanBinder {
          * @param id the injection point identity
          * @return the binder builder
          */
-        Binder bindNull(IpId id);
+        Binder bindNull(Ip id);
 
         /**
          * Represents injection points that cannot be bound at startup, and instead must rely on a
@@ -102,7 +102,7 @@ public interface ServiceInjectionPlanBinder {
          * @param serviceType the service type needing to be resolved
          * @return the binder builder
          */
-        Binder runtimeBind(IpId id,
+        Binder runtimeBind(Ip id,
                            boolean useProvider,
                            Class<?> serviceType);
 
@@ -114,7 +114,7 @@ public interface ServiceInjectionPlanBinder {
          * @param serviceType type of service to be discovered at runtime
          * @return the binder builder
          */
-        Binder runtimeBindOptional(IpId id,
+        Binder runtimeBindOptional(Ip id,
                                    boolean useProvider,
                                    Class<?> serviceType);
 
@@ -126,7 +126,7 @@ public interface ServiceInjectionPlanBinder {
          * @param serviceType type of service to be discovered at runtime
          * @return the binder builder
          */
-        Binder runtimeBindMany(IpId id,
+        Binder runtimeBindMany(Ip id,
                                boolean useProvider,
                                Class<?> serviceType);
 
@@ -138,7 +138,7 @@ public interface ServiceInjectionPlanBinder {
          * @param serviceType type of service to be discovered at runtime
          * @return the binder builder
          */
-        Binder runtimeBindNullable(IpId id,
+        Binder runtimeBindNullable(Ip id,
                                    boolean useProvider,
                                    Class<?> serviceType);
 

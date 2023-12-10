@@ -21,7 +21,7 @@ import java.util.Optional;
 import io.helidon.inject.api.ServiceInjectionPlanBinder;
 import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.api.ServiceProviderBindable;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.ServiceInfo;
 
 class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceInjectionPlanBinder.Binder {
@@ -58,43 +58,43 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bindNull(IpId ipIdentity) {
+    public Binder bindNull(Ip ipIdentity) {
         // NOP
         return this;
     }
 
     @Override
-    public Binder bind(IpId id, boolean useProvider, ServiceInfo<?> descriptor) {
+    public Binder bind(Ip id, boolean useProvider, ServiceInfo<?> descriptor) {
         return this;
     }
 
     @Override
-    public Binder bindOptional(IpId id, boolean useProvider, ServiceInfo<?>... descriptor) {
+    public Binder bindOptional(Ip id, boolean useProvider, ServiceInfo<?>... descriptor) {
         return this;
     }
 
     @Override
-    public Binder bindMany(IpId id, boolean useProvider, ServiceInfo<?>... serviceProviders) {
+    public Binder bindMany(Ip id, boolean useProvider, ServiceInfo<?>... serviceProviders) {
         return this;
     }
 
     @Override
-    public Binder runtimeBind(IpId id, boolean useProvider, Class<?> serviceType) {
+    public Binder runtimeBind(Ip id, boolean useProvider, Class<?> serviceType) {
         return this;
     }
 
     @Override
-    public Binder runtimeBindOptional(IpId id, boolean useProvider, Class<?> serviceType) {
+    public Binder runtimeBindOptional(Ip id, boolean useProvider, Class<?> serviceType) {
         return this;
     }
 
     @Override
-    public Binder runtimeBindMany(IpId id, boolean useProvider, Class<?> serviceType) {
+    public Binder runtimeBindMany(Ip id, boolean useProvider, Class<?> serviceType) {
         return this;
     }
 
     @Override
-    public Binder runtimeBindNullable(IpId id, boolean useProvider, Class<?> serviceType) {
+    public Binder runtimeBindNullable(Ip id, boolean useProvider, Class<?> serviceType) {
         return this;
     }
 

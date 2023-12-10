@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 import io.helidon.common.Weighted;
 import io.helidon.common.types.TypeName;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.ModuleComponent;
 
 /**
@@ -53,7 +53,7 @@ public final class ServiceUtils {
      */
     public static boolean isQualifiedInjectionTarget(ServiceProvider<?> sp) {
         Set<TypeName> contractsImplemented = sp.contracts();
-        List<IpId> dependencies = sp.dependencies();
+        List<Ip> dependencies = sp.dependencies();
 
         return (!dependencies.isEmpty())
                 || (!contractsImplemented.isEmpty()

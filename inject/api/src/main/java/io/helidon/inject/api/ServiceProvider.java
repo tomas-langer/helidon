@@ -21,7 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.service.ServiceInfo;
 
@@ -118,7 +118,7 @@ public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvid
     }
 
     @Override
-    default List<IpId> dependencies() {
+    default List<Ip> dependencies() {
         return serviceInfo().dependencies();
     }
 

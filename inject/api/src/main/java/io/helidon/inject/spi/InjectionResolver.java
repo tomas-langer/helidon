@@ -20,7 +20,7 @@ import java.util.Optional;
 
 import io.helidon.inject.api.InjectionServices;
 import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 
 /**
  * Implementors of this contract can assist with resolving injection points.
@@ -41,7 +41,7 @@ public interface InjectionResolver {
      * @param resolveIps        flag indicating whether injection points should be resolved
      * @return the resolution for the plan or the injection point, or empty if unable to resolve the injection point context
      */
-    Optional<Object> resolve(IpId ipInfo,
+    Optional<Object> resolve(Ip ipInfo,
                              InjectionServices injectionServices,
                              ServiceProvider<?> serviceProvider,
                              boolean resolveIps);

@@ -32,7 +32,7 @@ import io.helidon.common.types.Annotation;
 import io.helidon.inject.api.ContextualServiceQuery;
 import io.helidon.inject.api.InjectionPointProvider;
 import io.helidon.inject.service.Inject;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 
 import com.oracle.bmc.ConfigFileReader;
 import com.oracle.bmc.Region;
@@ -83,7 +83,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
     public Optional<AbstractAuthenticationDetailsProvider> first(ContextualServiceQuery query) {
         OciConfig ociConfig = OciExtension.ociConfig();
 
-        String requestedNamedProfile = toNamedProfile(query.injectionPointInfo().orElse(null));
+        String requestedNamedProfile = toNamedProfile(query.injectionPoint().orElse(null));
 
         // if the injection point names a profile for auth strategy then use it
         if (requestedNamedProfile != null && !requestedNamedProfile.isBlank()) {
@@ -124,7 +124,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
                                                  + OciConfig.CONFIG_KEY);
     }
 
-    static String toNamedProfile(IpId.Builder ipiBuilder) {
+    static String toNamedProfile(Ip.Builder ipiBuilder) {
         Optional<? extends Annotation> named = findFirst(Inject.Named.class, ipiBuilder.qualifiers());
         if (named.isEmpty()) {
             return null;
@@ -138,7 +138,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
         return nameProfile.trim();
     }
 
-    static String toNamedProfile(IpId ipi) {
+    static String toNamedProfile(Ip ipi) {
         if (ipi == null) {
             return null;
         }

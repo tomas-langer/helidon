@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Optional;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.service.IpId;
+import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.service.ServiceInfo;
 
@@ -266,7 +266,7 @@ public interface Services {
      * @return the qualifying services relative to the given context
      * @see InjectionServicesConfig#supportsContextualLookup()
      */
-    default Services contextualServices(IpId ctx) {
+    default Services contextualServices(Ip ctx) {
         return this;
     }
 

@@ -75,7 +75,7 @@ public interface ServiceInfo<T> extends Weighted {
      *
      * @return required dependencies
      */
-    default List<IpId> dependencies() {
+    default List<Ip> dependencies() {
         return List.of();
     }
 
