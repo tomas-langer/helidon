@@ -364,22 +364,19 @@ class InjectionExtension implements InjectCodegenExtension {
     // find constructor with @Inject, if none, find the first constructor (assume @Inject)
     private TypedElementInfo injectConstructor(TypeInfo typeInfo) {
         // first @Inject
-        Optional<TypedElementInfo> first = typeInfo.elementInfo()
+        return typeInfo.elementInfo()
                 .stream()
                 .filter(it -> it.kind() == ElementKind.CONSTRUCTOR)
                 .filter(it -> it.hasAnnotation(InjectCodegenTypes.INJECT_POINT))
-                .findFirst();
-        if (first.isPresent()) {
-            return first.get();
-        }
-
-        // first constructor
-        first = typeInfo.elementInfo()
-                .stream()
-                .filter(it -> it.kind() == ElementKind.CONSTRUCTOR)
-                .findFirst();
-
-        return first.orElse(DEFAULT_CONSTRUCTOR);
+                .findFirst()
+                // or first non-private constructor
+                .or(() -> typeInfo.elementInfo()
+                        .stream()
+                        .filter(not(ElementInfoPredicates::isPrivate))
+                        .filter(it -> it.kind() == ElementKind.CONSTRUCTOR)
+                        .findFirst())
+                // or default constructor
+                .orElse(DEFAULT_CONSTRUCTOR);
     }
 
     private List<TypedElementInfo> fieldInjectElements(TypeInfo typeInfo) {

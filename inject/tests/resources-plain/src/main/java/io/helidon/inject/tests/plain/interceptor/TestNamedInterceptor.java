@@ -50,7 +50,7 @@ public class TestNamedInterceptor implements Interceptor {
 
         TypedElementInfo elementInfo = ctx.elementInfo();
         Annotation annotation = elementInfo.findAnnotation(INTERCEPTED_ANNO)
-                .or(() -> Annotations.findFirst(INTERCEPTED_ANNO, ctx.classAnnotations()))
+                .or(() -> Annotations.findFirst(INTERCEPTED_ANNO, ctx.typeAnnotations()))
                 .orElse(null);
 
         if (annotation == null) {

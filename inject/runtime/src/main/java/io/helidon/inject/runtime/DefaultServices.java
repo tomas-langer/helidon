@@ -159,12 +159,14 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    void interceptors(ServiceInfo<?>... descriptors) {
-        List interceptors = new ArrayList<>(Stream.of(descriptors)
-                                                    .map(this::serviceProvider)
-                                                    .toList());
+    void interceptors(ServiceInfo... serviceInfos) {
+        if (this.interceptors == null) {
+            List interceptors = new ArrayList<>(Stream.of(serviceInfos)
+                                                        .map(this::serviceProvider)
+                                                        .toList());
 
-        this.interceptors = List.copyOf(interceptors);
+            this.interceptors = List.copyOf(interceptors);
+        }
     }
 
     private static boolean hasNamed(Set<Qualifier> qualifiers) {
@@ -203,7 +205,7 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
     }
 
     static ServiceProviderInjectionException resolutionBasedInjectionError(TypeName serviceTypeName) {
-        return resolutionBasedInjectionError(ServiceInfoCriteria.builder().serviceTypeName(serviceTypeName).build());
+        return resolutionBasedInjectionError(ServiceInfoCriteria.builder().serviceType(serviceTypeName).build());
     }
 
     /**
@@ -348,8 +350,8 @@ class DefaultServices implements Services, ServiceBinder, Resettable {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> ServiceProvider<T> serviceProvider(ServiceInfo<T> descriptor) {
-        return (ServiceProvider<T>) servicesByTypeName.get(descriptor.serviceType());
+    public ServiceProvider<?> serviceProvider(ServiceInfo serviceInfo) {
+        return servicesByTypeName.get(serviceInfo.serviceType());
     }
 
     Optional<Activator<?>> activator(ServiceProvider<?> instance) {

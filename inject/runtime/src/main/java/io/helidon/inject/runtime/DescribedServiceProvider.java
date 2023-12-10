@@ -26,19 +26,19 @@ import io.helidon.inject.service.ServiceInfo;
  * @param <T> type of the provided service
  */
 public abstract class DescribedServiceProvider<T> implements ServiceProvider<T> {
-    private final ServiceInfo<T> serviceInfo;
+    private final ServiceInfo serviceInfo;
 
     /**
      * Creates a new instance with the delegate descriptor.
      *
      * @param serviceInfo descriptor to delegate to
      */
-    protected DescribedServiceProvider(ServiceInfo<T> serviceInfo) {
+    protected DescribedServiceProvider(ServiceInfo serviceInfo) {
         this.serviceInfo = serviceInfo;
     }
 
     @Override
-    public ServiceInfo<T> serviceInfo() {
+    public ServiceInfo serviceInfo() {
         return serviceInfo;
     }
 }

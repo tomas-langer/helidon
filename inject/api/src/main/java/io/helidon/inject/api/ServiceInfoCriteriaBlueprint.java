@@ -112,25 +112,25 @@ interface ServiceInfoCriteriaBlueprint {
      * Matches is a looser form of equality check than {@code equals()}. If a service matches criteria
      * it is generally assumed to be viable for assignability.
      *
-     * @param descriptor to compare with
+     * @param serviceInfo to compare with
      * @return true if this criteria matches the service descriptor
      */
-    default boolean matches(ServiceInfo<?> descriptor) {
+    default boolean matches(ServiceInfo serviceInfo) {
         if (this == InjectionServices.EMPTY_CRITERIA) {
             return true;
         }
 
-        boolean matches = matches(descriptor.serviceType(), this.serviceType());
+        boolean matches = matches(serviceInfo.serviceType(), this.serviceType());
         if (matches && this.serviceType().isEmpty()) {
-            matches = descriptor.contracts().containsAll(this.contracts())
-                    || this.contracts().contains(descriptor.serviceType());
+            matches = serviceInfo.contracts().containsAll(this.contracts())
+                    || this.contracts().contains(serviceInfo.serviceType());
         }
         return matches
-                && matchesAbstract(includeAbstract(), descriptor.isAbstract())
-                && descriptor.scopes().containsAll(this.scopes())
-                && Qualifiers.matchesQualifiers(descriptor.qualifiers(), this.qualifiers())
-                && matchesWeight(descriptor, this)
-                && matches(descriptor.runLevel(), this.runLevel());
+                && matchesAbstract(includeAbstract(), serviceInfo.isAbstract())
+                && serviceInfo.scopes().containsAll(this.scopes())
+                && Qualifiers.matchesQualifiers(serviceInfo.qualifiers(), this.qualifiers())
+                && matchesWeight(serviceInfo, this)
+                && matches(serviceInfo.runLevel(), this.runLevel());
     }
 
     private boolean matchesAbstract(boolean criteriaAbstract, boolean isAbstract) {
@@ -159,7 +159,7 @@ interface ServiceInfoCriteriaBlueprint {
         return matches;
     }
 
-    private static boolean matchesWeight(ServiceInfo<?> src,
+    private static boolean matchesWeight(ServiceInfo src,
                                          ServiceInfoCriteriaBlueprint criteria) {
         if (criteria.weight().isEmpty()) {
             return true;

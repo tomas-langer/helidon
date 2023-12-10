@@ -54,7 +54,7 @@ public class VoidServiceProvider extends DescribedServiceProvider<Void> {
         return Optional.empty();
     }
 
-    private static class VoidDescriptor implements ServiceInfo<Void> {
+    private static class VoidDescriptor implements ServiceInfo {
         static final Set<TypeName> SCOPES = Set.of(InjectTypes.SINGLETON);
         private static final Set<TypeName> CONTRACTS = Set.of(TYPE_NAME);
 

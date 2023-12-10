@@ -25,14 +25,14 @@ import io.helidon.inject.api.ServiceProvider;
 import io.helidon.inject.service.ServiceInfo;
 
 class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
-    private final ConfigBeanServiceDescriptor<CB> serviceDescriptor;
+    private final ConfigBeanServiceInfo serviceInfo;
     private final CB instance;
     private final String id;
 
     ConfigBeanServiceProvider(TypeName beanType, CB instance, String id) {
         this.instance = instance;
         this.id = id;
-        this.serviceDescriptor = new ConfigBeanServiceDescriptor<>(beanType, id);
+        this.serviceInfo = new ConfigBeanServiceInfo(beanType, id);
     }
 
     @Override
@@ -51,8 +51,8 @@ class ConfigBeanServiceProvider<CB> implements ServiceProvider<CB> {
     }
 
     @Override
-    public ServiceInfo<CB> serviceInfo() {
-        return serviceDescriptor;
+    public ServiceInfo serviceInfo() {
+        return serviceInfo;
     }
 
     @Override

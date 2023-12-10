@@ -37,13 +37,13 @@ class BoundServiceProvider<T> extends DescribedServiceProvider<T> implements Ser
     private final LazyValue<T> instance;
     private final LazyValue<List<T>> instances;
 
-    private BoundServiceProvider(ServiceProvider<T> binding, Ip ipId) {
+    private BoundServiceProvider(ServiceProvider<T> binding, Ip injectionPoint) {
         super(binding.serviceInfo());
 
         this.binding = binding;
         ContextualServiceQuery query = ContextualServiceQuery.builder()
-                .injectionPointInfo(ipId)
-                .serviceInfoCriteria(ServiceInfoCriteria.create(ipId))
+                .injectionPoint(injectionPoint)
+                .serviceInfoCriteria(ServiceInfoCriteria.create(injectionPoint))
                 .expected(false)
                 .build();
         this.instance = LazyValue.create(() -> binding.first(query).orElse(null));

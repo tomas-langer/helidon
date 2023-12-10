@@ -250,12 +250,11 @@ public interface Services {
     /**
      * Get a service provider for a descriptor.
      *
-     * @param descriptor descriptor
+     * @param serviceInfo service information (metadata of the service)
      * @return service provider created for the descriptor
-     * @param <T> type of the service
      * @throws java.util.NoSuchElementException in case the descriptor is not part of this registry
      */
-    <T> ServiceProvider<T> serviceProvider(ServiceInfo<T> descriptor);
+    ServiceProvider<?> serviceProvider(ServiceInfo serviceInfo);
 
     /**
      * Implementors can provide a means to use a "special" services registry that better applies to the target injection

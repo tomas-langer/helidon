@@ -38,7 +38,7 @@ public interface ServiceProviderProvider {
                                                         boolean thisAlreadyMatches);
 
     /**
-     * This method will only apply to the managed/slave instances being provided, not to itself as in the case for
+     * This method will only apply to the managed instances being provided, not to itself as in the case for
      * {@link #serviceProviders(ServiceInfoCriteria, boolean, boolean)}.
      *
      * @param criteria              the injection point criteria that must match

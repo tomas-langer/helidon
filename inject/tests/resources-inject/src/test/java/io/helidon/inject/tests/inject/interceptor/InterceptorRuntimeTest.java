@@ -284,7 +284,7 @@ class InterceptorRuntimeTest {
         }
     }
 
-    private static class TestNamedInterceptorServiceInfo implements ServiceInfo<TestNamedInterceptor> {
+    private static class TestNamedInterceptorServiceInfo implements ServiceInfo {
         @Override
         public TypeName serviceType() {
             return TypeName.create(TestNamedInterceptor.class);

@@ -25,10 +25,8 @@ import io.helidon.common.types.TypeName;
 /**
  * Service metadata.
  * Also serves as a unique identification of a service in the service registry.
- *
- * @param <T> type of the service implementation this descriptor describes
  */
-public interface ServiceInfo<T> extends Weighted {
+public interface ServiceInfo extends Weighted {
     /**
      * Id used by the basic Helidon injection.
      */

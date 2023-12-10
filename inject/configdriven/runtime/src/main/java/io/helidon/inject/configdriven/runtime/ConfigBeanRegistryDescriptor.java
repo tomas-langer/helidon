@@ -25,7 +25,7 @@ import io.helidon.inject.service.ServiceInfo;
 /**
  * Service descriptor for {@link io.helidon.inject.configdriven.runtime.ConfigBeanRegistry}.
  */
-public final class ConfigBeanRegistryDescriptor implements ServiceInfo<ConfigBeanRegistry> {
+public final class ConfigBeanRegistryDescriptor implements ServiceInfo {
     /**
      * Singleton instance of this descriptor.
      */

@@ -244,7 +244,7 @@ public class ApplicationCreator {
 
     private static ServiceInfoCriteria toServiceInfoCriteria(TypeName typeName) {
         return ServiceInfoCriteria.builder()
-                .serviceTypeName(typeName)
+                .serviceType(typeName)
                 .build();
     }
 

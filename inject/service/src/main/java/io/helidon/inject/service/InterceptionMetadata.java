@@ -43,7 +43,7 @@ public interface InterceptionMetadata {
     /**
      * Create an invoker that handles interception if needed.
      *
-     * @param descriptor        descriptor of the service being intercepted
+     * @param descriptor        metadata of the service being intercepted
      * @param typeQualifiers    qualifiers on the type
      * @param typeAnnotations   annotations on the type
      * @param element           element being intercepted
@@ -52,7 +52,7 @@ public interface InterceptionMetadata {
      * @param <T>               type of the result of the invoker
      * @return an invoker that handles interception if enabled and if there are matching interceptors
      */
-    <T> Invoker<T> createInvoker(ServiceInfo<?> descriptor,
+    <T> Invoker<T> createInvoker(ServiceInfo descriptor,
                                  Set<Qualifier> typeQualifiers,
                                  List<Annotation> typeAnnotations,
                                  TypedElementInfo element,
@@ -62,7 +62,7 @@ public interface InterceptionMetadata {
     /**
      * Create an intercepted invoker and invoke it.
      *
-     * @param descriptor      descriptor of the service being intercepted
+     * @param serviceInfo     metadata of the service being intercepted
      * @param typeAnnotations annotations on the type
      * @param element         element being intercepted
      * @param interceptors    list of interceptors that match the element
@@ -71,7 +71,7 @@ public interface InterceptionMetadata {
      * @param <T>             type of the result of the invoker
      * @return result of the intercepted call
      */
-    <T> T invoke(ServiceInfo<?> descriptor,
+    <T> T invoke(ServiceInfo serviceInfo,
                  List<Annotation> typeAnnotations,
                  TypedElementInfo element,
                  List<Supplier<Interceptor>> interceptors,

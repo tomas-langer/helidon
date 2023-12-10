@@ -157,7 +157,7 @@ public abstract class AbstractConfiguredByTest {
                             "FakeWebServerNotDrivenAndHavingConfiguredByOverrides{@default}:INIT"));
 
         criteria = ServiceInfoCriteria.builder()
-                .serviceTypeName(TypeName.create(FakeTlsWSNotDrivenByCB.class))
+                .serviceType(TypeName.create(FakeTlsWSNotDrivenByCB.class))
                 .build();
         list = services.lookupAll(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());

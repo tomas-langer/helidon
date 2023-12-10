@@ -63,18 +63,18 @@ interface ContextualServiceQueryBlueprint {
         /**
          * Creates a contextual service query given the injection point info.
          *
-         * @param ipInfo   the injection point info
-         * @param expected true if the query is expected to at least have a single match
+         * @param injectionPoint the injection point info
+         * @param expected       true if the query is expected to at least have a single match
          * @return the query
          */
         @Prototype.FactoryMethod
-        static ContextualServiceQuery create(Ip ipInfo,
+        static ContextualServiceQuery create(Ip injectionPoint,
                                              boolean expected) {
-            Objects.requireNonNull(ipInfo);
+            Objects.requireNonNull(injectionPoint);
             return ContextualServiceQuery.builder()
                     .expected(expected)
-                    .injectionPointInfo(ipInfo)
-                    .serviceInfoCriteria(ServiceInfoCriteria.create(ipInfo))
+                    .injectionPoint(injectionPoint)
+                    .serviceInfoCriteria(ServiceInfoCriteria.create(injectionPoint))
                     .build();
         }
     }

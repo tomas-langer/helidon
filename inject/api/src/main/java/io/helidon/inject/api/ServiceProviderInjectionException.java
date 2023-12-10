@@ -19,8 +19,6 @@ package io.helidon.inject.api;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.helidon.inject.service.ServiceInfo;
-
 /**
  * Represents an injection exception. These might be thrown either at compile time or at runtime depending upon how the
  * application is built.
@@ -52,7 +50,7 @@ public class ServiceProviderInjectionException extends InjectionServiceProviderE
      */
     public ServiceProviderInjectionException(String msg,
                                              Throwable cause,
-                                             ServiceInfo<?> serviceProvider) {
+                                             ServiceProvider<?> serviceProvider) {
         super(msg, cause, serviceProvider);
     }
 
@@ -63,7 +61,7 @@ public class ServiceProviderInjectionException extends InjectionServiceProviderE
      * @param serviceProvider   the service provider
      */
     public ServiceProviderInjectionException(String msg,
-                                             ServiceInfo<?> serviceProvider) {
+                                             ServiceProvider<?> serviceProvider) {
         super(msg, serviceProvider);
     }
 

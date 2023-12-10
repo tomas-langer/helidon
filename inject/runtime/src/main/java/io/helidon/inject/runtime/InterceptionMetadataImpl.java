@@ -69,7 +69,7 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
     }
 
     @Override
-    public <T> Invoker<T> createInvoker(ServiceInfo<?> descriptor,
+    public <T> Invoker<T> createInvoker(ServiceInfo serviceInfo,
                                         Set<Qualifier> typeQualifiers,
                                         List<Annotation> typeAnnotations,
                                         TypedElementInfo element,
@@ -82,8 +82,8 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
             return targetInvoker;
         } else {
             return params -> Invocation.createInvokeAndSupply(InvocationContext.builder()
-                                                                      .serviceDescriptor(descriptor)
-                                                                      .classAnnotations(typeAnnotations)
+                                                                      .serviceInfo(serviceInfo)
+                                                                      .typeAnnotations(typeAnnotations)
                                                                       .elementInfo(element)
                                                                       .interceptors(interceptors)
                                                                       .build(),
@@ -94,13 +94,13 @@ class InterceptionMetadataImpl implements InterceptionMetadata {
     }
 
     @Override
-    public <V> V invoke(ServiceInfo<?> descriptor,
+    public <V> V invoke(ServiceInfo serviceInfo,
                         List<Annotation> typeAnnotations,
                         TypedElementInfo element,
                         List<Supplier<Interceptor>> interceptors,
                         Invoker<V> targetInvoker,
                         Object... args) {
-        return Invocation.createInvokeAndSupply(descriptor,
+        return Invocation.createInvokeAndSupply(serviceInfo,
                                                 typeAnnotations,
                                                 element,
                                                 interceptors,

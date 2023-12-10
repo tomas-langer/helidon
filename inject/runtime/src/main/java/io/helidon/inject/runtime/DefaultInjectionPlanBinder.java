@@ -33,9 +33,9 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bindTo(ServiceInfo<?> untrustedSp) {
+    public Binder bindTo(ServiceInfo untrustedServiceInfo) {
         // don't trust what we get, but instead lookup the service provider that we carry in our services registry
-        ServiceProvider<?> serviceProvider = services.serviceProvider(untrustedSp);
+        ServiceProvider<?> serviceProvider = services.serviceProvider(untrustedServiceInfo);
         Optional<? extends ServiceProviderBindable<?>> bindable = serviceProvider.serviceProviderBindable();
         Optional<Binder> binder = (bindable.isPresent()) ? bindable.get().injectionPlanBinder() : Optional.empty();
         if (binder.isEmpty()) {
@@ -53,8 +53,8 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public void interceptors(ServiceInfo<?>... descriptors) {
-        services.interceptors(descriptors);
+    public void interceptors(ServiceInfo... serviceInfos) {
+        services.interceptors(serviceInfos);
     }
 
     @Override
@@ -64,17 +64,17 @@ class DefaultInjectionPlanBinder implements ServiceInjectionPlanBinder, ServiceI
     }
 
     @Override
-    public Binder bind(Ip id, boolean useProvider, ServiceInfo<?> descriptor) {
+    public Binder bind(Ip id, boolean useProvider, ServiceInfo serviceInfo) {
         return this;
     }
 
     @Override
-    public Binder bindOptional(Ip id, boolean useProvider, ServiceInfo<?>... descriptor) {
+    public Binder bindOptional(Ip id, boolean useProvider, ServiceInfo... serviceInfos) {
         return this;
     }
 
     @Override
-    public Binder bindMany(Ip id, boolean useProvider, ServiceInfo<?>... serviceProviders) {
+    public Binder bindMany(Ip id, boolean useProvider, ServiceInfo... serviceInfos) {
         return this;
     }
 

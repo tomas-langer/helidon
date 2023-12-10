@@ -54,7 +54,7 @@ class InvocationTest {
         first = new TestInterceptor("first");
         second = new TestInterceptor("second");
         dummyCtx = InvocationContext.builder()
-                .serviceDescriptor(new DummyServiceDescriptor())
+                .serviceInfo(new DummyServiceInfo())
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
                                      .kind(ElementKind.METHOD)
@@ -81,7 +81,7 @@ class InvocationTest {
     @Test
     void normalCaseWithNoInterceptors() throws Exception {
         InvocationContext dummyCtx = InvocationContext.builder()
-                .serviceDescriptor(new DummyServiceDescriptor())
+                .serviceInfo(new DummyServiceInfo())
                 .elementInfo(TypedElementInfo.builder()
                                      .elementName("test")
                                      .kind(ElementKind.METHOD)
@@ -357,10 +357,10 @@ class InvocationTest {
         }
     }
 
-    private static class DummyServiceDescriptor implements ServiceInfo<DummyServiceDescriptor> {
+    private static class DummyServiceInfo implements ServiceInfo {
         @Override
         public TypeName serviceType() {
-            return TypeName.create(DummyServiceDescriptor.class);
+            return TypeName.create(DummyServiceInfo.class);
         }
 
         @Override

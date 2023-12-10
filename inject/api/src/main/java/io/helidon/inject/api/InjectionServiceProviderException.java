@@ -19,8 +19,6 @@ package io.helidon.inject.api;
 import java.util.Objects;
 import java.util.Optional;
 
-import io.helidon.inject.service.ServiceInfo;
-
 /**
  * An exception relative to a {@link ServiceProvider}.
  */
@@ -29,7 +27,7 @@ public class InjectionServiceProviderException extends InjectionException {
     /**
      * The service provider this exception pertains.
      */
-    private final ServiceInfo<?> serviceProvider;
+    private final ServiceProvider<?> serviceProvider;
 
     /**
      * A general purpose exception from the Injection framework.
@@ -52,7 +50,7 @@ public class InjectionServiceProviderException extends InjectionException {
         super(msg, cause);
 
         if (cause instanceof InjectionServiceProviderException exc) {
-           this.serviceProvider = exc.serviceDescriptor().orElse(null);
+           this.serviceProvider = exc.serviceProvider().orElse(null);
         } else {
            this.serviceProvider = null;
         }
@@ -62,13 +60,13 @@ public class InjectionServiceProviderException extends InjectionException {
      * A general purpose exception from the Injection framework.
      *
      * @param msg               the message
-     * @param serviceDescriptor   the service provider
+     * @param serviceProvider   the service provider
      */
     public InjectionServiceProviderException(String msg,
-                                             ServiceInfo<?> serviceDescriptor) {
+                                             ServiceProvider<?> serviceProvider) {
         super(msg);
-        Objects.requireNonNull(serviceDescriptor);
-        this.serviceProvider = serviceDescriptor;
+        Objects.requireNonNull(serviceProvider);
+        this.serviceProvider = serviceProvider;
     }
 
     /**
@@ -80,7 +78,7 @@ public class InjectionServiceProviderException extends InjectionException {
      */
     public InjectionServiceProviderException(String msg,
                                              Throwable cause,
-                                             ServiceInfo<?> serviceProvider) {
+                                             ServiceProvider<?> serviceProvider) {
         super(msg, cause);
         Objects.requireNonNull(serviceProvider);
         this.serviceProvider = serviceProvider;
@@ -91,7 +89,7 @@ public class InjectionServiceProviderException extends InjectionException {
      *
      * @return the optional / contextual service provider
      */
-    public Optional<ServiceInfo<?>> serviceDescriptor() {
+    public Optional<ServiceProvider<?>> serviceProvider() {
         return Optional.ofNullable(serviceProvider);
     }
 

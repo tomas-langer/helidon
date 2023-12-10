@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.ServiceProviderInjectionException;
+import io.helidon.inject.api.InjectionException;
 import io.helidon.inject.service.Descriptor;
 import io.helidon.inject.service.InjectionContext;
 import io.helidon.inject.service.InterceptionMetadata;
@@ -37,10 +37,10 @@ import io.helidon.inject.service.ServiceInfo;
  */
 public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<T> {
     private final Class<T> serviceType;
-    private final ServiceInfo<T> serviceInfo;
+    private final ServiceInfo serviceInfo;
 
     private ReflectionBasedSingletonServiceDescriptor(Class<T> serviceType,
-                                                      ServiceInfo<T> serviceInfo) {
+                                                      ServiceInfo serviceInfo) {
         this.serviceType = serviceType;
         this.serviceInfo = serviceInfo;
     }
@@ -66,7 +66,7 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<
      * @see InjectionTestingSupport#bind(io.helidon.inject.api.InjectionServices, io.helidon.inject.service.Descriptor)
      */
     public static <T> Descriptor<T> create(Class<T> serviceType,
-                                           ServiceInfo<T> serviceInfo) {
+                                           ServiceInfo serviceInfo) {
         Objects.requireNonNull(serviceType);
         Objects.requireNonNull(serviceInfo);
 
@@ -123,8 +123,8 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<
             Constructor<T> ctor = serviceType.getDeclaredConstructor();
             ctor.setAccessible(true);
             return ctor.newInstance();
-        } catch (Exception e) {
-            throw new ServiceProviderInjectionException("Failed to fully create instance: " + this, e, this);
+        } catch (ReflectiveOperationException e) {
+            throw new InjectionException("Failed to fully create instance for: " + this, e);
         }
     }
 }

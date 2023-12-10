@@ -27,17 +27,17 @@ public interface ServiceInjectionPlanBinder {
     /**
      * Bind an injection plan to a service provider instance.
      *
-     * @param serviceDescriptor the service to receive the injection plan.
+     * @param serviceInfo the service to receive the injection plan.
      * @return the binder to use for binding the injection plan to the service provider
      */
-    Binder bindTo(ServiceInfo<?> serviceDescriptor);
+    Binder bindTo(ServiceInfo serviceInfo);
 
     /**
      * Bind all discovered interceptors.
      *
-     * @param descriptors interceptor services
+     * @param serviceInfos interceptor services
      */
-    void interceptors(ServiceInfo<?>... descriptors);
+    void interceptors(ServiceInfo... serviceInfos);
 
     /**
      * The binder builder for the service plan.
@@ -52,24 +52,24 @@ public interface ServiceInjectionPlanBinder {
          *
          * @param id          the injection point identity
          * @param useProvider whether we inject a provider or provided
-         * @param descriptor  the service provider to bind to this identity.
+         * @param serviceInfo  the service provider to bind to this identity.
          * @return the binder builder
          */
         Binder bind(Ip id,
                     boolean useProvider,
-                    ServiceInfo<?> descriptor);
+                    ServiceInfo serviceInfo);
 
         /**
          * Bind to an optional field, with zero or one descriptors.
          *
          * @param id          injection point identity
          * @param useProvider whether we inject a provider or provided
-         * @param descriptor  the descriptor to bind (zero or one)
+         * @param serviceInfos  the descriptor to bind (zero or one)
          * @return the binder builder
          */
         Binder bindOptional(Ip id,
                             boolean useProvider,
-                            ServiceInfo<?>... descriptor);
+                            ServiceInfo... serviceInfos);
 
         /**
          * Binds a list of service providers to the injection point identified by the id.
@@ -77,12 +77,12 @@ public interface ServiceInjectionPlanBinder {
          *
          * @param id               the injection point identity
          * @param useProvider      whether we inject a provider or provided
-         * @param serviceProviders service descriptors to bind to this identity (zero or more)
+         * @param serviceInfos service descriptors to bind to this identity (zero or more)
          * @return the binder builder
          */
         Binder bindMany(Ip id,
                         boolean useProvider,
-                        ServiceInfo<?>... serviceProviders);
+                        ServiceInfo... serviceInfos);
 
         /**
          * Represents a null bind.

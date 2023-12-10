@@ -31,7 +31,7 @@ import io.helidon.common.types.TypeName;
  *
  * @param <T> type of the service implementation
  */
-public interface Descriptor<T> extends ServiceInfo<T> {
+public interface Descriptor<T> extends ServiceInfo {
     /**
      * Create a new service instance.
      *

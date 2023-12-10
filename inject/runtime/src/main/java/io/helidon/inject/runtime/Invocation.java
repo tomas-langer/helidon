@@ -16,8 +16,6 @@
 
 package io.helidon.inject.runtime;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -83,8 +81,8 @@ class Invocation<V> implements Interceptor.Chain<V> {
         Objects.requireNonNull(args);
 
         InvocationContext ctx = InvocationContext.builder()
-                .serviceDescriptor(descriptor)
-                .classAnnotations(typeAnnotations)
+                .serviceInfo(descriptor)
+                .typeAnnotations(typeAnnotations)
                 .elementInfo(element)
                 .interceptors(interceptors)
                 .build();
@@ -102,62 +100,6 @@ class Invocation<V> implements Interceptor.Chain<V> {
             // (and as a result, we do not support checked exceptions in intercepted constructors)
             throw new InvocationException("Error in interceptor chain processing", t, true);
         }
-    }
-
-    /**
-     * The degenerate case for {@link #mergeAndCollapse(List[])}. This is here only to eliminate the unchecked varargs compiler
-     * warnings that would otherwise be issued in code that does not have any interceptors on a method.
-     *
-     * @param <T> the type of the provider
-     * @return an empty list
-     * @deprecated this method should only be called by generated code
-     */
-    @Deprecated
-    public static <T> List<Supplier<T>> mergeAndCollapse() {
-        return List.of();
-    }
-
-    /**
-     * Merges a variable number of lists together, where the net result is the merged set of non-null providers
-     * ranked in proper weight order, or else empty list.
-     *
-     * @param lists the lists to merge
-     * @param <T>   the type of the provider
-     * @return the merged result or empty list if there is o interceptor providers
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> List<Supplier<T>> mergeAndCollapse(List<Supplier<T>>... lists) {
-        List<Supplier<T>> result = null;
-
-        for (List<Supplier<T>> list : lists) {
-            if (list == null) {
-                continue;
-            }
-
-            for (Supplier<T> p : list) {
-                if (p == null) {
-                    continue;
-                }
-
-                if (p instanceof ServiceProvider<?> serviceProvider
-                        && VoidServiceProvider.TYPE_NAME.equals(serviceProvider.serviceType())) {
-                    continue;
-                }
-
-                if (result == null) {
-                    result = new ArrayList<>();
-                }
-                if (!result.contains(p)) {
-                    result.add(p);
-                }
-            }
-        }
-
-        if (result != null && result.size() > 1) {
-            result.sort(DefaultServices.serviceProviderComparator());
-        }
-
-        return (result != null) ? Collections.unmodifiableList(result) : List.of();
     }
 
     /**

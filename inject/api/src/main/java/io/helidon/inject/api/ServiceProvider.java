@@ -30,7 +30,7 @@ import io.helidon.inject.service.ServiceInfo;
  *
  * @param <T> the type that this service provider manages
  */
-public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvider<T> {
+public interface ServiceProvider<T> extends ServiceInfo, InjectionPointProvider<T> {
 
     /**
      * Identifies the service provider physically and uniquely.
@@ -76,7 +76,7 @@ public interface ServiceProvider<T> extends ServiceInfo<T>, InjectionPointProvid
      *
      * @return descriptor of this service
      */
-    ServiceInfo<T> serviceInfo();
+    ServiceInfo serviceInfo();
 
     /**
      * The current activation phase for this service provider.

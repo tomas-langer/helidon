@@ -57,7 +57,7 @@ import io.helidon.inject.spi.InjectionResolver;
  */
 public abstract class ServiceProviderBase<T>
         extends DescribedServiceProvider<T>
-        implements ServiceProviderBindable<T>, ServiceInfo<T>, Activator<T> {
+        implements ServiceProviderBindable<T>, ServiceInfo, Activator<T> {
     static final TypeName SUPPLIER_TYPE = TypeName.create(Supplier.class);
     private static final System.Logger LOGGER = System.getLogger(ServiceProviderBase.class.getName());
     private static final TypeName SERVICE_PROVIDER_TYPE = TypeName.create(ServiceProvider.class);
@@ -651,8 +651,8 @@ public abstract class ServiceProviderBase<T>
         }
 
         @Override
-        public ServiceInjectionPlanBinder.Binder bind(Ip id, boolean useProvider, ServiceInfo<?> descriptor) {
-            ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(descriptor), id);
+        public ServiceInjectionPlanBinder.Binder bind(Ip id, boolean useProvider, ServiceInfo serviceInfo) {
+            ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(serviceInfo), id);
             if (useProvider) {
                 injectionPlan.put(id, () -> serviceProvider);
             } else {
@@ -669,12 +669,12 @@ public abstract class ServiceProviderBase<T>
         @Override
         public ServiceInjectionPlanBinder.Binder bindOptional(Ip id,
                                                               boolean useProvider,
-                                                              ServiceInfo<?>... descriptor) {
+                                                              ServiceInfo... serviceInfos) {
 
-            if (descriptor.length == 0) {
+            if (serviceInfos.length == 0) {
                 injectionPlan.put(id, Optional::empty);
             } else {
-                ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(descriptor[0]), id);
+                ServiceProvider<?> serviceProvider = BoundServiceProvider.create(services.serviceProvider(serviceInfos[0]), id);
                 if (useProvider) {
                     injectionPlan.put(id, () -> Optional.of(serviceProvider));
                 } else {
@@ -691,9 +691,9 @@ public abstract class ServiceProviderBase<T>
         @Override
         public ServiceInjectionPlanBinder.Binder bindMany(Ip id,
                                                           boolean useProvider,
-                                                          ServiceInfo<?>... descriptors) {
+                                                          ServiceInfo... serviceInfos) {
 
-            List<? extends ServiceProvider<?>> providers = Stream.of(descriptors)
+            List<? extends ServiceProvider<?>> providers = Stream.of(serviceInfos)
                     .map(services::serviceProvider)
                     .map(it -> BoundServiceProvider.create(it, id))
                     .toList();

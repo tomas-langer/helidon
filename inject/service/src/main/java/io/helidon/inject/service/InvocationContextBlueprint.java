@@ -35,14 +35,14 @@ interface InvocationContextBlueprint {
      *
      * @return the service being intercepted
      */
-    ServiceInfo<?> serviceDescriptor();
+    ServiceInfo serviceInfo();
 
     /**
      * The annotations on the enclosing type.
      *
      * @return the annotations on the enclosing type
      */
-    List<Annotation> classAnnotations();
+    List<Annotation> typeAnnotations();
 
     /**
      * The element info represents the method, field, or the constructor being invoked.

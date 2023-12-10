@@ -23,11 +23,11 @@ import io.helidon.inject.api.InjectTypes;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.service.ServiceInfo;
 
-class ConfigBeanServiceDescriptor<CB> implements ServiceInfo<CB> {
+class ConfigBeanServiceInfo implements ServiceInfo {
     private final TypeName beanType;
     private final Set<Qualifier> qualifiers;
 
-    ConfigBeanServiceDescriptor(TypeName beanType, String name) {
+    ConfigBeanServiceInfo(TypeName beanType, String name) {
         this.beanType = beanType;
         this.qualifiers = Set.of(Qualifier.createNamed(name));
     }
