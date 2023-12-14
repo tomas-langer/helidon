@@ -73,7 +73,7 @@ class UnsupportedTypesExtension implements InjectCodegenExtension {
             msg.append("'")
                     .append(CdiTypes.APPLICATION_SCOPED.fqName())
                     .append("' can be optionally mapped to '")
-                    .append(InjectCodegenTypes.INJECT_POINT.fqName())
+                    .append(InjectCodegenTypes.INJECTION_INJECT.fqName())
                     .append("' scope by passing -A")
                     .append(MapApplicationScopedProvider.MAP_APPLICATION_TO_SINGLETON_SCOPE)
                     .append("=true.\n");

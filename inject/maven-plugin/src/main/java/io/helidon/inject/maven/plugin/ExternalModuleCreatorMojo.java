@@ -33,9 +33,7 @@ import io.helidon.codegen.CodegenScope;
 import io.helidon.codegen.ModuleInfo;
 import io.helidon.codegen.scan.ScanModuleInfo;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.Activator;
 import io.helidon.inject.codegen.InjectOptions;
-import io.helidon.inject.service.ModuleComponent;
 import io.helidon.inject.service.Qualifier;
 
 import io.github.classgraph.ClassGraph;
@@ -50,7 +48,8 @@ import org.apache.maven.plugins.annotations.ResolutionScope;
 import static java.util.function.Predicate.not;
 
 /**
- * Responsible for creating {@link Activator}'s and a {@link ModuleComponent}
+ * Responsible for creating {@link io.helidon.inject.service.ServiceDescriptor}'s and
+ * a {@link io.helidon.inject.service.ModuleComponent}
  * wrapping a set of packages from an external third-party jar.
  */
 @Mojo(name = "external-module-create", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true,

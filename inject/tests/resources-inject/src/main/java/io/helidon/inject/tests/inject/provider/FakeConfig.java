@@ -18,7 +18,7 @@ package io.helidon.inject.tests.inject.provider;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.tbox.Preferred;
 
 public interface FakeConfig {
@@ -27,13 +27,13 @@ public interface FakeConfig {
 
     }
 
-    @Inject.Singleton
+    @Injection.Singleton
     @Preferred("x")
     @Weight(Weighted.DEFAULT_WEIGHT)
     class Builder implements B<FakeConfig> {
     }
 
-    @Inject.Singleton
+    @Injection.Singleton
     @Weight(Weighted.DEFAULT_WEIGHT + 1)
     class HigherWeightBuilder extends Builder {
     }

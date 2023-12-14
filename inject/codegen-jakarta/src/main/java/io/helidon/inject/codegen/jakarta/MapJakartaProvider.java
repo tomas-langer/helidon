@@ -42,11 +42,11 @@ public class MapJakartaProvider implements AnnotationMapperProvider {
                                                       JakartaTypes.INJECT_POST_CONSTRUCT,
                                                       JakartaTypes.INJECT_PRE_DESTROY);
     private static final Map<TypeName, Annotation> DIRECTLY_MAPPED = Map.of(
-            JakartaTypes.INJECT_SINGLETON, Annotation.create(InjectCodegenTypes.INJECT_SINGLETON),
-            JakartaTypes.INJECT_QUALIFIER, Annotation.create(InjectCodegenTypes.INJECT_QUALIFIER),
-            JakartaTypes.INJECT_INJECT, Annotation.create(InjectCodegenTypes.INJECT_POINT),
-            JakartaTypes.INJECT_POST_CONSTRUCT, Annotation.create(InjectCodegenTypes.INJECT_POST_CONSTRUCT),
-            JakartaTypes.INJECT_PRE_DESTROY, Annotation.create(InjectCodegenTypes.INJECT_PRE_DESTROY)
+            JakartaTypes.INJECT_SINGLETON, Annotation.create(InjectCodegenTypes.INJECTION_SINGLETON),
+            JakartaTypes.INJECT_QUALIFIER, Annotation.create(InjectCodegenTypes.INJECTION_QUALIFIER),
+            JakartaTypes.INJECT_INJECT, Annotation.create(InjectCodegenTypes.INJECTION_INJECT),
+            JakartaTypes.INJECT_POST_CONSTRUCT, Annotation.create(InjectCodegenTypes.INJECTION_POST_CONSTRUCT),
+            JakartaTypes.INJECT_PRE_DESTROY, Annotation.create(InjectCodegenTypes.INJECTION_PRE_DESTROY)
     );
 
     /**
@@ -87,7 +87,7 @@ public class MapJakartaProvider implements AnnotationMapperProvider {
             }
             // named is mapped to our named
             if (JakartaTypes.INJECT_NAMED.equals(typeName)) {
-                return Set.of(Annotation.create(InjectCodegenTypes.INJECT_NAMED, original.value().orElse("")));
+                return Set.of(Annotation.create(InjectCodegenTypes.INJECTION_NAMED, original.value().orElse("")));
             }
 
             return Set.of(original);

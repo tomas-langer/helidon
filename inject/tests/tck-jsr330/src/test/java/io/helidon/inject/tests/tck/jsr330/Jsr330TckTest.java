@@ -20,8 +20,7 @@ import java.util.Enumeration;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.InjectionServicesConfig;
+import io.helidon.inject.InjectionServices;
 
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
@@ -45,14 +44,13 @@ public class Jsr330TckTest {
      */
     @Test
     public void testItAll() {
-        InjectionServices injectionServices = InjectionServices.injectionServices().orElseThrow();
-        InjectionServicesConfig cfg = injectionServices.config();
-        Supplier<Car> carProvider = injectionServices.services().lookupFirst(Car.class);
+        InjectionServices injectionServices = InjectionServices.instance();
+        Supplier<Car> carProvider = injectionServices.services().first(Car.class);
         Objects.requireNonNull(carProvider.get());
         assertThat("sanity", carProvider.get(), not(carProvider.get()));
         junit.framework.Test jsrTest = Tck.testsFor(carProvider.get(),
-                                                    cfg.supportsJsr330Statics(),
-                                                    cfg.supportsJsr330Privates());
+                                                    false,
+                                                    false);
         TestResult result = new TestResult();
         jsrTest.run(result);
         assertThat(result.runCount(), greaterThan(0));

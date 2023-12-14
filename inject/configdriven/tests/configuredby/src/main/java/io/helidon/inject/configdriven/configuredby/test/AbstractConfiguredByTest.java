@@ -25,19 +25,21 @@ import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
 import io.helidon.config.MapConfigSource;
-import io.helidon.inject.api.InjectionServiceProviderException;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.Phase;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
-import io.helidon.inject.configdriven.api.ConfigDriven;
-import io.helidon.inject.configdriven.api.NamedInstance;
-import io.helidon.inject.configdriven.runtime.ConfigBeanRegistry;
+import io.helidon.inject.InjectionConfig;
+import io.helidon.inject.InjectionServiceProviderException;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.Phase;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
+import io.helidon.inject.configdriven.ConfigBeanRegistry;
+import io.helidon.inject.configdriven.service.ConfigDriven;
+import io.helidon.inject.configdriven.service.NamedInstance;
 import io.helidon.inject.configdriven.tests.config.FakeServerConfig;
 import io.helidon.inject.configdriven.tests.config.FakeTlsWSNotDrivenByCB;
 import io.helidon.inject.configdriven.tests.config.FakeWebServer;
 import io.helidon.inject.configdriven.tests.config.FakeWebServerContract;
+import io.helidon.inject.configdriven.tests.config.FakeWebServer__ServiceDescriptor;
 import io.helidon.inject.service.Qualifier;
 import io.helidon.inject.testing.InjectionTestingSupport;
 
@@ -77,21 +79,6 @@ public abstract class AbstractConfiguredByTest {
         InjectionTestingSupport.resetAll();
     }
 
-    protected void resetWith(Config config) {
-        GlobalConfig.config(() -> config, true);
-        InjectionTestingSupport.resetAll();
-        this.injectionServices = testableServices(config);
-        this.services = injectionServices.services();
-    }
-
-    public MapConfigSource.Builder createBasicTestingConfigSource() {
-        return ConfigSources.create(
-                Map.of(
-                        "inject.permits-dynamic", "true",
-                        "inject.activation-logs", "true",
-                        "inject.service-lookup-caching", "true"
-                ), "config-basic");
-    }
 
     public MapConfigSource.Builder createRootDefault8080TestingConfigSource() {
         return ConfigSources.create(
@@ -102,9 +89,20 @@ public abstract class AbstractConfiguredByTest {
                 ), "config-root-default-8080");
     }
 
+    protected void resetWith(Config config) {
+        GlobalConfig.config(() -> config, true);
+        InjectionTestingSupport.resetAll();
+        this.injectionServices = testableServices(InjectionConfig.builder()
+                                                          .permitsDynamic(true)
+                                                          .serviceLookupCaching(true)
+                                                          .config(config.get("inject"))
+                                                          .build());
+        this.services = injectionServices.services();
+    }
+
     @Test
     void testItAll() {
-        resetWith(io.helidon.config.Config.builder(createBasicTestingConfigSource(), createRootDefault8080TestingConfigSource())
+        resetWith(io.helidon.config.Config.builder(createRootDefault8080TestingConfigSource())
                           .disableEnvironmentVariablesSource()
                           .disableSystemPropertiesSource()
                           .build());
@@ -112,11 +110,12 @@ public abstract class AbstractConfiguredByTest {
         // verify the services registry
         testRegistry();
 
-        ServiceProvider<FakeWebServer> fakeWebServer = services.lookup(FakeWebServer.class);
+        ServiceProvider<FakeWebServer> fakeWebServer = services.serviceProvider(FakeWebServer__ServiceDescriptor.INSTANCE);
         assertThat(fakeWebServer.currentActivationPhase(), is(Phase.ACTIVE));
         assertThat(fakeWebServer.get().isRunning(), is(true));
 
-        ServiceProvider<ASingletonService> singletonService = services.lookup(ASingletonService.class);
+        ServiceProvider<ASingletonService> singletonService =
+                services.serviceProvider(ASingletonService__ServiceDescriptor.INSTANCE);
         assertThat(singletonService.currentActivationPhase(), is(Phase.ACTIVE));
         assertThat(singletonService.get().isRunning(), is(true));
 
@@ -129,10 +128,10 @@ public abstract class AbstractConfiguredByTest {
 
     //    @Test
     void testRegistry() {
-        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
+        Lookup criteria = Lookup.builder()
                 .addQualifier(Qualifier.create(ConfigDriven.class))
                 .build();
-        List<ServiceProvider<?>> list = services.lookupAll(criteria);
+        List<ServiceProvider<Object>> list = services.serviceProviders(criteria);
         List<String> desc = list.stream()
                 .filter(it -> !it.serviceType().resolvedName().contains(".yaml."))
                 .map(ServiceProvider::description)
@@ -141,34 +140,34 @@ public abstract class AbstractConfiguredByTest {
         assertThat("root providers are config-driven, auto-started services unless overridden to not be driven",
                    desc,
                    containsInAnyOrder("ASingletonService{root}:ACTIVE",
-                            "FakeTlsWSNotDrivenByCB{root}:PENDING",
-                            "FakeWebServer{root}:ACTIVE",
-                            "FakeWebServerNotDrivenAndHavingConfiguredByOverrides{root}:PENDING",
-                            "SomeConfiguredServiceWithAnAbstractBase{root}:PENDING"
+                                      "FakeTlsWSNotDrivenByCB{root}:PENDING",
+                                      "FakeWebServer{root}:ACTIVE",
+                                      "FakeWebServerNotDrivenAndHavingConfiguredByOverrides{root}:PENDING",
+                                      "SomeConfiguredServiceWithAnAbstractBase{root}:PENDING"
                    ));
 
-        criteria = ServiceInfoCriteria.builder()
+        criteria = Lookup.builder()
                 .addContract(FakeWebServerContract.class)
                 .build();
-        list = services.lookupAll(criteria);
+        list = services.serviceProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("no root providers expected in result, but all are auto-started unless overridden", desc,
                    contains("FakeWebServer{@default}:ACTIVE",
                             "FakeWebServerNotDrivenAndHavingConfiguredByOverrides{@default}:INIT"));
 
-        criteria = ServiceInfoCriteria.builder()
+        criteria = Lookup.builder()
                 .serviceType(TypeName.create(FakeTlsWSNotDrivenByCB.class))
                 .build();
-        list = services.lookupAll(criteria);
+        list = services.serviceProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("root providers expected here since we looked up by service type name", desc,
                    contains("FakeTlsWSNotDrivenByCB{root}:PENDING"));
 
-        criteria = ServiceInfoCriteria.builder()
+        criteria = Lookup.builder()
                 .addContract(FakeTlsWSNotDrivenByCB.class)
                 .addQualifier(Qualifier.createNamed("*"))
                 .build();
-        list = services.lookupAll(criteria);
+        list = services.serviceProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("root providers expected here since no configuration for this service", desc,
                    contains("FakeTlsWSNotDrivenByCB{root}:PENDING"));
@@ -179,18 +178,18 @@ public abstract class AbstractConfiguredByTest {
                    e.getMessage(),
                    equalTo("Expected to find a match: service provider: FakeTlsWSNotDrivenByCB{root}:PENDING"));
 
-        criteria = ServiceInfoCriteria.builder()
+        criteria = Lookup.builder()
                 .addContract(ASingletonService.class)
                 .addQualifier(Qualifier.createNamed("jane"))
                 .build();
-        list = services.lookupAll(criteria);
+        list = services.serviceProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("Even though there is a @default, it cannot match named", list, empty());
 
-        criteria = ServiceInfoCriteria.builder()
+        criteria = Lookup.builder()
                 .addContract(ASingletonService.class)
                 .build();
-        list = services.lookupAll(criteria);
+        list = services.serviceProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("Managed providers expected here since we have default configuration for this service", desc,
                    contains("ASingletonService{@default}:ACTIVE"));

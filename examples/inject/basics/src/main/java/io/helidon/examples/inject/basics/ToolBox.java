@@ -23,17 +23,17 @@ import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
- * By adding the {@link io.helidon.inject.service.Inject.Singleton}
+ * By adding the {@link io.helidon.inject.service.Injection.Singleton}
  * annotation results in ToolBox becoming a service. Services can be looked up
- * programmatically or declaratively injected via {@link io.helidon.inject.service.Inject.Point}.
+ * programmatically or declaratively injected via {@link io.helidon.inject.service.Injection.Inject}.
  * <p>
  * Here {@link Weight} is used that is higher than the default, making it more preferred in weighted rankings.
  */
-@Inject.Singleton
-@io.helidon.inject.service.Inject.RunLevel(io.helidon.inject.service.Inject.RunLevel.STARTUP)
+@Injection.Singleton
+@Injection.RunLevel(Injection.RunLevel.STARTUP)
 @Weight(Weighted.DEFAULT_WEIGHT + 1)
 public class ToolBox {
 
@@ -42,7 +42,7 @@ public class ToolBox {
 
     // Field injection is supported for non-static, non-private methods (but not recommended)
     // Here we are using it to also showcase for Optional usages.
-    @Inject.Point Optional<LittleHammer> optionalLittleHammer;
+    @Injection.Inject Optional<LittleHammer> optionalLittleHammer;
 
     /**
      * Here the constructor injects all {@link Tool} provider instances available. {@link java.util.function.Supplier} is used to allow lazy
@@ -50,7 +50,7 @@ public class ToolBox {
      *
      * @param allToolProviders all tool providers
      */
-    @Inject.Point
+    @Injection.Inject
     ToolBox(List<Supplier<Tool>> allToolProviders) {
         this.allToolProviders = Objects.requireNonNull(allToolProviders);
     }
@@ -65,7 +65,7 @@ public class ToolBox {
      *
      * @param preferredBigTool the preferred big tool
      */
-    @Inject.Point
+    @Injection.Inject
     @SuppressWarnings("unused")
     void setPreferredBigTool(@Big Tool preferredBigTool) {
         this.preferredBigTool = Objects.requireNonNull(preferredBigTool);
@@ -73,10 +73,10 @@ public class ToolBox {
 
     /**
      * This method will be called by Pico after this instance is lazily initialized (because this is the
-     * {@link io.helidon.inject.service.Inject.PostConstruct}
+     * {@link io.helidon.inject.service.Injection.PostConstruct}
      * method).
      */
-    @Inject.PostConstruct
+    @Injection.PostConstruct
     @SuppressWarnings("unused")
     void init() {
         System.out.println("Preferred (highest weighted) 'Big' Tool: " + preferredBigTool);

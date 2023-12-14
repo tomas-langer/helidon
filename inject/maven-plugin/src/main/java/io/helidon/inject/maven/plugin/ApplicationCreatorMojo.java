@@ -19,7 +19,6 @@ package io.helidon.inject.maven.plugin;
 import java.io.File;
 
 import io.helidon.codegen.CodegenScope;
-import io.helidon.inject.api.Application;
 
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
@@ -37,7 +36,7 @@ import static io.helidon.inject.maven.plugin.ApplicationCreator.APPLICATION_NAME
 public class ApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
 
     /**
-     * The classname to use for the {@link Application} class.
+     * The classname to use for the {@link io.helidon.inject.Application} class.
      * If not found the classname will be inferred.
      */
     @Parameter(property = "inject.application.class.name", readonly = true)

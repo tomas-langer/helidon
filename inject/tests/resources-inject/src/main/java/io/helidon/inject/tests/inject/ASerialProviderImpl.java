@@ -22,13 +22,13 @@ import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
  * Testing.
  */
 @Weight(Weighted.DEFAULT_WEIGHT + 100)
-@Inject.Singleton
+@Injection.Singleton
 public class ASerialProviderImpl implements Supplier<Serializable> {
 
     static {

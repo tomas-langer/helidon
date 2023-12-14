@@ -43,7 +43,7 @@
     <dependencies>
         <dependency>
             <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-runtime</artifactId>
+            <artifactId>helidon-inject-configdriven</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.inject.configdriven.tests</groupId>
@@ -59,6 +59,11 @@
             <groupId>jakarta.annotation</groupId>
             <artifactId>jakarta.annotation-api</artifactId>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.metrics</groupId>
+            <artifactId>helidon-metrics</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.helidon.common.testing</groupId>

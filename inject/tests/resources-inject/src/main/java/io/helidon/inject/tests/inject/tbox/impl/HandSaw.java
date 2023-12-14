@@ -20,11 +20,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointProvider;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.ContextualServiceQuery;
+import io.helidon.inject.InjectionPointProvider;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.Verification;
 import io.helidon.inject.tests.inject.tbox.AbstractBlade;
 import io.helidon.inject.tests.inject.tbox.AbstractSaw;
@@ -33,7 +32,7 @@ import io.helidon.inject.tests.inject.tbox.Lubricant;
 /**
  * Kept intentionally in a different package from {@link AbstractSaw} for testing.
  */
-@Inject.Singleton
+@Injection.Singleton
 @SuppressWarnings("unused")
 public class HandSaw extends AbstractSaw {
 
@@ -42,9 +41,9 @@ public class HandSaw extends AbstractSaw {
 
     private int setterInjectedLubricantInSubClassInjectedCount;
 
-    @Inject.Point @Inject.Named(FineBlade.NAME) Supplier<AbstractBlade> fineBladeFieldInjectedPkgPrivateProviderInSubClass;
-    @Inject.Point @Inject.Named(FineBlade.NAME) Optional<AbstractBlade> fineBladeFieldInjectedPkgPrivateOptionalInSubClass;
-    @Inject.Point @Inject.Named(FineBlade.NAME) List<AbstractBlade> fineBladeFieldInjectedPkgPrivateListInSubClass;
+    @Injection.Inject @Injection.Named(FineBlade.NAME) Supplier<AbstractBlade> fineBladeFieldInjectedPkgPrivateProviderInSubClass;
+    @Injection.Inject @Injection.Named(FineBlade.NAME) Optional<AbstractBlade> fineBladeFieldInjectedPkgPrivateOptionalInSubClass;
+    @Injection.Inject @Injection.Named(FineBlade.NAME) List<AbstractBlade> fineBladeFieldInjectedPkgPrivateListInSubClass;
 
     Supplier<AbstractBlade> setterInjectedPkgPrivateProviderInSubClass;
     Optional<AbstractBlade> setterInjectedPkgPrivateOptionalInSubClass;
@@ -59,43 +58,43 @@ public class HandSaw extends AbstractSaw {
     HandSaw() {
     }
 
-    @Inject.Point
+    @Injection.Inject
     public HandSaw(Optional<Lubricant> lubricant) {
         ctorInjectedLubricantInSubClass = lubricant;
     }
 
     @Override
-    public Optional<String> named() {
-        return Optional.of(getClass().getSimpleName());
+    public String name() {
+        return getClass().getSimpleName();
     }
 
-    @Inject.Point
+    @Injection.Inject
     protected void injectLubricant(Optional<Lubricant> lubricant) {
         setterInjectedLubricantInSubClass = lubricant;
         setterInjectedLubricantInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setBladeProvider(Supplier<AbstractBlade> blade) {
         setterInjectedPkgPrivateProviderInSubClass = blade;
         setterInjectedPkgPrivateProviderInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setBladeOptional(Optional<AbstractBlade> blade) {
         setterInjectedPkgPrivateOptionalInSubClass = blade;
         setterInjectedPkgPrivateOptionalInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setBladeList(List<AbstractBlade> blades) {
         setterInjectedPkgPrivateListInSubClass = blades;
         setterInjectedPkgPrivateListInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     @SuppressWarnings("unchecked")
-    void setAllBlades(@Inject.Named("*") List<Supplier<AbstractBlade>> blades) {
+    void setAllBlades(@Injection.Named("*") List<Supplier<AbstractBlade>> blades) {
         setterInjectedAllProviderListInSubClass = (List) blades;
         setterInjectedAllProviderListInSubClassInjectedCount++;
     }
@@ -124,9 +123,7 @@ public class HandSaw extends AbstractSaw {
                  ".setAllBlades(List<AbstractBlade> blades)", setterInjectedAllProviderListInSubClassInjectedCount, 1, ServiceProvider.class);
         List<AbstractBlade> blades = setterInjectedAllProviderListInSubClass.get(0)
                 .list(ContextualServiceQuery.builder()
-                              .serviceInfoCriteria(ServiceInfoCriteria.builder()
-                                                           .addContract(AbstractBlade.class)
-                                                           .build())
+                              .addContract(AbstractBlade.class)
                               .build());
         Verification.verifyInjected(blades, getClass() +
                 "<all blades>", null, 3, AbstractBlade.class);

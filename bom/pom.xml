@@ -1339,7 +1339,7 @@
             </dependency>
             <dependency>
                 <groupId>io.helidon.inject</groupId>
-                <artifactId>helidon-inject-api</artifactId>
+                <artifactId>helidon-inject</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
@@ -1367,21 +1367,16 @@
                 <artifactId>helidon-inject-testing</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
-            <dependency>
-                <groupId>io.helidon.inject</groupId>
-                <artifactId>helidon-inject-runtime</artifactId>
-                <version>${helidon.version}</version>
-            </dependency>
 
             <!-- Injection Config-Driven related -->
             <dependency>
                 <groupId>io.helidon.inject.configdriven</groupId>
-                <artifactId>helidon-inject-configdriven-api</artifactId>
+                <artifactId>helidon-inject-configdriven-service</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.helidon.inject.configdriven</groupId>
-                <artifactId>helidon-inject-configdriven-runtime</artifactId>
+                <artifactId>helidon-inject-configdriven</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
             <dependency>

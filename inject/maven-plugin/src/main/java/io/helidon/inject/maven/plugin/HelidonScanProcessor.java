@@ -41,9 +41,9 @@ import io.github.classgraph.ClassInfo;
  * An equivalent of inject annotation processor that takes care of all extensions, and provides only valid annotations.
  */
 class HelidonScanProcessor {
-    private static final Annotation DESCRIBE = Annotation.create(InjectCodegenTypes.INJECT_SERVICE);
+    private static final Annotation DESCRIBE = Annotation.create(InjectCodegenTypes.INJECTION_SERVICE);
     private static final TypeName GENERATOR = TypeName.create(HelidonScanProcessor.class);
-    private static final Annotation QUALIFIER_ANNOTATION = Annotation.create(InjectCodegenTypes.INJECT_QUALIFIER);
+    private static final Annotation QUALIFIER_ANNOTATION = Annotation.create(InjectCodegenTypes.INJECTION_QUALIFIER);
 
     private final Codegen codegen;
     private final MavenScanContext ctx;

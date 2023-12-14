@@ -36,7 +36,7 @@ import io.helidon.inject.codegen.InjectCodegenTypes;
  */
 @Weight(Weighted.DEFAULT_WEIGHT - 10)
 public class MapConfigDrivenProvider implements AnnotationMapperProvider {
-    private static final Annotation SINGLETON = Annotation.create(InjectCodegenTypes.INJECT_SINGLETON);
+    private static final Annotation SINGLETON = Annotation.create(InjectCodegenTypes.INJECTION_SINGLETON);
 
     /**
      * Required default constructor.

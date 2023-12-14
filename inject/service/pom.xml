@@ -15,9 +15,9 @@
     limitations under the License.
 -->
 
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://maven.apache.org/POM/4.0.0"
+        xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>io.helidon.inject</groupId>
         <artifactId>helidon-inject-project</artifactId>
@@ -28,8 +28,9 @@
 
     <artifactId>helidon-inject-service</artifactId>
     <name>Helidon Injection Service API</name>
-    <description>This is the minimal API as required by modules, that want to expose services without full dependency
-    on Inject API and/or Runtime</description>
+    <description>This is the minimal API as required by modules, that want to expose services without full dependency on Inject
+        API and/or Runtime
+    </description>
 
     <dependencies>
         <dependency>

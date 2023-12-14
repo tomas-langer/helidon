@@ -38,14 +38,14 @@ import io.helidon.inject.codegen.InjectCodegenTypes;
 @Weight(Weighted.DEFAULT_WEIGHT - 10) // lower weight than JavaxAnnotationMapper
 public class MapApplicationScopedProvider implements AnnotationMapperProvider {
     /**
-     * Identify whether any application scopes (from ee) is translated to {@code io.helidon.inject.service.Inject.Singleton}.
+     * Identify whether any application scopes (from ee) is translated to {@code io.helidon.inject.service.Injection.Singleton}.
      */
     static final Option<Boolean> MAP_APPLICATION_TO_SINGLETON_SCOPE
             = Option.create("inject.mapApplicationToSingletonScope",
                             "Should we map application scoped beans from Jakarta CDI to Singleton services?",
                             false);
 
-    private static final Annotation SINGLETON = Annotation.create(InjectCodegenTypes.INJECT_SINGLETON);
+    private static final Annotation SINGLETON = Annotation.create(InjectCodegenTypes.INJECTION_SINGLETON);
 
     /**
      * Required default constructor.

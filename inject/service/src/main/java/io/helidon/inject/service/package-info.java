@@ -15,7 +15,7 @@
  */
 
 /**
- * API requires for code generating classes required for Helidon Inject.
- * This is the minimal set of types that must be available.
+ * API requires for describing services, and for code generating classes required for Helidon Inject.
+ * This is the minimal set of types that must be available both at build time, and at runtime.
  */
 package io.helidon.inject.service;

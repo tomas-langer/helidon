@@ -24,11 +24,11 @@ package io.helidon.inject.service;
  * <p>
  * Note: instances of this type are not eligible for injection.
  */
-@Inject.Contract
+@Injection.Contract
 public interface ModuleComponent {
 
     /**
-     * Called by the provider implementation at bootstrapping time to bind all services / service providers to the
+     * Called by the provider implementation at bootstrapping time to bind all service descriptors to the
      * service registry.
      *
      * @param binder the binder used to register the services to the registry

@@ -16,9 +16,9 @@
 
 package io.helidon.inject.tests.interception;
 
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.InvocationException;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.InvocationException;
+import io.helidon.inject.Services;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,9 +46,9 @@ class InterceptionTest {
 
     @BeforeAll
     static void init() {
-        injectionServices = InjectionServices.injectionServices().orElseThrow();
+        injectionServices = InjectionServices.instance();
         services = injectionServices.services();
-        service = services.lookup(TheService.class).get();
+        service = services.first(TheService.class).get();
 
         assertAll(
                 () -> assertThat("Interceptors should not be called for constructor - returning",

@@ -16,6 +16,7 @@
 
 package io.helidon.inject.service;
 
+import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.builder.api.Option;
@@ -26,7 +27,7 @@ import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 
 /**
- * Unique identification of an injection point.
+ * Unique identification, and metadata of an injection point.
  */
 @Prototype.Blueprint
 interface IpBlueprint {
@@ -42,6 +43,7 @@ interface IpBlueprint {
      *
      * @return element kind (for parameters, the containing element)
      */
+    @Option.Default("CONSTRUCTOR")
     ElementKind elementKind();
 
     /**
@@ -119,4 +121,13 @@ interface IpBlueprint {
     @Option.Redundant(stringValue = false)
     // kind + service type + name is a unique identification already
     TypeName typeName();
+
+    /**
+     * Top level method that declares this method.
+     * This is to provide information about overridden methods, as we should only inject such methods once.
+     *
+     * @return unique identification of a declaring method
+     */
+    @Option.Redundant(stringValue = false)
+    Optional<String> method();
 }

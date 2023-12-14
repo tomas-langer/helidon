@@ -18,11 +18,11 @@ package io.helidon.examples.inject.basics;
 
 import java.util.List;
 
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
+import io.helidon.inject.service.Injection;
 
 /**
  * Basics example.
@@ -40,8 +40,8 @@ public class Main {
         // 0. Demonstrates programmatic lookup from the Services registry.
         // 1. when a service is being managed by a DI provider (like Helidon Injection) it should be "looked up" or injected instead of new'ed
         // 2. Notice we get a ServiceProvider - service providers allow for lazy initialization
-        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .runLevel(Inject.RunLevel.STARTUP)
+        Lookup criteria = Lookup.builder()
+                .runLevel(Injection.RunLevel.STARTUP)
                 .build();
 
         List<ServiceProvider<?>> startupServiceProviders = services.lookupAll(criteria);

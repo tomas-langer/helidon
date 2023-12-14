@@ -25,14 +25,14 @@ import io.helidon.common.types.Annotations;
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.Interception;
 import io.helidon.inject.service.InvocationContext;
 
 import static io.helidon.common.types.TypeNames.PRIMITIVE_LONG;
 import static io.helidon.common.types.TypeNames.STRING;
 
 @SuppressWarnings({"ALL", "unchecked"})
-public class TestNamedInterceptor implements Interceptor {
+public class TestNamedInterceptor implements Interception.Interceptor {
     public static final AtomicInteger CONSTRUCTOR_COUNTER = new AtomicInteger();
     public static final List<Invocation> INVOCATIONS = new ArrayList<>();
 

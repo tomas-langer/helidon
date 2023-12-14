@@ -47,11 +47,11 @@ public class InjectionExtensionProvider implements InjectCodegenExtensionProvide
 
     @Override
     public Set<TypeName> supportedAnnotations() {
-        return Set.of(InjectCodegenTypes.INJECT_SINGLETON,
-                      InjectCodegenTypes.INJECT_PRE_DESTROY,
-                      InjectCodegenTypes.INJECT_POST_CONSTRUCT,
-                      InjectCodegenTypes.INJECT_POINT,
-                      InjectCodegenTypes.INJECT_SERVICE);
+        return Set.of(InjectCodegenTypes.INJECTION_SINGLETON,
+                      InjectCodegenTypes.INJECTION_PRE_DESTROY,
+                      InjectCodegenTypes.INJECTION_POST_CONSTRUCT,
+                      InjectCodegenTypes.INJECTION_INJECT,
+                      InjectCodegenTypes.INJECTION_SERVICE);
     }
 
     @Override

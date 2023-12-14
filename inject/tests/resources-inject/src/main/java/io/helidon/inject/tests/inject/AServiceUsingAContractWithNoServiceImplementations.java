@@ -19,12 +19,12 @@ package io.helidon.inject.tests.inject;
 import java.util.List;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 class AServiceUsingAContractWithNoServiceImplementations {
 
-    @Inject.Point
+    @Injection.Inject
     AServiceUsingAContractWithNoServiceImplementations(List<Supplier<AContractWithNoServiceImplementations>> list) {
         if (!list.isEmpty()) {
             throw new AssertionError("Should be empty: " + list);

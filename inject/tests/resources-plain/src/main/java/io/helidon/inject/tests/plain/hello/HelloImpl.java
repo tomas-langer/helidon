@@ -22,30 +22,30 @@ import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT)
 public class HelloImpl implements Hello {
 
-    @Inject.Point
+    @Injection.Inject
     World world;
 
-    @Inject.Point
+    @Injection.Inject
     Supplier<World> worldRef;
 
-    @Inject.Point
+    @Injection.Inject
     List<Supplier<World>> listOfWorldRefs;
 
-    @Inject.Point
+    @Injection.Inject
     List<World> listOfWorlds;
 
-    @Inject.Point
-    @Inject.Named("red")
+    @Injection.Inject
+    @Injection.Named("red")
     Optional<World> redWorld;
     int postConstructCallCount;
     int preDestroyCallCount;
-    @Inject.Point
+    @Injection.Inject
     private Optional<World> privateWorld;
     private World setWorld;
     private Optional<World> setRedWorld;
@@ -54,7 +54,7 @@ public class HelloImpl implements Hello {
     HelloImpl() {
     }
 
-    @Inject.Point
+    @Injection.Inject
     public HelloImpl(World ctorWorld) {
         this();
         this.ctorWorld = ctorWorld;
@@ -70,23 +70,23 @@ public class HelloImpl implements Hello {
         assert (ctorWorld == world) : "world != ctorWorld";
     }
 
-    @Inject.Point
+    @Injection.Inject
     public void world(World world) {
         this.setWorld = world;
         assert (world == ctorWorld);
     }
 
-    @Inject.Point
-    public void setRedWorld(@Inject.Named("red") Optional<World> redWorld) {
+    @Injection.Inject
+    public void setRedWorld(@Injection.Named("red") Optional<World> redWorld) {
         this.setRedWorld = redWorld;
     }
 
-    @Inject.PostConstruct
+    @Injection.PostConstruct
     public void postConstruct() {
         postConstructCallCount++;
     }
 
-    @Inject.PreDestroy
+    @Injection.PreDestroy
     public void preDestroy() {
         preDestroyCallCount++;
     }

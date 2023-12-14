@@ -26,14 +26,14 @@ import io.helidon.common.config.ConfigException;
 import io.helidon.common.config.ConfigValue;
 import io.helidon.common.config.GlobalConfig;
 import io.helidon.config.spi.ConfigSource;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
-@Inject.ExternalContracts(Config.class)
+@Injection.Singleton
+@Injection.ExternalContracts(Config.class)
 class ConfigProducer implements Config {
     private final Config config;
 
-    @Inject.Point
+    @Injection.Inject
     ConfigProducer(List<Supplier<ConfigSource>> serviceProviders) {
         if (GlobalConfig.configured()) {
             config = GlobalConfig.config();

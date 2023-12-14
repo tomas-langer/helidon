@@ -16,22 +16,18 @@
 
 package io.helidon.inject.tests.inject.tbox.impl;
 
-import java.util.Optional;
-
-import io.helidon.inject.api.OptionallyNamed;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.tbox.Awl;
 
-@Inject.Singleton
-public class AwlImpl implements Awl, OptionallyNamed {
+@Injection.Singleton
+public class AwlImpl implements Awl {
 
-    @Inject.Point
+    @Injection.Inject
     AwlImpl() {
     }
 
     @Override
-    public Optional<String> named() {
-        return Optional.of("awl");
+    public String name() {
+        return "awl";
     }
-
 }

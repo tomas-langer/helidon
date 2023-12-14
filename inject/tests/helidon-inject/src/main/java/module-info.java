@@ -20,6 +20,7 @@
 module io.helidon.inject.tests.helidon.inject {
     requires io.helidon.inject.service;
     requires io.helidon.common;
+    requires io.helidon.inject;
 
     exports io.helidon.inject.tests.helidon.inject;
 

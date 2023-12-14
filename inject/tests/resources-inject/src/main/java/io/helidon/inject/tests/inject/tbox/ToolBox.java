@@ -19,12 +19,12 @@ package io.helidon.inject.tests.inject.tbox;
 import java.util.List;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
  * Testing.
  */
-@Inject.Contract
+@Injection.Contract
 public interface ToolBox {
 
     /**

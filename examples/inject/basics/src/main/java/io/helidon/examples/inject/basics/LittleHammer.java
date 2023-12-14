@@ -16,10 +16,10 @@
 
 package io.helidon.examples.inject.basics;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 @Little
-@Inject.Singleton
+@Injection.Singleton
 class LittleHammer extends Hammer {
 
     @Override

@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-runtime</artifactId>
+            <artifactId>helidon-inject-configdriven</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.config</groupId>

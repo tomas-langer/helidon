@@ -20,12 +20,12 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
  * Custom qualifier.
  */
-@Inject.Qualifier
+@Injection.Qualifier
 @Documented
 @Retention(RetentionPolicy.CLASS)
 @interface QualifierAnnotation {

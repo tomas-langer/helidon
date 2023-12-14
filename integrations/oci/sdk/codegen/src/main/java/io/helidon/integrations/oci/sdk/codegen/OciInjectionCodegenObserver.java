@@ -160,7 +160,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                                                                ""))
                 .type(generatedOciServiceBuilderTypeName)
                 .addInterface(ipProvider(ociServiceTypeName, builderSuffix))
-                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_SINGLETON))
                 .addAnnotation(Annotation.builder()
                                        .typeName(TypeName.create(Weight.class))
                                        .putValue("value", DEFAULT_INJECT_WEIGHT)
@@ -177,7 +177,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
             // constructor
             classModel.addConstructor(ctor -> ctor
                     .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_INJECT))
                     .addAnnotation(Annotation.create(Deprecated.class))
                     .addParameter(regionProvider -> regionProvider.name("regionProvider")
                             .type(regionProviderType))
@@ -186,7 +186,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
             // constructor
             classModel.addConstructor(ctor -> ctor
                     .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_INJECT))
                     .addAnnotation(Annotation.create(Deprecated.class)));
         }
 
@@ -226,13 +226,13 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
                                                                ""))
                 .type(generatedOciService)
                 .addInterface(ipProvider(ociServiceTypeName, "Client"))
-                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_SINGLETON))
                 .addAnnotation(Annotation.builder()
                                        .typeName(TypeName.create(Weight.class))
                                        .putValue("value", DEFAULT_INJECT_WEIGHT)
                                        .build())
                 .addAnnotation(Annotation.builder()
-                                       .typeName(InjectCodegenTypes.INJECT_EXTERNAL_CONTRACTS)
+                                       .typeName(InjectCodegenTypes.INJECTION_EXTERNAL_CONTRACTS)
                                        .putValue("value", ociServiceTypeName)
                                        .build());
 
@@ -255,7 +255,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
         // constructor
         classModel.addConstructor(ctor -> ctor
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
-                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
+                .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_INJECT))
                 .addAnnotation(Annotations.DEPRECATED)
                 .addParameter(authProvider -> authProvider.name("authProvider")
                         .type(authProviderType))
@@ -343,7 +343,7 @@ class OciInjectionCodegenObserver implements InjectCodegenObserver {
     }
 
     private boolean shouldProcess(TypedElementInfo element) {
-        if (!element.hasAnnotation(InjectCodegenTypes.INJECT_POINT)) {
+        if (!element.hasAnnotation(InjectCodegenTypes.INJECTION_INJECT)) {
             return false;
         }
 

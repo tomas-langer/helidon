@@ -16,10 +16,10 @@
 
 package io.helidon.inject.tests.helidon.inject;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 @QualifierAnnotation("qualified")
-@Inject.Singleton
+@Injection.Singleton
 class QualifiedService implements ContractOfQualified {
     @Override
     public String qualifier() {

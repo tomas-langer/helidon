@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.tbox.Hammer;
 import io.helidon.inject.tests.inject.tbox.Preferred;
 import io.helidon.inject.tests.inject.tbox.Tool;
 import io.helidon.inject.tests.inject.tbox.ToolBox;
 
 @SuppressWarnings("unused")
-@Inject.Singleton
+@Injection.Singleton
 public class MainToolBox implements ToolBox {
 
     private final List<Supplier<Tool>> allTools;
@@ -37,7 +37,7 @@ public class MainToolBox implements ToolBox {
 
     private Supplier<Hammer> setPreferredHammer;
 
-    @Inject.Point
+    @Injection.Inject
     @Preferred
     Supplier<Hammer> preferredHammer;
 
@@ -45,10 +45,10 @@ public class MainToolBox implements ToolBox {
     public int preDestroyCallCount;
     public int setterCallCount;
 
-    @Inject.Point
+    @Injection.Inject
     MainToolBox(List<Supplier<Tool>> allTools,
                 Screwdriver screwdriver,
-                @Inject.Named("big") Supplier<Hammer> bigHammer,
+                @Injection.Named("big") Supplier<Hammer> bigHammer,
                 List<Supplier<Hammer>> allHammers) {
         this.allTools = Objects.requireNonNull(allTools);
         this.screwdriver = Objects.requireNonNull(screwdriver);
@@ -56,13 +56,13 @@ public class MainToolBox implements ToolBox {
         this.allHammers = allHammers;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setScrewdriver(Screwdriver screwdriver) {
         assert(this.screwdriver == screwdriver);
         setterCallCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setPreferredHammer(@Preferred Supplier<Hammer> hammer) {
         this.setPreferredHammer = hammer;
     }
@@ -89,13 +89,13 @@ public class MainToolBox implements ToolBox {
         return screwdriver;
     }
 
-    @Inject.PostConstruct
+    @Injection.PostConstruct
     void postConstruct() {
         postConstructCallCount++;
         assert (preferredHammer == setPreferredHammer) : preferredHammer + " and " + setPreferredHammer;
     }
 
-    @Inject.PreDestroy
+    @Injection.PreDestroy
     void preDestroy() {
         preDestroyCallCount++;
     }

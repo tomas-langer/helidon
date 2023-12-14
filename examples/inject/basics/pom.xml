@@ -41,11 +41,7 @@
     <dependencies>
         <dependency>
             <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-runtime</artifactId>
+            <artifactId>helidon-inject</artifactId>
         </dependency>
     </dependencies>
 

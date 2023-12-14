@@ -20,7 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.helidon.builder.api.RuntimeType;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
  * Bulkhead protects a resource that cannot serve unlimited parallel
@@ -31,7 +31,7 @@ import io.helidon.inject.service.Inject;
  * additional attempts to invoke will end with a failed response with
  * {@link BulkheadException}.
  */
-@Inject.Contract
+@Injection.Contract
 @RuntimeType.PrototypedBy(BulkheadConfig.class)
 public interface Bulkhead extends FtHandler, RuntimeType.Api<BulkheadConfig> {
     /**

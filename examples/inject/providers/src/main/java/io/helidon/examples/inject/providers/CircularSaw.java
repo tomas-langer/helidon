@@ -18,12 +18,14 @@ package io.helidon.examples.inject.providers;
 
 import java.util.Optional;
 
+import io.helidon.inject.service.Injection;
+
 import jakarta.annotation.PostConstruct;
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 
 @Singleton
-@io.helidon.inject.service.Inject.RunLevel(io.helidon.inject.service.Inject.RunLevel.STARTUP)
+@Injection.RunLevel(Injection.RunLevel.STARTUP)
 class CircularSaw implements Saw {
 
     private final Blade blade;

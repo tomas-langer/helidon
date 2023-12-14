@@ -39,31 +39,27 @@ import io.helidon.codegen.ModuleInfo;
 import io.helidon.codegen.ModuleInfoSourceParser;
 import io.helidon.codegen.compiler.CompilerOptions;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.Application;
-import io.helidon.inject.api.CallingContext;
-import io.helidon.inject.api.CallingContextFactory;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.ServiceProviderProvider;
-import io.helidon.inject.api.Services;
-import io.helidon.inject.runtime.ServiceBinderDefault;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.ServiceProviderBindable;
+import io.helidon.inject.ServiceProviderProvider;
+import io.helidon.inject.Services;
 import io.helidon.inject.service.ModuleComponent;
+import io.helidon.inject.service.Qualifier;
 
 import org.apache.maven.model.Build;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 
-import static io.helidon.inject.api.CallingContextFactory.globalCallingContext;
 import static io.helidon.inject.maven.plugin.MavenUtil.toBasePath;
 import static io.helidon.inject.maven.plugin.MavenUtil.toSuggestedModuleName;
-import static io.helidon.inject.runtime.InjectionExceptions.toErrorMessage;
 
 /**
  * Abstract base for the Injection {@code maven-plugin} responsible for creating {@code Application} and Test
  * {@code Application}'s.
  *
- * @see Application
+ * @see io.helidon.inject.Application
  */
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo {
@@ -131,14 +127,12 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
     }
 
     Optional<ServiceProvider<ModuleComponent>> lookupThisModule(String name,
-                                                                Services services,
-                                                                boolean expected) {
-        Optional<ServiceProvider<ModuleComponent>> result = services.lookupFirst(ModuleComponent.class, name, false);
-        if (result.isEmpty() && expected) {
-            throw new CodegenException("No Injection module named '" + name
-                                               + "' was found in the current module - was APT run?");
-        }
-        return result;
+                                                                Services services) {
+        return services.findServiceProvider(
+                Lookup.builder()
+                        .addContract(ModuleComponent.class)
+                        .addQualifier(Qualifier.createNamed(name))
+                        .build());
     }
 
     abstract String getGeneratedClassName();
@@ -220,16 +214,6 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                         ? DEFAULT_PERMITTED_PROVIDER_TYPE
                         : PermittedProviderType.valueOf(permittedProviderTypes.toUpperCase());
 
-        CallingContext callCtx = null;
-        Optional<CallingContext.Builder> callingContextBuilder =
-                CallingContextFactory.createBuilder(false);
-        if (callingContextBuilder.isPresent()) {
-            callingContextBuilder.get()
-                    .update(it -> Optional.ofNullable(getThisModuleName()).ifPresent(it::moduleName));
-            callCtx = callingContextBuilder.get().build();
-            globalCallingContext(callCtx, true);
-        }
-
         // we MUST get the exclusion list prior to building the next loader, since it will reset the service registry
         Set<TypeName> serviceNamesForExclusion = getServiceTypeNamesForExclusion();
         boolean hasModuleInfo = hasModuleInfo();
@@ -247,10 +231,8 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
             Thread.currentThread().setContextClassLoader(loader);
 
             InjectionServices injectionServices = MavenPluginUtils.injectionServices(false);
-            if (injectionServices.config().usesCompileTimeApplications()) {
-                String desc = "Should not be using 'application' bindings";
-                String msg = (callCtx == null) ? toErrorMessage(desc) : toErrorMessage(callCtx, desc);
-                throw new IllegalStateException(msg);
+            if (injectionServices.config().useApplication()) {
+                throw new IllegalStateException("Maven plugin service registry must not be using 'application' bindings");
             }
             Services services = injectionServices.services();
 
@@ -262,25 +244,21 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                                                                          mavenLogger,
                                                                          moduleInfo);
 
-            List<ServiceProvider<?>> allModules = services
-                    .lookupAll(ServiceInfoCriteria.builder()
-                                       .addContract(ModuleComponent.class)
-                                       .build());
-            if (InjectionServices.isDebugEnabled()) {
-                getLog().info("processing modules: " + MavenPluginUtils.toDescriptions(allModules));
-            } else {
-                getLog().debug("processing modules: " + MavenPluginUtils.toDescriptions(allModules));
-            }
+            List<ServiceProvider<Object>> allModules = services
+                    .serviceProviders(Lookup.builder()
+                                              .addContract(ModuleComponent.class)
+                                              .build());
+            getLog().debug("Processing modules: " + MavenPluginUtils.toDescriptions(allModules));
+
             if (allModules.isEmpty()) {
-                warn("No modules to process");
+                warn("Application creator found no modules to process");
             }
 
             // retrieves all the services in the registry
-            List<ServiceProvider<?>> allServices = services
-                    .lookupAll(ServiceInfoCriteria.builder()
-                                       .build(), false);
+            List<ServiceProvider<Object>> allServices = services
+                    .serviceProviders(Lookup.EMPTY);
             if (allServices.isEmpty()) {
-                warn("no services to process");
+                warn("Application creator found no services to process");
                 return;
             }
 
@@ -288,7 +266,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
             serviceTypeNames.removeAll(serviceNamesForExclusion);
 
             String moduleInfoModuleName = getThisModuleName();
-            Optional<ServiceProvider<ModuleComponent>> moduleSp = lookupThisModule(moduleInfoModuleName, services, false);
+            Optional<ServiceProvider<ModuleComponent>> moduleSp = lookupThisModule(moduleInfoModuleName, services);
 
             String packageName = determinePackageName(moduleSp, serviceTypeNames, moduleInfo, getNonTestSourceRootPaths(), true);
             String className = getGeneratedClassName();
@@ -331,12 +309,12 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                 .collect(Collectors.toList());
     }
 
-    Set<TypeName> toNames(List<ServiceProvider<?>> services) {
+    Set<TypeName> toNames(List<ServiceProvider<Object>> services) {
         Map<TypeName, ServiceProvider<?>> result = new LinkedHashMap<>();
         services.forEach(sp -> {
-            sp = ServiceBinderDefault.toRootProvider(sp);
-            TypeName serviceType = sp.serviceType();
-            ServiceProvider<?> prev = result.put(serviceType, sp);
+            ServiceProvider<?> rootProvider = toRootProvider(sp);
+            TypeName serviceType = rootProvider.serviceType();
+            ServiceProvider<?> prev = result.put(serviceType, rootProvider);
             if (prev != null) {
                 if (!(prev instanceof ServiceProviderProvider)) {
                     throw new CodegenException("There are two registrations for the same service type: " + prev + " and " + sp);
@@ -348,26 +326,31 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
     }
 
     void warn(String msg) {
-        Optional<CallingContext.Builder> optBuilder = CallingContextFactory.createBuilder(false);
-        CallingContext callCtx = optBuilder.map(builder -> builder
-                        .update(it -> Optional.ofNullable(getThisModuleName()).ifPresent(it::moduleName)))
-                .map(CallingContext.Builder::build)
-                .orElse(null);
-        String desc = "no modules to process";
-        String ctxMsg = (callCtx == null) ? toErrorMessage(desc) : toErrorMessage(callCtx, desc);
+        getLog().warn(msg);
 
-        CodegenException e = new CodegenException(ctxMsg);
-        if (InjectionServices.isDebugEnabled()) {
-            getLog().warn(e.getMessage(), e);
-        } else {
-            getLog().warn(ctxMsg);
-        }
         if (isFailOnWarning()) {
-            throw e;
+            throw new CodegenException(msg);
         }
     }
 
     protected abstract CodegenScope scope();
+
+    /**
+     * Returns the root provider of the service provider passed.
+     *
+     * @param sp the service provider
+     * @return the root provider of the service provider, falling back to the service provider passed
+     */
+    private static ServiceProvider<?> toRootProvider(ServiceProvider<?> sp) {
+        Optional<? extends ServiceProviderBindable<?>> bindable = sp.serviceProviderBindable();
+        if (bindable.isPresent()) {
+            sp = bindable.get().rootProvider().orElse(sp);
+        }
+        if (sp instanceof ServiceProviderBindable<?> spb) {
+            return spb.rootProvider().orElse(sp);
+        }
+        return sp;
+    }
 
     private Set<String> toOptions() {
 

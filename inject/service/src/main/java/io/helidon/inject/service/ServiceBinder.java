@@ -17,7 +17,10 @@
 package io.helidon.inject.service;
 
 /**
- * Responsible for binding service providers to the service registry.
+ * Responsible for binding service descriptors to the service registry.
+ * <p>
+ * Implementation is provided by Helidon inject, and the binding code is code generated into a
+ * {@link io.helidon.inject.service.ModuleComponent}.
  */
 public interface ServiceBinder {
     /**
@@ -25,5 +28,5 @@ public interface ServiceBinder {
      *
      * @param serviceDescriptor the descriptor to bind into the service registry
      */
-    void bind(Descriptor<?> serviceDescriptor);
+    void bind(ServiceDescriptor<?> serviceDescriptor);
 }

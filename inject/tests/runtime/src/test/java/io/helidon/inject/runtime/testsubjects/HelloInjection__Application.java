@@ -16,8 +16,8 @@
 
 package io.helidon.inject.runtime.testsubjects;
 
-import io.helidon.inject.api.Application;
-import io.helidon.inject.api.ServiceInjectionPlanBinder;
+import io.helidon.inject.Application;
+import io.helidon.inject.ServiceInjectionPlanBinder;
 
 /**
  * For testing.

@@ -16,19 +16,12 @@
 
 package io.helidon.inject.tests.inject.tbox.impl;
 
-import java.util.Optional;
-
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.tbox.AbstractBlade;
 
-@Inject.Named(FineBlade.NAME)
+@Injection.Named(FineBlade.NAME)
 public class FineBlade extends AbstractBlade {
 
     static final String NAME = "fine";
-
-    @Override
-    public Optional<String> named() {
-        return Optional.of(NAME + " blade");
-    }
 
 }

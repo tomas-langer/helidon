@@ -16,13 +16,13 @@
 
 package io.helidon.inject.tests.helidon.inject;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Service
+@Injection.Service
 class NonSingletonService {
     private final SingletonService singleton;
 
-    @Inject.Point
+    @Injection.Inject
     NonSingletonService(SingletonService singleton) {
         this.singleton = singleton;
     }

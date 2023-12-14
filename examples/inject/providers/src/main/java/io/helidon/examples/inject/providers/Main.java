@@ -18,11 +18,11 @@ package io.helidon.examples.inject.providers;
 
 import java.util.List;
 
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
+import io.helidon.inject.service.Injection;
 
 /**
  * Providers example.
@@ -37,8 +37,8 @@ public class Main {
     public static void main(String... args) {
         Services services = InjectionServices.realizedServices();
 
-        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder()
-                .runLevel(Inject.RunLevel.STARTUP)
+        Lookup criteria = Lookup.builder()
+                .runLevel(Injection.RunLevel.STARTUP)
                 .build();
 
         List<ServiceProvider<?>> startupServiceProviders = services.lookupAll(criteria);

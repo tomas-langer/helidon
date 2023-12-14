@@ -16,7 +16,7 @@
 
 package io.helidon.inject.tests.inject.provider;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.tbox.Preferred;
 
 public interface FakeServer {
@@ -25,9 +25,9 @@ public interface FakeServer {
 
     }
 
-    @Inject.Singleton
+    @Injection.Singleton
     class Builder implements B<FakeServer> {
-        @Inject.Point
+        @Injection.Inject
         Builder(@Preferred("x") FakeConfig.Builder b) {
             assert (b.getClass() == FakeConfig.Builder.class) : String.valueOf(b);
         }

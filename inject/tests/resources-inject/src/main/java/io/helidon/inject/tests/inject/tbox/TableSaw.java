@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.tbox.impl.CoarseBlade;
 import io.helidon.inject.tests.inject.tbox.impl.DullBlade;
 
 /**
  * Intentionally in the same package as {AbstractSaw}.
  */
-@Inject.Singleton
+@Injection.Singleton
 @SuppressWarnings("unused")
 public class TableSaw extends AbstractSaw {
 
@@ -36,10 +36,10 @@ public class TableSaw extends AbstractSaw {
 
     private int setterInjectedLubricantInSubClassInjectedCount;
 
-    @Inject.Point @Inject.Named(CoarseBlade.NAME) Supplier<AbstractBlade> coarseBladeFieldInjectedPkgPrivateProviderInSubClass;
-    @Inject.Point @Inject.Named(CoarseBlade.NAME) Optional<AbstractBlade> coarseBladeFieldInjectedPkgPrivateOptionalInSubClass;
-    @Inject.Point @Inject.Named(CoarseBlade.NAME) List<AbstractBlade> coarseBladeFieldInjectedPkgPrivateListInSubClass;
-    @Inject.Point @Inject.Named(CoarseBlade.NAME) List<Supplier<AbstractBlade>> coarseBladeFieldInjectedPkgPrivateProviderListInSubClass;
+    @Injection.Inject @Injection.Named(CoarseBlade.NAME) Supplier<AbstractBlade> coarseBladeFieldInjectedPkgPrivateProviderInSubClass;
+    @Injection.Inject @Injection.Named(CoarseBlade.NAME) Optional<AbstractBlade> coarseBladeFieldInjectedPkgPrivateOptionalInSubClass;
+    @Injection.Inject @Injection.Named(CoarseBlade.NAME) List<AbstractBlade> coarseBladeFieldInjectedPkgPrivateListInSubClass;
+    @Injection.Inject @Injection.Named(CoarseBlade.NAME) List<Supplier<AbstractBlade>> coarseBladeFieldInjectedPkgPrivateProviderListInSubClass;
 
     Supplier<AbstractBlade> setterInjectedPkgPrivateProviderInSubClass;
     Optional<AbstractBlade> setterInjectedPkgPrivateOptionalInSubClass;
@@ -54,41 +54,41 @@ public class TableSaw extends AbstractSaw {
     TableSaw() {
     }
 
-    @Inject.Point
+    @Injection.Inject
     public TableSaw(Optional<Lubricant> lubricant) {
         ctorInjectedLubricantInSubClass = lubricant;
     }
 
     @Override
-    public Optional<String> named() {
-        return Optional.of(getClass().getSimpleName());
+    public String name() {
+        return getClass().getSimpleName();
     }
 
-    @Inject.Point
+    @Injection.Inject
     protected void injectLubricant(Optional<Lubricant> lubricant) {
         setterInjectedLubricantInSubClass = lubricant;
         setterInjectedLubricantInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setBladeProviderInSubclass(Supplier<AbstractBlade> blade) {
         setterInjectedPkgPrivateProviderInSubClass = blade;
         setterInjectedPkgPrivateProviderInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setBladeOptionalInSubclass(Optional<AbstractBlade> blade) {
         setterInjectedPkgPrivateOptionalInSubClass = blade;
         setterInjectedPkgPrivateOptionalInSubClassInjectedCount++;
     }
 
-    @Inject.Point
-    void setAllBladesInSubclass(@Inject.Named("*") List<AbstractBlade> blades) {
+    @Injection.Inject
+    void setAllBladesInSubclass(@Injection.Named("*") List<AbstractBlade> blades) {
         setterInjectedPkgPrivateListInSubClass = blades;
         setterInjectedPkgPrivateListInSubClassInjectedCount++;
     }
 
-    @Inject.Point
+    @Injection.Inject
     void setBladeProviderListInSubclass(List<Supplier<AbstractBlade>> blades) {
         setterInjectedPkgPrivateProviderListInSubClass = blades;
         setterInjectedPkgPrivateProviderListInSubClassInjectedCount++;

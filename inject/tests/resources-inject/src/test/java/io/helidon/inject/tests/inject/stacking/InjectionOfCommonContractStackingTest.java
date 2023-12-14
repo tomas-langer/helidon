@@ -18,10 +18,11 @@ package io.helidon.inject.tests.inject.stacking;
 
 import java.util.List;
 
-import io.helidon.config.Config;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionConfig;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
 import io.helidon.inject.testing.InjectionTestingSupport;
 
 import org.junit.jupiter.api.AfterEach;
@@ -39,7 +40,7 @@ import static org.hamcrest.Matchers.contains;
  */
 class InjectionOfCommonContractStackingTest {
 
-    private final Config config = InjectionTestingSupport.basicTestableConfig();
+    private final InjectionConfig config = InjectionTestingSupport.basicTestableConfig();
 
     private InjectionServices injectionServices;
     private Services services;
@@ -49,7 +50,7 @@ class InjectionOfCommonContractStackingTest {
         setUp(config);
     }
 
-    void setUp(Config config) {
+    void setUp(InjectionConfig config) {
         this.injectionServices = testableServices(config);
         this.services = injectionServices.services();
     }
@@ -61,7 +62,10 @@ class InjectionOfCommonContractStackingTest {
 
     @Test
     void injectionStacking() {
-        List<ServiceProvider<CommonContract>> allIntercepted = services.lookupAll(CommonContract.class);
+        List<ServiceProvider<CommonContract>> allIntercepted = services.serviceProviders(
+                Lookup.builder()
+                        .addContract(CommonContract.class)
+                        .build());
         List<String> desc = allIntercepted.stream().map(ServiceProvider::description).toList();
         // order matters here
         assertThat(desc, contains(
@@ -83,7 +87,7 @@ class InjectionOfCommonContractStackingTest {
                             "CommonContractImpl injected with null",
                             "TestingSingleton injected with MostOuterCommonContractImpl"));
 
-        assertThat(services.lookup(CommonContract.class).get().sayHello("arg"),
+        assertThat(services.first(CommonContract.class).get().sayHello("arg"),
                    equalTo("MostOuterCommonContractImpl:OuterCommonContractImpl:CommonContractImpl:arg"));
     }
 

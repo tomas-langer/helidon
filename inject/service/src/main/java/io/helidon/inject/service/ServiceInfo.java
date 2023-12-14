@@ -34,7 +34,7 @@ public interface ServiceInfo extends Weighted {
 
     /**
      * Id of runtime responsible for this service, such as
-     * injection, or config driven.
+     * injection, or config driven. The provider is discovered at runtime through service loader.
      *
      * @return type of the runtime
      */
@@ -50,11 +50,11 @@ public interface ServiceInfo extends Weighted {
     TypeName serviceType();
 
     /**
-     * Type of the descriptor (usually generated).
+     * Type of the service info (usually generated).
      *
      * @return descriptor type
      */
-    default TypeName descriptorType() {
+    default TypeName infoType() {
         return TypeName.create(getClass());
     }
 
@@ -68,8 +68,9 @@ public interface ServiceInfo extends Weighted {
     }
 
     /**
-     * List of dependencies required by this service. Each dependency is a point of injection of one instance into
-     * constructor or method parameter, or into a field.
+     * List of dependencies required by this service (and possibly by its supertypes).
+     * Each dependency is a point of injection of one instance into
+     * constructor, method parameter, or a field.
      *
      * @return required dependencies
      */
@@ -92,7 +93,7 @@ public interface ServiceInfo extends Weighted {
      * @return run level
      */
     default int runLevel() {
-        return 100;
+        return Injection.RunLevel.NORMAL;
     }
 
     /**

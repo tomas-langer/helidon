@@ -20,6 +20,7 @@
 module io.helidon.inject.tests.javax.inject {
     requires io.helidon.inject.service;
     requires io.helidon.common;
+    requires io.helidon.inject;
 
     requires java.annotation;
     requires java.inject;

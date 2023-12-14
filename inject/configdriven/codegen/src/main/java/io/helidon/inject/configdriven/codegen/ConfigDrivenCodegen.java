@@ -34,8 +34,8 @@ import io.helidon.inject.codegen.spi.InjectCodegenExtension;
 
 class ConfigDrivenCodegen implements InjectCodegenExtension {
     private static final String CONFIG_DRIVEN_RUNTIME_ID = "CONFIG_DRIVEN";
-    private static final TypeName CONFIG_BEAN_FACTORY = TypeName.create("io.helidon.inject.configdriven.api.ConfigBeanFactory");
-    private static final TypeName NAMED_INSTANCE_TYPE = TypeName.create("io.helidon.inject.configdriven.api.NamedInstance");
+    private static final TypeName CONFIG_BEAN_FACTORY = TypeName.create("io.helidon.inject.configdriven.service.ConfigBeanFactory");
+    private static final TypeName NAMED_INSTANCE_TYPE = TypeName.create("io.helidon.inject.configdriven.service.NamedInstance");
     private static final TypeName CONFIG_TYPE = TypeName.create("io.helidon.common.config.Config");
     private static final TypeName CONFIG_EXCEPTION_TYPE = TypeName.create("io.helidon.common.config.ConfigException");
 
@@ -165,7 +165,7 @@ class ConfigDrivenCodegen implements InjectCodegenExtension {
                     .addContentLine(".create(")
                     .addContent(CONFIG_TYPE)
                     .addContent(".empty()), ")
-                    .addContent(InjectCodegenTypes.INJECT_NAMED)
+                    .addContent(InjectCodegenTypes.INJECTION_NAMED)
                     .addContentLine(".DEFAULT_NAME));");
         } else {
             method.addContent("return ")
@@ -196,7 +196,7 @@ class ConfigDrivenCodegen implements InjectCodegenExtension {
                     .addContent("<>(")
                     .addContent(configBean.typeName())
                     .addContent(".create(beanConfig), ")
-                    .addContent(InjectCodegenTypes.INJECT_NAMED)
+                    .addContent(InjectCodegenTypes.INJECTION_NAMED)
                     .addContentLine(".DEFAULT_NAME));");
         }
     }

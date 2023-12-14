@@ -45,20 +45,18 @@ import io.helidon.codegen.compiler.CompilerOptions;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectTypes;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceInjectionPlanBinder;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionPointProvider;
+import io.helidon.inject.InjectionResolver;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceInjectionPlanBinder;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
-import io.helidon.inject.service.Inject;
-import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.Interception;
 import io.helidon.inject.service.Ip;
+import io.helidon.inject.service.ModuleComponent;
 import io.helidon.inject.service.Qualifier;
-import io.helidon.inject.spi.InjectionResolver;
-
-import static io.helidon.inject.runtime.ServiceUtils.isQualifiedInjectionTarget;
 
 /**
  * The default implementation for {@link io.helidon.inject.maven.plugin.ApplicationCreator}.
@@ -68,8 +66,19 @@ public class ApplicationCreator {
      * The application class name.
      */
     public static final String APPLICATION_NAME = "HelidonInjection__Application";
+    private static final TypeName MODULE_COMPONENT = TypeName.create(ModuleComponent.class);
+    private static final TypeName APPLICATION = TypeName.create(ModuleComponent.class);
     private static final TypeName CREATOR = TypeName.create(ApplicationCreator.class);
+    /**
+     * Helidon {link io.helidon.inject.InjectionPointProvider}.
+     */
+    private static final TypeName INJECTION_POINT_PROVIDER = TypeName.create(InjectionPointProvider.class);
+    /**
+     * Helidon {@link io.helidon.inject.ServiceProvider}.
+     */
+    private static final TypeName SERVICE_PROVIDER = TypeName.create(ServiceProvider.class);
     private static final TypeName BINDER_TYPE = TypeName.create(ServiceInjectionPlanBinder.class);
+
     private final MavenCodegenContext ctx;
     private final boolean failOnError;
     private final PermittedProviderType permittedProviderType;
@@ -91,14 +100,14 @@ public class ApplicationCreator {
                 .map(TypeName::create)
                 .collect(Collectors.toSet());
 
-        permittedProviderQualifierTypes = options.asList(ApplicationOptions.PERMITTED_PROVIDER_QUALIFIER_TYPE_NAMES)
+        this.permittedProviderQualifierTypes = options.asList(ApplicationOptions.PERMITTED_PROVIDER_QUALIFIER_TYPE_NAMES)
                 .stream()
                 .map(TypeName::create)
                 .collect(Collectors.toSet());
     }
 
     /**
-     * Generates the source and class file for {@link io.helidon.inject.api.Application} using the current classpath.
+     * Generates the source and class file for {@link io.helidon.inject.Application} using the current classpath.
      *
      * @param injectionServices injection services to use
      * @param serviceTypes      types to process
@@ -189,9 +198,9 @@ public class ApplicationCreator {
     BindingPlan bindingPlan(InjectionServices services,
                             TypeName serviceTypeName) {
 
-        ServiceInfoCriteria si = toServiceInfoCriteria(serviceTypeName);
-        ServiceProvider<?> sp = services.services().lookupFirst(si);
-        TypeName serviceDescriptorType = sp.descriptorType();
+        Lookup si = toServiceInfoCriteria(serviceTypeName);
+        ServiceProvider<?> sp = services.services().firstServiceProvider(si);
+        TypeName serviceDescriptorType = sp.infoType();
 
         if (!isQualifiedInjectionTarget(sp)) {
             return new BindingPlan(serviceDescriptorType, Set.of());
@@ -208,7 +217,7 @@ public class ApplicationCreator {
             TypeName ipType = dependency.typeName();
 
             InjectionPlan iPlan = injectionPlan(services, sp, dependency);
-            List<ServiceProvider<?>> qualified = iPlan.qualifiedProviders();
+            List<ServiceProvider<Object>> qualified = iPlan.qualifiedProviders();
             List<?> unqualified = iPlan.unqualifiedProviders();
 
             BindingType type = bindingType(ipType);
@@ -228,7 +237,7 @@ public class ApplicationCreator {
                 bindings.add(new Binding(BindingTime.RUNTIME, type, dependency, isProvider, List.of(targetType)));
             } else {
                 bindings.add(new Binding(BindingTime.BUILD, type, dependency, isProvider, qualified.stream()
-                        .map(ServiceProvider::descriptorType)
+                        .map(ServiceProvider::infoType)
                         .toList()));
             }
         }
@@ -242,15 +251,32 @@ public class ApplicationCreator {
         return sp.isProvider();
     }
 
-    private static ServiceInfoCriteria toServiceInfoCriteria(TypeName typeName) {
-        return ServiceInfoCriteria.builder()
+    private static Lookup toServiceInfoCriteria(TypeName typeName) {
+        return Lookup.builder()
                 .serviceType(typeName)
                 .build();
     }
 
     private static ServiceProvider<?> toServiceProvider(TypeName typeName,
                                                         Services services) {
-        return services.lookupFirst(toServiceInfoCriteria(typeName), true).orElseThrow();
+        return services.firstServiceProvider(toServiceInfoCriteria(typeName));
+    }
+
+    /**
+     * Determines if the service provider is valid to receive injections.
+     *
+     * @param sp the service provider
+     * @return true if the service provider can receive injection
+     */
+    private static boolean isQualifiedInjectionTarget(ServiceProvider<?> sp) {
+        Set<TypeName> contractsImplemented = sp.contracts();
+        List<Ip> dependencies = sp.dependencies();
+
+        return (!dependencies.isEmpty())
+                || (
+                !contractsImplemented.isEmpty()
+                        && !contractsImplemented.contains(MODULE_COMPONENT)
+                        && !contractsImplemented.contains(APPLICATION));
     }
 
     private String applicationName(String moduleName, CodegenScope scope, TypeName typeName) {
@@ -315,7 +341,9 @@ public class ApplicationCreator {
                                                Set<TypeName> serviceTypes) {
         Services services = injectionServices.services();
 
-        List<ServiceProvider<Supplier>> providers = services.lookupAll(Supplier.class);
+        List<ServiceProvider<Supplier>> providers = services.serviceProviders(Lookup.builder()
+                                                                                      .addContract(Supplier.class)
+                                                                                      .build());
         if (providers.isEmpty()) {
             return List.of();
         }
@@ -337,8 +365,8 @@ public class ApplicationCreator {
         }
 
         return ipType.isSupplier()
-                || InjectTypes.INJECTION_POINT_PROVIDER.equals(ipType)
-                || InjectTypes.SERVICE_PROVIDER.equals(ipType);
+                || INJECTION_POINT_PROVIDER.equals(ipType)
+                || SERVICE_PROVIDER.equals(ipType);
     }
 
     private BindingType bindingType(TypeName ipType) {
@@ -354,19 +382,19 @@ public class ApplicationCreator {
     private InjectionPlan injectionPlan(InjectionServices injectionServices,
                                         ServiceProvider<?> self,
                                         Ip dependency) {
-        ServiceInfoCriteria dependencyTo = ServiceInfoCriteria.create(dependency);
+        Lookup dependencyTo = Lookup.create(dependency);
         Set<Qualifier> qualifiers = dependencyTo.qualifiers();
         if (self.contracts().containsAll(dependencyTo.contracts()) && self.qualifiers().equals(qualifiers)) {
             // criteria must have a single contract for each injection point
             // if this service implements the contracts actually required, we must look for services with lower weight
             // but only if we also have the same qualifiers
-            dependencyTo = ServiceInfoCriteria.builder(dependencyTo)
+            dependencyTo = Lookup.builder(dependencyTo)
                     .weight(self.weight())
                     .build();
         }
 
         if (self instanceof InjectionResolver ir) {
-            Optional<Object> resolved = ir.resolve(dependency, injectionServices, self, false);
+            Optional<Object> resolved = ir.resolve(dependency, injectionServices.services(), self, false);
             Object target = resolved.orElse(null);
             if (target != null) {
                 return new InjectionPlan(toUnqualified(target).toList(), toQualified(target).toList());
@@ -374,8 +402,8 @@ public class ApplicationCreator {
         }
 
         Services services = injectionServices.services();
-        List<ServiceProvider<?>> qualifiedProviders = services.lookupAll(dependencyTo, false);
-        List<ServiceProvider<?>> unqualifiedProviders = List.of();
+        List<ServiceProvider<Object>> qualifiedProviders = services.serviceProviders(dependencyTo);
+        List<ServiceProvider<Object>> unqualifiedProviders = List.of();
 
         if (qualifiedProviders.isEmpty()) {
             if (dependency.typeName().isOptional()) {
@@ -398,13 +426,14 @@ public class ApplicationCreator {
         return new InjectionPlan(unqualifiedProviders, qualifiedProviders);
     }
 
-    private Stream<ServiceProvider<?>> toQualified(Object target) {
+    @SuppressWarnings("unchecked")
+    private Stream<ServiceProvider<Object>> toQualified(Object target) {
         if (target instanceof Collection<?> collection) {
             return collection.stream()
                     .flatMap(this::toQualified);
         }
         return (target instanceof ServiceProvider<?> sp)
-                ? Stream.of(sp)
+                ? Stream.of((ServiceProvider<Object>) sp)
                 : Stream.of();
     }
 
@@ -418,31 +447,34 @@ public class ApplicationCreator {
                 : Stream.of(target);
     }
 
-    private List<ServiceProvider<?>> injectionPointProvidersFor(Services services, Ip ipoint) {
+    private List<ServiceProvider<Object>> injectionPointProvidersFor(Services services, Ip ipoint) {
         if (ipoint.qualifiers().isEmpty()) {
             return List.of();
         }
-        ServiceInfoCriteria criteria = ServiceInfoCriteria.builder(ServiceInfoCriteria.create(ipoint))
+        Lookup criteria = Lookup.builder(Lookup.create(ipoint))
                 .qualifiers(Set.of())
                 .addContract(InjectCodegenTypes.INJECTION_POINT_PROVIDER)
                 .build();
-        return services.lookupAll(criteria);
+        return services.serviceProviders(criteria);
     }
 
     private void createConfigureMethodBody(InjectionServices services, Set<TypeName> serviceTypes, Method.Builder method) {
 
         // find all interceptors and bind them
-        List<ServiceProvider<Interceptor>> interceptors = services.services()
-                .lookupAll(Interceptor.class, Inject.Named.WILDCARD_NAME);
+        List<ServiceProvider<Interception.Interceptor>> interceptors = services.services()
+                .serviceProviders(Lookup.builder()
+                                          .addContract(Interception.Interceptor.class)
+                                          .addQualifier(Qualifier.WILDCARD_NAMED)
+                                          .build());
         method.addContent("binder.interceptors(");
         boolean multiline = interceptors.size() > 2;
         if (multiline) {
             method.addContentLine("");
         }
 
-        Iterator<ServiceProvider<Interceptor>> interceptorIterator = interceptors.iterator();
+        Iterator<ServiceProvider<Interception.Interceptor>> interceptorIterator = interceptors.iterator();
         while (interceptorIterator.hasNext()) {
-            method.addContent(interceptorIterator.next().descriptorType().genericTypeName())
+            method.addContent(interceptorIterator.next().infoType().genericTypeName())
                     .addContent(".INSTANCE");
             if (interceptorIterator.hasNext()) {
                 method.addContent(",");
@@ -593,7 +625,7 @@ public class ApplicationCreator {
     }
 
     record InjectionPlan(List<?> unqualifiedProviders,
-                         List<ServiceProvider<?>> qualifiedProviders) {
+                         List<ServiceProvider<Object>> qualifiedProviders) {
     }
 
     record BindingPlan(TypeName descriptorType,

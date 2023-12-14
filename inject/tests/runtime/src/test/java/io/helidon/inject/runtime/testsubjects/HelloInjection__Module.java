@@ -16,12 +16,12 @@
 
 package io.helidon.inject.runtime.testsubjects;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.service.ModuleComponent;
 import io.helidon.inject.service.ServiceBinder;
 
-@Inject.Singleton
-@Inject.Named(HelloInjection__Module.NAME)
+@Injection.Singleton
+@Injection.Named(HelloInjection__Module.NAME)
 public final class HelloInjection__Module implements ModuleComponent {
 
     public static final String NAME = "example";

@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.Interception;
 import io.helidon.inject.service.InvocationContext;
 
 import jakarta.inject.Named;
@@ -30,7 +30,7 @@ import jakarta.inject.Singleton;
 @Named("io.helidon.inject.tests.interception.Modify")
 @Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 50)
-class ModifyingInterceptor implements Interceptor {
+class ModifyingInterceptor implements Interception.Interceptor {
     private static final AtomicReference<Invocation> LAST_CALL = new AtomicReference<>();
 
     static Invocation lastCall() {

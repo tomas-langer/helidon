@@ -28,14 +28,17 @@ class ProviderReceiver {
     private final Provider<NonSingletonService> provider;
     private final List<Provider<NonSingletonService>> listOfProviders;
     private final Optional<Provider<NonSingletonService>> optionalProvider;
+    private final AContract contract;
 
     @Inject
     ProviderReceiver(Provider<NonSingletonService> provider,
                      List<Provider<NonSingletonService>> listOfProviders,
-                     Optional<Provider<NonSingletonService>> optionalProvider) {
+                     Optional<Provider<NonSingletonService>> optionalProvider,
+                     AContract contract) {
         this.provider = provider;
         this.listOfProviders = listOfProviders;
         this.optionalProvider = optionalProvider;
+        this.contract = contract;
     }
 
     NonSingletonService nonSingletonService() {
@@ -50,5 +53,9 @@ class ProviderReceiver {
 
     Optional<NonSingletonService> optionalService() {
         return optionalProvider.map(Provider::get);
+    }
+
+    AContract contract() {
+        return contract;
     }
 }

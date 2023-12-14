@@ -21,13 +21,13 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.helidon.builder.api.RuntimeType;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
  * Runs synchronous suppliers asynchronously using virtual threads. Includes
  * convenient static method to avoid creating instances of this class.
  */
-@Inject.Contract
+@Injection.Contract
 @RuntimeType.PrototypedBy(AsyncConfig.class)
 public interface Async extends RuntimeType.Api<AsyncConfig> {
 

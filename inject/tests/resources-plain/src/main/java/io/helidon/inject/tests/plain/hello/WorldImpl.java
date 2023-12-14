@@ -18,11 +18,11 @@ package io.helidon.inject.tests.plain.hello;
 
 import java.io.Serializable;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.ExternalContracts(World.class)
-@Inject.Named("unknown")
-@Inject.Singleton
+@Injection.ExternalContracts(World.class)
+@Injection.Named("unknown")
+@Injection.Singleton
 public class WorldImpl implements World, SomeOtherLocalNonContractInterface2, Serializable {
     private final String name;
 

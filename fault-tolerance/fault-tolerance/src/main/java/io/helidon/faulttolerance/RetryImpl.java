@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 class RetryImpl implements Retry {
     private final ErrorChecker errorChecker;
@@ -35,7 +35,7 @@ class RetryImpl implements Retry {
     private final AtomicLong retryCounter = new AtomicLong(0L);
     private final String name;
 
-    @Inject.Point
+    @Injection.Inject
     RetryImpl(RetryConfig retryConfig) {
         this.name = retryConfig.name().orElseGet(() -> "retry-" + System.identityHashCode(retryConfig));
         this.errorChecker = ErrorChecker.create(retryConfig.skipOn(), retryConfig.applyOn());

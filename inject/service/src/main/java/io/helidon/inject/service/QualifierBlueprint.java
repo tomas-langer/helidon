@@ -21,9 +21,9 @@ import io.helidon.common.types.Annotation;
 
 /**
  * Represents a qualifier annotation (a specific case of annotations, annotated with
- * {@link io.helidon.inject.service.Inject.Qualifier}.
+ * {@link Injection.Qualifier}).
  *
- * @see io.helidon.inject.service.Inject.Qualifier
+ * @see Injection.Qualifier
  */
 @Prototype.Blueprint
 @Prototype.CustomMethods(QualifierSupport.CustomMethods.class)

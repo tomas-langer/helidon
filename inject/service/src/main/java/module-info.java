@@ -18,14 +18,6 @@
  * API requires for code generating classes required for Helidon Inject.
  * This is the minimal set of types that must be available.
  */
-/*
-Note for developers:
-This modules MUST be a compile & runtime dependency of any module that exposes services,
-as the ModuleComponent is a ServiceLoader provider interface. As such, it must be set as
-provides ModuleComponent with Generated__ModuleComponent
-in the module-info.java of the project. If a module provides a service, the module of the service must not be a static
-dependency
- */
 module io.helidon.inject.service {
     // required for generated code
     requires transitive io.helidon.common.types;

@@ -79,7 +79,7 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-api</artifactId>
+            <artifactId>helidon-inject-configdriven-service</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>

@@ -16,16 +16,14 @@
 
 package io.helidon.inject.configdriven.configuredby.test;
 
-import io.helidon.inject.configdriven.runtime.ConfigBeanRegistry;
+import io.helidon.inject.configdriven.ConfigBeanRegistry;
+import io.helidon.inject.service.Injection;
 
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
-
-@Singleton
+@Injection.Singleton
 class ServiceUsingRegistry {
     private final ConfigBeanRegistry registry;
 
-    @Inject
+    @Injection.Inject
     ServiceUsingRegistry(ConfigBeanRegistry registry) {
         this.registry = registry;
     }

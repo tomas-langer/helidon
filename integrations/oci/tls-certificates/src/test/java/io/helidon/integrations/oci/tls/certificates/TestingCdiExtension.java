@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import io.helidon.config.Config;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.microprofile.cdi.RuntimeStart;
 
 import jakarta.annotation.Priority;
@@ -32,7 +32,7 @@ import jakarta.enterprise.inject.spi.Extension;
 
 import static jakarta.interceptor.Interceptor.Priority.PLATFORM_AFTER;
 
-@Inject.Singleton // both a CDI extension and a singleton
+@Injection.Singleton // both a CDI extension and a singleton
 @SuppressWarnings("unused")
 // consider relocating this to somewhere under inject
 public class TestingCdiExtension implements Extension, LifecycleHook {

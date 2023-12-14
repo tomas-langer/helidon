@@ -22,12 +22,12 @@ import java.util.Objects;
 import java.util.Set;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionException;
-import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.InjectionException;
 import io.helidon.inject.service.InjectionContext;
 import io.helidon.inject.service.InterceptionMetadata;
 import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceDescriptor;
 import io.helidon.inject.service.ServiceInfo;
 
 /**
@@ -35,7 +35,7 @@ import io.helidon.inject.service.ServiceInfo;
  *
  * @param <T> the service type
  */
-public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<T> {
+public class ReflectionBasedSingletonServiceDescriptor<T> implements ServiceDescriptor<T> {
     private final Class<T> serviceType;
     private final ServiceInfo serviceInfo;
 
@@ -48,11 +48,10 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<
     /**
      * Generates a service provider eligible for binding into the service registry with the following proviso:
      * <ul>
-     * <li>The service type will be of {@code io.helidon.inject.service.Inject.Singleton} scope</li>
+     * <li>The service type will be of {@code io.helidon.inject.service.Injection.Singleton} scope</li>
      * <li>The service type will be created reflectively, and will expect to have an empty constructor</li>
      * <li>The service type will not be able to provide its dependencies, nor will it be able to accept injection</li>
-     * <li>The service type will not be able to participate in lifecycle -
-     * {@link io.helidon.inject.api.PostConstructMethod} or {@link io.helidon.inject.api.PreDestroyMethod}</li>
+     * <li>The service type will not be able to participate in lifecycle - post-construct and pre-destroy</li>
      * </ul>
      * Note: Generally it is encouraged for users to rely on the annotation processors and other built on compile-time
      * tooling to generate the appropriate service providers and modules. This method is an alternative to that
@@ -63,10 +62,10 @@ public class ReflectionBasedSingletonServiceDescriptor<T> implements Descriptor<
      * @param serviceInfo the service info basic descriptor, or null to generate a default (empty) placeholder
      * @param <T>         the class of the service type
      * @return the service provider capable of being bound to the services registry
-     * @see InjectionTestingSupport#bind(io.helidon.inject.api.InjectionServices, io.helidon.inject.service.Descriptor)
+     * @see InjectionTestingSupport#bind(io.helidon.inject.Services, io.helidon.inject.service.ServiceDescriptor)
      */
-    public static <T> Descriptor<T> create(Class<T> serviceType,
-                                           ServiceInfo serviceInfo) {
+    public static <T> ServiceDescriptor<T> create(Class<T> serviceType,
+                                                  ServiceInfo serviceInfo) {
         Objects.requireNonNull(serviceType);
         Objects.requireNonNull(serviceInfo);
 

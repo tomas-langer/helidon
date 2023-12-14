@@ -24,7 +24,7 @@ module io.helidon.integrations.oci.sdk.runtime {
 
     requires transitive io.helidon.common;
     requires transitive io.helidon.config;
-    requires transitive io.helidon.inject.runtime;
+    requires transitive io.helidon.inject;
 
     exports io.helidon.integrations.oci.sdk.runtime;
 

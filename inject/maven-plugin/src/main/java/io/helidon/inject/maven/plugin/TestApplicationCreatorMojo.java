@@ -25,11 +25,10 @@ import java.util.Set;
 
 import io.helidon.codegen.CodegenScope;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.Application;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
 
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.model.Build;
@@ -53,7 +52,7 @@ import static io.helidon.inject.maven.plugin.MavenUtil.toSuggestedModuleName;
 public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
 
     /**
-     * The classname to use for the {@link Application} test class.
+     * The classname to use for the {@link io.helidon.inject.Application} test class.
      * If not found the classname will be inferred.
      */
     @Parameter(property = "io.helidon.inject.application.class.name", readonly = true
@@ -140,12 +139,12 @@ public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
             Thread.currentThread().setContextClassLoader(loader);
 
             InjectionServices injectionServices = injectionServices(false);
-            assert (!injectionServices.config().usesCompileTimeApplications());
+            assert (!injectionServices.config().useApplication());
             Services services = injectionServices.services();
 
             // retrieves all the services in the registry
-            List<ServiceProvider<?>> allServices = services
-                    .lookupAll(ServiceInfoCriteria.builder().build(), false);
+            List<ServiceProvider<Object>> allServices = services
+                    .serviceProviders(Lookup.EMPTY);
             Set<TypeName> serviceTypeNames = toNames(allServices);
             getLog().debug("excluding service type names: " + serviceTypeNames);
             return serviceTypeNames;

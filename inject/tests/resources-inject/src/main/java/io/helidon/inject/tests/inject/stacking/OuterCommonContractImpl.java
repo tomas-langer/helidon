@@ -20,13 +20,13 @@ import java.util.Optional;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 2)
 public class OuterCommonContractImpl extends CommonContractImpl {
 
-    @Inject.Point
+    @Injection.Inject
     public OuterCommonContractImpl(Optional<CommonContract> inner) {
         super(inner);
     }

@@ -19,12 +19,12 @@ package io.helidon.examples.inject.basics;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
  * Custom annotation.
  */
-@Inject.Qualifier
+@Injection.Qualifier
 @Retention(RetentionPolicy.CLASS)
 public @interface Big {
 

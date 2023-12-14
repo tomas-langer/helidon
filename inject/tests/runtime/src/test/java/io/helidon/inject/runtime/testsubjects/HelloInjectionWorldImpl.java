@@ -20,26 +20,26 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
-@Inject.Singleton
-@io.helidon.inject.service.Inject.RunLevel(0)
+@Injection.Singleton
+@Injection.RunLevel(0)
 public class HelloInjectionWorldImpl implements HelloInjectionWorld {
 
-    @Inject.Point
+    @Injection.Inject
     InjectionWorld world;
 
-    @Inject.Point
+    @Injection.Inject
     Supplier<InjectionWorld> worldRef;
 
-    @Inject.Point
+    @Injection.Inject
     List<Supplier<InjectionWorld>> listOfWorldRefs;
 
-    @Inject.Point
+    @Injection.Inject
     List<InjectionWorld> listOfWorlds;
 
-    @Inject.Point @Inject.Named("red")
+    @Injection.Inject @Injection.Named("red")
     Optional<InjectionWorld> redWorld;
 
     private InjectionWorld setWorld;
@@ -58,17 +58,17 @@ public class HelloInjectionWorldImpl implements HelloInjectionWorld {
         return "Hello " + world.name();
     }
 
-    @Inject.Point
+    @Injection.Inject
     void world(InjectionWorld world) {
         this.setWorld = world;
     }
 
-    @Inject.PostConstruct
+    @Injection.PostConstruct
     public void postConstruct() {
         postConstructCallCount++;
     }
 
-    @Inject.PreDestroy
+    @Injection.PreDestroy
     public void preDestroy() {
         preDestroyCallCount++;
     }

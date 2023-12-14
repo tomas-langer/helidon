@@ -16,9 +16,9 @@
 
 package io.helidon.inject.runtime.testsubjects;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.ExternalContracts(InjectionWorld.class)
+@Injection.ExternalContracts(InjectionWorld.class)
 public class InjectionWorldImpl implements InjectionWorld {
     private final String name;
 

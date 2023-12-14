@@ -38,9 +38,8 @@ import io.helidon.common.tls.ConfiguredTlsManager;
 import io.helidon.common.tls.TlsConfig;
 import io.helidon.config.Config;
 import io.helidon.faulttolerance.Async;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Services;
 import io.helidon.integrations.oci.tls.certificates.spi.OciCertificatesDownloader;
 import io.helidon.integrations.oci.tls.certificates.spi.OciPrivateKeyDownloader;
 
@@ -82,9 +81,9 @@ class DefaultOciCertificatesTlsManager extends ConfiguredTlsManager implements O
     @Override // TlsManager
     public void init(TlsConfig tls) {
         this.tlsConfig = tls;
-        Services services = InjectionServices.realizedServices();
-        this.pkDownloader = services.lookupFirst(OciPrivateKeyDownloader.class);
-        this.certDownloader = services.lookupFirst(OciCertificatesDownloader.class);
+        Services services = InjectionServices.instance().services();
+        this.pkDownloader = services.first(OciPrivateKeyDownloader.class);
+        this.certDownloader = services.first(OciCertificatesDownloader.class);
         this.asyncExecutor = Executors.newSingleThreadScheduledExecutor();
         this.async = Async.builder().executor(asyncExecutor).build();
 
@@ -92,7 +91,7 @@ class DefaultOciCertificatesTlsManager extends ConfiguredTlsManager implements O
         loadContext(true);
 
         // register for any available graceful shutdown events
-        Optional<ServiceProvider<LifecycleHook>> shutdownHook = services.lookupFirst(LifecycleHook.class, false);
+        Optional<Supplier<LifecycleHook>> shutdownHook = services.find(LifecycleHook.class);
         shutdownHook.ifPresent(sp -> sp.get().registerShutdownConsumer(this::shutdown));
 
         // now schedule for reload checking

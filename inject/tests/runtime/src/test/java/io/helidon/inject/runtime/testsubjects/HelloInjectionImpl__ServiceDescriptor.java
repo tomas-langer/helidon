@@ -22,18 +22,18 @@ import java.util.Set;
 
 import io.helidon.common.types.ElementKind;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectTypes;
-import io.helidon.inject.runtime.ServiceUtils;
-import io.helidon.inject.service.Descriptor;
+import io.helidon.inject.InjectTypes;
+import io.helidon.inject.Services;
 import io.helidon.inject.service.InjectionContext;
 import io.helidon.inject.service.InterceptionMetadata;
 import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
+import io.helidon.inject.service.ServiceDescriptor;
 
 /**
  * Serves as an exemplar of what will is normally code generated.
  */
-public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloInjectionWorldImpl> {
+public class HelloInjectionImpl__ServiceDescriptor implements ServiceDescriptor<HelloInjectionWorldImpl> {
     public static final HelloInjectionImpl__ServiceDescriptor INSTANCE = new HelloInjectionImpl__ServiceDescriptor();
 
     private static final TypeName DESCRIPTOR = TypeName.create(HelloInjectionImpl__ServiceDescriptor.class);
@@ -126,7 +126,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
 
     @Override
     public double weight() {
-        return ServiceUtils.DEFAULT_INJECT_WEIGHT;
+        return Services.INJECT_WEIGHT;
     }
 
     @Override
@@ -142,7 +142,7 @@ public class HelloInjectionImpl__ServiceDescriptor implements Descriptor<HelloIn
     @Override
     public void inject(InjectionContext ctx,
                        InterceptionMetadata interceptionMetadata,
-                       Set<MethodSignature> injected,
+                       Set<String> injected,
                        HelloInjectionWorldImpl instance) {
         instance.world = ctx.param(IP_0);
         instance.worldRef = ctx.param(IP_1);

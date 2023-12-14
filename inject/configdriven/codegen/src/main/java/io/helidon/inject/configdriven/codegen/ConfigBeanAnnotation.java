@@ -22,7 +22,7 @@ import io.helidon.common.types.TypeName;
 record ConfigBeanAnnotation(boolean repeatable,
                             boolean atLeastOne,
                             boolean wantDefault) {
-    static final String TYPE_NAME = "io.helidon.inject.configdriven.api.ConfigBean";
+    static final String TYPE_NAME = "io.helidon.inject.configdriven.service.ConfigBean";
     static final TypeName TYPE = TypeName.create(TYPE_NAME);
 
     static ConfigBeanAnnotation create(TypeInfo typeInfo) {

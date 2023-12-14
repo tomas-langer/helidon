@@ -17,9 +17,10 @@
 package io.helidon.inject.tests.inject;
 
 import io.helidon.common.types.TypeName;
-import io.helidon.config.Config;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionConfig;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
 import io.helidon.inject.codegen.InjectCodegenTypes;
 import io.helidon.inject.service.Qualifier;
 
@@ -41,7 +42,7 @@ import static org.hamcrest.Matchers.equalTo;
  * Javax to Jakarta related tests.
  */
 class JavaxTest {
-    private static final Config CONFIG = basicTestableConfig();
+    private static final InjectionConfig CONFIG = basicTestableConfig();
 
     private Services services;
 
@@ -61,13 +62,14 @@ class JavaxTest {
      */
     @Test
     void applicationScopeToSingletonScopeTranslation() {
-        ServiceProvider<AnApplicationScopedService> sp = services.lookupFirst(AnApplicationScopedService.class);
+        ServiceProvider<AnApplicationScopedService> sp = services.firstServiceProvider(
+                Lookup.create(AnApplicationScopedService.class));
         assertThat(sp.toString(),
                    equalTo("AnApplicationScopedService:INIT"));
         assertThat(sp.qualifiers(),
                    contains(Qualifier.create(Default.class)));
         assertThat(sp.scopes(),
-                   containsInAnyOrder(InjectCodegenTypes.INJECT_SINGLETON,
+                   containsInAnyOrder(InjectCodegenTypes.INJECTION_SINGLETON,
                                       TypeName.create(ApplicationScoped.class)));
     }
 

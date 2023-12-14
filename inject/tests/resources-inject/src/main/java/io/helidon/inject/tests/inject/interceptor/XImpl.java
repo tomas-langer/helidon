@@ -20,25 +20,24 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Optional;
 
-import io.helidon.inject.service.Inject;
-import io.helidon.inject.service.InterceptedTrigger;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.tests.inject.ClassNamedX;
 import io.helidon.inject.tests.plain.interceptor.IA;
 import io.helidon.inject.tests.plain.interceptor.IB;
 import io.helidon.inject.tests.plain.interceptor.InterceptorBasedAnno;
 
 /**
- * This test case is applying {@link InterceptorBasedAnno} (an {@link InterceptedTrigger})
+ * This test case is applying {@link InterceptorBasedAnno} (an {@link io.helidon.inject.service.Interception.Trigger})
  * <p>
  * Also note that interception was triggered by the presence of the {@link TestNamed} and {@link InterceptorBasedAnno} triggers.
  */
-@Inject.Singleton
-@io.helidon.inject.service.Inject.ClassNamed(ClassNamedX.class)
+@Injection.Singleton
+@Injection.ClassNamed(ClassNamedX.class)
 @TestNamed("TestNamed-ClassX")
-@io.helidon.inject.service.Inject.ExternalContracts(value = Closeable.class)
+@Injection.ExternalContracts(value = Closeable.class)
 @SuppressWarnings("unused")
 public class XImpl implements IA, IB, Closeable {
-    @Inject.Point
+    @Injection.Inject
     @InterceptorBasedAnno("<init>")
     // will be intercepted
     XImpl(Optional<IA> optionalIA) {
@@ -62,18 +61,18 @@ public class XImpl implements IA, IB, Closeable {
     public void methodIA2() {
     }
 
-    @Inject.Named("methodIB")
+    @Injection.Named("methodIB")
     @InterceptorBasedAnno("IBSubAnno")
     @Override
     // will be intercepted
-    public void methodIB(@Inject.Named("arg1") String val) {
+    public void methodIB(@Injection.Named("arg1") String val) {
     }
 
-    @Inject.Named("methodIB2")
+    @Injection.Named("methodIB2")
     @InterceptorBasedAnno("IBSubAnno")
     @Override
     // will be intercepted
-    public String methodIB2(@Inject.Named("arg1") String val) {
+    public String methodIB2(@Injection.Named("arg1") String val) {
         return val;
     }
 

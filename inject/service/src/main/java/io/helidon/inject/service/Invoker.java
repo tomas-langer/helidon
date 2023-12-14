@@ -18,6 +18,7 @@ package io.helidon.inject.service;
 
 /**
  * Invocation of an element that has parameters, and may throw checked exceptions.
+ * This type is used to handle intercepted methods, constructors, and field injections.
  *
  * @param <T> type of the result of the invocation
  */

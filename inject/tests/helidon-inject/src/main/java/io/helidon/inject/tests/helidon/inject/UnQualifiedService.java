@@ -16,9 +16,9 @@
 
 package io.helidon.inject.tests.helidon.inject;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 class UnQualifiedService implements ContractOfQualified {
     @Override
     public String qualifier() {

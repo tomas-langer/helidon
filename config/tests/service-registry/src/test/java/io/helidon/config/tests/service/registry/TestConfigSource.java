@@ -23,9 +23,9 @@ import io.helidon.config.ConfigException;
 import io.helidon.config.spi.ConfigContent;
 import io.helidon.config.spi.ConfigNode;
 import io.helidon.config.spi.NodeConfigSource;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 @Weight(200)
 class TestConfigSource implements NodeConfigSource {
 

@@ -18,15 +18,15 @@ package io.helidon.examples.inject.basics;
 
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
 /**
- * By adding the {@link io.helidon.inject.service.Inject.Singleton} annotation results in Hammer becoming a service. Services can be looked up
- * programmatically or declaratively injected via {@link io.helidon.inject.service.Inject.Point}.
+ * By adding the {@link io.helidon.inject.service.Injection.Singleton} annotation results in Hammer becoming a service. Services can be looked up
+ * programmatically or declaratively injected via {@link io.helidon.inject.service.Injection.Inject}.
  * <p>
  * Here {@link Weight} is used that is higher than the default, making it more preferred in weighted rankings.
  */
-@Inject.Singleton
+@Injection.Singleton
 @Weight(Weighted.DEFAULT_WEIGHT + 1)
 class Hammer implements Tool {
 

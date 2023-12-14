@@ -29,9 +29,10 @@ import java.util.function.Supplier;
 
 import io.helidon.common.Weight;
 import io.helidon.common.types.Annotation;
-import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointProvider;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.ContextualServiceQuery;
+import io.helidon.inject.InjectionPointProvider;
+import io.helidon.inject.Services;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.service.Ip;
 
 import com.oracle.bmc.ConfigFileReader;
@@ -45,7 +46,6 @@ import com.oracle.bmc.auth.SimplePrivateKeySupplier;
 import com.oracle.bmc.auth.StringPrivateKeySupplier;
 
 import static io.helidon.common.types.Annotations.findFirst;
-import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
 
 /**
  * This (overridable) provider will provide the default implementation for {@link AbstractAuthenticationDetailsProvider}.
@@ -54,8 +54,8 @@ import static io.helidon.inject.runtime.ServiceUtils.DEFAULT_INJECT_WEIGHT;
  * @see OciConfigBlueprint
  * @see OciConfig
  */
-@Inject.Singleton
-@Weight(DEFAULT_INJECT_WEIGHT)
+@Injection.Singleton
+@Weight(Services.INJECT_WEIGHT)
 class OciAuthenticationDetailsProvider implements InjectionPointProvider<AbstractAuthenticationDetailsProvider> {
     static final System.Logger LOGGER = System.getLogger(OciAuthenticationDetailsProvider.class.getName());
 
@@ -125,7 +125,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
     }
 
     static String toNamedProfile(Ip.Builder ipiBuilder) {
-        Optional<? extends Annotation> named = findFirst(Inject.Named.class, ipiBuilder.qualifiers());
+        Optional<? extends Annotation> named = findFirst(Injection.Named.class, ipiBuilder.qualifiers());
         if (named.isEmpty()) {
             return null;
         }
@@ -143,7 +143,7 @@ class OciAuthenticationDetailsProvider implements InjectionPointProvider<Abstrac
             return null;
         }
 
-        Optional<? extends Annotation> named = findFirst(Inject.Named.class, ipi.qualifiers());
+        Optional<? extends Annotation> named = findFirst(Injection.Named.class, ipi.qualifiers());
         if (named.isEmpty()) {
             return null;
         }

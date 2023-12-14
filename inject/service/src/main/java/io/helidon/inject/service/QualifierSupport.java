@@ -24,24 +24,27 @@ import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 
+/*
+ Support for QualifierBlueprint
+ */
 class QualifierSupport {
     static final class CustomMethods {
         /**
-         * Represents a wildcard {@link io.helidon.inject.service.Inject.Named} qualifier.
+         * Represents a wildcard {@link Injection.Named} qualifier.
          */
         @Prototype.Constant
-        static final Qualifier WILDCARD_NAMED = createNamed(Inject.Named.WILDCARD_NAME);
+        static final Qualifier WILDCARD_NAMED = createNamed(Injection.Named.WILDCARD_NAME);
 
         /**
-         * Represents an instance named with the default name: {@value io.helidon.inject.service.Inject.Named#DEFAULT_NAME}.
+         * Represents an instance named with the default name: {@value Injection.Named#DEFAULT_NAME}.
          */
         @Prototype.Constant
-        static final Qualifier DEFAULT_NAMED = createNamed(Inject.Named.DEFAULT_NAME);
+        static final Qualifier DEFAULT_NAMED = createNamed(Injection.Named.DEFAULT_NAME);
 
         /**
-         * The type name for {@link io.helidon.inject.service.Inject.ClassNamed}.
+         * The type name for {@link Injection.ClassNamed}.
          */
-        private static final TypeName CLASS_NAMED = TypeName.create(Inject.ClassNamed.class);
+        private static final TypeName CLASS_NAMED = TypeName.create(Injection.ClassNamed.class);
 
         private CustomMethods() {
         }
@@ -81,6 +84,36 @@ class QualifierSupport {
         /**
          * Creates a qualifier from an annotation.
          *
+         * @param qualifierType the qualifier type
+         * @return qualifier
+         */
+        @Prototype.FactoryMethod
+        static Qualifier create(TypeName qualifierType) {
+            Objects.requireNonNull(qualifierType);
+            TypeName qualifierTypeName = maybeNamed(qualifierType);
+            return Qualifier.builder().typeName(qualifierTypeName).build();
+        }
+
+        /**
+         * Creates a qualifier with a value from an annotation.
+         *
+         * @param qualifierType the qualifier type
+         * @param value         the value property
+         * @return qualifier
+         */
+        @Prototype.FactoryMethod
+        static Qualifier create(TypeName qualifierType, String value) {
+            Objects.requireNonNull(qualifierType);
+            TypeName qualifierTypeName = maybeNamed(qualifierType);
+            return Qualifier.builder()
+                    .typeName(qualifierTypeName)
+                    .putValue("value", value)
+                    .build();
+        }
+
+        /**
+         * Creates a qualifier from an annotation.
+         *
          * @param annotation the qualifier annotation
          * @return qualifier
          */
@@ -97,7 +130,7 @@ class QualifierSupport {
         }
 
         /**
-         * Creates a {@link io.helidon.inject.service.Inject.Named} qualifier.
+         * Creates a {@link Injection.Named} qualifier.
          *
          * @param name the name
          * @return named qualifier
@@ -106,22 +139,22 @@ class QualifierSupport {
         static Qualifier createNamed(String name) {
             Objects.requireNonNull(name);
             return Qualifier.builder()
-                    .typeName(Inject.Named.TYPE_NAME)
+                    .typeName(Injection.Named.TYPE_NAME)
                     .value(name)
                     .build();
         }
 
         /**
-         * Creates a {@link io.helidon.inject.service.Inject.Named} qualifier.
+         * Creates a {@link Injection.Named} qualifier.
          *
          * @param name the name
          * @return named qualifier
          */
         @Prototype.FactoryMethod
-        static Qualifier createNamed(Inject.Named name) {
+        static Qualifier createNamed(Injection.Named name) {
             Objects.requireNonNull(name);
             Qualifier.Builder builder = Qualifier.builder()
-                    .typeName(Inject.Named.TYPE_NAME);
+                    .typeName(Injection.Named.TYPE_NAME);
             if (!name.value().isEmpty()) {
                 builder.value(name.value());
             }
@@ -129,22 +162,22 @@ class QualifierSupport {
         }
 
         /**
-         * Creates a {@link io.helidon.inject.service.Inject.Named} qualifier.
+         * Creates a {@link Injection.Named} qualifier.
          *
          * @param name the name
          * @return named qualifier
          */
         @Prototype.FactoryMethod
-        static Qualifier createNamed(Inject.ClassNamed name) {
+        static Qualifier createNamed(Injection.ClassNamed name) {
             Objects.requireNonNull(name);
             return Qualifier.builder()
-                    .typeName(Inject.Named.TYPE_NAME)
+                    .typeName(Injection.Named.TYPE_NAME)
                     .value(name.value().getName())
                     .build();
         }
 
         /**
-         * Creates a {@link io.helidon.inject.service.Inject.Named} qualifier from a class name.
+         * Creates a {@link Injection.Named} qualifier from a class name.
          *
          * @param className class whose name will be used
          * @return named qualifier
@@ -153,14 +186,14 @@ class QualifierSupport {
         static Qualifier createNamed(Class<?> className) {
             Objects.requireNonNull(className);
             return Qualifier.builder()
-                    .typeName(Inject.Named.TYPE_NAME)
+                    .typeName(Injection.Named.TYPE_NAME)
                     .value(className.getName())
                     .build();
         }
 
         private static TypeName maybeNamed(TypeName qualifierType) {
             if (CLASS_NAMED.equals(qualifierType)) {
-                return Inject.Named.TYPE_NAME;
+                return Injection.Named.TYPE_NAME;
             }
             return qualifierType;
         }

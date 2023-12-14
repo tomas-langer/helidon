@@ -16,14 +16,14 @@
 
 package io.helidon.examples.inject.interceptors;
 
-import io.helidon.inject.service.Inject;
-import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.service.Injection;
+import io.helidon.inject.service.Interception;
 import io.helidon.inject.service.InvocationContext;
 
-@Inject.ClassNamed(Turn.class)
-@Inject.Singleton
+@Injection.ClassNamed(Turn.class)
+@Injection.Singleton
 @SuppressWarnings("unused")
-class TurnInterceptor implements Interceptor {
+class TurnInterceptor implements Interception.Interceptor {
 
     @Override
     @SuppressWarnings("unchecked")

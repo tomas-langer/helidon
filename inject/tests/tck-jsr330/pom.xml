@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-runtime</artifactId>
+            <artifactId>helidon-inject</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.inject</groupId>
@@ -120,7 +120,7 @@
                             <serviceTypeName>org.atinject.tck.auto.accessories.SpareTire</serviceTypeName>
                             <qualifiers>
                                 <qualifier>
-                                    <qualifierTypeName>io.helidon.inject.service.Inject.Named</qualifierTypeName>
+                                    <qualifierTypeName>io.helidon.inject.service.Injection.Named</qualifierTypeName>
                                     <value>spare</value>
                                 </qualifier>
                             </qualifiers>
@@ -139,6 +139,11 @@
                     <dependency>
                         <groupId>io.helidon.inject</groupId>
                         <artifactId>helidon-inject-codegen-jakarta</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.helidon.codegen</groupId>
+                        <artifactId>helidon-codegen-helidon-copyright</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
                 </dependencies>

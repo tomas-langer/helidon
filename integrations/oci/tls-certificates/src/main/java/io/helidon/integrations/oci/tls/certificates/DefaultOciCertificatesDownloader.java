@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.Objects;
 
 import io.helidon.common.pki.PemReader;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 import io.helidon.integrations.oci.sdk.runtime.OciExtension;
 import io.helidon.integrations.oci.tls.certificates.spi.OciCertificatesDownloader;
 
@@ -42,7 +42,7 @@ import static io.helidon.integrations.oci.tls.certificates.spi.OciCertificatesDo
 /**
  * Implementation of the {@link OciCertificatesDownloader} that will use OCI's Certificates Service to download certs.
  */
-@Inject.Singleton
+@Injection.Singleton
 class DefaultOciCertificatesDownloader implements OciCertificatesDownloader {
 
     @Override

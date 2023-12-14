@@ -50,9 +50,9 @@ public class JakartaExtensionProvider implements InjectCodegenExtensionProvider 
 
     @Override
     public Set<TypeName> supportedAnnotations() {
-        return Set.of(InjectCodegenTypes.INJECT_SINGLETON,
-                      InjectCodegenTypes.INJECT_POINT,
-                      InjectCodegenTypes.INJECT_SERVICE);
+        return Set.of(InjectCodegenTypes.INJECTION_SINGLETON,
+                      InjectCodegenTypes.INJECTION_INJECT,
+                      InjectCodegenTypes.INJECTION_SERVICE);
     }
 
     @Override
@@ -92,10 +92,10 @@ public class JakartaExtensionProvider implements InjectCodegenExtensionProvider 
                     .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                     .type(type)
                     .addInterface(supplier(providedType))
-                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_SINGLETON));
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_SINGLETON));
 
             for (Annotation annotation : typeInfo.annotations()) {
-                if (annotation.typeName().equals(InjectCodegenTypes.INJECT_SINGLETON)) {
+                if (annotation.typeName().equals(InjectCodegenTypes.INJECTION_SINGLETON)) {
                     // we do not want it twice
                     continue;
                 }
@@ -110,7 +110,7 @@ public class JakartaExtensionProvider implements InjectCodegenExtensionProvider 
             );
 
             classModel.addConstructor(ctr -> ctr
-                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECT_POINT))
+                    .addAnnotation(Annotation.create(InjectCodegenTypes.INJECTION_INJECT))
                     .addParameter(provider -> provider.name("provider")
                             .type(sourceType))
                     .addContentLine("this.provider = provider;")

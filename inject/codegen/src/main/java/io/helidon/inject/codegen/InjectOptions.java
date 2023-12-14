@@ -34,7 +34,7 @@ public final class InjectOptions {
                           "Treat all super types as a contract for a given service type being added.",
                           false);
     /**
-     * Which {@code io.helidon.inject.api.InterceptionStrategy} to use.
+     * Which {@code io.helidon.inject.InterceptionStrategy} to use.
      */
     public static final Option<InterceptionStrategy> INTERCEPTION_STRATEGY =
             Option.create("inject.interceptionStrategy",

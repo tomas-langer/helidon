@@ -16,13 +16,13 @@
 
 package io.helidon.inject.tests.helidon.inject;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 class QualifiedReceiver {
     private final ContractOfQualified qualified;
 
-    @Inject.Point
+    @Injection.Inject
     QualifiedReceiver(@QualifierAnnotation("qualified") ContractOfQualified qualified) {
         this.qualified = qualified;
     }

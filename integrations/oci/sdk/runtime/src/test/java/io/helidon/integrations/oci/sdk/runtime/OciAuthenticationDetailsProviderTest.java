@@ -19,15 +19,17 @@ package io.helidon.integrations.oci.sdk.runtime;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import io.helidon.builder.api.Option;
+import io.helidon.common.config.GlobalConfig;
 import io.helidon.common.types.Annotation;
 import io.helidon.config.Config;
-import io.helidon.inject.api.InjectionServiceProviderException;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.InjectionConfig;
+import io.helidon.inject.InjectionServiceProviderException;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.Services;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 
@@ -64,9 +66,10 @@ class OciAuthenticationDetailsProviderTest {
         resetAll();
     }
 
-    void resetWith(Config config) {
+    void resetWith(Config config, InjectionConfig injectionConfig) {
+        GlobalConfig.config(() -> config, true);
         resetAll();
-        this.injectionServices = testableServices(config);
+        this.injectionServices = testableServices(injectionConfig);
         this.services = injectionServices.services();
     }
 
@@ -106,7 +109,7 @@ class OciAuthenticationDetailsProviderTest {
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());
 
-        ipi.addAnnotation(Annotation.create(Inject.Named.class));
+        ipi.addAnnotation(Annotation.create(Injection.Named.class));
         assertThat(OciAuthenticationDetailsProvider.toNamedProfile(ipi),
                    nullValue());
 
@@ -160,15 +163,15 @@ class OciAuthenticationDetailsProviderTest {
 
     @Test
     void selectionWhenNoConfigIsSet() {
-        Config config = OciExtensionTest.createTestConfig(
-                OciExtensionTest.basicTestingConfigSource());
-        resetWith(config);
+        resetWith(Config.empty(), InjectionConfig.builder()
+                          .permitsDynamic(true)
+                          .build());
 
-        assertThat(OciExtension.isSufficientlyConfigured(config),
+        assertThat(OciExtension.isSufficientlyConfigured(Config.empty()),
                    is(false));
 
-        ServiceProvider<AbstractAuthenticationDetailsProvider> authServiceProvider =
-                services.lookupFirst(AbstractAuthenticationDetailsProvider.class, true).orElseThrow();
+        Supplier<AbstractAuthenticationDetailsProvider> authServiceProvider =
+                services.first(AbstractAuthenticationDetailsProvider.class);
         Objects.requireNonNull(authServiceProvider);
 
         // this code is dependent upon whether and OCI config-file is present - so leaving this commented out intentionally
@@ -181,15 +184,17 @@ class OciAuthenticationDetailsProviderTest {
     @Test
     void selectionWhenFileConfigIsSetWithAuto() {
         Config config = OciExtensionTest.createTestConfig(
-                OciExtensionTest.basicTestingConfigSource(),
                 OciExtensionTest.ociAuthConfigStrategies(OciAuthenticationDetailsProvider.VAL_AUTO),
                 OciExtensionTest.ociAuthConfigFile("./target", "profile"));
-        resetWith(config);
+        resetWith(config, InjectionConfig.builder()
+                .permitsDynamic(true)
+                .build());
 
-        ServiceProvider<AbstractAuthenticationDetailsProvider> authServiceProvider =
-                services.lookupFirst(AbstractAuthenticationDetailsProvider.class, true).orElseThrow();
+        Supplier<AbstractAuthenticationDetailsProvider> authServiceProvider =
+                services.first(AbstractAuthenticationDetailsProvider.class);
 
         InjectionServiceProviderException e = assertThrows(InjectionServiceProviderException.class, authServiceProvider::get);
+        e.printStackTrace();
         assertThat(e.getCause().getClass(),
                    equalTo(UncheckedIOException.class));
     }
@@ -197,13 +202,14 @@ class OciAuthenticationDetailsProviderTest {
     @Test
     void selectionWhenSimpleConfigIsSetWithAuto() {
         Config config = OciExtensionTest.createTestConfig(
-                OciExtensionTest.basicTestingConfigSource(),
                 OciExtensionTest.ociAuthConfigStrategies(OciAuthenticationDetailsProvider.VAL_AUTO),
                 OciExtensionTest.ociAuthSimpleConfig("tenant", "user", "passphrase", "fp", "privKey", null, "us-phoenix-1"));
-        resetWith(config);
+        resetWith(config, InjectionConfig.builder()
+                .permitsDynamic(true)
+                .build());
 
-        ServiceProvider<AbstractAuthenticationDetailsProvider> authServiceProvider =
-                services.lookupFirst(AbstractAuthenticationDetailsProvider.class, true).orElseThrow();
+        Supplier<AbstractAuthenticationDetailsProvider> authServiceProvider =
+                services.first(AbstractAuthenticationDetailsProvider.class);
 
         AbstractAuthenticationDetailsProvider authProvider = authServiceProvider.get();
         assertThat(authProvider.getClass(),

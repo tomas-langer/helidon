@@ -18,9 +18,9 @@ package io.helidon.inject.tests.helidon.inject;
 
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 class AContractSupplier implements Supplier<AContract> {
     @Override
     public AContract get() {

@@ -16,9 +16,9 @@
 
 package io.helidon.inject.tests.plain.interceptor;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Contract
+@Injection.Contract
 public interface IA {
 
     void methodIA1();

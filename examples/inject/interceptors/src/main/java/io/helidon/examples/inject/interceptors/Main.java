@@ -16,9 +16,9 @@
 
 package io.helidon.examples.inject.interceptors;
 
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceProvider;
-import io.helidon.inject.api.Services;
+import io.helidon.inject.InjectionServices;
+import io.helidon.inject.ServiceProvider;
+import io.helidon.inject.Services;
 
 /**
  * Interceptors example.

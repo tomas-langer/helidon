@@ -16,10 +16,10 @@
 
 package io.helidon.inject.tests.helidon.inject;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Named("named")
-@Inject.Singleton
+@Injection.Named("named")
+@Injection.Singleton
 class NamedService implements ContractOfNamed {
     @Override
     public String name() {

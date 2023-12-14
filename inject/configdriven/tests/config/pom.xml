@@ -49,19 +49,14 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-api</artifactId>
-        </dependency>
-        <dependency>
             <!-- required for compilation of generated types -->
             <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-runtime</artifactId>
-            <optional>true</optional>
+            <artifactId>helidon-inject-service</artifactId>
         </dependency>
         <dependency>
             <!-- required for compilation of generated types -->
             <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-runtime</artifactId>
+            <artifactId>helidon-inject-configdriven-service</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>

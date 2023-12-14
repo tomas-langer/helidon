@@ -54,7 +54,7 @@
             we only use inject API when injecting, so it would be on the module path anyway
             -->
             <groupId>io.helidon.inject</groupId>
-            <artifactId>helidon-inject-api</artifactId>
+            <artifactId>helidon-inject</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -77,7 +77,7 @@
             Marks singletons driven by configuration
             -->
             <groupId>io.helidon.inject.configdriven</groupId>
-            <artifactId>helidon-inject-configdriven-api</artifactId>
+            <artifactId>helidon-inject-configdriven-service</artifactId>
             <optional>true</optional>
         </dependency>
         <dependency>

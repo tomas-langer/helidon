@@ -32,8 +32,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.ModuleInfo;
 import io.helidon.common.types.TypeName;
-import io.helidon.inject.api.InjectionServices;
-import io.helidon.inject.api.ServiceProvider;
+import io.helidon.inject.ServiceProvider;
 import io.helidon.inject.service.ModuleComponent;
 
 import org.apache.maven.artifact.Artifact;
@@ -145,13 +144,6 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
     private List<String> compilerArgs;
 
     /**
-     * Sets the debug flag.
-     * See {@link InjectionServices#TAG_DEBUG}.
-     */
-    @Parameter(property = InjectionServices.TAG_DEBUG, readonly = true)
-    private boolean isDebugEnabled;
-
-    /**
      * Default constructor.
      */
     protected AbstractCreatorMojo() {
@@ -170,15 +162,6 @@ public abstract class AbstractCreatorMojo extends AbstractMojo {
         } finally {
             getLog().info("Finished " + getClass().getName() + " for " + getProject());
         }
-    }
-
-    /**
-     * Returns true if debug is enabled.
-     *
-     * @return true if in debug mode
-     */
-    protected boolean isDebugEnabled() {
-        return isDebugEnabled;
     }
 
     /**

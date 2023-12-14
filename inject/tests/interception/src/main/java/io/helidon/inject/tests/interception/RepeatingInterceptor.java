@@ -19,8 +19,8 @@ package io.helidon.inject.tests.interception;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.helidon.inject.api.InvocationException;
-import io.helidon.inject.service.Interceptor;
+import io.helidon.inject.InvocationException;
+import io.helidon.inject.service.Interception;
 import io.helidon.inject.service.InvocationContext;
 
 import jakarta.inject.Named;
@@ -28,7 +28,7 @@ import jakarta.inject.Singleton;
 
 @Named("io.helidon.inject.tests.interception.Repeat")
 @Singleton
-class RepeatingInterceptor implements Interceptor {
+class RepeatingInterceptor implements Interception.Interceptor {
     private static final AtomicReference<Invocation> LAST_CALL = new AtomicReference<>();
 
     static Invocation lastCall() {

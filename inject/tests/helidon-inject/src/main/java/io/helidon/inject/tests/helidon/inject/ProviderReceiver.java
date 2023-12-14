@@ -20,16 +20,16 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Singleton
+@Injection.Singleton
 class ProviderReceiver {
     private final Supplier<NonSingletonService> provider;
     private final List<Supplier<NonSingletonService>> listOfProviders;
     private final Optional<Supplier<NonSingletonService>> optionalProvider;
     private final AContract contract;
 
-    @Inject.Point
+    @Injection.Inject
     ProviderReceiver(Supplier<NonSingletonService> provider,
                      List<Supplier<NonSingletonService>> listOfProviders,
                      Optional<Supplier<NonSingletonService>> optionalProvider,

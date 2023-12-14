@@ -25,27 +25,13 @@ import static org.hamcrest.MatcherAssert.assertThat;
 
 class QualifierTest {
 
-    @Test
-    void buildAndCompare() {
-        Qualifier qav1 = Qualifier.builder()
-                .type(Inject.Named.class)
-                .value("x.y")
-                .build();
-        Annotation qav2 = Qualifier.builder()
-                .type(Inject.Named.class)
-                .value("x.y")
-                .build();
-        assertThat(qav1.compareTo(qav2),
-                   is(0));
-    }
-
-    @Inject.Named("io.helidon.inject.api.DefaultQualifierTest")
-    @Inject.ClassNamed(QualifierTest.class)
+    @Injection.Named("io.helidon.inject.DefaultQualifierTest")
+    @Injection.ClassNamed(QualifierTest.class)
     @Test
     public void createClassNamed() throws Exception {
         Qualifier qav1 = Qualifier.createNamed(QualifierTest.class);
         Qualifier qav2 = Qualifier.builder()
-                .type(Inject.Named.class)
+                .type(Injection.Named.class)
                 .value(Qualifier.class.getName())
                 .build();
         assertThat(qav1.compareTo(qav2),
@@ -63,7 +49,21 @@ class QualifierTest {
                    is(0));
     }
 
-    static class FakeNamed implements Inject.Named {
+    @Test
+    void buildAndCompare() {
+        Qualifier qav1 = Qualifier.builder()
+                .type(Injection.Named.class)
+                .value("x.y")
+                .build();
+        Annotation qav2 = Qualifier.builder()
+                .type(Injection.Named.class)
+                .value("x.y")
+                .build();
+        assertThat(qav1.compareTo(qav2),
+                   is(0));
+    }
+
+    static class FakeNamed implements Injection.Named {
         @Override
         public String value() {
             return QualifierTest.class.getName();
@@ -71,11 +71,11 @@ class QualifierTest {
 
         @Override
         public Class<? extends java.lang.annotation.Annotation> annotationType() {
-            return Inject.Named.class;
+            return Injection.Named.class;
         }
     }
 
-    static class FakeClassNamed implements Inject.ClassNamed {
+    static class FakeClassNamed implements Injection.ClassNamed {
         @Override
         public Class value() {
             return QualifierTest.class;
@@ -83,7 +83,7 @@ class QualifierTest {
 
         @Override
         public Class<? extends java.lang.annotation.Annotation> annotationType() {
-            return Inject.ClassNamed.class;
+            return Injection.ClassNamed.class;
         }
     }
 

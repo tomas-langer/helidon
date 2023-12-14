@@ -17,19 +17,17 @@
 package io.helidon.inject.service;
 
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypedElementInfo;
 
 /**
- * Used by {@link io.helidon.inject.service.Interceptor}.
+ * Invocation context provides metadata about the invoked element to an interceptor.
+ * Used by {@link io.helidon.inject.service.Interception.Interceptor}.
  */
 @Prototype.Blueprint
 interface InvocationContextBlueprint {
-
     /**
      * The service being intercepted.
      *
@@ -38,7 +36,7 @@ interface InvocationContextBlueprint {
     ServiceInfo serviceInfo();
 
     /**
-     * The annotations on the enclosing type.
+     * Annotations on the enclosing type.
      *
      * @return the annotations on the enclosing type
      */
@@ -50,19 +48,4 @@ interface InvocationContextBlueprint {
      * @return the element info of element being intercepted
      */
     TypedElementInfo elementInfo();
-
-    /**
-     * The interceptor chain.
-     *
-     * @return the interceptor chain
-     */
-    List<Supplier<Interceptor>> interceptors();
-
-    /**
-     * The contextual info that can be shared between interceptors.
-     *
-     * @return the read/write contextual data that is passed between each chained interceptor
-     */
-    Map<String, Object> contextData();
-
 }

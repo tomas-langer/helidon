@@ -16,9 +16,9 @@
 
 package io.helidon.inject.tests.jakarta.inject;
 
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.service.Injection;
 
-@Inject.Contract
+@Injection.Contract
 interface ContractOfNamed {
     String name();
 }

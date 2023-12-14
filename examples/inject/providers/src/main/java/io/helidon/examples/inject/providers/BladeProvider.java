@@ -23,16 +23,16 @@ import java.util.Optional;
 import io.helidon.common.LazyValue;
 import io.helidon.examples.inject.basics.Big;
 import io.helidon.examples.inject.basics.Little;
-import io.helidon.inject.api.ContextualServiceQuery;
-import io.helidon.inject.api.InjectionPointProvider;
-import io.helidon.inject.api.ServiceInfoCriteria;
-import io.helidon.inject.service.Inject;
+import io.helidon.inject.ContextualServiceQuery;
+import io.helidon.inject.InjectionPointProvider;
+import io.helidon.inject.Lookup;
+import io.helidon.inject.service.Injection;
 import io.helidon.inject.service.Ip;
 import io.helidon.inject.service.Qualifier;
 
 import static io.helidon.common.LazyValue.create;
 
-@Inject.Singleton
+@Injection.Singleton
 public class BladeProvider implements InjectionPointProvider<Blade> {
 
     static final LazyValue<Optional<Blade>> LARGE_BLADE = create(() -> Optional.of(new SizedBlade(SizedBlade.Size.LARGE)));
@@ -50,7 +50,7 @@ public class BladeProvider implements InjectionPointProvider<Blade> {
      */
     @Override
     public Optional<Blade> first(ContextualServiceQuery query) {
-        ServiceInfoCriteria criteria = query.serviceInfoCriteria();
+        Lookup criteria = query.serviceInfoCriteria();
         if (contains(criteria.qualifiers(), Big.class)) {
             return logAndReturn(LARGE_BLADE.get(), query);
         } else if (contains(criteria.qualifiers(), Little.class)) {

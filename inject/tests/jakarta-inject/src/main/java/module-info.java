@@ -20,6 +20,7 @@
 module io.helidon.inject.tests.jakarta.inject {
     requires io.helidon.inject.service;
     requires io.helidon.common;
+    requires io.helidon.inject;
 
     requires jakarta.annotation;
     requires jakarta.inject;
