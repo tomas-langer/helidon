@@ -281,7 +281,7 @@ public class ApplicationCreator {
 
     private String applicationName(String moduleName, CodegenScope scope, TypeName typeName) {
         String applicationName = moduleName == null
-                ? "unknown/" + typeName.packageName()
+                ? "unnamed/" + typeName.packageName()
                 : moduleName;
         if (!scope.isProduction()) {
             applicationName = applicationName + "/" + scope.name();

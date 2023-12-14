@@ -40,7 +40,7 @@ public class ToolBox {
     private final List<Supplier<Tool>> allToolProviders;
     private Tool preferredBigTool;
 
-    // Field injection is supported for non-static, non-private methods (but not recommended)
+    // Field injection is supported for non-static, non-private fields (but not recommended)
     // Here we are using it to also showcase for Optional usages.
     @Injection.Inject Optional<LittleHammer> optionalLittleHammer;
 

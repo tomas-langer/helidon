@@ -16,8 +16,9 @@
 
 package io.helidon.examples.inject.interceptors;
 
+import java.util.function.Supplier;
+
 import io.helidon.inject.InjectionServices;
-import io.helidon.inject.ServiceProvider;
 import io.helidon.inject.Services;
 
 /**
@@ -31,15 +32,16 @@ public class Main {
      * @param args arguments
      */
     public static void main(String... args) {
-        Services services = InjectionServices.realizedServices();
+        // global service registry
+        Services services = InjectionServices.instance().services();
 
         // use the intercepted screwdriver - note that hashCode(), equals(), and toString() are not intercepted
-        ServiceProvider<ScrewDriver> screwDriver = services.lookupFirst(ScrewDriver.class);
+        Supplier<ScrewDriver> screwDriver = services.first(ScrewDriver.class);
         System.out.println(screwDriver.get() + " (1st turn): ");
         screwDriver.get().turn("left");
 
         // use the intercepted screwdriver turning tool - note that hashCode(), equals(), and toString() are not intercepted
-        ServiceProvider<TurningTool> turningTool = services.lookupFirst(TurningTool.class);
+        Supplier<TurningTool> turningTool = services.first(TurningTool.class);
         System.out.println(turningTool.get() + " (2nd turn): ");
         turningTool.get().turn("left");
     }

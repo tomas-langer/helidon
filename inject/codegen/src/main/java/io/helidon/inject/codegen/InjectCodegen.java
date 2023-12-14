@@ -139,7 +139,7 @@ class InjectCodegen implements CodegenExtension {
         String packageName = topLevelPackage(generatedServiceDescriptors);
         boolean hasModule = moduleName != null && !"unnamed module".equals(moduleName);
         if (!hasModule) {
-            moduleName = "unknown/" + packageName + (ctx.scope().isProduction() ? "" : "/" + ctx.scope().name());
+            moduleName = "unnamed/" + packageName + (ctx.scope().isProduction() ? "" : "/" + ctx.scope().name());
         }
         ClassCode moduleComponent = ModuleComponentHandler.createClassModel(ctx.scope(),
                                                                             generatedServiceDescriptors,

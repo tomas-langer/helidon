@@ -14,10 +14,6 @@
 # limitations under the License.
 #
 
-# these are only needed for unit testing - if there is a repeated setup and tear down, etc.
-inject:
-  permits-dynamic: true
-
 drill:
   hand:
     name: "Hand"

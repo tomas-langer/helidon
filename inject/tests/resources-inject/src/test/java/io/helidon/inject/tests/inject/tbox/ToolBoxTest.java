@@ -212,8 +212,8 @@ class ToolBoxTest {
         assertThat(names,
                    contains("io.helidon.config",
                             "io.helidon.inject.configdriven",
-                            "unknown/io.helidon.inject.tests.inject",
-                            "unknown/io.helidon.inject.tests.inject/test"));
+                            "unnamed/io.helidon.inject.tests.inject",
+                            "unnamed/io.helidon.inject.tests.inject/test"));
     }
 
     @Test
