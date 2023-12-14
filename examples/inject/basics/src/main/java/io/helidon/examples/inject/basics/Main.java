@@ -48,7 +48,7 @@ public class Main {
         List<Supplier<Object>> startupServiceProviders = services.all(criteria);
         System.out.println("Startup service providers (ranked according to weight, pre-activated): " + startupServiceProviders);
 
-        Supplier<Object> highestWeightedServiceProvider = services.first(criteria);
+        Supplier<Object> highestWeightedServiceProvider = services.get(criteria);
         System.out.println("Highest weighted service provider: " + highestWeightedServiceProvider);
 
         // trigger lazy activations for the highest weighted service provider

@@ -88,14 +88,14 @@ class ConfigDrivenCodegen implements InjectCodegenExtension {
                     .isStatic(true)
                     .accessModifier(AccessModifier.PRIVATE)
                     .name("CB_TYPE")
-                    .type(TypeNames.HELIDON_TYPE_NAME)
+                    .type(TypeNames.TYPE_NAME)
                     .addContentCreate(configBeanType.genericTypeName()));
 
             // Class<ConfigBeanType> configBeanType()
             classModel.addMethod(beanTypeMethod -> beanTypeMethod
                     .name("configBeanType")
                     .addAnnotation(Annotations.OVERRIDE)
-                    .returnType(TypeNames.HELIDON_TYPE_NAME)
+                    .returnType(TypeNames.TYPE_NAME)
                     .addContentLine("return CB_TYPE;"));
             // List<NamedInstance<T>> createConfigBeans(Config config)
             classModel.addMethod(createBeansMethod -> createBeansMethod

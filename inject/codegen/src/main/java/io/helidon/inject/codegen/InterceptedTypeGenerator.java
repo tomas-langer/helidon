@@ -242,7 +242,7 @@ class InterceptedTypeGenerator {
                     .accessModifier(AccessModifier.PRIVATE)
                     .isStatic(true)
                     .isFinal(true)
-                    .type(TypeNames.HELIDON_TYPED_ELEMENT_INFO)
+                    .type(TypeNames.TYPED_ELEMENT_INFO)
                     .name(interceptedMethod.constantName())
                     .addContentCreate(interceptedMethod.info()));
         }

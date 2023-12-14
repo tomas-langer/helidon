@@ -199,7 +199,7 @@ public class ApplicationCreator {
                             TypeName serviceTypeName) {
 
         Lookup si = toServiceInfoCriteria(serviceTypeName);
-        ServiceProvider<?> sp = services.services().firstServiceProvider(si);
+        ServiceProvider<?> sp = services.services().getProvider(si);
         TypeName serviceDescriptorType = sp.infoType();
 
         if (!isQualifiedInjectionTarget(sp)) {
@@ -259,7 +259,7 @@ public class ApplicationCreator {
 
     private static ServiceProvider<?> toServiceProvider(TypeName typeName,
                                                         Services services) {
-        return services.firstServiceProvider(toServiceInfoCriteria(typeName));
+        return services.getProvider(toServiceInfoCriteria(typeName));
     }
 
     /**
@@ -341,7 +341,7 @@ public class ApplicationCreator {
                                                Set<TypeName> serviceTypes) {
         Services services = injectionServices.services();
 
-        List<ServiceProvider<Supplier>> providers = services.serviceProviders(Lookup.builder()
+        List<ServiceProvider<Supplier>> providers = services.allProviders(Lookup.builder()
                                                                                       .addContract(Supplier.class)
                                                                                       .build());
         if (providers.isEmpty()) {
@@ -402,7 +402,7 @@ public class ApplicationCreator {
         }
 
         Services services = injectionServices.services();
-        List<ServiceProvider<Object>> qualifiedProviders = services.serviceProviders(dependencyTo);
+        List<ServiceProvider<Object>> qualifiedProviders = services.allProviders(dependencyTo);
         List<ServiceProvider<Object>> unqualifiedProviders = List.of();
 
         if (qualifiedProviders.isEmpty()) {
@@ -455,14 +455,14 @@ public class ApplicationCreator {
                 .qualifiers(Set.of())
                 .addContract(InjectCodegenTypes.INJECTION_POINT_PROVIDER)
                 .build();
-        return services.serviceProviders(criteria);
+        return services.allProviders(criteria);
     }
 
     private void createConfigureMethodBody(InjectionServices services, Set<TypeName> serviceTypes, Method.Builder method) {
 
         // find all interceptors and bind them
         List<ServiceProvider<Interception.Interceptor>> interceptors = services.services()
-                .serviceProviders(Lookup.builder()
+                .allProviders(Lookup.builder()
                                           .addContract(Interception.Interceptor.class)
                                           .addQualifier(Qualifier.WILDCARD_NAMED)
                                           .build());

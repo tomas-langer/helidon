@@ -131,7 +131,7 @@ public abstract class AbstractConfiguredByTest {
         Lookup criteria = Lookup.builder()
                 .addQualifier(Qualifier.create(ConfigDriven.class))
                 .build();
-        List<ServiceProvider<Object>> list = services.serviceProviders(criteria);
+        List<ServiceProvider<Object>> list = services.allProviders(criteria);
         List<String> desc = list.stream()
                 .filter(it -> !it.serviceType().resolvedName().contains(".yaml."))
                 .map(ServiceProvider::description)
@@ -149,7 +149,7 @@ public abstract class AbstractConfiguredByTest {
         criteria = Lookup.builder()
                 .addContract(FakeWebServerContract.class)
                 .build();
-        list = services.serviceProviders(criteria);
+        list = services.allProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("no root providers expected in result, but all are auto-started unless overridden", desc,
                    contains("FakeWebServer{@default}:ACTIVE",
@@ -158,7 +158,7 @@ public abstract class AbstractConfiguredByTest {
         criteria = Lookup.builder()
                 .serviceType(TypeName.create(FakeTlsWSNotDrivenByCB.class))
                 .build();
-        list = services.serviceProviders(criteria);
+        list = services.allProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("root providers expected here since we looked up by service type name", desc,
                    contains("FakeTlsWSNotDrivenByCB{root}:PENDING"));
@@ -167,7 +167,7 @@ public abstract class AbstractConfiguredByTest {
                 .addContract(FakeTlsWSNotDrivenByCB.class)
                 .addQualifier(Qualifier.createNamed("*"))
                 .build();
-        list = services.serviceProviders(criteria);
+        list = services.allProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("root providers expected here since no configuration for this service", desc,
                    contains("FakeTlsWSNotDrivenByCB{root}:PENDING"));
@@ -182,14 +182,14 @@ public abstract class AbstractConfiguredByTest {
                 .addContract(ASingletonService.class)
                 .addQualifier(Qualifier.createNamed("jane"))
                 .build();
-        list = services.serviceProviders(criteria);
+        list = services.allProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("Even though there is a @default, it cannot match named", list, empty());
 
         criteria = Lookup.builder()
                 .addContract(ASingletonService.class)
                 .build();
-        list = services.serviceProviders(criteria);
+        list = services.allProviders(criteria);
         desc = list.stream().map(ServiceProvider::description).collect(Collectors.toList());
         assertThat("Managed providers expected here since we have default configuration for this service", desc,
                    contains("ASingletonService{@default}:ACTIVE"));

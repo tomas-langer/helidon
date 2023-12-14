@@ -171,7 +171,7 @@ class OciAuthenticationDetailsProviderTest {
                    is(false));
 
         Supplier<AbstractAuthenticationDetailsProvider> authServiceProvider =
-                services.first(AbstractAuthenticationDetailsProvider.class);
+                services.get(AbstractAuthenticationDetailsProvider.class);
         Objects.requireNonNull(authServiceProvider);
 
         // this code is dependent upon whether and OCI config-file is present - so leaving this commented out intentionally
@@ -191,7 +191,7 @@ class OciAuthenticationDetailsProviderTest {
                 .build());
 
         Supplier<AbstractAuthenticationDetailsProvider> authServiceProvider =
-                services.first(AbstractAuthenticationDetailsProvider.class);
+                services.get(AbstractAuthenticationDetailsProvider.class);
 
         InjectionServiceProviderException e = assertThrows(InjectionServiceProviderException.class, authServiceProvider::get);
         e.printStackTrace();
@@ -209,7 +209,7 @@ class OciAuthenticationDetailsProviderTest {
                 .build());
 
         Supplier<AbstractAuthenticationDetailsProvider> authServiceProvider =
-                services.first(AbstractAuthenticationDetailsProvider.class);
+                services.get(AbstractAuthenticationDetailsProvider.class);
 
         AbstractAuthenticationDetailsProvider authProvider = authServiceProvider.get();
         assertThat(authProvider.getClass(),

@@ -66,7 +66,7 @@ class WebServerConfigDrivenTest {
             services = injectionServices.services();
         }
 
-        ServiceProvider<WebServer> webServerSp = services.firstServiceProvider(Lookup.create(WebServer.class));
+        ServiceProvider<WebServer> webServerSp = services.getProvider(Lookup.create(WebServer.class));
         assertThat(webServerSp.currentActivationPhase(), is(Phase.ACTIVE));
     }
 

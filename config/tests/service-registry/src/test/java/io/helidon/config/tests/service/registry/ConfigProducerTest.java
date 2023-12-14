@@ -52,7 +52,7 @@ class ConfigProducerTest {
         // value should be overridden using our custom config source
         Config config = InjectionServices.instance()
                 .services()
-                .first(Config.class)
+                .get(Config.class)
                 .get();
 
         assertThat(config.get("app.value").asString().asOptional(), is(Optional.of("source")));
@@ -71,7 +71,7 @@ class ConfigProducerTest {
         // value should be overridden using our custom config source
         Config config = InjectionServices.instance()
                 .services()
-                .first(Config.class)
+                .get(Config.class)
                 .get();
 
         assertThat(config.get("app.value").asString().asOptional(), is(Optional.of("file")));

@@ -55,7 +55,7 @@ class PerRequestProviderTest {
 
     @Test
     void myConcreteClassContractTest() {
-        ServiceProvider<MyConcreteClassContract> sp = services.firstServiceProvider(
+        ServiceProvider<MyConcreteClassContract> sp = services.getProvider(
                 Lookup.builder()
                         .addContract(MyConcreteClassContract.class)
                         .build());

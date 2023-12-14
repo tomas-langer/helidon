@@ -144,7 +144,7 @@ public class TestApplicationCreatorMojo extends AbstractApplicationCreatorMojo {
 
             // retrieves all the services in the registry
             List<ServiceProvider<Object>> allServices = services
-                    .serviceProviders(Lookup.EMPTY);
+                    .allProviders(Lookup.EMPTY);
             Set<TypeName> serviceTypeNames = toNames(allServices);
             getLog().debug("excluding service type names: " + serviceTypeNames);
             return serviceTypeNames;

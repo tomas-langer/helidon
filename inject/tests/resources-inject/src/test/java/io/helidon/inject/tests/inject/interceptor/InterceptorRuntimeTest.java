@@ -113,17 +113,17 @@ class InterceptorRuntimeTest {
         Lookup criteria = Lookup.builder()
                 .addContract(Closeable.class)
                 .build();
-        List<ServiceProvider<Object>> closeableProviders = services.serviceProviders(criteria);
+        List<ServiceProvider<Object>> closeableProviders = services.allProviders(criteria);
         assertThat(toDescriptions(closeableProviders),
                    contains("XImpl:INIT", "YImpl:INIT"));
 
-        List<ServiceProvider<IB>> ibProviders = services.serviceProviders(Lookup.builder()
+        List<ServiceProvider<IB>> ibProviders = services.allProviders(Lookup.builder()
                                                                                   .addContract(IB.class)
                                                                                   .build());
         assertThat(closeableProviders,
                    equalTo(ibProviders));
 
-        ServiceProvider<XImpl> ximplProvider = services.firstServiceProvider(Lookup.builder()
+        ServiceProvider<XImpl> ximplProvider = services.getProvider(Lookup.builder()
                                                                                      .addContract(XImpl.class)
                                                                                      .build());
         assertThat(closeableProviders.get(0),
@@ -154,7 +154,7 @@ class InterceptorRuntimeTest {
 
         // There is only one service (regardless of interception status)
         ServiceProvider<Closeable> yimplProvider = services
-                .firstServiceProvider(
+                .getProvider(
                         Lookup.builder()
                                 .addContract(Closeable.class)
                                 .qualifiers(Set.of(Qualifier.create(Injection.Named.class, ClassNamedY.class.getName())))
@@ -181,13 +181,13 @@ class InterceptorRuntimeTest {
         assertThat(TestNamedInterceptor.CONSTRUCTOR_COUNTER.get(),
                    equalTo(0));
 
-        List<ServiceProvider<Closeable>> closeableProviders = services.serviceProviders(Lookup.create(Closeable.class));
+        List<ServiceProvider<Closeable>> closeableProviders = services.allProviders(Lookup.create(Closeable.class));
 
-        List<ServiceProvider<IB>> ibProviders = services.serviceProviders(Lookup.create(IB.class));
+        List<ServiceProvider<IB>> ibProviders = services.allProviders(Lookup.create(IB.class));
         assertThat(closeableProviders,
                    equalTo(ibProviders));
 
-        ServiceProvider<XImpl> ximplProvider = services.firstServiceProvider(Lookup.create(XImpl.class));
+        ServiceProvider<XImpl> ximplProvider = services.getProvider(Lookup.create(XImpl.class));
         assertThat(closeableProviders.get(0),
                    is(ximplProvider));
 
@@ -224,7 +224,7 @@ class InterceptorRuntimeTest {
 
         // we cannot look up by service type here - we need to instead lookup by one of the interfaces
         ServiceProvider<IB> yimplProvider = services
-                .firstServiceProvider(Lookup.builder()
+                .getProvider(Lookup.builder()
                                               .addContract(IB.class)
                                               .addQualifier(Qualifier.createNamed(ClassNamedY.class.getName()))
                                               .build());

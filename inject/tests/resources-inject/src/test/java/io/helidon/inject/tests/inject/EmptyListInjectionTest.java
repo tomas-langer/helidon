@@ -49,7 +49,7 @@ class EmptyListInjectionTest {
     @Test
     void acceptEmptyListInjectables() {
         Supplier<AServiceUsingAContractWithNoServiceImplementations> sp =
-                services.first(AServiceUsingAContractWithNoServiceImplementations.class);
+                services.get(AServiceUsingAContractWithNoServiceImplementations.class);
         assertThat(sp.get(), notNullValue());
     }
 

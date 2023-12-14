@@ -21,7 +21,7 @@ import io.helidon.examples.inject.basics.Tool;
 /**
  * Normally, one would need to place {@link io.helidon.inject.service.Injection.Contract} on interfaces. Here, however, we used
  * {@code -Ainject.autoAddNonContractInterfaces=true} in the {@code pom.xml} thereby making all interfaces into contracts that
- * can be found via {@link io.helidon.inject.Services#find}.
+ * can be found via {@link io.helidon.inject.Services#first}.
  */
 //@Contract
 public interface Saw extends Tool {

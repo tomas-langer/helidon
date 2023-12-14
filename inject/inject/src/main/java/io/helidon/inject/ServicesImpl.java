@@ -89,7 +89,7 @@ class ServicesImpl implements Services, ServiceBinder {
 
     @Override
     @SuppressWarnings("unchecked")
-    public <T> Optional<Supplier<T>> find(Lookup criteria) {
+    public <T> Optional<Supplier<T>> first(Lookup criteria) {
         return this.<T>lookup(criteria, 1)
                 .stream()
                 .findFirst();
@@ -103,7 +103,7 @@ class ServicesImpl implements Services, ServiceBinder {
 
     @SuppressWarnings("unchecked")
     @Override
-    public <T> List<ServiceProvider<T>> serviceProviders(Lookup criteria) {
+    public <T> List<ServiceProvider<T>> allProviders(Lookup criteria) {
         return this.lookup(criteria, Integer.MAX_VALUE);
     }
 
@@ -154,7 +154,7 @@ class ServicesImpl implements Services, ServiceBinder {
 
     List<ServiceProvider<Interception.Interceptor>> interceptors() {
         if (interceptors == null) {
-            interceptors = serviceProviders(Lookup.builder()
+            interceptors = allProviders(Lookup.builder()
                                                     .addContract(Interception.Interceptor.class)
                                                     .addQualifier(Qualifier.WILDCARD_NAMED)
                                                     .build());

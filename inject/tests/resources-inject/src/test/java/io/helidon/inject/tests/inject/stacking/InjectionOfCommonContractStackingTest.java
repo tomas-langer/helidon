@@ -62,7 +62,7 @@ class InjectionOfCommonContractStackingTest {
 
     @Test
     void injectionStacking() {
-        List<ServiceProvider<CommonContract>> allIntercepted = services.serviceProviders(
+        List<ServiceProvider<CommonContract>> allIntercepted = services.allProviders(
                 Lookup.builder()
                         .addContract(CommonContract.class)
                         .build());
@@ -87,7 +87,7 @@ class InjectionOfCommonContractStackingTest {
                             "CommonContractImpl injected with null",
                             "TestingSingleton injected with MostOuterCommonContractImpl"));
 
-        assertThat(services.first(CommonContract.class).get().sayHello("arg"),
+        assertThat(services.get(CommonContract.class).get().sayHello("arg"),
                    equalTo("MostOuterCommonContractImpl:OuterCommonContractImpl:CommonContractImpl:arg"));
     }
 

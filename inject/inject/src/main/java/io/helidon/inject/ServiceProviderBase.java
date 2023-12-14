@@ -434,7 +434,7 @@ public abstract class ServiceProviderBase<T>
 
     protected void prepareDependency(Services services, Map<Ip, Supplier<?>> injectionPlan, Ip dependency) {
         Lookup criteria = Lookup.create(dependency);
-        List<ServiceProvider<Object>> discovered = services.serviceProviders(criteria)
+        List<ServiceProvider<Object>> discovered = services.allProviders(criteria)
                 .stream()
                 .filter(it -> it != this)
                 .toList();
@@ -717,7 +717,7 @@ public abstract class ServiceProviderBase<T>
                     return this;
                 }
             }
-            Supplier<?> serviceProvider = services.first(serviceType);
+            Supplier<?> serviceProvider = services.get(serviceType);
             injectionPlan.put(injectionPoint, () -> useProvider ? serviceProvider : serviceProvider.get());
             return this;
         }
@@ -735,7 +735,7 @@ public abstract class ServiceProviderBase<T>
                     return this;
                 }
             }
-            Optional<? extends Supplier<?>> serviceProvider = services.find(serviceType);
+            Optional<? extends Supplier<?>> serviceProvider = services.first(serviceType);
             if (serviceProvider.isEmpty()) {
                 injectionPlan.put(injectionPoint, Optional::empty);
             } else {
@@ -764,7 +764,7 @@ public abstract class ServiceProviderBase<T>
 
         @Override
         public ServiceInjectionPlanBinder.Binder runtimeBindNullable(Ip injectionPoint, boolean useProvider, Class<?> serviceType) {
-            Optional<? extends Supplier<?>> serviceProvider = services.find(serviceType);
+            Optional<? extends Supplier<?>> serviceProvider = services.first(serviceType);
 
             if (serviceProvider.isEmpty()) {
                 injectionPlan.put(injectionPoint, () -> null);

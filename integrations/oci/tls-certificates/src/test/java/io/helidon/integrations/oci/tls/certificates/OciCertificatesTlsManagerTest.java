@@ -49,7 +49,7 @@ class OciCertificatesTlsManagerTest {
     @Test
     void serverRuntime() throws Exception {
         Services services = InjectionServices.instance().services();
-        LifecycleHook lifecycleHook = services.first(LifecycleHook.class).get();
+        LifecycleHook lifecycleHook = services.get(LifecycleHook.class).get();
         CountDownLatch startup = new CountDownLatch(1);
 
         lifecycleHook.registerStartupConsumer(c -> startup.countDown());

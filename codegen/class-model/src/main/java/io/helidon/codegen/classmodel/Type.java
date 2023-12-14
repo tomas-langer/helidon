@@ -63,12 +63,12 @@ abstract class Type extends ModelComponent {
         StringBuilder nameBuilder = new StringBuilder(name);
 
         if (!instance.typeArguments().isEmpty()) {
-            nameBuilder.append("<")
+            nameBuilder.append('<')
                     .append(instance.typeArguments()
                                     .stream()
                                     .map(TypeName::resolvedName)
                                     .collect(Collectors.joining(", ")))
-                    .append(">");
+                    .append('>');
         }
 
         if (instance.array()) {

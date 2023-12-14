@@ -99,7 +99,7 @@ class ToolBoxTest {
 
     @Test
     void toolbox() {
-        List<ServiceProvider<Awl>> blanks = services.serviceProviders(Lookup.builder()
+        List<ServiceProvider<Awl>> blanks = services.allProviders(Lookup.builder()
                                                                               .addContract(Awl.class)
                                                                               .build());
         List<String> desc = blanks.stream().map(ServiceProvider::description).collect(Collectors.toList());
@@ -107,7 +107,7 @@ class ToolBoxTest {
         assertThat(desc,
                    contains("AwlImpl:INIT"));
 
-        List<ServiceProvider<ToolBox>> allToolBoxes = services.serviceProviders(Lookup.builder()
+        List<ServiceProvider<ToolBox>> allToolBoxes = services.allProviders(Lookup.builder()
                                                                                         .addContract(ToolBox.class)
                                                                                         .build());
         desc = allToolBoxes.stream().map(ServiceProvider::description).collect(Collectors.toList());
@@ -157,9 +157,9 @@ class ToolBoxTest {
 
     @Test
     void testClasses() {
-        assertThat(services.find(TestingSingleton.class),
+        assertThat(services.first(TestingSingleton.class),
                    notNullValue());
-        assertThat(services.find(TestingSingleton.class),
+        assertThat(services.first(TestingSingleton.class),
                    optionalPresent());
     }
 
@@ -169,7 +169,7 @@ class ToolBoxTest {
      */
     @Test
     void autoExternalContracts() {
-        List<ServiceProvider<Serializable>> allSerializable = services.serviceProviders(Lookup.builder()
+        List<ServiceProvider<Serializable>> allSerializable = services.allProviders(Lookup.builder()
                                                                                                 .addContract(Serializable.class)
                                                                                                 .build());
         List<String> desc = allSerializable.stream().map(ServiceProvider::description).collect(Collectors.toList());
@@ -180,16 +180,16 @@ class ToolBoxTest {
 
     @Test
     void providerTest() {
-        Serializable s1 = services.first(Serializable.class).get();
+        Serializable s1 = services.get(Serializable.class).get();
         assertThat(s1, notNullValue());
         assertThat(ASerialProviderImpl.class + " is a higher weight and should have been returned for " + String.class,
                    String.class, equalTo(s1.getClass()));
-        assertThat(services.first(Serializable.class).get(), not(s1));
+        assertThat(services.get(Serializable.class).get(), not(s1));
     }
 
     @Test
     void modules() {
-        List<ServiceProvider<ModuleComponent>> allModules = services.serviceProviders(
+        List<ServiceProvider<ModuleComponent>> allModules = services.allProviders(
                 Lookup.builder()
                         .addContract(ModuleComponent.class)
                         .build());
@@ -218,13 +218,13 @@ class ToolBoxTest {
 
     @Test
     void innerClassesCanBeGenerated() {
-        FakeServer.Builder s1 = services.first(FakeServer.Builder.class).get();
+        FakeServer.Builder s1 = services.get(FakeServer.Builder.class).get();
         assertThat(s1, notNullValue());
-        assertThat(services.first(FakeServer.Builder.class).get(), is(s1));
+        assertThat(services.get(FakeServer.Builder.class).get(), is(s1));
 
-        FakeConfig.Builder c1 = services.first(FakeConfig.Builder.class).get();
+        FakeConfig.Builder c1 = services.get(FakeConfig.Builder.class).get();
         assertThat(c1, notNullValue());
-        assertThat(services.first(FakeConfig.Builder.class).get(), is(c1));
+        assertThat(services.get(FakeConfig.Builder.class).get(), is(c1));
     }
 
     /**
@@ -233,7 +233,7 @@ class ToolBoxTest {
      */
     @Test
     void hierarchyOfInjections() {
-        List<ServiceProvider<AbstractSaw>> saws = services.serviceProviders(
+        List<ServiceProvider<AbstractSaw>> saws = services.allProviders(
                 Lookup.builder()
                         .addContract(AbstractSaw.class)
                         .build());
@@ -255,7 +255,7 @@ class ToolBoxTest {
         long initialCount = lookupCounter.count();
 
         List<ServiceProvider<Object>> runLevelServices = services
-                .serviceProviders(Lookup.builder()
+                .allProviders(Lookup.builder()
                                           .runLevel(Injection.RunLevel.STARTUP)
                                           .build());
         List<String> desc = runLevelServices.stream().map(ServiceProvider::description).collect(Collectors.toList());
@@ -281,7 +281,7 @@ class ToolBoxTest {
         Counter counter = lookupCounter();
 
         List<ServiceProvider<Object>> allServices = services
-                .serviceProviders(Lookup.EMPTY);
+                .allProviders(Lookup.EMPTY);
 
         // from this point, there should be no additional lookups
         long initialCount = counter.count();
@@ -300,7 +300,7 @@ class ToolBoxTest {
         assertThat(TestingSingleton.postConstructCount(), equalTo(0));
         assertThat(TestingSingleton.preDestroyCount(), equalTo(0));
 
-        List<ServiceProvider<CommonContract>> allInterceptedBefore = services.serviceProviders(
+        List<ServiceProvider<CommonContract>> allInterceptedBefore = services.allProviders(
                 Lookup.builder()
                         .addContract(CommonContract.class)
                         .build());
@@ -309,7 +309,7 @@ class ToolBoxTest {
         assertThat(TestingSingleton.preDestroyCount(), equalTo(0));
         allInterceptedBefore.forEach(ServiceProvider::get);
 
-        TestingSingleton testingSingletonFromLookup = services.first(TestingSingleton.class).get();
+        TestingSingleton testingSingletonFromLookup = services.get(TestingSingleton.class).get();
         assertThat(testingSingletonFromLookup, notNullValue());
         assertThat(TestingSingleton.postConstructCount(), equalTo(1));
         assertThat(TestingSingleton.preDestroyCount(), equalTo(0));
@@ -346,7 +346,7 @@ class ToolBoxTest {
 
         tearDown();
         setUp();
-        TestingSingleton testingSingletonFromLookup2 = injectionServices.services().first(TestingSingleton.class).get();
+        TestingSingleton testingSingletonFromLookup2 = injectionServices.services().get(TestingSingleton.class).get();
         assertThat(testingSingletonFromLookup2, not(testingSingletonFromLookup));
 
         map = injectionServices.shutdown();
@@ -364,7 +364,7 @@ class ToolBoxTest {
 
     @Test
     void knownProviders() {
-        List<ServiceProvider<Object>> providers = services.serviceProviders(
+        List<ServiceProvider<Object>> providers = services.allProviders(
                 Lookup.builder().addContract(Supplier.class).build());
         List<String> desc = providers.stream().map(ServiceProvider::description).collect(Collectors.toList());
         // note that order matters here (weight ranked)
@@ -377,7 +377,7 @@ class ToolBoxTest {
 
     @Test
     void classNamed() {
-        List<ServiceProvider<Object>> providers = services.serviceProviders(
+        List<ServiceProvider<Object>> providers = services.allProviders(
                 Lookup.builder()
                         .addQualifier(Qualifier.createNamed(ClassNamedY.class))
                         .build());
@@ -386,7 +386,7 @@ class ToolBoxTest {
                    contains("YImpl:INIT",
                             "BladeProvider:INIT"));
 
-        providers = services.serviceProviders(
+        providers = services.allProviders(
                 Lookup.builder()
                         .addQualifier(Qualifier.createNamed(ClassNamedY.class.getName()))
                         .build());

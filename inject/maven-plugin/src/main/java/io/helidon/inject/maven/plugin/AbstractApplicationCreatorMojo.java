@@ -128,7 +128,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
 
     Optional<ServiceProvider<ModuleComponent>> lookupThisModule(String name,
                                                                 Services services) {
-        return services.findServiceProvider(
+        return services.firstProvider(
                 Lookup.builder()
                         .addContract(ModuleComponent.class)
                         .addQualifier(Qualifier.createNamed(name))
@@ -245,7 +245,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
                                                                          moduleInfo);
 
             List<ServiceProvider<Object>> allModules = services
-                    .serviceProviders(Lookup.builder()
+                    .allProviders(Lookup.builder()
                                               .addContract(ModuleComponent.class)
                                               .build());
             getLog().debug("Processing modules: " + MavenPluginUtils.toDescriptions(allModules));
@@ -256,7 +256,7 @@ public abstract class AbstractApplicationCreatorMojo extends AbstractCreatorMojo
 
             // retrieves all the services in the registry
             List<ServiceProvider<Object>> allServices = services
-                    .serviceProviders(Lookup.EMPTY);
+                    .allProviders(Lookup.EMPTY);
             if (allServices.isEmpty()) {
                 warn("Application creator found no services to process");
                 return;

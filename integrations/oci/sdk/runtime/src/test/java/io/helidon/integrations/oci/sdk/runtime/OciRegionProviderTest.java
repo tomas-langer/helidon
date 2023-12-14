@@ -68,7 +68,7 @@ class OciRegionProviderTest {
                 .build());
 
         ServiceProvider<Region> regionProvider = InjectionServices.instance().services()
-                .firstServiceProvider(Lookup.create(Region.class));
+                .getProvider(Lookup.create(Region.class));
         assertThrows(InjectionServiceProviderException.class,
                      regionProvider::get);
 

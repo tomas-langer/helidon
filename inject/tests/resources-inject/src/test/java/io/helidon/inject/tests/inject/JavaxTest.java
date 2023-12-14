@@ -62,7 +62,7 @@ class JavaxTest {
      */
     @Test
     void applicationScopeToSingletonScopeTranslation() {
-        ServiceProvider<AnApplicationScopedService> sp = services.firstServiceProvider(
+        ServiceProvider<AnApplicationScopedService> sp = services.getProvider(
                 Lookup.create(AnApplicationScopedService.class));
         assertThat(sp.toString(),
                    equalTo("AnApplicationScopedService:INIT"));

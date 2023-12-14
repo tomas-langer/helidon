@@ -68,13 +68,13 @@ import static java.util.function.Predicate.not;
 
 class InjectionExtension implements InjectCodegenExtension {
     static final TypeName LIST_OF_ANNOTATIONS = TypeName.builder(TypeNames.LIST)
-            .addTypeArgument(TypeNames.HELIDON_ANNOTATION)
+            .addTypeArgument(TypeNames.ANNOTATION)
             .build();
     static final TypeName SET_OF_QUALIFIERS = TypeName.builder(TypeNames.SET)
             .addTypeArgument(InjectCodegenTypes.QUALIFIER)
             .build();
     static final TypeName SET_OF_TYPES = TypeName.builder(TypeNames.SET)
-            .addTypeArgument(TypeNames.HELIDON_TYPE_NAME)
+            .addTypeArgument(TypeNames.TYPE_NAME)
             .build();
 
     static final TypeName SET_OF_SIGNATURES = TypeName.builder(TypeNames.SET)
@@ -851,7 +851,7 @@ class InjectionExtension implements InjectCodegenExtension {
                 .isStatic(true)
                 .isFinal(true)
                 .accessModifier(AccessModifier.PRIVATE)
-                .type(TypeNames.HELIDON_TYPE_NAME)
+                .type(TypeNames.TYPE_NAME)
                 .name("SERVICE_TYPE")
                 .addContentCreate(serviceType.genericTypeName()));
 
@@ -859,7 +859,7 @@ class InjectionExtension implements InjectCodegenExtension {
                 .isStatic(true)
                 .isFinal(true)
                 .accessModifier(AccessModifier.PRIVATE)
-                .type(TypeNames.HELIDON_TYPE_NAME)
+                .type(TypeNames.TYPE_NAME)
                 .name("INFO_TYPE")
                 .addContentCreate(descriptorType.genericTypeName()));
     }
@@ -869,12 +869,12 @@ class InjectionExtension implements InjectCodegenExtension {
         genericTypes.forEach((typeName, generic) -> classModel.addField(field -> field.accessModifier(AccessModifier.PRIVATE)
                 .isStatic(true)
                 .isFinal(true)
-                .type(TypeNames.HELIDON_TYPE_NAME)
+                .type(TypeNames.TYPE_NAME)
                 .name(generic.constantName())
                 .update(it -> {
                     if (typeName.indexOf('.') < 0) {
                         // there is no package, we must use class (if this is a generic type, we have a problem)
-                        it.addContent(TypeNames.HELIDON_TYPE_NAME)
+                        it.addContent(TypeNames.TYPE_NAME)
                                 .addContent(".create(")
                                 .addContent(typeName)
                                 .addContent(".class)");
@@ -909,7 +909,7 @@ class InjectionExtension implements InjectCodegenExtension {
                                     if (param.kind() != ElementKind.CONSTRUCTOR) {
                                         // constructor is default and does not need to be defined
                                         maybeElementKind.addContent(".elementKind(")
-                                                .addContent(TypeNames.HELIDON_ELEMENT_KIND)
+                                                .addContent(TypeNames.ELEMENT_KIND)
                                                 .addContent(".")
                                                 .addContent(param.kind.name())
                                                 .addContentLine(")");
@@ -935,7 +935,7 @@ class InjectionExtension implements InjectCodegenExtension {
                                 .addContentLine(")");
                         if (param.access() != AccessModifier.PACKAGE_PRIVATE) {
                             it.addContent(".access(")
-                                    .addContent(TypeNames.HELIDON_ACCESS_MODIFIER)
+                                    .addContent(TypeNames.ACCESS_MODIFIER)
                                     .addContent(".")
                                     .addContent(param.access().name())
                                     .addContentLine(")");
@@ -1194,7 +1194,7 @@ class InjectionExtension implements InjectCodegenExtension {
                 .isStatic(true)
                 .isFinal(true)
                 .name(fieldElementConstantName(fieldElement.elementName()))
-                .type(TypeNames.HELIDON_TYPED_ELEMENT_INFO)
+                .type(TypeNames.TYPED_ELEMENT_INFO)
                 .addContentCreate(fieldElement));
     }
 
@@ -1207,14 +1207,14 @@ class InjectionExtension implements InjectCodegenExtension {
                 .isStatic(true)
                 .isFinal(true)
                 .name("CTOR_ELEMENT")
-                .type(TypeNames.HELIDON_TYPED_ELEMENT_INFO)
+                .type(TypeNames.TYPED_ELEMENT_INFO)
                 .addContentCreate(constructorInjectElement));
     }
 
     private void serviceTypeMethod(ClassModel.Builder classModel) {
         // TypeName serviceType()
         classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
-                .returnType(TypeNames.HELIDON_TYPE_NAME)
+                .returnType(TypeNames.TYPE_NAME)
                 .name("serviceType")
                 .addContentLine("return SERVICE_TYPE;"));
     }
@@ -1222,7 +1222,7 @@ class InjectionExtension implements InjectCodegenExtension {
     private void descriptorTypeMethod(ClassModel.Builder classModel) {
         // TypeName descriptorType()
         classModel.addMethod(method -> method.addAnnotation(Annotations.OVERRIDE)
-                .returnType(TypeNames.HELIDON_TYPE_NAME)
+                .returnType(TypeNames.TYPE_NAME)
                 .name("infoType")
                 .addContentLine("return INFO_TYPE;"));
     }

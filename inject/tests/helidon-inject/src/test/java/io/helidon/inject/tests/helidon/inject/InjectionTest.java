@@ -62,7 +62,7 @@ class InjectionTest {
     @Test
     @Order(0)
     void testSingleton() {
-        Supplier<SingletonService> provider = services.first(SingletonService.class);
+        Supplier<SingletonService> provider = services.get(SingletonService.class);
 
         assertThat(provider, notNullValue());
 
@@ -77,7 +77,7 @@ class InjectionTest {
     @Test
     @Order(1)
     void testLifecycle() {
-        Supplier<LifecycleReceiver> provider = services.first(LifecycleReceiver.class);
+        Supplier<LifecycleReceiver> provider = services.get(LifecycleReceiver.class);
 
         assertThat(provider, notNullValue());
 
@@ -88,7 +88,7 @@ class InjectionTest {
     @Test
     @Order(2)
     void testNonSingleton() {
-        Supplier<NonSingletonService> provider = services.first(NonSingletonService.class);
+        Supplier<NonSingletonService> provider = services.get(NonSingletonService.class);
 
         assertThat(provider, notNullValue());
 
@@ -108,7 +108,7 @@ class InjectionTest {
     @Test
     @Order(3)
     void testNamed() {
-        Supplier<NamedReceiver> provider = services.first(NamedReceiver.class);
+        Supplier<NamedReceiver> provider = services.get(NamedReceiver.class);
 
         assertThat(provider, notNullValue());
 
@@ -120,7 +120,7 @@ class InjectionTest {
     @Test
     @Order(4)
     void testQualified() {
-        Supplier<QualifiedReceiver> provider = services.first(QualifiedReceiver.class);
+        Supplier<QualifiedReceiver> provider = services.get(QualifiedReceiver.class);
 
         assertThat(provider, notNullValue());
 
@@ -132,7 +132,7 @@ class InjectionTest {
     @Test
     @Order(4)
     void testProvider() {
-        Supplier<ProviderReceiver> provider = services.first(ProviderReceiver.class);
+        Supplier<ProviderReceiver> provider = services.get(ProviderReceiver.class);
 
         assertThat(provider, notNullValue());
 

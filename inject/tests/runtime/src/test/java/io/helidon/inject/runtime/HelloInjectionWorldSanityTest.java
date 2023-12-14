@@ -75,7 +75,7 @@ class HelloInjectionWorldSanityTest {
     void sanity() {
         Services services = InjectionServices.instance().services();
 
-        List<ServiceProvider<ModuleComponent>> moduleProviders = services.serviceProviders(Lookup.create(ModuleComponent.class));
+        List<ServiceProvider<ModuleComponent>> moduleProviders = services.allProviders(Lookup.create(ModuleComponent.class));
         assertThat(moduleProviders.size(),
                    equalTo(EXPECTED_MODULES));
         List<String> descriptions = ProviderUtil.toDescriptions(moduleProviders);
@@ -85,7 +85,7 @@ class HelloInjectionWorldSanityTest {
                                       "EmptyModule:ACTIVE",
                                       "HelloInjection__Module:ACTIVE"));
 
-        List<ServiceProvider<Application>> applications = services.serviceProviders(Lookup.create(Application.class));
+        List<ServiceProvider<Application>> applications = services.allProviders(Lookup.create(Application.class));
         assertThat(applications.size(),
                    equalTo(1));
         assertThat(ProviderUtil.toDescriptions(applications),
@@ -114,11 +114,11 @@ class HelloInjectionWorldSanityTest {
         Services services = InjectionServices.instance().services();
 
         ServiceProvider<HelloInjectionWorld> helloProvider1 =
-                services.firstServiceProvider(Lookup.create(HelloInjectionWorld.class));
+                services.getProvider(Lookup.create(HelloInjectionWorld.class));
         assertThat(helloProvider1,
                    notNullValue());
 
-        ServiceProvider<HelloInjectionWorldImpl> helloProvider2 = services.firstServiceProvider(Lookup.create(
+        ServiceProvider<HelloInjectionWorldImpl> helloProvider2 = services.getProvider(Lookup.create(
                 HelloInjectionWorldImpl.class));
         assertThat(helloProvider1,
                    sameInstance(helloProvider2));
@@ -142,7 +142,7 @@ class HelloInjectionWorldSanityTest {
         assertThat(helloProvider1.weight(),
                    equalTo(Services.INJECT_WEIGHT));
 
-        ServiceProvider<InjectionWorld> worldProvider1 = services.firstServiceProvider(Lookup.create(InjectionWorld.class));
+        ServiceProvider<InjectionWorld> worldProvider1 = services.getProvider(Lookup.create(InjectionWorld.class));
         assertThat(worldProvider1, notNullValue());
         assertThat(worldProvider1.description(),
                    equalTo("InjectionWorldImpl:INIT"));

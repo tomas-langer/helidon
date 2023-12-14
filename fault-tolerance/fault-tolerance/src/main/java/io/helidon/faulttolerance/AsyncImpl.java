@@ -96,7 +96,7 @@ class AsyncImpl implements Async {
     }
 
     private static Optional<ExecutorService> executorService(Services services, String name) {
-        return services.<ExecutorService>find(Lookup.builder()
+        return services.<ExecutorService>first(Lookup.builder()
                                                       .addContract(ExecutorService.class)
                                                       .addQualifier(Qualifier.createNamed(name))
                                                       .build())

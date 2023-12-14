@@ -152,23 +152,23 @@ public final class TypeNames {
     /**
      * Type name of the type name.
      */
-    public static final TypeName HELIDON_TYPE_NAME = TypeName.create(TypeName.class);
+    public static final TypeName TYPE_NAME = TypeName.create(TypeName.class);
     /**
-     * Helidon typed element info type.
+     * Type name of typed element info.
      */
-    public static final TypeName HELIDON_TYPED_ELEMENT_INFO = TypeName.create(TypedElementInfo.class);
+    public static final TypeName TYPED_ELEMENT_INFO = TypeName.create(TypedElementInfo.class);
     /**
      * Helidon annotation type.
      */
-    public static final TypeName HELIDON_ANNOTATION = TypeName.create(Annotation.class);
+    public static final TypeName ANNOTATION = TypeName.create(Annotation.class);
     /**
      * Helidon element kind (enum).
      */
-    public static final TypeName HELIDON_ELEMENT_KIND = TypeName.create(ElementKind.class);
+    public static final TypeName ELEMENT_KIND = TypeName.create(ElementKind.class);
     /**
      * Helidon access modifier (enum).
      */
-    public static final TypeName HELIDON_ACCESS_MODIFIER = TypeName.create(AccessModifier.class);
+    public static final TypeName ACCESS_MODIFIER = TypeName.create(AccessModifier.class);
 
     private TypeNames() {
     }
