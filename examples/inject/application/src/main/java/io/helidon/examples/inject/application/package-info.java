@@ -14,16 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.examples.inject.providers;
-
 /**
- * Normally, one would need to place {@link io.helidon.inject.service.Injection.Contract} on interfaces. Here, however, we used
- * {@code -Ahelidon.inject.autoAddNonContractInterfaces=true} in the {@code pom.xml} thereby making all interfaces into contracts that
- * can be found via {@link io.helidon.inject.Services#first(Class)}.
+ * Examples of multi-module Application generation in Injection.
  */
-//@Contract
-public interface Blade {
-
-    String name();
-
-}
+package io.helidon.examples.inject.application;

@@ -18,18 +18,15 @@ package io.helidon.examples.inject.providers;
 
 import java.util.Optional;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.inject.Inject;
-import jakarta.inject.Named;
-import jakarta.inject.Singleton;
+import io.helidon.inject.service.Injection;
 
-@Singleton
+@Injection.Singleton
 class HandSaw implements Saw {
 
     private final Blade blade;
 
-    @Inject
-    HandSaw(@Named("replacement-blade-that-does-not-exist") Optional<Blade> blade) {
+    @Injection.Inject
+    HandSaw(@Injection.Named("replacement-blade-that-does-not-exist") Optional<Blade> blade) {
         this.blade = blade.orElse(null);
     }
 
@@ -38,7 +35,7 @@ class HandSaw implements Saw {
         return "Hand Saw: (blade=" + blade + ")";
     }
 
-    @PostConstruct
+    @Injection.PostConstruct
     @SuppressWarnings("unused")
     void init() {
         System.out.println(name() + "; initialized");

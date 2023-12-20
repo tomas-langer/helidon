@@ -16,8 +16,9 @@
 
 package io.helidon.examples.inject.providers;
 
-import jakarta.inject.Provider;
-import jakarta.inject.Singleton;
+import java.util.function.Supplier;
+
+import io.helidon.inject.service.Injection;
 
 /**
  * Showcases dependent scope-creating a nail for caller's demand for a {@link Nail} to be provided.
@@ -25,8 +26,8 @@ import jakarta.inject.Singleton;
  *
  * @see BladeProvider
  */
-@Singleton
-class NailProvider implements Provider<Nail> {
+@Injection.Singleton
+class NailProvider implements Supplier<Nail> {
 
     /**
      * Creates a new nail every its called.

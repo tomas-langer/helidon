@@ -42,7 +42,8 @@ public class ToolBox {
 
     // Field injection is supported for non-static, non-private fields (but not recommended)
     // Here we are using it to also showcase for Optional usages.
-    @Injection.Inject Optional<LittleHammer> optionalLittleHammer;
+    @Injection.Inject
+    Optional<LittleHammer> optionalLittleHammer;
 
     /**
      * Here the constructor injects all {@link Tool} provider instances available. {@link java.util.function.Supplier} is used to allow lazy

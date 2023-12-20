@@ -39,7 +39,6 @@ class Drill implements Tool {
     }
 
     @Injection.PostConstruct
-    @SuppressWarnings("unused")
     void init() {
         System.out.println(name() + "; initialized");
     }
