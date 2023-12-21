@@ -30,6 +30,10 @@ public final class InjectTypes {
      */
     public static final TypeName SINGLETON = TypeName.create(Injection.Singleton.class);
     /**
+     * Helidon {@link io.helidon.inject.service.Injection.Requeston}.
+     */
+    public static final TypeName REQUESTON = TypeName.create(Injection.Requeston.class);
+    /**
      * Helidon {@link io.helidon.inject.service.Injection.Named}.
      */
     public static final TypeName NAMED = TypeName.create(Injection.Named.class);
