@@ -58,13 +58,21 @@ class BuiltInMappers implements MapperProvider {
         Map<ClassPair, Mapper<?, ?>> mappers = new HashMap<>();
         // basic types
         addStringMapper(mappers, Boolean.class, BuiltInMappers::asBoolean);
+        addStringMapper(mappers, boolean.class, BuiltInMappers::asBoolean);
         addStringMapper(mappers, Byte.class, BuiltInMappers::asByte);
+        addStringMapper(mappers, byte.class, BuiltInMappers::asByte);
         addStringMapper(mappers, Short.class, BuiltInMappers::asShort);
+        addStringMapper(mappers, short.class, BuiltInMappers::asShort);
         addStringMapper(mappers, Integer.class, BuiltInMappers::asInt);
+        addStringMapper(mappers, int.class, BuiltInMappers::asInt);
         addStringMapper(mappers, Long.class, BuiltInMappers::asLong);
+        addStringMapper(mappers, long.class, BuiltInMappers::asLong);
         addStringMapper(mappers, Float.class, BuiltInMappers::asFloat);
+        addStringMapper(mappers, float.class, BuiltInMappers::asFloat);
         addStringMapper(mappers, Double.class, BuiltInMappers::asDouble);
+        addStringMapper(mappers, double.class, BuiltInMappers::asDouble);
         addStringMapper(mappers, Character.class, BuiltInMappers::asChar);
+        addStringMapper(mappers, char.class, BuiltInMappers::asChar);
         addStringMapper(mappers, Class.class, BuiltInMappers::asClass);
         //javax.math
         addStringMapper(mappers, BigDecimal.class, BigDecimal::new);
