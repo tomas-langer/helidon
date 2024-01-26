@@ -476,7 +476,7 @@ final class GenerateAbstractBuilder {
             boolean configured = typeContext.configuredData().configured();
             if (configured) {
                 // need to have a non-null config instance
-                preBuildBuilder.addContentLine("this.config = config == null ? Config.empty() : config;");
+                preBuildBuilder.addContentLine("var config = this.config == null ? Config.empty() : this.config;");
             }
             for (PrototypeProperty property : typeContext.propertyData().properties()) {
                 AnnotationDataOption configuredOption = property.configuredOption();
