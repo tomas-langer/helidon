@@ -138,3 +138,14 @@ Example:
 ```
 core:io.helidon.ContractImpl__ServiceDescriptor:101.3:io.helidon.Contract1,io.helidon.Contract2
 ```
+
+# Inject Service Registry
+
+An extension to the core service registry, Helidon Service Inject adds a few concepts:
+- Scopes
+- Interceptors
+- Config beans
+- Maven Plugin
+  - generated Application class (bindings for all discovered services and their dependencies)
+  - generated Main class (all instances are registered through API, ZERO reflection by Helidon)
+  - generate service descriptors for third party jars

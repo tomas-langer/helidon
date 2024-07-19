@@ -20,6 +20,8 @@
 module io.helidon.http {
 
     requires static io.helidon.config.metadata;
+    // only used for annotations, not required for runtime
+    requires static io.helidon.service.inject.api;
 
     requires transitive io.helidon.common.buffers;
     requires transitive io.helidon.common.configurable;

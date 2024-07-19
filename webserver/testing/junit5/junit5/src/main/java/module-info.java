@@ -34,6 +34,9 @@ module io.helidon.webserver.testing.junit5 {
 
     requires transitive hamcrest.all;
     requires transitive org.junit.jupiter.api;
+    requires io.helidon.service.registry;
+
+    requires static io.helidon.service.inject;
 
     exports io.helidon.webserver.testing.junit5;
     exports io.helidon.webserver.testing.junit5.spi;

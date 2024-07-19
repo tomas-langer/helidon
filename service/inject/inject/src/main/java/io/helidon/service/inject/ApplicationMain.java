@@ -64,7 +64,8 @@ public abstract class ApplicationMain {
         beforeServiceDescriptors(config);
         serviceDescriptors(config);
         afterServiceDescriptors(config);
-        init(config.build());
+        var registry = init(config.build());
+        afterInit(registry);
     }
 
     /**
@@ -133,7 +134,7 @@ public abstract class ApplicationMain {
      *
      * @param config configuration of the Inject service registry
      */
-    protected void init(InjectConfig config) {
+    protected InjectRegistry init(InjectConfig config) {
         InjectRegistryManager manager = InjectRegistryManager.create(config);
         InjectRegistry registry = manager.registry();
         InjectStartupProvider.registerShutdownHandler(manager);
@@ -142,6 +143,15 @@ public abstract class ApplicationMain {
         registry.all(Lookup.builder()
                              .runLevel(Injection.RunLevel.STARTUP)
                              .build());
+        return registry;
+    }
+
+    /**
+     * Allows to query the registry after the service is started.
+     *
+     * @param registry inject service registry
+     */
+    protected void afterInit(InjectRegistry registry) {
     }
 
     /**

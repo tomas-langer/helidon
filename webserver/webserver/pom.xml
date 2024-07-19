@@ -85,6 +85,13 @@
             <artifactId>helidon-service-registry</artifactId>
         </dependency>
         <dependency>
+            <!-- Optional, as we only use annotations, and to compile generated sources, which cannot
+             be used without it -->
+            <groupId>io.helidon.service.inject</groupId>
+            <artifactId>helidon-service-inject-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <!--
             This dependency is not required, yet a lot of examples depend on it. Kept in for backward compatibility.
             This used to be a transitive dependency of another module.

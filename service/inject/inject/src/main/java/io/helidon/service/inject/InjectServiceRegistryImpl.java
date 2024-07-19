@@ -239,7 +239,7 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
         List<ServiceManager<T>> managers = lookupManagers(lookup);
 
         if (managers.isEmpty()) {
-            throw new ServiceRegistryException("No services match: " + lookup);
+            throw new ServiceRegistryException("There is no service in registry that matches this lookup: " + lookup);
         }
         return new ServiceSupplies.ServiceSupply<>(lookup, managers);
     }
