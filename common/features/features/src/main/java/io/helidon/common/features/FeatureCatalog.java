@@ -52,7 +52,8 @@ final class FeatureCatalog {
                 }
                 String module = props.getProperty("m");
                 if (module == null) {
-                    LOGGER.log(Level.WARNING, "Got module descriptor with no module name. Available properties: " + props);
+                    LOGGER.log(Level.WARNING, "Got module descriptor with no module name. Available properties: " + props
+                            + " at " + url);
                     continue;
                 }
                 FeatureDescriptor.Builder builder = FeatureDescriptor.builder();

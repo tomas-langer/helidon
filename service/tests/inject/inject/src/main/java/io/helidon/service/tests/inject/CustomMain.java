@@ -17,6 +17,7 @@
 package io.helidon.service.tests.inject;
 
 import io.helidon.service.inject.InjectConfig;
+import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.inject.api.Injection;
 
 /**
@@ -33,6 +34,7 @@ public class CustomMain extends GeneratedMain {
     Helidon APIs would cause older generated code to stop working.
     The only exception is major version updates, but it would still be better if this stays compatible.
      */
+
     /**
      * Start the application.
      *
@@ -60,10 +62,13 @@ public class CustomMain extends GeneratedMain {
     }
 
     @Override
-    protected void init(InjectConfig config) {
+    protected InjectRegistry init(InjectConfig config) {
         System.out.println("Before init method");
-        super.init(config);
-        System.out.println("After init method");
+        try {
+            return super.init(config);
+        } finally {
+            System.out.println("After init method");
+        }
     }
 
     @Override

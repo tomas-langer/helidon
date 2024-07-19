@@ -16,31 +16,30 @@
 
 package io.helidon.examples.quickstart.se;
 
+import java.util.Map;
+
 import io.helidon.http.Status;
+import io.helidon.webclient.api.ClientResponseTyped;
 import io.helidon.webclient.http1.Http1Client;
 import io.helidon.webclient.http1.Http1ClientResponse;
-import io.helidon.webserver.http.HttpRouting;
 import io.helidon.webserver.testing.junit5.ServerTest;
-import io.helidon.webserver.testing.junit5.SetUpRoute;
 
+import jakarta.json.Json;
+import jakarta.json.JsonBuilderFactory;
 import jakarta.json.JsonObject;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@ServerTest
+@ServerTest(useRegistry = true)
 class MainTest {
+    private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());
 
     private final Http1Client client;
 
     protected MainTest(Http1Client client) {
         this.client = client;
-    }
-
-    @SetUpRoute
-    static void routing(HttpRouting.Builder builder) {
-        Main.routing(builder);
     }
 
     @Test
@@ -71,5 +70,15 @@ class MainTest {
         try (Http1ClientResponse response = client.get("/observe/metrics").request()) {
             assertThat(response.status(), is(Status.OK_200));
         }
+    }
+
+    @Test
+    void testErrorHandler() {
+        JsonObject badEntity = JSON.createObjectBuilder().build();
+
+        ClientResponseTyped<JsonObject> response = client.put("/greet/greeting").submit(badEntity, JsonObject.class);
+        assertThat(response.status(), is(Status.BAD_REQUEST_400));
+        JsonObject entity = response.entity();
+        assertThat(entity.getString("error"), is("No greeting provided"));
     }
 }

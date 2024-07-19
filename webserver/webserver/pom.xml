@@ -81,6 +81,13 @@
             <artifactId>helidon-common-features</artifactId>
         </dependency>
         <dependency>
+            <!-- Optional, as we only use annotations, and to compile generated sources, which cannot
+             be used without it -->
+            <groupId>io.helidon.service.inject</groupId>
+            <artifactId>helidon-service-inject-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <!--
             This dependency is not required, yet a lot of examples depend on it. Kept in for backward compatibility.
             This used to be a transitive dependency of another module.
@@ -165,6 +172,11 @@
                             <version>${helidon.version}</version>
                         </path>
                         <path>
+                            <groupId>io.helidon.service</groupId>
+                            <artifactId>helidon-service-codegen</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                        <path>
                             <groupId>io.helidon.codegen</groupId>
                             <artifactId>helidon-codegen-helidon-copyright</artifactId>
                             <version>${helidon.version}</version>
@@ -185,6 +197,11 @@
                     <dependency>
                         <groupId>io.helidon.builder</groupId>
                         <artifactId>helidon-builder-codegen</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>io.helidon.service</groupId>
+                        <artifactId>helidon-service-codegen</artifactId>
                         <version>${helidon.version}</version>
                     </dependency>
                     <dependency>

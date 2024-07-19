@@ -61,6 +61,11 @@
             <optional>true</optional>
         </dependency>
         <dependency>
+            <groupId>io.helidon.service.inject</groupId>
+            <artifactId>helidon-service-inject-api</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config</artifactId>
             <scope>test</scope>

@@ -7,3 +7,7 @@ This feature was marked as preview, and we have decided to do a major refactorin
 mostly backward incompatible.
 
 Sorry for this inconvenience.
+
+The new modules:
+- `helidon-service-registry` - "A replacement for Java ServiceLoader": basic service registry support with build time generated descriptors, reflection free (except for descriptor discovery), supports basic inversion of control (can add other services as constructor parameters)
+- `helidon-service-inject` - full injection support with interceptors, scopes etc., extension of the basic service registry

@@ -43,10 +43,13 @@ import io.helidon.common.features.api.HelidonFlavor;
 import io.helidon.common.tls.Tls;
 import io.helidon.http.encoding.ContentEncodingContext;
 import io.helidon.http.media.MediaContext;
+import io.helidon.service.inject.api.Injection;
 import io.helidon.spi.HelidonShutdownHandler;
 import io.helidon.webserver.http.DirectHandlers;
 import io.helidon.webserver.spi.ServerFeature;
 
+@Injection.Singleton
+@Injection.RunLevel(Injection.RunLevel.STARTUP)
 class LoomServer implements WebServer {
     private static final System.Logger LOGGER = System.getLogger(LoomServer.class.getName());
     private static final String EXIT_ON_STARTED_KEY = "exit.on.started";
@@ -63,6 +66,14 @@ class LoomServer implements WebServer {
     private volatile HelidonShutdownHandler shutdownHandler;
     private volatile List<ListenerFuture> startFutures;
     private volatile boolean alreadyStarted = false;
+
+    @Injection.Inject
+    LoomServer(WebServerService service) {
+        // only used by service registry
+        this(WebServerConfig.builder()
+                     .update(service::updateServerBuilder)
+                     .buildPrototype());
+    }
 
     LoomServer(WebServerConfig serverConfig) {
         this.registerShutdownHook = serverConfig.shutdownHook();
@@ -186,6 +197,16 @@ class LoomServer implements WebServer {
     @Override
     public Context context() {
         return context;
+    }
+
+    @Injection.PostConstruct
+    void postConstruct() {
+        start();
+    }
+
+    @Injection.PreDestroy
+    void preDestroy() {
+        stop();
     }
 
     private void stopIt() {

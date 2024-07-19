@@ -31,10 +31,20 @@ import org.junit.jupiter.api.extension.ExtendWith;
  *     <li>{@link SetUpRoute}</li>
  *     <li>{@link SetUpServer}</li>
  * </ul>
+ * <p>
+ * When {@link #useRegistry()} is set to {@code true}, only services discovered through service registry
+ * would be used
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @ExtendWith(HelidonServerJunitExtension.class)
 @Inherited
 public @interface ServerTest {
+    /**
+     * Whether to use inject registry to start the server.
+     * When using registry, the routing is constructed via inversion of control.
+     *
+     * @return whether to use service registry, defaults to {@code false}
+     */
+    boolean useRegistry() default false;
 }

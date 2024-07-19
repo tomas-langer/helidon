@@ -81,10 +81,16 @@ class HelidonServerJunitExtension extends JunitExtensionBase
         if (testAnnot == null) {
             throw new IllegalStateException("Invalid test class for this extension: " + testClass);
         }
+        boolean useRegistry = testAnnot.useRegistry();
 
-        WebServerConfig.Builder builder = WebServer.builder()
-                .config(GlobalConfig.config().get("server"))
-                .host("localhost");
+        WebServerConfig.Builder builder = WebServer.builder();
+
+        if (useRegistry) {
+            ServiceRegistrySupport.setup(builder);
+        } else {
+            builder.config(GlobalConfig.config().get("server"))
+                    .host("localhost");
+        }
 
         extensions.forEach(it -> it.beforeAll(context));
         extensions.forEach(it -> it.updateServerBuilder(builder));

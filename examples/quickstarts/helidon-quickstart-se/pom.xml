@@ -46,6 +46,11 @@
             <artifactId>helidon-http-media-jsonp</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.logging</groupId>
+            <artifactId>helidon-logging-jul</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.webserver.observe</groupId>
             <artifactId>helidon-webserver-observe-health</artifactId>
         </dependency>
@@ -58,10 +63,6 @@
             <artifactId>helidon-metrics-system-meters</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.helidon.openapi</groupId>
-            <artifactId>helidon-openapi</artifactId>
-        </dependency>
-        <dependency>
             <groupId>io.helidon.config</groupId>
             <artifactId>helidon-config-yaml</artifactId>
         </dependency>
@@ -72,6 +73,10 @@
         <dependency>
             <groupId>jakarta.json</groupId>
             <artifactId>jakarta.json-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.service.inject</groupId>
+            <artifactId>helidon-service-inject</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -103,6 +108,40 @@
                 <executions>
                     <execution>
                         <id>copy-libs</id>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.helidon.bundles</groupId>
+                            <artifactId>helidon-bundles-apt</artifactId>
+                            <version>${helidon.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+                <dependencies>
+                    <!-- This is not needed for applications that are not part of Helidon Maven reactor -->
+                    <dependency>
+                        <groupId>io.helidon.bundles</groupId>
+                        <artifactId>helidon-bundles-apt</artifactId>
+                        <version>${helidon.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>io.helidon.service</groupId>
+                <artifactId>helidon-service-maven-plugin</artifactId>
+                <version>${helidon.version}</version>
+                <executions>
+                    <execution>
+                        <id>create-application</id>
+                        <goals>
+                            <goal>application-create</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>

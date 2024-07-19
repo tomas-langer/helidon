@@ -32,6 +32,7 @@
 
     <modules>
         <module>helidon-quickstart-se</module>
+        <module>helidon-quickstart-se-imperative</module>
         <module>helidon-quickstart-mp</module>
         <module>helidon-standalone-quickstart-mp</module>
         <module>helidon-standalone-quickstart-se</module>

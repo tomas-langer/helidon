@@ -54,5 +54,4 @@ module io.helidon.config {
 
     // needed when running with modules - to make private methods accessible
     opens io.helidon.config to weld.core.impl, io.helidon.microprofile.cdi;
-
 }
