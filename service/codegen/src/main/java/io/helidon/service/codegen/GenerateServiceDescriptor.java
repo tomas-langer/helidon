@@ -550,13 +550,6 @@ public class GenerateServiceDescriptor {
                                 .addContent(".contractType(G")
                                 .addContent(genericTypes.get(param.contract().fqName()).constantName())
                                 .addContentLine(")");
-                        if (param.access() != AccessModifier.PACKAGE_PRIVATE) {
-                            it.addContent(".access(")
-                                    .addContent(TypeNames.ACCESS_MODIFIER)
-                                    .addContent(".")
-                                    .addContent(param.access().name())
-                                    .addContentLine(")");
-                        }
 
                         if (param.isStatic()) {
                             it.addContentLine(".isStatic(true)");

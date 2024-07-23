@@ -19,9 +19,7 @@ package io.helidon.examples.quickstart.se;
 import java.util.Map;
 
 import io.helidon.http.Status;
-import io.helidon.webclient.api.ClientResponseTyped;
 import io.helidon.webclient.http1.Http1Client;
-import io.helidon.webclient.http1.Http1ClientResponse;
 import io.helidon.webserver.testing.junit5.ServerTest;
 
 import jakarta.json.Json;
@@ -32,7 +30,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
-@ServerTest(useRegistry = true)
+@ServerTest
 class MainTest {
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());
 
@@ -44,39 +42,36 @@ class MainTest {
 
     @Test
     void testRootRoute() {
-        try (Http1ClientResponse response = client.get("/greet").request()) {
-            assertThat(response.status(), is(Status.OK_200));
-            JsonObject json = response.as(JsonObject.class);
-            assertThat(json.getString("message"), is("Hello World!"));
-        }
+        var response = client.get("/greet").request(JsonObject.class);
+
+        assertThat(response.status(), is(Status.OK_200));
+        JsonObject json = response.entity();
+        assertThat(json.getString("message"), is("Hello World!"));
     }
 
     @Test
     void testHealthObserver() {
-        try (Http1ClientResponse response = client.get("/observe/health").request()) {
-            assertThat(response.status(), is(Status.NO_CONTENT_204));
-        }
+        var response = client.get("/observe/health").request(String.class);
+        assertThat(response.status(), is(Status.NO_CONTENT_204));
     }
 
     @Test
     void testDeadlockHealthCheck() {
-        try (Http1ClientResponse response = client.get("/observe/health/live/deadlock").request()) {
-            assertThat(response.status(), is(Status.NO_CONTENT_204));
-        }
+        var response = client.get("/observe/health/live/deadlock").request(String.class);
+        assertThat(response.status(), is(Status.NO_CONTENT_204));
     }
 
     @Test
     void testMetricsObserver() {
-        try (Http1ClientResponse response = client.get("/observe/metrics").request()) {
-            assertThat(response.status(), is(Status.OK_200));
-        }
+        var response = client.get("/observe/metrics").request(String.class);
+        assertThat(response.status(), is(Status.OK_200));
     }
 
     @Test
     void testErrorHandler() {
         JsonObject badEntity = JSON.createObjectBuilder().build();
 
-        ClientResponseTyped<JsonObject> response = client.put("/greet/greeting").submit(badEntity, JsonObject.class);
+        var response = client.put("/greet/greeting").submit(badEntity, JsonObject.class);
         assertThat(response.status(), is(Status.BAD_REQUEST_400));
         JsonObject entity = response.entity();
         assertThat(entity.getString("error"), is("No greeting provided"));

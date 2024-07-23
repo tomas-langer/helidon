@@ -44,7 +44,7 @@ public @interface ServerTest {
      * Whether to use inject registry to start the server.
      * When using registry, the routing is constructed via inversion of control.
      *
-     * @return whether to use service registry, defaults to {@code false}
+     * @return whether to use service registry, defaults to {@code true} if inject service registry is on classpath
      */
-    boolean useRegistry() default false;
+    boolean useRegistry() default true;
 }

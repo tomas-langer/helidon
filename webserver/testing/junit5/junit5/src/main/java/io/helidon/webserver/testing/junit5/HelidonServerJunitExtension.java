@@ -81,7 +81,7 @@ class HelidonServerJunitExtension extends JunitExtensionBase
         if (testAnnot == null) {
             throw new IllegalStateException("Invalid test class for this extension: " + testClass);
         }
-        boolean useRegistry = testAnnot.useRegistry();
+        boolean useRegistry = ServiceRegistrySupport.enabled() && testAnnot.useRegistry();
 
         WebServerConfig.Builder builder = WebServer.builder();
 
@@ -163,6 +163,9 @@ class HelidonServerJunitExtension extends JunitExtensionBase
         }
         if (paramType.equals(URI.class)) {
             return uri(parameterContext.getDeclaringExecutable(), Junit5Util.socketName(parameterContext.getParameter()));
+        }
+        if (ServiceRegistrySupport.enabled() && ServiceRegistrySupport.supportedType(paramType)) {
+            return ServiceRegistrySupport.param(paramType);
         }
 
         for (ServerJunitExtension extension : extensions) {

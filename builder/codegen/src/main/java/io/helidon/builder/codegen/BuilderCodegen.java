@@ -129,14 +129,19 @@ class BuilderCodegen implements CodegenExtension {
         if (lines.isEmpty()) {
             lines.add("# List of service contracts we want to support either from service registry, or from service loader");
         }
+
+        boolean modified = false;
         for (String serviceLoaderContract : this.serviceLoaderContracts) {
             if (!lines.contains(serviceLoaderContract)) {
                 lines.add(serviceLoaderContract);
+                modified = true;
             }
         }
 
         serviceLoaderResource.lines(lines);
-        serviceLoaderResource.write();
+        if (modified) {
+            serviceLoaderResource.write();
+        }
     }
 
     private void process(RoundContext roundContext, TypeInfo blueprint) {

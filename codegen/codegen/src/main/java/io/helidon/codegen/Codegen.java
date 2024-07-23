@@ -284,11 +284,22 @@ public class Codegen {
                 .stream()
                 .map(Annotation::typeName)
                 .forEach(result::add);
+        theTypeInfo.inheritedAnnotations()
+                .stream()
+                .map(Annotation::typeName)
+                .forEach(result::add);
 
         // on fields, methods etc.
         theTypeInfo.elementInfo()
                 .stream()
                 .map(TypedElementInfo::annotations)
+                .flatMap(List::stream)
+                .map(Annotation::typeName)
+                .forEach(result::add);
+
+        theTypeInfo.elementInfo()
+                .stream()
+                .map(TypedElementInfo::inheritedAnnotations)
                 .flatMap(List::stream)
                 .map(Annotation::typeName)
                 .forEach(result::add);
@@ -299,6 +310,14 @@ public class Codegen {
                 .map(TypedElementInfo::parameterArguments)
                 .flatMap(List::stream)
                 .map(TypedElementInfo::annotations)
+                .flatMap(List::stream)
+                .map(Annotation::typeName)
+                .forEach(result::add);
+        theTypeInfo.elementInfo()
+                .stream()
+                .map(TypedElementInfo::parameterArguments)
+                .flatMap(List::stream)
+                .map(TypedElementInfo::inheritedAnnotations)
                 .flatMap(List::stream)
                 .map(Annotation::typeName)
                 .forEach(result::add);
