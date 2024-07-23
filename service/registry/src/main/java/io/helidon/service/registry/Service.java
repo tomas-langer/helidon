@@ -18,6 +18,7 @@ package io.helidon.service.registry;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -64,7 +65,8 @@ public final class Service {
      */
     @Documented
     @Retention(RetentionPolicy.CLASS)
-    @Target(ElementType.TYPE)
+    @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
+    @Inherited
     public @interface Provider {
         /**
          * Type name of this annotation.
