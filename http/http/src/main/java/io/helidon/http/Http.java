@@ -221,4 +221,26 @@ public final class Http {
     @HttpMethod(Method.PATCH_STRING)
     public @interface PATCH {
     }
+
+    /**
+     * PATCH method of an HTTP endpoint.
+     */
+    @Retention(RetentionPolicy.CLASS)
+    @Documented
+    public @interface Produces {
+        /**
+         * Media types that may be returned by this endpoint.
+         *
+         * @return
+         */
+        String[] value();
+    }
+
+    /**
+     * PATCH method of an HTTP endpoint.
+     */
+    @Retention(RetentionPolicy.CLASS)
+    @Documented
+    public @interface Consumes {
+    }
 }
