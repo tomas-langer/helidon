@@ -60,6 +60,10 @@ public class ConfigMetadataProcessor extends AbstractProcessor {
 
         handler = new ConfigMetadataHandler();
         handler.init(processingEnv);
+
+        processingEnv.getMessager()
+                .printWarning( "Module helidon-config-metadata-processor is deprecated, "
+                                       + "please use io.helidon.config.metadata:helidon-config-metadata-codegen");
     }
 
     @Override

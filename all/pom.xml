@@ -134,6 +134,10 @@
             <artifactId>helidon-config-metadata-processor</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.config.metadata</groupId>
+            <artifactId>helidon-config-metadata-codegen</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.security</groupId>
             <artifactId>helidon-security</artifactId>
         </dependency>
@@ -1097,6 +1101,10 @@
         <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-codegen</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.metadata</groupId>
+            <artifactId>helidon-metadata-hjson</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.integrations.oci.sdk</groupId>

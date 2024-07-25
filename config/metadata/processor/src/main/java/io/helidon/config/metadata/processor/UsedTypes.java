@@ -30,7 +30,6 @@ final class UsedTypes {
     /*
     Using builder API
      */
-    static final TypeName BUILDER = TypeName.create("io.helidon.common.Builder");
     static final TypeName COMMON_CONFIG = TypeName.create("io.helidon.common.config.Config");
     static final TypeName CONFIG = TypeName.create("io.helidon.config.Config");
     static final TypeName PROTOTYPE_FACTORY = TypeName.create("io.helidon.builder.api.Prototype.Factory");

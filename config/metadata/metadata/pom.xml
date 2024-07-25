@@ -23,22 +23,31 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.helidon.config</groupId>
-        <artifactId>helidon-config-project</artifactId>
+        <artifactId>helidon-config-metadata-project</artifactId>
         <version>4.1.0-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
-    <!-- normally we would use io.helidon.config.metadata group id, but this would introduce backward incompatibility -->
-    <artifactId>helidon-config-metadata-project</artifactId>
-    <name>Helidon Config Metadata Project</name>
-    <packaging>pom</packaging>
+    <artifactId>helidon-config-metadata</artifactId>
+    <name>Helidon Config Metadata</name>
+
+    <properties>
+        <helidon.services.skip>true</helidon.services.skip>
+    </properties>
 
     <description>
-        Configuration Metadata annotations and codegen.
+        Configuration Metadata annotations and processing.
     </description>
 
-    <modules>
-        <module>metadata</module>
-        <module>codegen</module>
-        <module>processor</module>
-    </modules>
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-all</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
 </project>
