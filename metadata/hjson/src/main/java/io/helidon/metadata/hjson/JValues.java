@@ -64,7 +64,8 @@ final class JValues {
                     .replaceAll("\"", "\\\\\"")
                     .replaceAll("\t", "\\\\\t")
                     .replaceAll("\r", "\\\\\r")
-                    .replaceAll("\\\\", "\\\\\\\\")
+                    // replace two backslashes with four backslashes
+                    .replaceAll("\\\\\\\\", "\\\\\\\\\\\\\\\\")
                     .replaceAll("\f", "\\\\\f");
         }
     }

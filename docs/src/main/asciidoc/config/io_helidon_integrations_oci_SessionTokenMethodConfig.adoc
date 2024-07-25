@@ -53,7 +53,7 @@ Type: link:{javadoc-base-url}/io.helidon.integrations.oci/io/helidon/integration
  Defaults to 0, to refresh immediately (implemented in the authentication details provider).
 
  Initial refresh delay
- See SessionTokenAuthenticationDetailsProviderBuilder.initialRefreshDelay(long)
+ See com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider.SessionTokenAuthenticationDetailsProviderBuilder.initialRefreshDelay(long)
 |`passphrase` |char[] |{nbsp} |The OCI authentication passphrase.
 
  This property must be provided in order to set the
@@ -71,7 +71,7 @@ Type: link:{javadoc-base-url}/io.helidon.integrations.oci/io/helidon/integration
  Defaults to 55 minutes (implemented in the authentication details provider).
 
  Refresh period
- See SessionTokenAuthenticationDetailsProviderBuilder.refreshPeriod(long)
+ See com.oracle.bmc.auth.SessionTokenAuthenticationDetailsProvider.SessionTokenAuthenticationDetailsProviderBuilder.refreshPeriod(long)
 |`region` |string |{nbsp} |The OCI region.
 
  The OCI region

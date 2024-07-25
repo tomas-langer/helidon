@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 import java.util.List;
 
 /**
- * A JSON value (may of types of {@link io.helidon.common.json.JType}).
+ * A JSON value (may of types of {@link io.helidon.metadata.hjson.JType}).
  */
 public sealed interface JValue<T> permits JValues.StringValue,
                                           JValues.NumberValue,
@@ -16,7 +16,7 @@ public sealed interface JValue<T> permits JValues.StringValue,
      * Read a JSON value from an input stream.
      *
      * @param stream input stream to read JSON from
-     * @return a parsed value, either non-array of type {@link io.helidon.common.json.JType#OBJECT},
+     * @return a parsed value, either non-array of type {@link io.helidon.metadata.hjson.JType#OBJECT},
      *         or an array
      * @see #asObject()
      * @see #asObjectArray()
@@ -60,7 +60,7 @@ public sealed interface JValue<T> permits JValues.StringValue,
      * Get an object array from this parsed value.
      *
      * @return object array, or this object as an array
-     * @throws io.helidon.common.json.JException in case this object is not of type {@link io.helidon.common.json.JType#OBJECT}
+     * @throws io.helidon.metadata.hjson.JException in case this object is not of type {@link io.helidon.metadata.hjson.JType#OBJECT}
      */
     @SuppressWarnings("unchecked")
     default JArray<JObject> asObjectArray() {
@@ -80,7 +80,7 @@ public sealed interface JValue<T> permits JValues.StringValue,
      * Get an object from this parsed value.
      *
      * @return this value as an object
-     * @throws io.helidon.common.json.JException in case this object is not of type {@link io.helidon.common.json.JType#OBJECT}
+     * @throws io.helidon.metadata.hjson.JException in case this object is not of type {@link io.helidon.metadata.hjson.JType#OBJECT}
      */
     default JObject asObject() {
         if (type() != JType.OBJECT) {

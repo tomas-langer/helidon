@@ -90,7 +90,7 @@ This is a standalone configuration type, prefix from configuration root: `client
  If no media context is registered, default media context is used.
 
  Media context
-|`media-type-parser-mode` |ParserMode |`ParserMode.STRICT` |Configure media type parsing mode for HTTP `Content-Type` header.
+|`media-type-parser-mode` |ParserMode (STRICT, RELAXED) |`ParserMode.STRICT` |Configure media type parsing mode for HTTP `Content-Type` header.
 
  Media type parsing mode
 |`properties` |Map&lt;string, string&gt; |{nbsp} |Properties configured for this client. These properties are propagated through client request, to be used by

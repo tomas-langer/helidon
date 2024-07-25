@@ -59,7 +59,7 @@ This type provides the following service implementations:
 |`max-headers-size` |int |`16384` |Maximal size of received headers in bytes.
 
  Maximal header size
-|`max-prologue-length` |int |`2048` |Maximal size of received HTTP prologue (GET /path HTTP/1.1).
+|`max-prologue-length` |int |`4096` |Maximal size of received HTTP prologue (GET /path HTTP/1.1).
 
  Maximal size in bytes
 |`recv-log` |boolean |`true` |Logging of received packets. Uses trace and debug levels on logger of

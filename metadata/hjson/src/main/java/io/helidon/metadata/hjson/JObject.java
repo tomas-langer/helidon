@@ -56,7 +56,7 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return boolean value if present
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a {@code boolean}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a {@code boolean}
      */
     public Optional<Boolean> getBoolean(String key) {
         return Optional.ofNullable(getObjectBoolean(key, null));
@@ -68,8 +68,8 @@ public final class JObject implements JValue<JObject> {
      * @param key          key under this object
      * @param defaultValue default value to use if the key does not exist
      * @return boolean value, or default value if the key does not exist
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#BOOLEAN}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#BOOLEAN}
      */
     public boolean getBoolean(String key, boolean defaultValue) {
         return getObjectBoolean(key, defaultValue);
@@ -80,8 +80,8 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return object value if present
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#OBJECT}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#OBJECT}
      */
     public Optional<JObject> getObject(String key) {
         JValue<?> jValue = values.get(key);
@@ -102,8 +102,8 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return string value if present
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#STRING}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#STRING}
      */
     public Optional<String> getString(String key) {
         String value = getString(key, null);
@@ -116,8 +116,8 @@ public final class JObject implements JValue<JObject> {
      * @param key          key under this object
      * @param defaultValue default value to use if the key does not exist
      * @return string value, or default value if the key does not exist
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#STRING}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#STRING}
      */
     public String getString(String key, String defaultValue) {
         JValue<?> jValue = values.get(key);
@@ -138,8 +138,8 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return int value if present, from {@link java.math.BigDecimal#intValue()}
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#NUMBER}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#NUMBER}
      */
     public Optional<Integer> getInt(String key) {
         return Optional.ofNullable(getObjectInt(key, null));
@@ -151,8 +151,8 @@ public final class JObject implements JValue<JObject> {
      * @param key          key under this object
      * @param defaultValue default value to use if the key does not exist
      * @return int value, or default value if the key does not exist
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#NUMBER}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#NUMBER}
      * @see #getInt(String)
      */
     public int getInt(String key, int defaultValue) {
@@ -164,8 +164,8 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return double value if present, from {@link java.math.BigDecimal#doubleValue()}
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#NUMBER}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#NUMBER}
      */
     public Optional<Double> getDouble(String key) {
         return Optional.ofNullable(getObjectDouble(key, null));
@@ -177,8 +177,8 @@ public final class JObject implements JValue<JObject> {
      * @param key          key under this object
      * @param defaultValue default value to use if the key does not exist
      * @return double value, or default value if the key does not exist
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#NUMBER}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#NUMBER}
      * @see #getDouble(String)
      */
     public double getDouble(String key, double defaultValue) {
@@ -190,9 +190,9 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return string array value, if the key exists
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#STRING}
-     * @throws io.helidon.common.json.JException in case the key exists, but is not {@link #isArray()}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#STRING}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not {@link #isArray()}
      */
     @SuppressWarnings("unchecked")
     public Optional<List<String>> getStrings(String key) {
@@ -219,9 +219,9 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return object array value, if the key exists
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#OBJECT}
-     * @throws io.helidon.common.json.JException in case the key exists, but is not {@link #isArray()}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#OBJECT}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not {@link #isArray()}
      */
     @SuppressWarnings("unchecked")
     public Optional<List<JObject>> getObjects(String key) {
@@ -243,9 +243,9 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return number array value, if the key exists
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#NUMBER}
-     * @throws io.helidon.common.json.JException in case the key exists, but is not {@link #isArray()}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#NUMBER}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not {@link #isArray()}
      */
     @SuppressWarnings("unchecked")
     public Optional<List<BigDecimal>> getNumbers(String key) {
@@ -272,9 +272,9 @@ public final class JObject implements JValue<JObject> {
      *
      * @param key key under this object
      * @return boolean array value, if the key exists
-     * @throws io.helidon.common.json.JException in case the key exists, but is not a
-     *                                           {@link io.helidon.common.json.JType#BOOLEAN}
-     * @throws io.helidon.common.json.JException in case the key exists, but is not {@link #isArray()}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not a
+     *                                           {@link io.helidon.metadata.hjson.JType#BOOLEAN}
+     * @throws io.helidon.metadata.hjson.JException in case the key exists, but is not {@link #isArray()}
      */
     @SuppressWarnings("unchecked")
     public Optional<List<Boolean>> getBooleans(String key) {

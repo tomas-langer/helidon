@@ -45,7 +45,7 @@ This is a standalone configuration type, prefix from configuration root: `oci`
 |key |type |default value |description
 
 |`auth-strategies` |string[&#93; (auto, config, config-file, instance-principals, resource-principal) |{nbsp} |The list of authentication strategies that will be attempted by
- com.oracle.bmc.auth.BasicAuthenticationDetailsProvider when one is
+ com.oracle.bmc.auth.AbstractAuthenticationDetailsProvider when one is
  called for. This is only used if authStrategy() is not present.
 
 - `auto` - if present in the list, or if no value
@@ -70,10 +70,28 @@ If there are more than one strategy descriptors defined, the
 
  The list of authentication strategies that will be applied, defaulting to `auto`
  See io.helidon.integrations.oci.sdk.runtime.OciAuthenticationDetailsProvider.AuthStrategy
+
+Allowed values:
+
+- `auto`: auto select first applicable
+- `config`: simple authentication provider
+- `config-file`: config file authentication provider
+- `instance-principals`: instance principals authentication provider
+- `resource-principal`: resource principal authentication provider
+
 |`auth-strategy` |string (auto, config, config-file, instance-principals, resource-principal) |{nbsp} |The singular authentication strategy to apply. This will be preferred over authStrategies() if both are
  present.
 
  The singular authentication strategy to be applied
+
+Allowed values:
+
+- `auto`: auto select first applicable
+- `config`: simple authentication provider
+- `config-file`: config file authentication provider
+- `instance-principals`: instance principals authentication provider
+- `resource-principal`: resource principals authentication provider
+
 |`auth.fingerprint` |string |{nbsp} |The OCI authentication fingerprint.
 
  This configuration property has an effect only when `config` is, explicitly or implicitly,

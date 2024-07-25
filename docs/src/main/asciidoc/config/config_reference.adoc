@@ -24,6 +24,8 @@ ifndef::rootdir[:rootdir: {docdir}/..]
 
 The following section lists all configurable types in Helidon.
 
+// everything after the line below will be deleted and regenerated
+// do not remove: codegen boundary
 - xref:{rootdir}/config/io_helidon_security_providers_abac_AbacProvider.adoc[AbacProvider (security.providers.abac)]
 - xref:{rootdir}/config/io_helidon_webserver_accesslog_AccessLogConfig.adoc[AccessLogConfig (webserver.accesslog)]
 - xref:{rootdir}/config/io_helidon_webserver_accesslog_AccessLogFeature.adoc[AccessLogFeature (webserver.accesslog)]
@@ -53,6 +55,7 @@ The following section lists all configurable types in Helidon.
 - xref:{rootdir}/config/io_helidon_webclient_grpc_GrpcClient.adoc[GrpcClient (webclient.grpc)]
 - xref:{rootdir}/config/io_helidon_webclient_grpc_GrpcClientProtocolConfig.adoc[GrpcClientProtocolConfig (webclient.grpc)]
 - xref:{rootdir}/config/io_helidon_webserver_grpc_GrpcConfig.adoc[GrpcConfig (webserver.grpc)]
+- xref:{rootdir}/config/io_helidon_webserver_grpc_GrpcTracingConfig.adoc[GrpcTracingConfig (webserver.grpc)]
 - xref:{rootdir}/config/io_helidon_security_providers_header_HeaderAtnProvider.adoc[HeaderAtnProvider (security.providers.header)]
 - xref:{rootdir}/config/io_helidon_security_providers_httpsign_SignedHeadersConfig_HeadersConfig.adoc[HeadersConfig (security.providers.httpsign.SignedHeadersConfig)]
 - xref:{rootdir}/config/io_helidon_webserver_observe_health_HealthObserver.adoc[HealthObserver (webserver.observe.health)]
@@ -67,6 +70,7 @@ The following section lists all configurable types in Helidon.
 - xref:{rootdir}/config/io_helidon_security_providers_httpsign_HttpSignProvider.adoc[HttpSignProvider (security.providers.httpsign)]
 - xref:{rootdir}/config/io_helidon_security_providers_idcs_mapper_IdcsMtRoleMapperProvider.adoc[IdcsMtRoleMapperProvider (security.providers.idcs.mapper)]
 - xref:{rootdir}/config/io_helidon_security_providers_idcs_mapper_IdcsRoleMapperProvider.adoc[IdcsRoleMapperProvider (security.providers.idcs.mapper)]
+- xref:{rootdir}/config/io_helidon_integrations_oci_ImdsInstanceInfo.adoc[ImdsInstanceInfo (integrations.oci)]
 - xref:{rootdir}/config/io_helidon_security_providers_httpsign_InboundClientDefinition.adoc[InboundClientDefinition (security.providers.httpsign)]
 - xref:{rootdir}/config/io_helidon_webserver_observe_info_InfoObserver.adoc[InfoObserver (webserver.observe.info)]
 - xref:{rootdir}/config/io_helidon_tracing_providers_jaeger_JaegerTracerBuilder.adoc[JaegerTracerBuilder (tracing.providers.jaeger)]

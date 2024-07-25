@@ -158,7 +158,7 @@ abstract class TypeHandlerBase {
     }
 
     List<ConfiguredOptionData.AllowedValue> allowedValuesEnum(ConfiguredOptionData data, TypeInfo enumInfo) {
-        if (data.allowedValues().isEmpty()) {
+        if (!data.allowedValues().isEmpty()) {
             // this was already processed due to an explicit type defined in the annotation
             // or allowed values explicitly configured in annotation
             return data.allowedValues();

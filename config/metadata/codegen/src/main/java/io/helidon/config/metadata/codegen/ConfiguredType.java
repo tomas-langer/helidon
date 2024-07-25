@@ -184,9 +184,12 @@ final class ConfiguredType {
             List<JObject> allowedValues = new ArrayList<>();
 
             for (ConfiguredOptionData.AllowedValue allowedValue : property.allowedValues) {
-                allowedValues.add(JObject.create()
-                                          .set("value", allowedValue.value())
-                                          .set("description", allowedValue.description()));
+                JObject allowedJson = JObject.create()
+                        .set("value", allowedValue.value());
+                if (!allowedValue.description().isBlank()) {
+                    allowedJson.set("description", allowedValue.description().trim());
+                }
+                allowedValues.add(allowedJson);
             }
 
             optionBuilder.setObjects("allowedValues", allowedValues);

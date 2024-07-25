@@ -40,5 +40,6 @@
         <module>metadata</module>
         <module>codegen</module>
         <module>processor</module>
+        <module>docs</module>
     </modules>
 </project>

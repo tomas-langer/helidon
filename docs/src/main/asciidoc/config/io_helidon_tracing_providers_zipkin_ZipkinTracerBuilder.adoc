@@ -49,6 +49,12 @@ This is a standalone configuration type, prefix from configuration root: `tracin
 |`api-version` |Version (V1, V2) |`V2` |Version of Zipkin API to use.
  Defaults to Version.V2.
 
+Allowed values:
+
+- `V1`: Version 1.
+- `V2`: Version 2.
+
+
 |===
 
 // end::config[]

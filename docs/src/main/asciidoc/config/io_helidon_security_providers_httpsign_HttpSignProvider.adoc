@@ -63,6 +63,14 @@ This type provides the following service implementations:
  allow communication between versions as needed.
 |`headers` |HttpSignHeader[&#93; (SIGNATURE, AUTHORIZATION, CUSTOM) |{nbsp} |Add a header that is validated on inbound requests. Provider may support more than
  one header to validate.
+
+Allowed values:
+
+- `SIGNATURE`: Creates (or validates) a "Signature" header.
+- `AUTHORIZATION`: Creates (or validates) an "Authorization" header, that contains "Signature" as the
+ beginning of its content (the rest of the header is the same as for SIGNATURE.
+- `CUSTOM`: Custom provided using a io.helidon.security.util.TokenHandler.
+
 |`inbound.keys` |xref:{rootdir}/config/io_helidon_security_providers_httpsign_InboundClientDefinition.adoc[InboundClientDefinition[&#93;] |{nbsp} |Add inbound configuration. This is used to validate signature and authenticate the
  party.
 

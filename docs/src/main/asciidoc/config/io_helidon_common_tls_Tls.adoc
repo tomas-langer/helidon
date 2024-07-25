@@ -46,9 +46,22 @@ Type: link:{javadoc-base-url}/io.helidon.common.tls/io/helidon/common/tls/Tls.ht
 
  Cipher suits to enable, by default (or if list is empty), all available cipher suites
          are enabled
-|`client-auth` |TlsClientAuth |`TlsClientAuth.NONE` |Configure requirement for mutual TLS.
+|`client-auth` |TlsClientAuth (REQUIRED, OPTIONAL, NONE) |`TlsClientAuth.NONE` |Configure requirement for mutual TLS.
 
  What type of mutual TLS to use, defaults to TlsClientAuth.NONE
+
+Allowed values:
+
+- `REQUIRED`: Mutual TLS is required.
+ Server MUST present a certificate trusted by the client, client MUST present a certificate trusted by the server.
+ This implies private key and trust configuration for both server and client.
+- `OPTIONAL`: Mutual TLS is optional.
+ Server MUST present a certificate trusted by the client, client MAY present a certificate trusted by the server.
+ This implies private key configuration at least for server, trust configuration for at least client.
+- `NONE`: Mutual TLS is disabled.
+ Server MUST present a certificate trusted by the client, client does not present a certificate.
+ This implies private key configuration for server, trust configuration for client.
+
 |`enabled` |boolean |`true` |Flag indicating whether Tls is enabled.
 
  Enabled flag
