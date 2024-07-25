@@ -4,13 +4,20 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import io.helidon.logging.common.LogConfig;
+
 /**
  * Main class to start generating data.
  */
 public class Main {
+    static {
+        LogConfig.initClass();
+    }
+
     public static void main(String[] args) throws Exception {
+        LogConfig.configureRuntime();
+
         Path targetPath;
-        String relativePath = "{rootdir}/config/";
 
         if (args.length == 0) {
             targetPath = findReasonablePath();
@@ -23,7 +30,7 @@ public class Main {
 
         Path path = targetPath.toAbsolutePath().normalize();
         if (Files.exists(path) && Files.isDirectory(path)) {
-            ConfigDocumentation docs = new ConfigDocumentation(path, relativePath);
+            ConfigDocumentation docs = ConfigDocumentation.create(path);
             docs.process();
         } else {
             throw new IllegalArgumentException("Target path must be a directory and must exist: "
@@ -39,9 +46,8 @@ public class Main {
         p = Paths.get(".").toAbsolutePath().normalize();
         if (p.toString().replace('\\', '/').endsWith("config/metadata/docs")) {
             // we are probably in Helidon repository in config/metadata/docs
-            return p.getParent().getParent().getParent();
+            return p.getParent().getParent().getParent().resolve("docs/src/main/asciidoc/config");
         }
-        // just return current directory and hope for the best
-        return p;
+        throw new IllegalArgumentException("Cannot discover config asciidoc path, please provide it as a parameter");
     }
 }

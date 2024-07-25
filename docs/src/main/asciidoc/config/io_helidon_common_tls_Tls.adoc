@@ -44,7 +44,7 @@ Type: link:{javadoc-base-url}/io.helidon.common.tls/io/helidon/common/tls/Tls.ht
 
 |`cipher-suite` |string[&#93; |{nbsp} |Enabled cipher suites for TLS communication.
 
- Cipher suits to enable, by default (or if list is empty), all available cipher suites
+ Cipher suites to enable, by default (or if list is empty), all available cipher suites
          are enabled
 |`client-auth` |TlsClientAuth (REQUIRED, OPTIONAL, NONE) |`TlsClientAuth.NONE` |Configure requirement for mutual TLS.
 

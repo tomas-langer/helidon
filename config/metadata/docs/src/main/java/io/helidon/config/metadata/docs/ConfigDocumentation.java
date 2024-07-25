@@ -18,7 +18,7 @@ package io.helidon.config.metadata.docs;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UncheckedIOException;
+import java.lang.System.Logger.Level;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -47,8 +47,10 @@ import jakarta.json.bind.Jsonb;
 import jakarta.json.bind.JsonbBuilder;
 import org.eclipse.yasson.YassonConfig;
 
-class ConfigDocumentation {
+public class ConfigDocumentation {
+    private static final System.Logger LOGGER = System.getLogger(ConfigDocumentation.class.getName());
     private static final String CODEGEN_BOUNDARY = "// do not remove: codegen boundary";
+    private static final String RELATIVE_PATH_ADOC = "{rootdir}/config/";
     private static final Pattern MODULE_PATTERN = Pattern.compile("(.*?)(\\.spi)?\\.([a-zA-Z0-9]*?)");
     private static final Pattern COPYRIGHT_LINE_PATTERN = Pattern.compile(".*Copyright \\(c\\) (.*) Oracle and/or its "
                                                                                   + "affiliates.");
@@ -68,11 +70,13 @@ class ConfigDocumentation {
     }
 
     private final Path path;
-    private final String relativePath;
 
-    ConfigDocumentation(Path path, String relativePath) {
+    ConfigDocumentation(Path path) {
         this.path = path;
-        this.relativePath = relativePath;
+    }
+
+    public static ConfigDocumentation create(Path targetPath) {
+        return new ConfigDocumentation(targetPath);
     }
 
     static String titleFromFileName(String fileName) {
@@ -139,7 +143,7 @@ class ConfigDocumentation {
 
     void process() throws Exception {
         Handlebars handlebars = new Handlebars();
-        URL resource = ConfigDocumentation.class.getResource("/type-docs.adoc.hbs");
+        URL resource = ConfigDocumentation.class.getResource("type-docs.adoc.hbs");
         if (resource == null) {
             throw new IllegalStateException("Could not locate required handlebars template on classpath: type-docs.adoc.hbs");
         }
@@ -178,7 +182,7 @@ class ConfigDocumentation {
 
         List<String> generatedFiles = new LinkedList<>();
         for (CmModule module : allModules) {
-            moduleDocs(configuredTypes, template, path, relativePath, module, generatedFiles);
+            moduleDocs(configuredTypes, template, path, RELATIVE_PATH_ADOC, module, generatedFiles);
         }
 
         // sort alphabetically by page title
@@ -198,19 +202,18 @@ class ConfigDocumentation {
             newLines.add("- xref:{rootdir}/config/" + generatedFile + "[" + titleFromFileName(generatedFile) + "]");
         }
 
+        LOGGER.log(Level.INFO, "Updating " + configReference.toAbsolutePath());
         Files.write(configReference, newLines);
 
         // and now delete obsolete files
         // filter out generated files
         try (Stream<Path> x = Files.list(path)
                 .filter(it -> it.getFileName().toString().endsWith(".adoc"))
+                .filter(it -> !it.getFileName().toString().equals("config_reference.adoc"))
                 .filter(it -> !generatedFiles.contains(String.valueOf(it.getFileName())))) {
             x.forEach(it -> {
-                try {
-                    Files.delete(it);
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Failed to delete obsolete file: " + it.toAbsolutePath(), e);
-                }
+                LOGGER.log(Level.WARNING, "File " + it.toAbsolutePath()
+                        + " should be deleted, as its config metadata no longer exists");
             });
         }
     }
@@ -244,7 +247,7 @@ class ConfigDocumentation {
             String path = type.replace('.', '_') + ".adoc";
             return Files.exists(modulePath.resolve(path));
         };
-        System.out.println("Documenting module " + module.getModule());
+        LOGGER.log(Level.INFO, "Documenting module " + module.getModule());
         // each type will have its own, such as:
         // docs/io.helidon.common.configurable/LruCache.adoc
         for (CmType type : module.getTypes()) {
@@ -578,13 +581,17 @@ class ConfigDocumentation {
                 List<CmOption> options = next.getOptions();
                 for (int j = 0; j < options.size(); j++) {
                     CmOption option = options.get(j);
+                    String optionType = option.getType();
                     if (option.isMerge()) {
-                        isResolved = false;
-                        if (resolved.containsKey(option.getType())) {
-                            options.remove(j);
-                            options.addAll(resolved.get(option.getType()).getOptions());
-                            shouldExit = false;
-                            break;
+                        // primitives and strings are always resolved
+                        if (!(TYPE_MAPPING.containsKey(optionType) || TYPE_MAPPING.containsValue(optionType))) {
+                            isResolved = false;
+                            if (resolved.containsKey(optionType)) {
+                                options.remove(j);
+                                options.addAll(resolved.get(optionType).getOptions());
+                                shouldExit = false;
+                                break;
+                            }
                         }
                     }
                 }
@@ -598,12 +605,12 @@ class ConfigDocumentation {
             }
         }
 
-        if (remaining.size() > 0) {
-            System.err.println("There are types with merged type that is not on classpath: ");
+        if (!remaining.isEmpty()) {
+            LOGGER.log(Level.WARNING, "There are types with merged type that is not on classpath: ");
             for (CmType cmType : remaining) {
                 for (CmOption option : cmType.getOptions()) {
                     if (option.isMerge()) {
-                        System.err.println("Option " + option.getKey() + ", merges: " + option.getType() + " in "
+                        LOGGER.log(Level.WARNING, "    Option " + option.getKey() + ", merges: " + option.getType() + " in "
                                                    + cmType.getAnnotatedType());
                     }
                 }
