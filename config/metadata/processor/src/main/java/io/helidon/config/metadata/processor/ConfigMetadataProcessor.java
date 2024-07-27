@@ -31,7 +31,10 @@ import static io.helidon.config.metadata.processor.UsedTypes.META_OPTIONS;
 
 /**
  * Annotation processor.
+ *
+ * @deprecated use {@code helidon-config-metadata-codegen} instead
  */
+@Deprecated(forRemoval = true, since = "4.1.0")
 public class ConfigMetadataProcessor extends AbstractProcessor {
     private ConfigMetadataHandler handler;
 

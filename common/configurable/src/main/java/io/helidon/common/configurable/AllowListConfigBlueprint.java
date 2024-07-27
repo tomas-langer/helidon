@@ -87,7 +87,7 @@ interface AllowListConfigBlueprint extends Prototype.Factory<AllowList> {
     /**
      * Exact strings to deny.
      *
-     * @return exact strings to allow
+     * @return exact strings to deny
      */
     @Option.Configured("deny.exact")
     @Option.Singular

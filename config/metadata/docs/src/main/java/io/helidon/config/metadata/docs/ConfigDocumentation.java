@@ -113,14 +113,59 @@ public class ConfigDocumentation {
         result = result.replaceAll("\n\\s*<nl>\\s*", "\n");
         result = result.replaceAll("\\s*<nl>\\s*", "\n");
         result = result.replaceAll("<li>\\s*", "\n- ");
+        result = result.replaceAll("<br>", "\n");
         // also fix javadoc issues
         // {@value}
         result = result.replaceAll("\\{@value\\s+#?(.*?)}", "`$1`");
         // {@link}
         result = result.replaceAll("\\{@link\\s+#?(.*?)}", "`$1`");
-
         // escaped end of lines
         result = result.replaceAll("\\n", "\n");
+        // <b>
+        result = replace(result, "<b>", "</b>", "*", "*");
+        // <i>
+        result = replace(result, "<i>", "</i>", "_", "_");
+        // <a href="">...</a>
+        result = replaceLinks(result);
+        // <pre>....</pre>
+        result = replacePre(result);
+        // tables
+        result = handleTables(result);
+        // <h4>, <h5>
+        result = replace(result, "<h4>", "</h4>", "\n[.underline]#", "#\n");
+        result = replace(result, "<h5>", "</h5>", "\n[.underline]#", "#\n");
+        // <sup>, <sub>
+        result = replace(result, "<sup>", "</sup>", "^", "^");
+        result = replace(result, "<sub>", "</sub>", "~", "~");
+
+        // end of lines followed by a single space (multiple are probably intended)
+        result = result.replaceAll("\n ", "\n");
+
+        return result;
+    }
+
+    private static String replacePre(String result) {
+        // pre - replace with code block
+        StringBuilder theBuilder = new StringBuilder();
+        int lastIndex = 0;
+        while (true) {
+            int index = result.indexOf("<pre>", lastIndex);
+            if (index == -1) {
+                // add the rest of the string
+                theBuilder.append(result.substring(lastIndex));
+                break;
+            }
+            int endIndex = result.indexOf("</pre>", index);
+            theBuilder.append(result.substring(lastIndex, index));
+            theBuilder.append("\n----\n");
+            theBuilder.append(result.substring(index + 5, endIndex));
+            theBuilder.append("\n----\n");
+            lastIndex = endIndex + 6;
+        }
+        return theBuilder.toString();
+    }
+
+    private static String handleTables(String result) {
         // table - keep as is, just a passthrough
         StringBuilder theBuilder = new StringBuilder();
         int lastIndex = 0;
@@ -216,6 +261,24 @@ public class ConfigDocumentation {
                         + " should be deleted, as its config metadata no longer exists");
             });
         }
+    }
+
+    private static String replaceLinks(String result) {
+        //https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm[API Signing Key's fingerprint]
+        Pattern pattern = Pattern.compile("<a.*?href=\"(.*?)\">(.*?)</a>", Pattern.DOTALL);
+        return pattern.matcher(result).replaceAll(it -> it.group(1)
+                + "[" + it.group(2) + "]");
+    }
+
+    // replaces beginning and ending tags with a string, and removed end of lines in the text within
+    private static String replace(String source, String start, String end, String newStart, String newEnd) {
+        Pattern pattern = Pattern.compile(start + "(\\s*)(.*?)(\\s*)" + end, Pattern.DOTALL);
+        return pattern.matcher(source)
+                .replaceAll(it -> it.group(1)
+                        + newStart
+                        + it.group(2).replace('\n', ' ')
+                        + newEnd
+                        + it.group(3));
     }
 
     private static String title(String typeName) {
@@ -611,7 +674,7 @@ public class ConfigDocumentation {
                 for (CmOption option : cmType.getOptions()) {
                     if (option.isMerge()) {
                         LOGGER.log(Level.WARNING, "    Option " + option.getKey() + ", merges: " + option.getType() + " in "
-                                                   + cmType.getAnnotatedType());
+                                + cmType.getAnnotatedType());
                     }
                 }
 

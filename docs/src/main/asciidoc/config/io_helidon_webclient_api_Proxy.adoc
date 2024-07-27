@@ -45,7 +45,7 @@ Type: link:{javadoc-base-url}/io.helidon.webclient.api/io/helidon/webclient/api/
 |`host` |string |{nbsp} |Sets a new host value.
 |`no-proxy` |string[&#93; |{nbsp} |Configure a host pattern that is not going through a proxy.
 
- Options are:
+Options are:
 
 - IP Address, such as `192.168.1.1`
 - IP V6 Address, such as `[2001:db8:85a3:8d3:1319:8a2e:370:7348]`

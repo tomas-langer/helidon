@@ -76,9 +76,14 @@ final class Javadoc {
         // replace all {@see ...} with just the reference
         javadoc = JAVADOC_SEE.matcher(javadoc).replaceAll(it -> javadocSee(it.group(1)));
 
-        index = javadoc.indexOf("@return");
+        int count = 9;
+        index = javadoc.indexOf(" @return");
+        if (index == -1) {
+            count = 8;
+            index = javadoc.indexOf("@return");
+        }
         if (index > -1) {
-            javadoc = javadoc.substring(0, index) + capitalize(javadoc.substring(index + 8));
+            javadoc = javadoc.substring(0, index) + capitalize(javadoc.substring(index + count).trim());
         }
 
         return javadoc.trim();

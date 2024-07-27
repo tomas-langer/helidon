@@ -44,31 +44,31 @@ Type: link:{javadoc-base-url}/io.helidon.integrations.oci/io/helidon/integration
 
 |`canonical-region-name` |string |{nbsp} |Canonical Region Name.
 
- Canonical Region Name of where the Instance exists
+Canonical Region Name of where the Instance exists
 |`compartment-id` |string |{nbsp} |Compartment Id.
 
- Compartment Id where the Instance was provisioned.
+Compartment Id where the Instance was provisioned.
 |`display-name` |string |{nbsp} |Display Name.
 
- Display Name of the Instance
+Display Name of the Instance
 |`fault-domain` |string |{nbsp} |Fault Domain Name.
 
- Fault Domain Name where the Instance exists
+Fault Domain Name where the Instance exists
 |`host-name` |string |{nbsp} |Host Name.
 
- Host Name of the Instance
+Host Name of the Instance
 |`json-object` |JsonObject |{nbsp} |Instance Data.
 
- Full information about the Instance as a jakarta.json.JsonObject
+Full information about the Instance as a jakarta.json.JsonObject
 |`oci-ad-name` |string |{nbsp} |Oci Availability Domain Name.
 
- Physical Availaibility Domain Name where the Instance exists
+Physical Availaibility Domain Name where the Instance exists
 |`region` |string |{nbsp} |Region Name.
 
- Short Region Name of where the Instance exists
+Short Region Name of where the Instance exists
 |`tenant-id` |string |{nbsp} |Tenant Id.
 
- Tenant Id where the Instance was provisioned.
+Tenant Id where the Instance was provisioned.
 
 |===
 

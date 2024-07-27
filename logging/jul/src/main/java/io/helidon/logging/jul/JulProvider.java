@@ -100,6 +100,9 @@ public class JulProvider implements LoggingProvider {
         if (runtime || NativeImageHelper.isBuildTime()) {
             String when = runtime ? WHEN_RUNTIME : WHEN_INIT;
             Logger.getLogger(JulProvider.class.getName()).info("Logging at " + when + " configured using " + source);
+        } else {
+            // build time without native image
+            Logger.getLogger(JulProvider.class.getName()).info("Logging at " + WHEN_RUNTIME + " configured using " + source);
         }
     }
 
