@@ -34,6 +34,7 @@ module io.helidon.service.maven.plugin {
     requires maven.plugin.api;
     requires maven.project;
     requires io.github.classgraph;
+    requires io.helidon.service.metadata;
 
     exports io.helidon.service.maven.plugin;
 }

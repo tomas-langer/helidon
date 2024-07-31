@@ -68,6 +68,14 @@
             <artifactId>helidon-metrics-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.common</groupId>
+            <artifactId>helidon-common-mapper</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.service</groupId>
+            <artifactId>helidon-service-metadata</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-registry</artifactId>
         </dependency>

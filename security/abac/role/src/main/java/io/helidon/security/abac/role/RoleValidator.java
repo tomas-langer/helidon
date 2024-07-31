@@ -46,6 +46,7 @@ import io.helidon.security.SubjectType;
 import io.helidon.security.providers.abac.AbacAnnotation;
 import io.helidon.security.providers.abac.AbacValidatorConfig;
 import io.helidon.security.providers.abac.spi.AbacValidator;
+import io.helidon.service.inject.api.Interception;
 
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
@@ -202,6 +203,7 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
     @Inherited
     @Repeatable(RolesContainer.class)
     @AbacAnnotation
+    @Interception.EntryPointTrigger
     public @interface Roles {
         /**
          * Array of roles allowed for this resource.
@@ -226,6 +228,7 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
     @Documented
     @Inherited
     @AbacAnnotation
+    @Interception.EntryPointTrigger
     public @interface RolesContainer {
         /**
          * Repeatable annotation value.

@@ -55,7 +55,6 @@
         <module>tls</module>
         <module>types</module>
         <module>uri</module>
-        <module>json</module>
     </modules>
 
     <build>

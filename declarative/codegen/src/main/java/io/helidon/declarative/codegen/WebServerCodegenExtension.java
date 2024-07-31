@@ -16,6 +16,7 @@
 
 package io.helidon.declarative.codegen;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -31,8 +32,10 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.service.codegen.ServiceCodegenTypes;
 
+import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_CONSUMES_ANNOTATION;
 import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_METHOD_ANNOTATION;
 import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_PATH_ANNOTATION;
+import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_PRODUCES_ANNOTATION;
 import static java.util.function.Predicate.not;
 
 class WebServerCodegenExtension implements CodegenExtension {
@@ -84,6 +87,17 @@ class WebServerCodegenExtension implements CodegenExtension {
                 .map(it -> toParamDef(endpoint, it))
                 .toList();
 
+        List<String> produces = new ArrayList<>();
+        List<String> consumes = new ArrayList<>();
+
+        if (typedElementInfo.hasAnnotation(HTTP_PRODUCES_ANNOTATION)) {
+            produces.addAll(typedElementInfo.annotation(HTTP_PRODUCES_ANNOTATION).stringValues().orElseGet(List::of));
+        }
+
+        if (typedElementInfo.hasAnnotation(HTTP_CONSUMES_ANNOTATION)) {
+            consumes.addAll(typedElementInfo.annotation(HTTP_CONSUMES_ANNOTATION).stringValues().orElseGet(List::of));
+        }
+
         return new MethodDef(typedElementInfo,
                              Optional.ofNullable(path),
                              className,
@@ -91,7 +105,9 @@ class WebServerCodegenExtension implements CodegenExtension {
                              serviceMethod,
                              methodName,
                              httpMethod,
-                             params);
+                             params,
+                             produces,
+                             consumes);
     }
 
     private ParamDef toParamDef(TypeInfo endpoint, TypedElementInfo elementInfo) {

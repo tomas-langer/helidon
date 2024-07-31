@@ -17,6 +17,7 @@
 package io.helidon.security;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -207,6 +208,12 @@ public class SecurityLevel {
          */
         public SecurityLevelBuilder withClassAnnotations(Map<Class<? extends Annotation>, List<Annotation>> classAnnotations) {
             this.classAnnotations = classAnnotations;
+            return this;
+        }
+
+        public SecurityLevelBuilder addMethodAnnotation(Annotation annotation) {
+            this.methodAnnotations.computeIfAbsent(annotation.annotationType(), it -> new ArrayList<>())
+                    .add(annotation);
             return this;
         }
 

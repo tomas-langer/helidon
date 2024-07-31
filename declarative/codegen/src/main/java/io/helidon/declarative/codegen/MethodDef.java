@@ -40,7 +40,9 @@ record MethodDef(TypedElementInfo methodElement,
                  String serviceMethod, // endpoint_greetNamed
                  String methodName, // greetNamed
                  String httpMethod, // GET
-                 List<ParamDef> params
+                 List<ParamDef> params,
+                 List<String> producesMediaTypes,
+                 List<String> consumesMediaTypes
 
 ) {
     TypeName supplierType() {

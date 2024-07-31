@@ -23,9 +23,13 @@ final class WebServerCodegenTypes {
 
     static final TypeName SERVER_REQUEST = TypeName.create("io.helidon.webserver.http.ServerRequest");
     static final TypeName SERVER_RESPONSE = TypeName.create("io.helidon.webserver.http.ServerResponse");
+    static final TypeName SERVER_HTTP_ROUTE = TypeName.create("io.helidon.webserver.http.HttpRoute");
     static final TypeName SERVER_HTTP_FEATURE = TypeName.create("io.helidon.webserver.http.HttpFeature");
     static final TypeName SERVER_HTTP_ROUTING_BUILDER = TypeName.create("io.helidon.webserver.http.HttpRouting.Builder");
     static final TypeName SERVER_HTTP_RULES = TypeName.create("io.helidon.webserver.http.HttpRules");
+
+    static final TypeName MEDIA_TYPE = TypeName.create("io.helidon.common.media.type.MediaType");
+    static final TypeName MEDIA_TYPES = TypeName.create("io.helidon.common.media.type.MediaTypes");
 
     static final TypeName HTTP_METHOD = TypeName.create("io.helidon.http.Method");
     static final TypeName HTTP_STATUS = TypeName.create("io.helidon.http.Status");
@@ -34,6 +38,8 @@ final class WebServerCodegenTypes {
     static final TypeName HTTP_PATH_ANNOTATION = TypeName.create("io.helidon.http.Http.Path");
     static final TypeName HTTP_METHOD_ANNOTATION = TypeName.create("io.helidon.http.Http.HttpMethod");
     static final TypeName HTTP_STATUS_ANNOTATION = TypeName.create("io.helidon.http.Http.Status");
+    static final TypeName HTTP_PRODUCES_ANNOTATION = TypeName.create("io.helidon.http.Http.Produces");
+    static final TypeName HTTP_CONSUMES_ANNOTATION = TypeName.create("io.helidon.http.Http.Consumes");
     static final TypeName HTTP_PATH_PARAM_ANNOTATION = TypeName.create("io.helidon.http.Http.PathParam");
     static final TypeName HTTP_QUERY_PARAM_ANNOTATION = TypeName.create("io.helidon.http.Http.QueryParam");
     static final TypeName HTTP_HEADER_PARAM_ANNOTATION = TypeName.create("io.helidon.http.Http.HeaderParam");

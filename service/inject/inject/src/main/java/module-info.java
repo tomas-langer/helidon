@@ -26,9 +26,11 @@ module io.helidon.service.inject {
     requires transitive io.helidon.builder.api;
     requires transitive io.helidon.common.types;
     requires transitive io.helidon.common.configurable;
+
     requires io.helidon.metrics.api;
     requires io.helidon;
     requires io.helidon.logging.common;
+    requires io.helidon.service.metadata;
 
     provides io.helidon.service.registry.spi.ServiceRegistryManagerProvider
             with io.helidon.service.inject.InjectRegistryManagerProvider;

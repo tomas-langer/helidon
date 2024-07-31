@@ -18,6 +18,9 @@
  * Helidon WebServer Security Support.
  */
 module io.helidon.webserver.security {
+    // only used for generated code
+    requires static io.helidon.service.inject.api;
+
     requires io.helidon.common.context;
     requires io.helidon.security.integration.common;
     requires io.helidon.webserver;
@@ -27,6 +30,7 @@ module io.helidon.webserver.security {
     requires transitive io.helidon.common.config;
     requires transitive io.helidon.security.util;
     requires transitive io.helidon.security;
+    requires io.helidon.service.registry;
 
     provides io.helidon.webserver.spi.ServerFeatureProvider
             with io.helidon.webserver.security.SecurityFeatureProvider;

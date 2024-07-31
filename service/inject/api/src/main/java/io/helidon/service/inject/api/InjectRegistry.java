@@ -33,7 +33,7 @@ import io.helidon.service.registry.Service;
 @Service.Contract
 public interface InjectRegistry extends io.helidon.service.registry.ServiceRegistry {
     /**
-     * {@link io.helidon.service.registry.DescriptorMetadata#registryType()} for inject services.
+     * {@link io.helidon.service.metadata.DescriptorMetadata#registryType()} for inject services.
      */
     String REGISTRY_TYPE_INJECT = "inject";
 

@@ -34,7 +34,7 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.service.codegen.GeneratedMainCodegen;
 import io.helidon.service.inject.api.InjectServiceInfo;
-import io.helidon.service.registry.DescriptorMetadata;
+import io.helidon.service.metadata.DescriptorMetadata;
 import io.helidon.service.registry.GeneratedService;
 import io.helidon.service.registry.ServiceDiscovery;
 import io.helidon.service.registry.ServiceLoader__ServiceDescriptor;

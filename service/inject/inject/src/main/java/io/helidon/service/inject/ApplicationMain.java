@@ -133,6 +133,7 @@ public abstract class ApplicationMain {
      * startup services.
      *
      * @param config configuration of the Inject service registry
+     * @return the inject registry created within this method
      */
     protected InjectRegistry init(InjectConfig config) {
         InjectRegistryManager manager = InjectRegistryManager.create(config);

@@ -223,25 +223,34 @@ public final class Http {
     }
 
     /**
-     * PATCH method of an HTTP endpoint.
+     * What media type(s) this method produces.
+     * <p>
+     * If the method may produce more than one type, the response headers must be crafted by hand. If it produces
+     * exactly one type, that type will be set by Helidon on response.
      */
     @Retention(RetentionPolicy.CLASS)
+    @Target(ElementType.METHOD)
     @Documented
     public @interface Produces {
         /**
-         * Media types that may be returned by this endpoint.
+         * Media types produced by this method.
          *
-         * @return
+         * @return produced media types, such as {@code application/json}
          */
         String[] value();
     }
 
     /**
-     * PATCH method of an HTTP endpoint.
+     * What media type(s) this method can consume.
      */
     @Retention(RetentionPolicy.CLASS)
     @Documented
     public @interface Consumes {
+        /**
+         * Media types acceptable by this method.
+         *
+         * @return consumed media types, such as {@code application/json}
+         */
         String[] value();
     }
 }

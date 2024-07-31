@@ -169,7 +169,7 @@ public final class HeaderNames {
      */
     public static final String COOKIE_STRING = Strings.COOKIE_STRING;
     /**
-     * The {@value} header name.
+     * The {@value #COOKIE_STRING} header name.
      * An HTTP cookie previously sent by the server with {@value #SET_COOKIE_STRING}.
      */
     public static final HeaderName COOKIE = HeaderNameEnum.COOKIE;
@@ -681,7 +681,7 @@ public final class HeaderNames {
     /**
      * The {@value #TRANSFER_ENCODING_STRING} header name.
      * The form of encoding used to safely transfer the entity to the user. Currently defined methods are:
-     * {@value}.
+     * {@code chunked, compress, deflate, gzip, identity}.
      */
     public static final HeaderName TRANSFER_ENCODING = HeaderNameEnum.TRANSFER_ENCODING;
     /**

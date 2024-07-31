@@ -19,10 +19,10 @@ package io.helidon.examples.quickstart.se;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.helidon.common.config.Configuration;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
 import io.helidon.http.Status;
+import io.helidon.service.inject.api.Configuration;
 import io.helidon.service.inject.api.Injection;
 
 import jakarta.json.Json;
@@ -55,7 +55,7 @@ class GreetEndpoint {
     private final AtomicReference<String> greeting = new AtomicReference<>();
 
     @Injection.Inject
-    GreetEndpoint(@Configuration.Value("app.greeting:Ciao") String greeting) {
+    GreetEndpoint(@Configuration.Value(value = "app.greeting:Ciao") String greeting) {
         this.greeting.set(greeting);
     }
 
@@ -86,7 +86,7 @@ class GreetEndpoint {
     @Http.PUT
     @Http.Path("/greeting")
     @Http.Status(Status.NO_CONTENT_204_INT)
-    @Http.Consumes()
+    @Http.Consumes(MediaTypes.APPLICATION_JSON_STRING)
     void updateGreetingHandler(@Http.Entity JsonObject greetingMessage) {
         if (!greetingMessage.containsKey("greeting")) {
             // mapped by QuickstartErrorHandler
@@ -94,6 +94,26 @@ class GreetEndpoint {
         }
 
         greeting.set(greetingMessage.getString("greeting"));
+    }
+
+    /**
+     * Set the greeting to use in future messages.
+     *
+     * @param greetingMessage the entity
+     * @return Hello World message
+     */
+    @Http.POST
+    @Http.Path("/greeting")
+    @Http.Consumes(MediaTypes.APPLICATION_JSON_STRING)
+    @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
+    JsonObject updateGreetingHandlerReturningCurrent(@Http.Entity JsonObject greetingMessage) {
+        if (!greetingMessage.containsKey("greeting")) {
+            // mapped by QuickstartErrorHandler
+            throw new QuickstartException(Status.BAD_REQUEST_400, "No greeting provided");
+        }
+        JsonObject response = response("World");
+        greeting.set(greetingMessage.getString("greeting"));
+        return response;
     }
 
     private JsonObject response(String name) {

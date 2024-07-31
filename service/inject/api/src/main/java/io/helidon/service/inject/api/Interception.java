@@ -18,6 +18,7 @@ package io.helidon.service.inject.api;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -34,13 +35,28 @@ public final class Interception {
 
     /**
      * Meta-annotation for an annotation that will trigger services annotated with it to become intercepted.
+     * This will intercept any method in an annotated type, or an annotated method.
      *
      * @see Interception.Interceptor
      */
     @Documented
     @Retention(RetentionPolicy.CLASS)
     @Target(ElementType.ANNOTATION_TYPE)
+    @Inherited
     public @interface Trigger {
+    }
+
+    /**
+     * Meta annotation for an annotation that will trigger interception of the entry point. Entry point interceptors
+     * use entry point specific interfaces (e.g. for WebServer, the interceptor would get the server request and server response).
+     * <p>
+     * Each entry point that supports declarative model should add support for entry point triggers.
+     */
+    @Documented
+    @Retention(RetentionPolicy.CLASS)
+    @Target(ElementType.ANNOTATION_TYPE)
+    @Inherited
+    public @interface EntryPointTrigger {
     }
 
     /**

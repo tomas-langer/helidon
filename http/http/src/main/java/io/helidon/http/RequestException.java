@@ -22,11 +22,29 @@ package io.helidon.http;
  * This exception is not used by clients.
  */
 public class RequestException extends RuntimeException {
+    /**
+     * Type of this event.
+     */
     private final DirectHandler.EventType eventType;
+    /**
+     * HTTP status to return.
+     */
     private final Status status;
+    /**
+     * Request as far as it could have been parsed.
+     */
     private final DirectHandler.TransportRequest transportRequest;
+    /**
+     * Whether the connection can be kept alive.
+     */
     private final boolean keepAlive;
+    /**
+     * Header to return with the response.
+     */
     private final ServerResponseHeaders responseHeaders;
+    /**
+     * Whether the message is safe to be shown in logs and messages.
+     */
     private final boolean safeMessage;
 
     /**

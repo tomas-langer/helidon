@@ -63,6 +63,10 @@
             <artifactId>helidon-config-yaml</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.service</groupId>
+            <artifactId>helidon-service-registry</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.service.inject</groupId>
             <artifactId>helidon-service-inject</artifactId>
             <optional>true</optional>

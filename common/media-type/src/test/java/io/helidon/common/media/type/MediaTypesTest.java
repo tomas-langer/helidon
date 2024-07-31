@@ -50,6 +50,7 @@ class MediaTypesTest {
             .filter(it -> Modifier.isStatic(it.getModifiers()))
             .filter(it -> Modifier.isFinal(it.getModifiers()))
             .filter(it -> Modifier.isPublic(it.getModifiers()))
+            .filter(it -> it.getType().equals(MediaType.class))
             .map(Field::getName)
             .collect(Collectors.toSet());
 

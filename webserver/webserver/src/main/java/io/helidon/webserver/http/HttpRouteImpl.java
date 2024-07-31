@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2022, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,21 +22,36 @@ import io.helidon.http.HttpPrologue;
 import io.helidon.http.Method;
 import io.helidon.http.PathMatcher;
 import io.helidon.http.PathMatchers;
+import io.helidon.http.ServerRequestHeaders;
 
 class HttpRouteImpl extends HttpRouteBase implements HttpRoute {
     private final Handler handler;
     private final Predicate<Method> methodPredicate;
     private final PathMatcher pathMatcher;
+    private final Predicate<ServerRequestHeaders> headersPredicate;
 
     HttpRouteImpl(HttpRoute.Builder builder) {
         this.handler = builder.handler();
         this.methodPredicate = builder.methodPredicate();
         this.pathMatcher = builder.pathPredicate();
+        this.headersPredicate = builder.headersPredicate();
     }
 
     @Override
     public PathMatchers.MatchResult accepts(HttpPrologue prologue) {
         if (!methodPredicate.test(prologue.method())) {
+            return PathMatchers.MatchResult.notAccepted();
+        }
+
+        return pathMatcher.match(prologue.uriPath());
+    }
+
+    @Override
+    public PathMatchers.MatchResult accepts(HttpPrologue prologue, ServerRequestHeaders headers) {
+        if (!methodPredicate.test(prologue.method())) {
+            return PathMatchers.MatchResult.notAccepted();
+        }
+        if (!headersPredicate.test(headers)) {
             return PathMatchers.MatchResult.notAccepted();
         }
 

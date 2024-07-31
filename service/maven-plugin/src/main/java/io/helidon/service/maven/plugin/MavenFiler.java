@@ -26,6 +26,7 @@ import java.nio.file.StandardOpenOption;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenFiler;
+import io.helidon.codegen.FilerResource;
 import io.helidon.codegen.FilerTextResource;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.common.types.TypeName;
@@ -97,6 +98,24 @@ class MavenFiler implements CodegenFiler {
             }
         } else {
             return new MavenFilerTextResource(resourcePath);
+        }
+    }
+
+    @Override
+    public FilerResource resource(String location, Object... originatingElements) {
+        Path resourcePath = outputDirectory.resolve(location);
+        Path parentDir = resourcePath.getParent();
+        if (parentDir != null) {
+            mkdirs(parentDir);
+        }
+        if (Files.exists(resourcePath)) {
+            try {
+                return new MavenFilerResource(resourcePath, Files.readAllBytes(resourcePath));
+            } catch (IOException e) {
+                throw new CodegenException("Failed to read existing resource: " + resourcePath.toAbsolutePath(), e);
+            }
+        } else {
+            return new MavenFilerResource(resourcePath);
         }
     }
 

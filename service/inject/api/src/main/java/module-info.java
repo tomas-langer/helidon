@@ -18,9 +18,11 @@
  * Service registry with injection support API.
  */
 module io.helidon.service.inject.api {
-    exports io.helidon.service.inject.api;
+    requires io.helidon.common.config;
 
     requires transitive io.helidon.service.registry;
     requires transitive io.helidon.builder.api;
     requires transitive io.helidon.common.types;
+
+    exports io.helidon.service.inject.api;
 }

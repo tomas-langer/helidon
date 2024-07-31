@@ -45,13 +45,13 @@ import io.helidon.common.types.TypeName;
 import io.helidon.service.codegen.DescriptorClassCode;
 import io.helidon.service.codegen.GenerateServiceDescriptor;
 import io.helidon.service.codegen.HelidonMetaInfServices;
-import io.helidon.service.codegen.HelidonMetaInfServices.DescriptorMeta;
 import io.helidon.service.codegen.RegistryCodegenContext;
 import io.helidon.service.inject.api.InjectServiceInfo;
 import io.helidon.service.inject.api.Interception;
 import io.helidon.service.inject.api.Ip;
 import io.helidon.service.inject.api.Lookup;
 import io.helidon.service.inject.api.Qualifier;
+import io.helidon.service.metadata.DescriptorMetadata;
 import io.helidon.service.registry.ServiceLoader__ServiceDescriptor;
 
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_PLAN_BINDER;
@@ -171,17 +171,17 @@ class ApplicationCreator {
         List<Path> toCompile = new ArrayList<>();
         toCompile.add(generated);
 
-        HelidonMetaInfServices services = HelidonMetaInfServices.create(ctx.filer(), GENERATOR, GENERATOR, moduleName);
+        HelidonMetaInfServices services = HelidonMetaInfServices.create(ctx.filer(), moduleName);
 
         for (DescriptorClassCode descriptor : registryCodegenContext.descriptors()) {
             Path path = ctx.filer().writeSourceFile(descriptor.classCode().classModel().build(),
                                                     descriptor.classCode().originatingElements());
             toCompile.add(path);
 
-            services.add(new DescriptorMeta(descriptor.registryType(),
-                                            descriptor.classCode().newType(),
-                                            descriptor.weight(),
-                                            descriptor.contracts()));
+            services.add(DescriptorMetadata.create(descriptor.registryType(),
+                                                   descriptor.classCode().newType(),
+                                                   descriptor.weight(),
+                                                   descriptor.contracts()));
         }
 
         services.write();

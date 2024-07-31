@@ -24,9 +24,17 @@ package io.helidon.http;
  * before the status code is sent.
  */
 public class HttpException extends RuntimeException {
-
+    /**
+     * HTTP status to return.
+     */
     private final Status status;
+    /**
+     * Whether the connection can be kept alive.
+     */
     private final boolean keepAlive;
+    /**
+     * Header to return with the response.
+     */
     private final ServerResponseHeaders headers = ServerResponseHeaders.create();
 
     /**

@@ -40,6 +40,8 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
+import io.helidon.service.codegen.spi.RegistryCodegenExtension;
+import io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider;
 import io.helidon.service.metadata.DescriptorMetadata;
 
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICE_ANNOTATION_DESCRIPTOR;

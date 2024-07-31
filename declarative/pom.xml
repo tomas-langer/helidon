@@ -39,6 +39,7 @@
 
     <modules>
         <module>codegen</module>
+        <module>tests</module>
     </modules>
 
     <build>

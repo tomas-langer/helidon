@@ -36,6 +36,7 @@ import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.codegen.classmodel.Field;
 import io.helidon.codegen.classmodel.Javadoc;
 import io.helidon.codegen.classmodel.Method;
@@ -1194,10 +1195,16 @@ class InjectionExtension implements RegistryCodegenExtension {
                             for (Annotation qualifier : param.qualifiers()) {
                                 it.addContent(".addQualifier(qualifier -> qualifier.typeName(")
                                         .addContentCreate(qualifier.typeName().genericTypeName())
-                                        .addContent(")");
-                                qualifier.value().ifPresent(q -> it.addContent(".value(\"")
-                                        .addContent(q)
-                                        .addContent("\")"));
+                                        .addContentLine(")");
+                                qualifier.values()
+                                        .keySet()
+                                        .forEach(propertyName -> {
+                                            it.addContent(".putValue(\"")
+                                                    .addContent(propertyName)
+                                                    .addContent("\", ");
+                                            addAnnotationValue(it, qualifier.objectValue(propertyName).get());
+                                            it.addContentLine(")");
+                                        });
                                 it.addContentLine(")");
                             }
                         }
@@ -1974,6 +1981,47 @@ class InjectionExtension implements RegistryCodegenExtension {
         return TypeName.builder(descriptorType)
                 .addTypeArgument(serviceType)
                 .build();
+    }
+
+    private static void addAnnotationValue(ContentBuilder<?> contentBuilder, Object objectValue) {
+        switch (objectValue) {
+        case String value -> contentBuilder.addContent("\"" + value + "\"");
+        case Boolean value -> contentBuilder.addContent(String.valueOf(value));
+        case Long value -> contentBuilder.addContent(String.valueOf(value) + 'L');
+        case Double value -> contentBuilder.addContent(String.valueOf(value) + 'D');
+        case Integer value -> contentBuilder.addContent(String.valueOf(value));
+        case Byte value -> contentBuilder.addContent("(byte)" + value);
+        case Character value -> contentBuilder.addContent("'" + value + "'");
+        case Short value -> contentBuilder.addContent("(short)" + value);
+        case Float value -> contentBuilder.addContent(String.valueOf(value) + 'F');
+        case Class<?> value -> contentBuilder.addContentCreate(TypeName.create(value));
+        case TypeName value -> contentBuilder.addContentCreate(value);
+        case Annotation value -> contentBuilder.addContentCreate(value);
+        case Enum<?> value -> toEnumValue(contentBuilder, value);
+        case List<?> values -> toListValues(contentBuilder, values);
+        default -> throw new IllegalStateException("Unexpected annotation value type " + objectValue.getClass()
+                .getName() + ": " + objectValue);
+        }
+    }
+
+    private static void toListValues(ContentBuilder<?> contentBuilder, List<?> values) {
+        contentBuilder.addContent(List.class)
+                .addContent(".of(");
+        int size = values.size();
+        for (int i = 0; i < size; i++) {
+            Object value = values.get(i);
+            addAnnotationValue(contentBuilder, value);
+            if (i != size - 1) {
+                contentBuilder.addContent(",");
+            }
+        }
+        contentBuilder.addContent(")");
+    }
+
+    private static void toEnumValue(ContentBuilder<?> contentBuilder, Enum<?> enumValue) {
+        contentBuilder.addContent(enumValue.getDeclaringClass())
+                .addContent(".")
+                .addContent(enumValue.name());
     }
 
     private record GenericTypeDeclaration(String constantName,

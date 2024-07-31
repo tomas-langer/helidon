@@ -18,6 +18,7 @@ package io.helidon.http;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -35,11 +36,19 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 class HttpStatusTest {
-    private static final Class<Status> clazz = Status.class;
-    private static final Set<String> constants = Stream.of(clazz.getDeclaredFields())
+    private static final Class<Status> CLASS = Status.class;
+    private static final Set<String> STATUS_CONSTANTS = Stream.of(CLASS.getDeclaredFields())
             .filter(it -> Modifier.isStatic(it.getModifiers()))
             .filter(it -> Modifier.isFinal(it.getModifiers()))
             .filter(it -> Modifier.isPublic(it.getModifiers()))
+            .filter(it -> it.getType().equals(Status.class))
+            .map(Field::getName)
+            .collect(Collectors.toSet());
+    private static final Set<String> INT_CONSTANTS = Stream.of(CLASS.getDeclaredFields())
+            .filter(it -> Modifier.isStatic(it.getModifiers()))
+            .filter(it -> Modifier.isFinal(it.getModifiers()))
+            .filter(it -> Modifier.isPublic(it.getModifiers()))
+            .filter(it -> it.getType().equals(int.class))
             .map(Field::getName)
             .collect(Collectors.toSet());
 
@@ -67,11 +76,11 @@ class HttpStatusTest {
     }
 
     @Test
-    void testAllConstantsAreValid() throws NoSuchFieldException, IllegalAccessException {
+    void testAllStatusConstantsAreValid() throws NoSuchFieldException, IllegalAccessException {
         // this is to test correct initialization (there may be an issue when the constants
         // are defined on the interface and implemented by enum outside of it)
-        for (String constant : constants) {
-            Status value = (Status) clazz.getField(constant)
+        for (String constant : STATUS_CONSTANTS) {
+            Status value = (Status) CLASS.getField(constant)
                     .get(null);
 
             assertAll(
@@ -93,6 +102,25 @@ class HttpStatusTest {
                     }
             );
 
+            // make sure the int constant exists for this value
+            int intConstant = (int) CLASS.getField(constant + "_INT")
+                    .get(null);
+
+            assertThat(constant, intConstant, is(value.code()));
+        }
+    }
+
+    @Test
+    void testAllIntConstantsAreValid() throws NoSuchFieldException, IllegalAccessException {
+        Set<Integer> allValues = new HashSet<>();
+
+        for (String constant : INT_CONSTANTS) {
+            int value = (int) CLASS.getField(constant)
+                    .get(null);
+
+            assertThat(value, not(0));
+
+            assertThat(constant + " has duplicate value: " + value, allValues.add(value), is(true));
         }
     }
 }

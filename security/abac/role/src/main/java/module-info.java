@@ -31,6 +31,8 @@ module io.helidon.security.abac.role {
     requires jakarta.annotation;
 
     requires static io.helidon.common.features.api;
+    // only for annotation
+    requires static io.helidon.service.inject.api;
 
     requires transitive io.helidon.common.config;
     requires transitive io.helidon.security.providers.common;
