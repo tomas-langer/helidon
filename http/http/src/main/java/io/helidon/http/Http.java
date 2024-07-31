@@ -242,5 +242,6 @@ public final class Http {
     @Retention(RetentionPolicy.CLASS)
     @Documented
     public @interface Consumes {
+        String[] value();
     }
 }

@@ -19,7 +19,7 @@ package io.helidon.examples.quickstart.se;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import io.helidon.common.config.Config;
+import io.helidon.common.config.Configuration;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
 import io.helidon.http.Status;
@@ -55,7 +55,7 @@ class GreetEndpoint {
     private final AtomicReference<String> greeting = new AtomicReference<>();
 
     @Injection.Inject
-    GreetEndpoint(@Config.Value("app.greeting:Ciao") String greeting) {
+    GreetEndpoint(@Configuration.Value("app.greeting:Ciao") String greeting) {
         this.greeting.set(greeting);
     }
 
@@ -63,7 +63,7 @@ class GreetEndpoint {
      * Return a worldly greeting message.
      */
     @Http.GET
-    @Http.Produces(MediaTypes.APPLICATION_JSON)
+    @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
     JsonObject getDefaultMessageHandler() {
         return response("World");
     }
@@ -73,7 +73,7 @@ class GreetEndpoint {
      */
     @Http.GET
     @Http.Path("/{name}")
-    @Http.Produces()
+    @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
     JsonObject getMessageHandler(@Http.PathParam("name") String name) {
         return response(name);
     }

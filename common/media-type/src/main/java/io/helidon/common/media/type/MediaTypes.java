@@ -51,7 +51,11 @@ public final class MediaTypes {
      */
     public static final MediaType APPLICATION_SVG_XML = MediaTypeEnum.APPLICATION_SVG_XML;
     /**
-     * {@code application/json} media type.
+     * {@value} media type.
+     */
+    public static final String APPLICATION_JSON_STRING = "application/json";
+    /**
+     * {@value #APPLICATION_JSON_STRING} media type.
      */
     public static final MediaType APPLICATION_JSON = MediaTypeEnum.APPLICATION_JSON;
     /**
