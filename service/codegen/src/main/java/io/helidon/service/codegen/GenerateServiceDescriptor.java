@@ -533,6 +533,7 @@ public class GenerateServiceDescriptor {
         // constant for dependency
         for (ParamDefinition param : params) {
             classModel.addField(field -> field
+                    // must be public, used in generated Injection__Application to bind services
                     .accessModifier(AccessModifier.PUBLIC)
                     .isStatic(true)
                     .isFinal(true)

@@ -47,19 +47,6 @@ public final class Interception {
     }
 
     /**
-     * Meta annotation for an annotation that will trigger interception of the entry point. Entry point interceptors
-     * use entry point specific interfaces (e.g. for WebServer, the interceptor would get the server request and server response).
-     * <p>
-     * Each entry point that supports declarative model should add support for entry point triggers.
-     */
-    @Documented
-    @Retention(RetentionPolicy.CLASS)
-    @Target(ElementType.ANNOTATION_TYPE)
-    @Inherited
-    public @interface EntryPointTrigger {
-    }
-
-    /**
      * Implementors of this contract must be {@link io.helidon.service.inject.api.Injection.Named}
      * according to the {@link Interception.Trigger} annotation they support.
      */

@@ -46,7 +46,6 @@ import io.helidon.security.SubjectType;
 import io.helidon.security.providers.abac.AbacAnnotation;
 import io.helidon.security.providers.abac.AbacValidatorConfig;
 import io.helidon.security.providers.abac.spi.AbacValidator;
-import io.helidon.service.inject.api.Interception;
 
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
@@ -161,6 +160,12 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
         validate(config.serviceRolesAllowed(), collector, request.service(), SubjectType.SERVICE);
     }
 
+    @Override
+    public Collection<Class<? extends Annotation>> supportedAnnotations() {
+        //Order of the annotations matters because of annotation handling.
+        return List.of(RolesAllowed.class, Roles.class, RolesContainer.class, PermitAll.class, DenyAll.class);
+    }
+
     private void validate(Set<String> rolesAllowed, Errors.Collector collector, Optional<Subject> subject, SubjectType type) {
         if (rolesAllowed.isEmpty()) {
             // no required roles
@@ -187,12 +192,6 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
         }
     }
 
-    @Override
-    public Collection<Class<? extends Annotation>> supportedAnnotations() {
-        //Order of the annotations matters because of annotation handling.
-        return List.of(RolesAllowed.class, Roles.class, RolesContainer.class, PermitAll.class, DenyAll.class);
-    }
-
     /**
      * A definition of "roles allowed" for a specific subject type.
      * If user/service is in any of the roles, access will be granted.
@@ -203,7 +202,6 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
     @Inherited
     @Repeatable(RolesContainer.class)
     @AbacAnnotation
-    @Interception.EntryPointTrigger
     public @interface Roles {
         /**
          * Array of roles allowed for this resource.
@@ -228,7 +226,6 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
     @Documented
     @Inherited
     @AbacAnnotation
-    @Interception.EntryPointTrigger
     public @interface RolesContainer {
         /**
          * Repeatable annotation value.
@@ -408,6 +405,20 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
             }
 
             /**
+             * Load configuration data from configuration.
+             *
+             * @param config configuration located the key of this attribute config
+             * @return updated builder instance
+             */
+            public Builder config(Config config) {
+                config.get("user").asList(String.class).ifPresent(this::addRoles);
+                config.get("service").asList(String.class).ifPresent(this::addServiceRoles);
+                config.get("permit-all").asBoolean().ifPresent(this::permitAll);
+                config.get("deny-all").asBoolean().ifPresent(this::denyAll);
+                return this;
+            }
+
+            /**
              * Add a role to the list of roles for a service subject.
              *
              * @param role a role to add
@@ -437,20 +448,6 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
              */
             private Builder denyAll(boolean denyAll) {
                 this.denyAll = denyAll;
-                return this;
-            }
-
-            /**
-             * Load configuration data from configuration.
-             *
-             * @param config configuration located the key of this attribute config
-             * @return updated builder instance
-             */
-            public Builder config(Config config) {
-                config.get("user").asList(String.class).ifPresent(this::addRoles);
-                config.get("service").asList(String.class).ifPresent(this::addServiceRoles);
-                config.get("permit-all").asBoolean().ifPresent(this::permitAll);
-                config.get("deny-all").asBoolean().ifPresent(this::denyAll);
                 return this;
             }
         }

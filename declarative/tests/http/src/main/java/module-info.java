@@ -5,7 +5,6 @@ module io.helidon.declarative.tests.http {
     requires io.helidon.service.inject;
     requires jakarta.json;
     requires io.helidon.config.yaml;
-    requires io.helidon.security.abac.role;
     requires io.helidon.webserver.security;
 
     exports io.helidon.declarative.tests.http;

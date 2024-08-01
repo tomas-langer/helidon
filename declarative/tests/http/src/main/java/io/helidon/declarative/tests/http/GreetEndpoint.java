@@ -108,7 +108,6 @@ class GreetEndpoint {
     @Http.Path("/greeting")
     @Http.Consumes(MediaTypes.APPLICATION_JSON_STRING)
     @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
-    @RoleValidator.Roles("admin")
     JsonObject updateGreetingHandlerReturningCurrent(@Http.Entity JsonObject greetingMessage,
                                                      SecurityContext securityContext) {
         if (!greetingMessage.containsKey("greeting")) {
