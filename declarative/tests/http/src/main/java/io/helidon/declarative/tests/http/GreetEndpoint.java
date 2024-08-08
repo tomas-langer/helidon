@@ -23,7 +23,6 @@ import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
 import io.helidon.http.Status;
 import io.helidon.security.SecurityContext;
-import io.helidon.security.abac.role.RoleValidator;
 import io.helidon.service.inject.api.Configuration;
 import io.helidon.service.inject.api.Injection;
 
@@ -63,6 +62,15 @@ class GreetEndpoint {
 
     /**
      * Return a worldly greeting message.
+     */
+    @Http.GET
+    @Http.Produces("text/plain")
+    JsonObject getDefaultMessageHandlerPlain() {
+        return response("World");
+    }
+
+    /**
+     * Return a worldly greeting message in plaintext.
      */
     @Http.GET
     @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)

@@ -33,6 +33,7 @@ import io.helidon.codegen.CodegenContext;
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Field;
 import io.helidon.codegen.classmodel.Method;
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.types.AccessModifier;
@@ -163,10 +164,22 @@ final class GenerateEndpointService {
                     .type(MEDIA_TYPE)
                     .name(constantName)
                     .addContent(MEDIA_TYPES)
-                    .addContent(".create(\"")
-                    .addContent(mediaType)
-                    .addContent("\")"));
+                    .addContent(".")
+                    .update(builder -> mediaTypeRetriever(builder, mediaType)));
         });
+    }
+
+    private static void mediaTypeRetriever(Field.Builder builder, String mediaType) {
+        switch (mediaType) {
+        case "application/json" -> builder.addContent("APPLICATION_JSON");
+        case "*/*" -> builder.addContent("WILDCARD");
+        case "text/plain" -> builder.addContent("TEXT_PLAIN");
+        case "text/html" -> builder.addContent("TEXT_HTML");
+        case "application/xml" -> builder.addContent("APPLICATION_XML");
+        default -> builder.addContent("create(\"")
+                .addContent(mediaType)
+                .addContent("\")");
+        }
     }
 
     private static void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton) {
