@@ -73,11 +73,13 @@ final class GenerateEndpointService {
 
     private static final List<HttpParameterCodegenProvider> PARAM_PROVIDERS =
             HelidonServiceLoader.builder(ServiceLoader.load(HttpParameterCodegenProvider.class))
-                    .addService(new HttpEntityParamProvider())
-                    .addService(new HttpHeaderParamProvider())
-                    .addService(new HttpPathParamProvider())
-                    .addService(new HttpQueryParamProvider())
-                    .addService(new ServerReqResParamProvider())
+                    .addService(new ParamProviderHttpEntity())
+                    .addService(new ParamProviderHttpHeader())
+                    .addService(new ParamProviderHttpPathParam())
+                    .addService(new ParamProviderHttpQuery())
+                    .addService(new ParamProviderHttpReqRes())
+                    .addService(new ParamProviderSecurityContext())
+                    .addService(new ParamProviderContext())
                     .build()
                     .asList();
 

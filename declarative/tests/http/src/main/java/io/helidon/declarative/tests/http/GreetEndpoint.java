@@ -19,9 +19,11 @@ package io.helidon.declarative.tests.http;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.helidon.common.context.Context;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
 import io.helidon.http.Status;
+import io.helidon.metrics.api.Metrics;
 import io.helidon.security.SecurityContext;
 import io.helidon.service.inject.api.Configuration;
 import io.helidon.service.inject.api.Injection;
@@ -61,21 +63,22 @@ class GreetEndpoint {
     }
 
     /**
-     * Return a worldly greeting message.
-     */
-    @Http.GET
-    @Http.Produces("text/plain")
-    JsonObject getDefaultMessageHandlerPlain() {
-        return response("World");
-    }
-
-    /**
      * Return a worldly greeting message in plaintext.
      */
     @Http.GET
     @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
+    @Metrics.Counted
     JsonObject getDefaultMessageHandler() {
         return response("World");
+    }
+
+    /**
+     * Return a worldly greeting message.
+     */
+    @Http.GET
+    @Http.Produces("text/plain")
+    String getDefaultMessageHandlerPlain(Context context) {
+        return stringResponse("World");
     }
 
     /**
@@ -128,11 +131,13 @@ class GreetEndpoint {
     }
 
     private JsonObject response(String name) {
-        String msg = String.format("%s %s!", greeting.get(), name);
-
         return JSON.createObjectBuilder()
-                .add("message", msg)
+                .add("message", stringResponse(name))
                 .build();
+    }
+
+    private String stringResponse(String name) {
+        return String.format("%s %s!", greeting.get(), name);
     }
 
 }

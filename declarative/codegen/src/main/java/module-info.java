@@ -29,7 +29,4 @@ module io.helidon.declarative.codegen {
 
     provides io.helidon.codegen.spi.CodegenExtensionProvider
             with io.helidon.declarative.codegen.WebServerCodegenProvider;
-
-    provides io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider
-            with io.helidon.declarative.codegen.SecurityContextParamProvider;
 }

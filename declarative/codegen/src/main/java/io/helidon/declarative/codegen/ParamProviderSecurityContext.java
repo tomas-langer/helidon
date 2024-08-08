@@ -5,7 +5,7 @@ import java.util.NoSuchElementException;
 import io.helidon.common.types.TypeName;
 import io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider;
 
-public class SecurityContextParamProvider implements HttpParameterCodegenProvider {
+class ParamProviderSecurityContext implements HttpParameterCodegenProvider {
     private static final TypeName COMMON_SECURITY_CONTEXT = TypeName.create("io.helidon.common.security.SecurityContext");
     private static final TypeName SECURITY_CONTEXT = TypeName.create("io.helidon.security.SecurityContext");
 

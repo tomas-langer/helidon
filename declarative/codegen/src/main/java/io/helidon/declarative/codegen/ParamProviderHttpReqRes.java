@@ -19,7 +19,7 @@ package io.helidon.declarative.codegen;
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.TypeName;
 
-class ServerReqResParamProvider implements io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider {
+class ParamProviderHttpReqRes implements io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider {
     @Override
     public boolean codegen(ParameterCodegenContext ctx) {
         TypeName parameterType = ctx.parameterType();

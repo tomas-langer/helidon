@@ -6,6 +6,9 @@ module io.helidon.declarative.tests.http {
     requires jakarta.json;
     requires io.helidon.config.yaml;
     requires io.helidon.webserver.security;
+    requires io.helidon.metrics.api;
+    // todo remove - now needed for interceptors
+    requires io.helidon.metrics;
 
     exports io.helidon.declarative.tests.http;
 }

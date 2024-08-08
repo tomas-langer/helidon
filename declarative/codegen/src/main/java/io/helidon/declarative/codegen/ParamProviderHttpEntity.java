@@ -23,7 +23,7 @@ import io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider;
 
 import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_ENTITY_PARAM_ANNOTATION;
 
-class HttpEntityParamProvider extends AbstractParametersProvider implements HttpParameterCodegenProvider {
+class ParamProviderHttpEntity extends AbstractParametersProvider implements HttpParameterCodegenProvider {
     @Override
     public boolean codegen(ParameterCodegenContext ctx) {
 

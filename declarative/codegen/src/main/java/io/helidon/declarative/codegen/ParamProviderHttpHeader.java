@@ -30,7 +30,7 @@ import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_HEADER_N
 import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_HEADER_NAMES;
 import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_HEADER_PARAM_ANNOTATION;
 
-class HttpHeaderParamProvider extends AbstractParametersProvider implements HttpParameterCodegenProvider {
+class ParamProviderHttpHeader extends AbstractParametersProvider implements HttpParameterCodegenProvider {
     @Override
     public boolean codegen(ParameterCodegenContext ctx) {
 

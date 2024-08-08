@@ -23,29 +23,31 @@ import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.Annotation;
 import io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider;
 
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_PATH_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_QUERY_PARAM_ANNOTATION;
 
-class HttpPathParamProvider extends AbstractParametersProvider implements HttpParameterCodegenProvider {
+class ParamProviderHttpQuery extends AbstractParametersProvider implements HttpParameterCodegenProvider {
     @Override
     public boolean codegen(ParameterCodegenContext ctx) {
         Optional<Annotation> first = ctx.qualifiers().stream()
-                .filter(it -> HTTP_PATH_PARAM_ANNOTATION.equals(it.typeName()))
+                .filter(it -> HTTP_QUERY_PARAM_ANNOTATION.equals(it.typeName()))
                 .findFirst();
 
         if (first.isEmpty()) {
             return false;
         }
 
-        Annotation pathParam = first.get();
-        String pathParamName = pathParam.value()
-                .orElseThrow(() -> new CodegenException("@PathParam annotation must have a value."));
+        Annotation queryParam = first.get();
+        String queryParamName = queryParam.value()
+                .orElseThrow(() -> new CodegenException("@QueryParam annotation must have a value."));
 
         ContentBuilder<?> contentBuilder = ctx.contentBuilder();
         contentBuilder.addContent(ctx.serverRequestParamName())
-                .addContent(".path().pathParameters()");
+                .addContent(".query()");
 
-        codegenFromParameters(contentBuilder, ctx.parameterType(), pathParamName);
-
+        codegenFromParameters(contentBuilder,
+                              ctx.parameterType(),
+                              queryParamName);
         return true;
     }
+
 }

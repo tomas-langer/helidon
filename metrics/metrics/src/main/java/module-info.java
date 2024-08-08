@@ -27,7 +27,9 @@ import io.helidon.common.features.api.HelidonFlavor;
 )
 module io.helidon.metrics {
     requires static io.helidon.common.features.api;
+    requires static io.helidon.service.inject.api;
 
     requires transitive io.helidon.metrics.api;
 
+    exports io.helidon.metrics;
 }

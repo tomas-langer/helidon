@@ -28,12 +28,14 @@ import io.helidon.common.features.api.HelidonFlavor;
 
     requires static io.helidon.common.features.api;
     requires static io.helidon.config.metadata;
+    requires static io.helidon.service.inject.api;
 
     requires io.helidon.builder.api;
     requires io.helidon.http;
+    requires io.helidon.common.context;
 
     requires transitive io.helidon.common.config;
-    requires io.helidon.common.context;
+
 
     exports io.helidon.metrics.api;
     exports io.helidon.metrics.spi;

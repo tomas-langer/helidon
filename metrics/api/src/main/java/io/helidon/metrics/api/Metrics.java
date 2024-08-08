@@ -15,10 +15,18 @@
  */
 package io.helidon.metrics.api;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import io.helidon.service.inject.api.Interception;
 
 /**
  * A main entry point for developers to the Helidon metrics system, allowing access to the global meter registry and providing
@@ -197,4 +205,58 @@ public interface Metrics {
         }
         return result;
     }
+
+    enum ApplyOn {
+        SUCCESS,
+        FAILURE,
+        ALL
+    }
+
+    /**
+     * Records a monotonically increasing value.
+     * <p>
+     * Equivalent of {@link io.helidon.metrics.api.Counter}
+     */
+    @Target({ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR})
+    @Retention(RetentionPolicy.CLASS)
+    @Documented
+    @Inherited
+    @Interception.Trigger
+    @interface Counted {
+        /**
+         * Name of this counter. Default name is the fully qualified class name + dot + method name that is invoked.
+         * If defined on a class, this name will replace the fully qualified class name for naming counters on methods.
+         *
+         * @return counter name
+         */
+        String value() default "";
+
+        /**
+         * If set to {@code true}, the name defined by {@link #value()} is considered an absolute name, and will not be
+         * prefixed by the fully qualified class name.
+         * <p>
+         * This method is ignored on types, as it does not make sense (the value is always absolute if defined, and serves
+         * as a prefix for method metrics).
+         *
+         * @return whether the name is absolute
+         */
+        boolean absoluteName() default false;
+
+        /**
+         * Description of this counter.
+         *
+         * @return counter description
+         */
+        String description() default "";
+
+        /**
+         * Additional tags of this counter.
+         *
+         * @return counter tags
+         */
+        String[] tags() default {};
+
+        ApplyOn applyOn() default ApplyOn.ALL;
+    }
+
 }
