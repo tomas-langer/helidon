@@ -20,7 +20,7 @@ package io.helidon.faulttolerance;
  * Failure because of {@link Bulkhead} issues, most likely that the bulkhead does
  * not allow any more queued tasks.
  */
-public class BulkheadException extends RuntimeException {
+public class BulkheadException extends FaultToleranceException {
     BulkheadException(String message) {
         super(message);
     }

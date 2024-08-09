@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen;
+package io.helidon.declarative.codegen.webserver;
 
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.TypeName;
+import io.helidon.declarative.codegen.webserver.spi.HttpParameterCodegenProvider;
 
-class ParamProviderHttpReqRes implements io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider {
+class ParamProviderHttpReqRes implements HttpParameterCodegenProvider {
     @Override
     public boolean codegen(ParameterCodegenContext ctx) {
         TypeName parameterType = ctx.parameterType();

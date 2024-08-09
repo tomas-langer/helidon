@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen.spi;
+package io.helidon.declarative.codegen.webserver.spi;
 
-import io.helidon.declarative.codegen.ParameterCodegenContext;
+import io.helidon.declarative.codegen.webserver.ParameterCodegenContext;
 
 /**
  * Java {@link java.util.ServiceLoader} provider interface to add support for parameters of HTTP endpoint

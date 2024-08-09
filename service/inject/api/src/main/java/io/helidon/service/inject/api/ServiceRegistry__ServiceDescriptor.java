@@ -27,7 +27,7 @@ import io.helidon.service.registry.ServiceRegistry;
 @SuppressWarnings("checkstyle:TypeName") // matches pattern of generated descriptors
 public class ServiceRegistry__ServiceDescriptor implements GeneratedInjectService.Descriptor<InjectRegistry> {
     /**
-     * Singleton instance to be referenced when building applications.
+     * Singleton instance to be referenced when building bindings.
      */
     public static final ServiceRegistry__ServiceDescriptor INSTANCE = new ServiceRegistry__ServiceDescriptor();
 

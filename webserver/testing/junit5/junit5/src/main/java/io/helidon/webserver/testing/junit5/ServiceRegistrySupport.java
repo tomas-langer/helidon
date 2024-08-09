@@ -15,7 +15,7 @@ import io.helidon.webserver.WebServerService__ServiceDescriptor;
 class ServiceRegistrySupport {
     private static final LazyValue<Boolean> enabled = LazyValue.create(() -> {
         try {
-            Class.forName("io.helidon.service.inject.api.InjectRegistry");
+            Class.forName("io.helidon.service.inject.ApplicationMain");
             return true;
         } catch (ClassNotFoundException e) {
             return false;

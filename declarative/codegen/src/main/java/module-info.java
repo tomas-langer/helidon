@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import io.helidon.declarative.codegen.faulttolerance.FtExtensionProvider;
+
 /**
  * Code generation support for Helidon Declarative APIs.
  */
@@ -22,11 +24,16 @@ module io.helidon.declarative.codegen {
     requires io.helidon.codegen.classmodel;
     requires io.helidon.service.codegen;
 
-    exports io.helidon.declarative.codegen;
-    exports io.helidon.declarative.codegen.spi;
+    // webserver related code generation (HTTP endpoints)
+    exports io.helidon.declarative.codegen.webserver;
+    exports io.helidon.declarative.codegen.webserver.spi;
+    // fault tolerance (fallback)
+    exports io.helidon.declarative.codegen.faulttolerance;
 
-    uses io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider;
+    uses io.helidon.declarative.codegen.webserver.spi.HttpParameterCodegenProvider;
 
     provides io.helidon.codegen.spi.CodegenExtensionProvider
-            with io.helidon.declarative.codegen.WebServerCodegenProvider;
+            with io.helidon.declarative.codegen.webserver.WebServerCodegenProvider;
+    provides io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider
+            with FtExtensionProvider;
 }

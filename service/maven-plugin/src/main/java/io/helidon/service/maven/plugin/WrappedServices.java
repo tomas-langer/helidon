@@ -53,7 +53,7 @@ class WrappedServices implements AutoCloseable {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    static WrappedServices create(ClassLoader classLoader, CodegenLogger logger, boolean useApplications) {
+    static WrappedServices create(ClassLoader classLoader, CodegenLogger logger, boolean useBindings) {
         try {
             /*
             Phase.GATHERING_DEPENDENCIES
@@ -69,8 +69,8 @@ class WrappedServices implements AutoCloseable {
                     .invoke(null);
             Class<?> injectConfigBuilderType = injectConfigBuilder.getClass();
 
-            injectConfigBuilderType.getMethod("useApplication", boolean.class)
-                    .invoke(injectConfigBuilder, useApplications);
+            injectConfigBuilderType.getMethod("useBinding", boolean.class)
+                    .invoke(injectConfigBuilder, useBindings);
             injectConfigBuilderType.getMethod("limitRuntimePhase", Activator.Phase.class)
                     .invoke(injectConfigBuilder, limitPhase);
             Object injectionConfig = injectConfigBuilderType.getMethod("build")

@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen;
+package io.helidon.declarative.codegen.webserver;
 
 import java.util.Optional;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.Annotation;
-import io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider;
+import io.helidon.declarative.codegen.webserver.spi.HttpParameterCodegenProvider;
 
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_PATH_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_PATH_PARAM_ANNOTATION;
 
 class ParamProviderHttpPathParam extends AbstractParametersProvider implements HttpParameterCodegenProvider {
     @Override

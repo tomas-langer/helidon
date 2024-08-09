@@ -19,7 +19,7 @@ package io.helidon.faulttolerance;
 /**
  * General timeout runtime exception.
  */
-public class TimeoutException extends RuntimeException {
+public class TimeoutException extends FaultToleranceException {
     private static final long serialVersionUID = 1900924677490550714L;
 
     /**

@@ -26,6 +26,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Supplier;
 
+import io.helidon.service.inject.api.Injection;
+
 class RetryImpl implements Retry {
     private final ErrorChecker errorChecker;
     private final long maxTimeNanos;
@@ -34,6 +36,7 @@ class RetryImpl implements Retry {
     private final AtomicLong retryCounter = new AtomicLong(0L);
     private final String name;
 
+    @Injection.Inject
     RetryImpl(RetryConfig retryConfig) {
         this.name = retryConfig.name().orElseGet(() -> "retry-" + System.identityHashCode(retryConfig));
         this.errorChecker = ErrorChecker.create(retryConfig.skipOn(), retryConfig.applyOn());

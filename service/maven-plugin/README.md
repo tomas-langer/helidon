@@ -67,7 +67,7 @@ example usage:
 
 ### application-create
 
-This goal is used to trigger the creation of the <i>Injection__Application</i> for your module (which typically is found in the
+This goal is used to trigger the creation of the <i>Injection__Binding</i> for your module (which typically is found in the
 final assembly jar module for your application). The usage of this also triggers the validation and integrity checks for your
 entire application's DI model, and will fail-fast at compilation time if any issue is detected (e.g., a non-Optional @Inject is
 found on a contract type having no concrete service implementations, etc.). Assuming there are no issues found during application
@@ -76,7 +76,7 @@ literal DI resolution plan for each of your services. This can also be very usef
 besides being optimal from a runtime performance perspective.
 
 Also note that Helidon Injection strives to ensure your application stays as deterministic as possible (as shown by the <i>
-Injection__Application/i> generated class). But when the <i>jakarta.inject.Provider</i> type is used within your application then
+Injection__Binding/i> generated class). But when the <i>jakarta.inject.Provider</i> type is used within your application then
 some of that deterministic behavior goes away. This is due to how Provider<>'s work since the implementation for the Provider (
 i.e., your application logic) "owns" the behavior for what actual concrete type that are created by it, along with the
 scope/cardinality for those instances. These instances are then delivered (as potentially injectable services) into other
@@ -139,12 +139,12 @@ Here we can see additional DI constructs, specifically two Qualifiers, are being
 
 ## TestApplication
 
-When the maven plugin creates an application for <i>src/main/java</i> sources, a <i>Injection__Application</i> will be created for
+When the maven plugin creates an application for <i>src/main/java</i> sources, a <i>Injection__Binding</i> will be created for
 compile-time dependencies involved in the DI set of services. But when <i>src/test/java</i> sources are compiled, a <i>
 Injection__TestApplication</i> will be created for test-type dependencies involved in the test-side DI set of services of your
 application.
 
 ## Best Practices
 
-Only one <i>Injection__Application</i> should typically be in your module classpath. And in production applications there should
+Only one <i>Injection__Binding</i> should typically be in your module classpath. And in production applications there should
 never be any test service types or a <i>Injection__TestApplication</i>, etc.

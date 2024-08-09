@@ -29,7 +29,7 @@ public class QualifiedProvidersTest {
     @Test
     public void testQualifiedProvidersNoApp() {
         InjectRegistryManager registryManager = InjectRegistryManager.create(InjectConfig.builder()
-                                                                                     .useApplication(false)
+                                                                                     .useBinding(false)
                                                                                      .build());
 
         try {

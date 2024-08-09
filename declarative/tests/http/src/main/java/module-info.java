@@ -9,6 +9,7 @@ module io.helidon.declarative.tests.http {
     requires io.helidon.metrics.api;
     // todo remove - now needed for interceptors
     requires io.helidon.metrics;
+    requires io.helidon.faulttolerance;
 
     exports io.helidon.declarative.tests.http;
 }

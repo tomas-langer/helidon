@@ -1,8 +1,9 @@
-package io.helidon.declarative.codegen;
+package io.helidon.declarative.codegen.webserver;
 
 import io.helidon.common.types.TypeName;
+import io.helidon.declarative.codegen.webserver.spi.HttpParameterCodegenProvider;
 
-class ParamProviderContext implements io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider {
+class ParamProviderContext implements HttpParameterCodegenProvider {
     private static final TypeName CONTEXT = TypeName.create("io.helidon.common.context.Context");
 
     @Override

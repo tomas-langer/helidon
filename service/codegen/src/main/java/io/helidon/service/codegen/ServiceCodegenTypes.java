@@ -201,7 +201,7 @@ public final class ServiceCodegenTypes {
     /**
      * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.inject.api.Application}.
      */
-    public static final TypeName INJECT_APPLICATION = TypeName.create("io.helidon.service.inject.Application");
+    public static final TypeName INJECT_BINDING = TypeName.create("io.helidon.service.inject.Binding");
     /**
      * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.inject.api.InvocationException}.
      */

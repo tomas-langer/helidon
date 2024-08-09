@@ -1,0 +1,213 @@
+package io.helidon.declarative.codegen.faulttolerance;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+import java.util.function.Predicate;
+
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Constructor;
+import io.helidon.codegen.classmodel.Method;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
+import io.helidon.common.types.TypeInfo;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNames;
+import io.helidon.common.types.TypedElementInfo;
+import io.helidon.service.codegen.RegistryCodegenContext;
+import io.helidon.service.codegen.ServiceCodegenTypes;
+
+import static io.helidon.declarative.codegen.faulttolerance.FtTypes.RETRY;
+import static io.helidon.declarative.codegen.faulttolerance.FtTypes.RETRY_ANNOTATION;
+import static io.helidon.declarative.codegen.faulttolerance.FtTypes.RETRY_CONFIG;
+
+final class RetryHandler extends FtHandler {
+
+    RetryHandler(RegistryCodegenContext ctx) {
+        super(ctx, RETRY_ANNOTATION);
+    }
+
+    @Override
+    void process(TypeInfo enclosingType,
+                 TypedElementInfo element,
+                 Annotation annotation,
+                 TypeName generatedType,
+                 ClassModel.Builder classModel) {
+        TypeName enclosingTypeName = enclosingType.typeName();
+
+        // class definition
+        classModel.addInterface(FtTypes.RETRY_GENERATED_METHOD);
+
+        // generate the class body
+        retryBody(classModel,
+                  enclosingTypeName,
+                  generatedType,
+                  element.elementName(),
+                  annotation);
+
+        // add type to context
+        addType(generatedType,
+                classModel,
+                enclosingTypeName,
+                element);
+    }
+
+    private void retryBody(ClassModel.Builder classModel,
+                           TypeName enclosingTypeName,
+                           TypeName generatedType,
+                           String methodName,
+                           Annotation annotation) {
+        addErrorChecker(classModel, annotation);
+
+        classModel.addField(retry -> retry
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .type(RETRY)
+                .name("retry"));
+
+        String name = annotation.stringValue("name").filter(Predicate.not(String::isBlank))
+                .orElse(null);
+
+        /*
+        Constructor (may inject named Retry)
+         */
+        var ctr = Constructor.builder()
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_INJECT))
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE);
+
+        if (name == null) {
+            ctr.addContentLine("this.retry = produceRetry();");
+        } else {
+            // named, inject
+            ctr.addParameter(namedRetry -> namedRetry
+                            .name("namedRetry")
+                            .type(TypeName.builder()
+                                          .from(TypeNames.OPTIONAL)
+                                          .addTypeArgument(RETRY)
+                                          .build())
+                            .addAnnotation(namedAnnotation(name)))
+                    .addContent("this.retry = namedRetry.orElseGet(")
+                    .addContent(generatedType)
+                    .addContentLine("::produceRetry);");
+        }
+
+        classModel.addConstructor(ctr);
+
+        /*
+        Retry method (implementing interface)
+         */
+        classModel.addMethod(retry -> retry
+                .name("retry")
+                .addAnnotation(Annotations.OVERRIDE)
+                .returnType(RETRY)
+                .accessModifier(AccessModifier.PUBLIC)
+                .addContentLine("return retry;")
+        );
+
+        /*
+        Produce retry method (from annotation values)
+         */
+        String customName;
+        if (name == null) {
+            // this is not fully random, but we may only get conflict on the same type, same method name
+            customName = enclosingTypeName.fqName()
+                    + "." + methodName + "-"
+                    + System.identityHashCode(enclosingTypeName);
+        } else {
+            customName = name + "-" + UUID.randomUUID();
+        }
+
+        classModel.addMethod(produceRetry -> produceRetry
+                .accessModifier(AccessModifier.PRIVATE)
+                .isStatic(true)
+                .returnType(RETRY)
+                .name("produceRetry")
+                .update(builder -> produceRetryMethodBody(builder, annotation, customName))
+        );
+    }
+
+    private void produceRetryMethodBody(Method.Builder builder, Annotation annotation, String customName) {
+        int calls = annotation.intValue("calls").orElse(3);
+        long delayTime = annotation.longValue("delayTime").orElse(200L);
+        ChronoUnit unit = annotation.enumValue("timeUnit", ChronoUnit.class).orElse(ChronoUnit.MILLIS);
+        double delayFactor = annotation.doubleValue("delayFactor").orElse(-1.0);
+        long jitterTime = annotation.longValue("jitterTime").orElse(-1L);
+        long overallTimeout = annotation.longValue("overallTimeout").orElse(1000L);
+
+        /*
+        First build the retry policy
+         */
+        builder.addContent("var policy = ")
+                .addContent(RETRY)
+                .addContent(".");
+
+        if (jitterTime < 0 || delayFactor > 0) {
+            delayFactor = delayFactor > 0 ? delayFactor : 2.0;
+            // delaying
+            builder.addContentLine("DelayingRetryPolicy.builder()")
+                    .increaseContentPadding()
+                    .increaseContentPadding()
+                    .addContent(".delayFactor(")
+                    .addContent(String.valueOf(delayFactor))
+                    .addContentLine(")");
+        } else {
+            // jittery
+            builder.addContentLine("JitterRetryPolicy.builder()")
+                    .increaseContentPadding()
+                    .increaseContentPadding()
+                    .addContent(".jitter(")
+                    .addContent(Duration.class)
+                    .addContent(".of(")
+                    .addContent(String.valueOf(jitterTime))
+                    .addContent(", ")
+                    .addContent(ChronoUnit.class)
+                    .addContent(".")
+                    .addContent(unit.name())
+                    .addContentLine("))");
+        }
+        builder.addContent(".calls(")
+                .addContent(String.valueOf(calls))
+                .addContentLine(")");
+        builder.addContent(".delay(")
+                .addContent(Duration.class)
+                .addContent(".of(")
+                .addContent(String.valueOf(delayTime))
+                .addContent(", ")
+                .addContent(ChronoUnit.class)
+                .addContent(".")
+                .addContent(unit.name())
+                .addContentLine("))");
+        builder.addContentLine(".build();")
+                .decreaseContentPadding()
+                .decreaseContentPadding();
+        builder.addContentLine("");
+
+        /*
+        Now build the retry itself
+         */
+        builder.addContent("return ")
+                .addContent(RETRY_CONFIG)
+                .addContentLine(".builder()")
+                .increaseContentPadding()
+                .increaseContentPadding()
+                .addContentLine(".applyOn(APPLY_ON)")
+                .addContentLine(".skipOn(SKIP_ON)")
+                .addContentLine(".retryPolicy(policy)")
+                .addContent(".overallTimeout(")
+                .addContent(Duration.class)
+                .addContent(".of(")
+                .addContent(String.valueOf(overallTimeout))
+                .addContent(", ")
+                .addContent(ChronoUnit.class)
+                .addContent(".")
+                .addContent(unit.name())
+                .addContentLine("))")
+                .addContent(".name(\"")
+                .addContent(customName)
+                .addContentLine("\")")
+                .addContentLine(".build();")
+                .decreaseContentPadding()
+                .decreaseContentPadding();
+    }
+}

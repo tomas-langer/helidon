@@ -1,0 +1,192 @@
+package io.helidon.declarative.codegen.faulttolerance;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenUtil;
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Field;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.TypeInfo;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypedElementInfo;
+import io.helidon.service.codegen.RegistryCodegenContext;
+import io.helidon.service.codegen.RegistryRoundContext;
+
+import static io.helidon.declarative.codegen.DeclarativeTypes.SET_OF_THROWABLES;
+import static io.helidon.declarative.codegen.DeclarativeTypes.SINGLETON_ANNOTATION;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_NAMED;
+
+abstract class FtHandler {
+    private final RegistryCodegenContext ctx;
+    private final TypeName annotation;
+    private final TypeName generator;
+
+    FtHandler(RegistryCodegenContext ctx,
+              TypeName annotation) {
+        this.ctx = ctx;
+        this.annotation = annotation;
+        this.generator = TypeName.create(getClass());
+    }
+
+    final void process(RegistryRoundContext roundCtx, Map<TypeName, TypeInfo> types) {
+        var elements = roundCtx.annotatedElements(annotation);
+        int index = 0;
+        for (TypedElementInfo element : elements) {
+            var enclosingType = enclosingType(types, element);
+            var generatedType = generatedTypeName(enclosingType.typeName(), element, index);
+            process(enclosingType,
+                    element,
+                    element.annotation(annotation),
+                    generatedType,
+                    classBuilder(enclosingType.typeName(),
+                                 element,
+                                 generatedType));
+            index++;
+        }
+    }
+
+    TypeInfo enclosingType(Map<TypeName, TypeInfo> types, TypedElementInfo element) {
+        if (element.enclosingType().isEmpty()) {
+            throw new CodegenException(
+                    annotation.className()
+                            + " annotation is only allowed on a method, yet this element does not have an enclosing type: "
+                            + element.elementName(),
+                    element.originatingElement().orElseGet(element::elementName));
+        }
+
+        TypeName enclosingType = element.enclosingType().get();
+        TypeInfo typeInfo = types.get(enclosingType);
+        if (typeInfo == null) {
+            throw new CodegenException(
+                    annotation.className() + " annotation is expected on a type processed as part of this processing round, "
+                            + "yet the type info is not available for type: " + enclosingType.fqName(),
+                    element.originatingElement().orElseGet(element::elementName));
+        }
+        return typeInfo;
+    }
+
+    abstract void process(TypeInfo enclosingType,
+                          TypedElementInfo element,
+                          Annotation ftAnnotation,
+                          TypeName generatedType,
+                          ClassModel.Builder classModel);
+
+    Annotation namedAnnotation(TypeName enclosingTypeName,
+                               TypedElementInfo element) {
+        return namedAnnotation(enclosingTypeName.fqName()
+                                       + "." + element.elementName()
+                                       + "(" + paramsForNamed(element.parameterArguments()) + ")");
+    }
+
+    Annotation namedAnnotation(String name) {
+        return Annotation.create(INJECTION_NAMED, name);
+    }
+
+    void addType(TypeName generatedType,
+                 ClassModel.Builder classModel,
+                 TypeName enclosingTypeName,
+                 TypedElementInfo element) {
+        ctx.addType(generatedType,
+                    classModel,
+                    enclosingTypeName,
+                    element.originatingElement()
+                            .orElseGet(() -> enclosingTypeName.fqName() + "." + element.elementName()));
+    }
+
+    void addErrorChecker(ClassModel.Builder classModel, Annotation annotation) {
+        // we need set of throwables to apply on, skip on, and error check fields
+        List<TypeName> applyOn = annotation.typeValues("applyOn")
+                .orElseGet(List::of);
+        List<TypeName> skipOn = annotation.typeValues("skipOn")
+                .orElseGet(List::of);
+
+        classModel.addField(applyOnField -> applyOnField
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .isStatic(true)
+                .type(SET_OF_THROWABLES)
+                .name("APPLY_ON")
+                .update(it -> throwableSet(it, applyOn))
+        );
+
+        classModel.addField(skipOnField -> skipOnField
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .isStatic(true)
+                .type(SET_OF_THROWABLES)
+                .name("SKIP_ON")
+                .update(it -> throwableSet(it, skipOn))
+        );
+
+        classModel.addField(errorChecker -> errorChecker
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .isStatic(true)
+                .type(FtTypes.ERROR_CHECKER)
+                .name("ERROR_CHECKER")
+                .addContent(FtTypes.ERROR_CHECKER)
+                .addContent(".create(SKIP_ON, APPLY_ON)")
+        );
+    }
+
+    private void throwableSet(Field.Builder field, List<TypeName> listOfThrowables) {
+        field.addContent(Set.class)
+                .addContent(".of(");
+        if (listOfThrowables.isEmpty()) {
+            field.addContent(")");
+            return;
+        }
+        field.addContentLine("");
+        field.increaseContentPadding()
+                .increaseContentPadding()
+                .update(it -> {
+                    Iterator<TypeName> iterator = listOfThrowables.iterator();
+                    while (iterator.hasNext()) {
+                        it.addContent(iterator.next())
+                                .addContent(".class");
+                        if (iterator.hasNext()) {
+                            it.addContent(",");
+                        }
+                        it.addContentLine("");
+                    }
+                })
+                .decreaseContentPadding()
+                .decreaseContentPadding()
+                .addContent(")");
+    }
+
+    private ClassModel.Builder classBuilder(TypeName enclosingType,
+                                            TypedElementInfo element,
+                                            TypeName generatedType) {
+        return ClassModel.builder()
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                .addAnnotation(SINGLETON_ANNOTATION)
+                .addAnnotation(namedAnnotation(enclosingType, element))
+                .addAnnotation(CodegenUtil.generatedAnnotation(generator, enclosingType, generatedType, "1", ""))
+                .copyright(CodegenUtil.copyright(generator, enclosingType, generatedType))
+                .type(generatedType)
+                .sortStaticFields(false);
+    }
+
+    private String paramsForNamed(List<TypedElementInfo> params) {
+        return params.stream()
+                .map(TypedElementInfo::typeName)
+                .map(TypeName::fqName)
+                .collect(Collectors.joining(","));
+    }
+
+    private TypeName generatedTypeName(TypeName typeName, TypedElementInfo element, int index) {
+        return TypeName.builder()
+                .packageName(typeName.packageName())
+                .className(typeName.classNameWithEnclosingNames().replace('.', '_') + "_"
+                                   + element.elementName() + (index == 0 ? "" : "_" + index)
+                                   + "__" + annotation.className())
+                .build();
+    }
+}

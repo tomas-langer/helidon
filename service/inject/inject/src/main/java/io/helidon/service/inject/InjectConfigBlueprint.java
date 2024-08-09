@@ -74,15 +74,16 @@ interface InjectConfigBlueprint extends ServiceRegistryConfig {
     Activator.Phase limitRuntimePhase();
 
     /**
-     * Flag indicating whether compile-time generated {@link io.helidon.service.inject.Application}'s
+     * Flag indicating whether compile-time generated {@link Binding}'s
      * should be used at Injection's startup initialization.
-     * Even if set to {@code true}, this is effective only if an Application was generated using Helidon Service Maven Plugin.
+     * Even if set to {@code true}, this is effective only if an {@link io.helidon.service.inject.Binding}
+     * was generated using Helidon Service Maven Plugin.
      *
-     * @return the flag indicating whether the provider is permitted to use Application generated code from compile-time,
+     * @return the flag indicating whether the provider is permitted to use binding generated code from compile-time,
      *         defaults to {@code true}
-     * @see io.helidon.service.inject.Application
+     * @see io.helidon.service.inject.Binding
      */
     @Option.Configured
     @Option.DefaultBoolean(true)
-    boolean useApplication();
+    boolean useBinding();
 }

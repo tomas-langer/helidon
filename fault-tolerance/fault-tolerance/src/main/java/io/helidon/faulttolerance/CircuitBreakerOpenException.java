@@ -19,7 +19,7 @@ package io.helidon.faulttolerance;
 /**
  * Failure because {@link CircuitBreaker} is open and does not accept requests.
  */
-public class CircuitBreakerOpenException extends RuntimeException {
+public class CircuitBreakerOpenException extends FaultToleranceException {
     CircuitBreakerOpenException(String message) {
         super(message);
     }

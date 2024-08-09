@@ -32,6 +32,9 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
+import io.helidon.service.inject.api.Injection;
+
+@Injection.CreateFor(BulkheadConfigBlueprint.class)
 class BulkheadImpl implements Bulkhead {
     private static final System.Logger LOGGER = System.getLogger(BulkheadImpl.class.getName());
 
@@ -46,6 +49,7 @@ class BulkheadImpl implements Bulkhead {
     private final Set<Supplier<?>> cancelledSuppliers = new CopyOnWriteArraySet<>();
     private final BulkheadConfig config;
 
+    @Injection.Inject
     BulkheadImpl(BulkheadConfig config) {
         this.inProgress = new Semaphore(config.limit(), true);
         this.name = config.name().orElseGet(() -> "bulkhead-" + System.identityHashCode(config));

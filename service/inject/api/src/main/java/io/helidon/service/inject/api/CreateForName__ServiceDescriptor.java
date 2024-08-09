@@ -26,12 +26,12 @@ import io.helidon.common.types.TypeNames;
  * service.
  * <p>
  * Not intended for direct use by users, implementation detail of the service registry, must be public,
- * as it may be used in generated applications
+ * as it may be used in generated binding.
  */
 @SuppressWarnings({"checkstyle:TypeName"}) // matches pattern of generated descriptors
 public class CreateForName__ServiceDescriptor implements GeneratedInjectService.Descriptor<String> {
     /**
-     * Singleton instance to be referenced when building applications.
+     * Singleton instance to be referenced when building bindings.
      */
     public static final CreateForName__ServiceDescriptor INSTANCE = new CreateForName__ServiceDescriptor();
 

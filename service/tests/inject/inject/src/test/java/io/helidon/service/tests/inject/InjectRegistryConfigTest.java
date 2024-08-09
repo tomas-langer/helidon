@@ -51,7 +51,7 @@ public class InjectRegistryConfigTest {
         assertThat(cfg.limitRuntimePhase(), is(Activator.Phase.ACTIVE));
         assertThat(cfg.lookupCacheEnabled(), is(false));
         assertThat(cfg.lookupCache(), is(optionalEmpty()));
-        assertThat(cfg.useApplication(), is(true));
+        assertThat(cfg.useBinding(), is(true));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class InjectRegistryConfigTest {
                                        "inject.limit-runtime-phase", "CONSTRUCTING",
                                        "inject.lookup-cache-enabled", "true",
                                        "inject.lookup-cache.capacity", "200",
-                                       "inject.use-application", "false"
+                                       "inject.use-binding", "false"
                                 ), "config-1"))
                 .disableEnvironmentVariablesSource()
                 .disableSystemPropertiesSource()
@@ -83,6 +83,6 @@ public class InjectRegistryConfigTest {
         assertThat(cfg.lookupCache(), is(optionalPresent()));
         LruCache<Lookup, List<InjectServiceInfo>> cache = cfg.lookupCache().get();
         assertThat(cache.capacity(), is(200));
-        assertThat(cfg.useApplication(), is(false));
+        assertThat(cfg.useBinding(), is(false));
     }
 }

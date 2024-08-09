@@ -29,8 +29,8 @@ import io.helidon.common.config.ConfigException;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.metadata.Configured;
 import io.helidon.service.codegen.ServiceCodegenTypes;
-import io.helidon.service.inject.Application;
 import io.helidon.service.inject.ApplicationMain;
+import io.helidon.service.inject.Binding;
 import io.helidon.service.inject.InjectConfig;
 import io.helidon.service.inject.InjectRegistryManager;
 import io.helidon.service.inject.InjectionPlanBinder;
@@ -118,7 +118,7 @@ class ServiceCodegenTypesTest {
         checkField(toCheck, checked, fields, "QUALIFIED_PROVIDER", Injection.QualifiedProvider.class);
         checkField(toCheck, checked, fields, "INJECTION_PLAN_BINDER", InjectionPlanBinder.class);
         checkField(toCheck, checked, fields, "INJECT_SCOPE_HANDLER", Injection.ScopeHandler.class);
-        checkField(toCheck, checked, fields, "INJECT_APPLICATION", Application.class);
+        checkField(toCheck, checked, fields, "INJECT_BINDING", Binding.class);
         checkField(toCheck, checked, fields, "INJECT_CONFIG_BUILDER", InjectConfig.Builder.class);
         checkField(toCheck, checked, fields, "INJECT_QUALIFIED_PROVIDER_DESCRIPTOR", QualifiedProviderDescriptor.class);
         checkField(toCheck, checked, fields, "INJECT_SCOPE_HANDLER_DESCRIPTOR", ScopeHandlerDescriptor.class);

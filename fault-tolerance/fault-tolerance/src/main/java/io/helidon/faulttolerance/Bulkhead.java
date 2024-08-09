@@ -20,6 +20,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import io.helidon.builder.api.RuntimeType;
+import io.helidon.service.registry.Service;
 
 /**
  * Bulkhead protects a resource that cannot serve unlimited parallel
@@ -30,6 +31,7 @@ import io.helidon.builder.api.RuntimeType;
  * additional attempts to invoke will end with a failed response with
  * {@link BulkheadException}.
  */
+@Service.Contract
 @RuntimeType.PrototypedBy(BulkheadConfig.class)
 public interface Bulkhead extends FtHandler, RuntimeType.Api<BulkheadConfig> {
     /**
@@ -122,7 +124,7 @@ public interface Bulkhead extends FtHandler, RuntimeType.Api<BulkheadConfig> {
          * Called right before blocking on the internal semaphore's queue.
          *
          * @param supplier the supplier to be enqueued
-         * @param <T> type of value returned by supplier
+         * @param <T>      type of value returned by supplier
          */
         default <T> void enqueueing(Supplier<? extends T> supplier) {
         }
@@ -131,7 +133,7 @@ public interface Bulkhead extends FtHandler, RuntimeType.Api<BulkheadConfig> {
          * Called after semaphore is acquired and before supplier is called.
          *
          * @param supplier the supplier to execute
-         * @param <T> type of value returned by supplier
+         * @param <T>      type of value returned by supplier
          */
         default <T> void dequeued(Supplier<? extends T> supplier) {
         }

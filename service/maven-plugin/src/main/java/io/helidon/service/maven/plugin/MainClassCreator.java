@@ -39,7 +39,7 @@ import io.helidon.service.registry.GeneratedService;
 import io.helidon.service.registry.ServiceDiscovery;
 import io.helidon.service.registry.ServiceLoader__ServiceDescriptor;
 
-import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_APPLICATION;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_BINDING;
 
 class MainClassCreator {
     private static final TypeName GENERATOR = TypeName.create(MainClassCreator.class);
@@ -122,7 +122,7 @@ class MainClassCreator {
         ServiceDiscovery.create()
                 .allMetadata()
                 .stream()
-                .filter(it -> it.contracts().contains(INJECT_APPLICATION))
+                .filter(it -> it.contracts().contains(INJECT_BINDING))
                 .map(DescriptorMetadata::descriptorType)
                 .forEach(serviceDescriptors::add);
     }

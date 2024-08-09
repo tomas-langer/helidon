@@ -1,8 +1,6 @@
 Helidon Declarative
 ----
 
-_This document describes the target solution, not the current state_
-
 Helidon Declarative approach is a modification of the Helidon SE flavor, where instead of asking the user to do everything by
 hand, we introduce an inversion of control mechanism based on Helidon Service Inject (reflection free).
 
@@ -17,17 +15,17 @@ A few rules for non-declarative developers:
 # How to build an application
 
 This describes how to create a declarative app from an existing imperative quickstart. This will be incorporated into our
-archetype engine, so it should work ootb
+archetype engine, so it should work ootb.
 
 1. Add `helidon-service-inject` dependency
 2. Add required annotation processing configuration (for end-user, we provide a
-   bundle) - `helidon-codegen-apt`, `helidon-service-codegen` are the minimal required annotation processor paths of compiler
+   bundle) - `helidon-codegen-apt`, `helidon-declarative-codegen` are the minimal required annotation processor paths of compiler
    plugin
 3. Add `helidon-service-maven-plugin` with `application-create` goal to `pom.xml`
 
 Such an application will provide:
 
-- generated `Injection__Application`: binds all service descriptors to appropriate injection points (so we do not need to search
+- generated `Injection__Binding`: binds all service descriptors to appropriate injection points (so we do not need to search
   the registry at runtime)
 - generated `GeneratedMain` main class: binds all service descriptor instances to service registry configuration (to fully avoid
   reflection)
@@ -54,8 +52,9 @@ The following annotations can be used on methods:
 The following annotations can be used on parameters of endpoint methods:
 
 - `@Http.Entity` - bind the entity to this parameter
-- `@Http.HeaderParam("user-agent")"` - bind the header parameter value to this parameter
-- `@Http.PathParam("name")` - bind the path template parameter to this parameter
+- `@Http.HeaderParam("user-agent")"` - bind the header parameter value to this parameter (Parameter may be declared as an Optional<X>)
+- `@Http.PathParam("name")` - bind the path template parameter to this parameter (Parameter may be declared as an Optional<X>)
+- `@Http.QueryParam("name")` - bind the query parameter to this parameter (Parameter may be declared as an Optional<X>)
 
 Additional parameters can be used on endpoint methods (these are considered "entry points"), such as `SecurityContext` when
 security is used, `Context` etc. See features below for details of what they support.
@@ -82,15 +81,17 @@ To customize startup of your application:
 
 The following features (this should be a full list of Helidon SE features, with equivalents for MP features) should be available:
 
-Features that should be implemented:
+Features that have POC implemented:
 
-| Feature      | Status | Description                                                                             | 
-|--------------|--------|-----------------------------------------------------------------------------------------|
-| Access Log   | N/A    | No changes, there is no interaction                                                     |
-| Injection    | Done   | See annotations on `io.helidon.service.inject.api.Injection`                            | 
-| Routing HTTP | Done   | See annotations on `io.helidon.http.Http`, similar should be added for WebSocket, grpc  |
-| Config       | DONE   | Done through Config beans, annotations on `io.helidon.service.inject.api.Configuration` |
-| Context      | DONE   | `Context` instance can be a parameter of entry point method                             |
+| Feature         | Status | Description                                                                             | 
+|-----------------|--------|-----------------------------------------------------------------------------------------|
+| Access Log      | N/A    | No changes, there is no interaction                                                     |
+| Injection       | DONE   | See annotations on `io.helidon.service.inject.api.Injection`                            | 
+| Routing HTTP    | DONE   | See annotations on `io.helidon.http.Http`, similar should be added for WebSocket, grpc  |
+| Config          | DONE   | Done through Config beans, annotations on `io.helidon.service.inject.api.Configuration` |
+| Context         | DONE   | `Context` instance can be a parameter of entry point method                             |
+| Fault Tolerance | DONE   | See annotations on `io.helidon.faulttolerance.FaultTolerance`                           | 
+| Metrics         | POC    | See annotations on `io.helidon.metrics.api.Metrics`, Counter and Timer done             |
 
 Features that require work:
 
@@ -103,11 +104,9 @@ Features that require work:
 | OpenAPI           | TODO   | See annotations on `io.helidon.openapi.OpenApi`                                                                                            | 
 | Tracing           | TODO   | See annotations on `io.helidon.tracing.Tracing`                                                                                            | 
 | Health            | TODO   | Implement a `HealthCheckProvider` and mark it as a `@Service.Provider`                                                                     | 
-| Metrics           | TODO   | See annotations on `io.helidon.metrics.api.Metrics`                                                                                        |
 | Observe/Info      | N/A    | N/A                                                                                                                                        | 
 | Validation        | TODO   | See annotations on `io.helidon.validation.Validation`                                                                                      | 
 | Database          | TODO   | Introduction of Helidon Data                                                                                                               | 
-| Fault Tolerance   | TODO   | See annotations on `io.helidon.faulttolerance.FaultTolerance`                                                                              | 
 | GraphQL           | TBD    | TBD                                                                                                                                        | 
 | LRA               | TBD    | TBD                                                                                                                                        | 
 | Messaging         | TBD    | TBD                                                                                                                                        | 

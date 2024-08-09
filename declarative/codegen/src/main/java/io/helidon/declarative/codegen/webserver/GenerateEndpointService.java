@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen;
+package io.helidon.declarative.codegen.webserver;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,28 +43,28 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.declarative.codegen.spi.HttpParameterCodegenProvider;
+import io.helidon.declarative.codegen.webserver.spi.HttpParameterCodegenProvider;
 import io.helidon.service.codegen.ServiceCodegenTypes;
 
 import static io.helidon.codegen.CodegenUtil.toConstantName;
-import static io.helidon.declarative.codegen.WebServerCodegenExtension.GENERATOR;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.COMMON_CONTEXT;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_METHOD;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_STATUS;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_STATUS_ANNOTATION;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.INJECT_SCOPE;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.MEDIA_TYPE;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.MEDIA_TYPES;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVER_HTTP_ROUTE;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVER_HTTP_ROUTING_BUILDER;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVER_HTTP_RULES;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVER_REQUEST;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVER_RESPONSE;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVICE_CONTEXT;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVICE_HEADERS;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVICE_PROLOGUE;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVICE_SERVER_REQUEST;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.SERVICE_SERVER_RESPONSE;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenExtension.GENERATOR;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.COMMON_CONTEXT;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_METHOD;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_STATUS;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_STATUS_ANNOTATION;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.INJECT_SCOPE;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.MEDIA_TYPE;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.MEDIA_TYPES;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVER_HTTP_ROUTE;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVER_HTTP_ROUTING_BUILDER;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVER_HTTP_RULES;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVER_REQUEST;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVER_RESPONSE;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVICE_CONTEXT;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVICE_HEADERS;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVICE_PROLOGUE;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVICE_SERVER_REQUEST;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.SERVICE_SERVER_RESPONSE;
 
 final class GenerateEndpointService {
     private static final String REQUEST_PARAM_NAME = "helidonDeclarative__server_req";

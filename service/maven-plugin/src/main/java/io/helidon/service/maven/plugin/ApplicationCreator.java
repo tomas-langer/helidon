@@ -56,7 +56,7 @@ import io.helidon.service.registry.ServiceLoader__ServiceDescriptor;
 
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_PLAN_BINDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_POINT_PROVIDER;
-import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_APPLICATION;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_BINDING;
 import static io.helidon.service.codegen.ServiceCodegenTypes.QUALIFIED_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICES_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICE_ANNOTATION_CONTRACT;
@@ -134,7 +134,7 @@ class ApplicationCreator {
                                                                typeName,
                                                                "1",
                                                                ""))
-                .addInterface(INJECT_APPLICATION);
+                .addInterface(INJECT_BINDING);
 
         // deprecated default constructor - application should always be service loaded
         classModel.addConstructor(ctr -> ctr
@@ -265,7 +265,7 @@ class ApplicationCreator {
         return (!dependencies.isEmpty())
                 || (
                 !contractsImplemented.isEmpty()
-                        && !contractsImplemented.contains(INJECT_APPLICATION));
+                        && !contractsImplemented.contains(INJECT_BINDING));
     }
 
     private TypeInfo createAppTypeInfo(TypeName typeName) {
@@ -276,7 +276,7 @@ class ApplicationCreator {
                 .addAnnotation(Annotation.create(SERVICE_ANNOTATION_PROVIDER))
                 .addInterfaceTypeInfo(TypeInfo.builder()
                                               .kind(ElementKind.INTERFACE)
-                                              .typeName(INJECT_APPLICATION)
+                                              .typeName(INJECT_BINDING)
                                               .addAnnotation(Annotation.create(SERVICE_ANNOTATION_CONTRACT))
                                               .build())
                 .build();

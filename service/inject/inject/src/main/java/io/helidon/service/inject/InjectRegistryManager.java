@@ -143,7 +143,7 @@ public class InjectRegistryManager implements ServiceRegistryManager {
             Map<TypedQualifiedProviderKey, Set<InjectServiceInfo>> typedQualifiedProviders =
                     new HashMap<>();
 
-            List<GeneratedService.Descriptor<Application>> applications = new ArrayList<>();
+            List<GeneratedService.Descriptor<Binding>> applications = new ArrayList<>();
 
             config.serviceInstances()
                     .forEach((descriptor, instance) -> {
@@ -181,8 +181,8 @@ public class InjectRegistryManager implements ServiceRegistryManager {
                 }
 
                 GeneratedService.Descriptor<?> descriptor = descriptorMeta.descriptor();
-                if (descriptor.contracts().contains(Application.TYPE)) {
-                    applications.add((GeneratedService.Descriptor<Application>) descriptor);
+                if (descriptor.contracts().contains(Binding.TYPE)) {
+                    applications.add((GeneratedService.Descriptor<Binding>) descriptor);
                     // applications are not bound to the registry
                 } else {
                     Described described = toDescribed(descriptorToDescribed, descriptor);
@@ -217,9 +217,9 @@ public class InjectRegistryManager implements ServiceRegistryManager {
                                                      typedQualifiedProviders);
 
             // now check if we have an application, and if so, apply it
-            for (GeneratedService.Descriptor<Application> application : applications) {
+            for (GeneratedService.Descriptor<Binding> application : applications) {
                 // applications cannot have dependencies
-                Application appInstance = (Application) application.instantiate(DependencyContext.create(Map.of()));
+                Binding appInstance = (Binding) application.instantiate(DependencyContext.create(Map.of()));
                 appInstance.configure(new ApplicationPlanBinder(appInstance, registry));
             }
 
@@ -258,7 +258,7 @@ public class InjectRegistryManager implements ServiceRegistryManager {
     }
 
     @SuppressWarnings("unchecked")
-    private void bind(List<GeneratedService.Descriptor<Application>> applications,
+    private void bind(List<GeneratedService.Descriptor<Binding>> applications,
                       Map<TypeName, InjectServiceInfo> scopeHandlers,
                       Map<TypeName, InjectServiceInfo> servicesByType,
                       Map<TypeName, Set<InjectServiceInfo>> servicesByContract,
@@ -268,8 +268,8 @@ public class InjectRegistryManager implements ServiceRegistryManager {
 
         Descriptor<?> descriptor = described.injectDescriptor();
 
-        if (descriptor.contracts().contains(Application.TYPE)) {
-            applications.add((GeneratedService.Descriptor<Application>) described.coreDescriptor());
+        if (descriptor.contracts().contains(Binding.TYPE)) {
+            applications.add((GeneratedService.Descriptor<Binding>) described.coreDescriptor());
             // application is not bound to the registry
             return;
         }
@@ -434,10 +434,10 @@ public class InjectRegistryManager implements ServiceRegistryManager {
     private static class ApplicationPlanBinder implements InjectionPlanBinder {
         private static final System.Logger LOGGER = System.getLogger(ApplicationPlanBinder.class.getName());
 
-        private final Application appInstance;
+        private final Binding appInstance;
         private final InjectServiceRegistryImpl registry;
 
-        private ApplicationPlanBinder(Application appInstance, InjectServiceRegistryImpl registry) {
+        private ApplicationPlanBinder(Binding appInstance, InjectServiceRegistryImpl registry) {
             this.appInstance = appInstance;
             this.registry = registry;
         }

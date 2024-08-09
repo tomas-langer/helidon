@@ -20,23 +20,23 @@ import io.helidon.common.types.TypeName;
 import io.helidon.service.registry.Service;
 
 /**
- * An Application instance, if available at runtime, will be expected to provide a plan for all service provider's injection
+ * A binding instance, if available at runtime, will be expected to provide a plan for all service provider's injection
  * points.
  * <p>
  * Implementations of this contract are normally code generated, although then can be programmatically written by the developer
  * for special cases.
  */
 @Service.Contract
-public interface Application {
+public interface Binding {
     /**
      * Type name of this interface.
      */
-    TypeName TYPE = TypeName.create(Application.class);
+    TypeName TYPE = TypeName.create(Binding.class);
 
     /**
-     * Name of this application.
+     * Name of this application binding.
      *
-     * @return application name
+     * @return binding name
      */
     String name();
 

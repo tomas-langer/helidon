@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen;
+package io.helidon.declarative.codegen.webserver;
 
 import java.util.List;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen;
+package io.helidon.declarative.codegen.webserver;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,10 +32,10 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.service.codegen.ServiceCodegenTypes;
 
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_CONSUMES_ANNOTATION;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_METHOD_ANNOTATION;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_PATH_ANNOTATION;
-import static io.helidon.declarative.codegen.WebServerCodegenTypes.HTTP_PRODUCES_ANNOTATION;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_CONSUMES_ANNOTATION;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_METHOD_ANNOTATION;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_PATH_ANNOTATION;
+import static io.helidon.declarative.codegen.webserver.WebServerCodegenTypes.HTTP_PRODUCES_ANNOTATION;
 import static java.util.function.Predicate.not;
 
 class WebServerCodegenExtension implements CodegenExtension {

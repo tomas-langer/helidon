@@ -14,14 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen;
-
-import java.util.List;
-
-import io.helidon.common.types.Annotation;
-import io.helidon.common.types.TypeName;
-
-record ParamDef(TypeName type,
-                String name,
-                List<Annotation> qualifiers) {
-}
+/**
+ * Helidon declarative extensibility.
+ */
+package io.helidon.declarative.codegen.webserver.spi;

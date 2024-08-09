@@ -1,0 +1,169 @@
+package io.helidon.declarative.codegen.faulttolerance;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.UUID;
+import java.util.function.Predicate;
+
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Constructor;
+import io.helidon.codegen.classmodel.Method;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
+import io.helidon.common.types.TypeInfo;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNames;
+import io.helidon.common.types.TypedElementInfo;
+import io.helidon.service.codegen.RegistryCodegenContext;
+import io.helidon.service.codegen.ServiceCodegenTypes;
+
+import static io.helidon.declarative.codegen.faulttolerance.FtTypes.CIRCUIT_BREAKER;
+import static io.helidon.declarative.codegen.faulttolerance.FtTypes.CIRCUIT_BREAKER_ANNOTATION;
+import static io.helidon.declarative.codegen.faulttolerance.FtTypes.CIRCUIT_BREAKER_CONFIG;
+
+class CircuitBreakerHandler extends FtHandler {
+
+    CircuitBreakerHandler(RegistryCodegenContext ctx) {
+        super(ctx, CIRCUIT_BREAKER_ANNOTATION);
+    }
+
+    @Override
+    void process(TypeInfo enclosingType,
+                 TypedElementInfo element,
+                 Annotation annotation,
+                 TypeName generatedType,
+                 ClassModel.Builder classModel) {
+        TypeName enclosingTypeName = enclosingType.typeName();
+
+        // class definition
+        classModel.addInterface(FtTypes.CIRCUIT_BREAKER_GENERATED_METHOD);
+
+        // generate the class body
+        circuitBreakerBody(classModel,
+                           enclosingTypeName,
+                           generatedType,
+                           element.elementName(),
+                           annotation);
+
+        // add type to context
+        addType(generatedType,
+                classModel,
+                enclosingTypeName,
+                element);
+    }
+
+    private void circuitBreakerBody(ClassModel.Builder classModel,
+                                    TypeName enclosingTypeName,
+                                    TypeName generatedType,
+                                    String methodName,
+                                    Annotation annotation) {
+        addErrorChecker(classModel, annotation);
+
+        classModel.addField(circuitBreaker -> circuitBreaker
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .type(CIRCUIT_BREAKER)
+                .name("breaker"));
+
+        String name = annotation.stringValue("name").filter(Predicate.not(String::isBlank))
+                .orElse(null);
+
+        /*
+        Constructor (may inject named CircuitBreaker)
+         */
+        var ctr = Constructor.builder()
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_INJECT))
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE);
+
+        if (name == null) {
+            ctr.addContentLine("this.breaker = produceBreaker();");
+        } else {
+            // named, inject
+            ctr.addParameter(namedCircuitBreaker -> namedCircuitBreaker
+                            .name("namedBreaker")
+                            .type(TypeName.builder()
+                                          .from(TypeNames.OPTIONAL)
+                                          .addTypeArgument(CIRCUIT_BREAKER)
+                                          .build())
+                            .addAnnotation(namedAnnotation(name)))
+                    .addContent("this.breaker = namedBreaker.orElseGet(")
+                    .addContent(generatedType)
+                    .addContentLine("::produceBreaker);");
+        }
+
+        classModel.addConstructor(ctr);
+
+        /*
+        CircuitBreaker method (implementing interface)
+         */
+        classModel.addMethod(circuitBreaker -> circuitBreaker
+                .name("circuitBreaker")
+                .addAnnotation(Annotations.OVERRIDE)
+                .returnType(CIRCUIT_BREAKER)
+                .accessModifier(AccessModifier.PUBLIC)
+                .addContentLine("return breaker;")
+        );
+
+        /*
+        Produce circuitBreaker method (from annotation values)
+         */
+        String customName;
+        if (name == null) {
+            // this is not fully random, but we may only get conflict on the same type, same method name
+            customName = enclosingTypeName.fqName()
+                    + "." + methodName + "-"
+                    + System.identityHashCode(enclosingTypeName);
+        } else {
+            customName = name + "-" + UUID.randomUUID();
+        }
+
+        classModel.addMethod(produceCircuitBreaker -> produceCircuitBreaker
+                .accessModifier(AccessModifier.PRIVATE)
+                .isStatic(true)
+                .returnType(CIRCUIT_BREAKER)
+                .name("produceBreaker")
+                .update(builder -> produceBreakerMethodBody(builder, annotation, customName))
+        );
+    }
+
+    private void produceBreakerMethodBody(Method.Builder builder, Annotation annotation, String customName) {
+        long delayTime = annotation.longValue("delayTime").orElse(5L);
+        ChronoUnit unit = annotation.enumValue("timeUnit", ChronoUnit.class).orElse(ChronoUnit.SECONDS);
+        int errorRatio = annotation.intValue("errorRatio").orElse(60);
+        int volume = annotation.intValue("volume").orElse(10);
+        int successThreshold = annotation.intValue("successThreshold").orElse(1);
+
+        builder.addContent("return ")
+                .addContent(CIRCUIT_BREAKER_CONFIG)
+                .addContentLine(".builder()")
+                .increaseContentPadding()
+                .increaseContentPadding()
+                .addContentLine(".applyOn(APPLY_ON)")
+                .addContentLine(".skipOn(SKIP_ON)")
+                .addContent(".delay(")
+                .addContent(Duration.class)
+                .addContent(".of(")
+                .addContent(String.valueOf(delayTime))
+                .addContent(", ")
+                .addContent(ChronoUnit.class)
+                .addContent(".")
+                .addContent(unit.name())
+                .addContentLine("))")
+                .addContent(".name(\"")
+                .addContent(customName)
+                .addContentLine("\")")
+                .addContent(".errorRatio(")
+                .addContent(String.valueOf(errorRatio))
+                .addContentLine(")")
+                .addContent(".volume(")
+                .addContent(String.valueOf(volume))
+                .addContentLine(")")
+                .addContent(".successThreshold(")
+                .addContent(String.valueOf(successThreshold))
+                .addContentLine(")")
+                .addContentLine(".build();")
+                .decreaseContentPadding()
+                .decreaseContentPadding();
+    }
+}
