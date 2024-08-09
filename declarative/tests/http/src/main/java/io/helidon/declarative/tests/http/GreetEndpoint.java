@@ -23,6 +23,7 @@ import io.helidon.common.context.Context;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.http.Http;
 import io.helidon.http.Status;
+import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.Metrics;
 import io.helidon.security.SecurityContext;
 import io.helidon.service.inject.api.Configuration;
@@ -68,6 +69,7 @@ class GreetEndpoint {
     @Http.GET
     @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
     @Metrics.Counted
+    @Metrics.Timed
     JsonObject getDefaultMessageHandler() {
         return response("World");
     }

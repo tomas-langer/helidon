@@ -256,7 +256,85 @@ public interface Metrics {
          */
         String[] tags() default {};
 
+        /**
+         * Whether to apply on success, error, or both.
+         *
+         * @return when to apply counter
+         */
         ApplyOn applyOn() default ApplyOn.ALL;
+
+        /**
+         * Scope of this counter.
+         *
+         * @return counter scope
+         */
+        String scope() default Meter.Scope.APPLICATION;
+    }
+
+    /**
+     * Times invocation of a method.
+     * <p>
+     * Equivalent of {@link io.helidon.metrics.api.Counter}
+     */
+    @Target({ElementType.TYPE, ElementType.METHOD, ElementType.CONSTRUCTOR})
+    @Retention(RetentionPolicy.CLASS)
+    @Documented
+    @Inherited
+    @Interception.Trigger
+    @interface Timed {
+        /**
+         * Name of this counter. Default name is the fully qualified class name + dot + method name that is invoked.
+         * If defined on a class, this name will replace the fully qualified class name for naming counters on methods.
+         *
+         * @return counter name
+         */
+        String value() default "";
+
+        /**
+         * If set to {@code true}, the name defined by {@link #value()} is considered an absolute name, and will not be
+         * prefixed by the fully qualified class name.
+         * <p>
+         * This method is ignored on types, as it does not make sense (the value is always absolute if defined, and serves
+         * as a prefix for method metrics).
+         *
+         * @return whether the name is absolute
+         */
+        boolean absoluteName() default false;
+
+        /**
+         * Description of this counter.
+         *
+         * @return counter description
+         */
+        String description() default "";
+
+        /**
+         * Additional tags of this counter.
+         *
+         * @return counter tags
+         */
+        String[] tags() default {};
+
+        /**
+         * Whether to apply on success, error, or both.
+         *
+         * @return when to apply counter
+         */
+        ApplyOn applyOn() default ApplyOn.ALL;
+
+        /**
+         * Scope of this counter.
+         *
+         * @return counter scope
+         */
+        String scope() default Meter.Scope.APPLICATION;
+
+        /**
+         * Unit of the timer, defaults to {@link Meter.BaseUnits#NANOSECONDS}.
+         *
+         * @return timer unit
+         */
+        String unit() default Meter.BaseUnits.NANOSECONDS;
     }
 
 }

@@ -1,5 +1,6 @@
 package io.helidon.metrics;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,55 +14,57 @@ import io.helidon.common.Weighted;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.metrics.api.Counter;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MeterRegistry;
 import io.helidon.metrics.api.Metrics;
 import io.helidon.metrics.api.MetricsFactory;
 import io.helidon.metrics.api.Tag;
+import io.helidon.metrics.api.Timer;
 import io.helidon.service.inject.api.Injection;
 import io.helidon.service.inject.api.Interception;
 import io.helidon.service.inject.api.InvocationContext;
 
 @Injection.Singleton
-@Injection.NamedByClass(Metrics.Counted.class)
+@Injection.NamedByClass(Metrics.Timed.class)
 @Weight(Weighted.DEFAULT_WEIGHT - 10)
-class CountedInterceptor implements Interception.Interceptor {
-    private static final TypeName COUNTED = TypeName.create(Metrics.Counted.class);
+class TimedInterceptor implements Interception.Interceptor {
+    private static final TypeName TIMED = TypeName.create(Metrics.Timed.class);
     private static final Annotation DEFAULTS = Annotation.builder()
-            .typeName(COUNTED)
+            .typeName(TIMED)
             .putValue("value", "")
             .putValue("absoluteName", false)
             .putValue("description", "")
             .putValue("tags", List.of())
             .putValue("applyOn", Metrics.ApplyOn.ALL)
             .putValue("scope", Meter.Scope.APPLICATION)
+            .putValue("unit", Meter.BaseUnits.NANOSECONDS)
             .build();
 
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
-    private final Map<CacheKey, CounterData> counters = new HashMap<>();
+    private final Map<CacheKey, TimerData> timers = new HashMap<>();
     private final LazyValue<MetricsFactory> metricsFactory = LazyValue.create(MetricsFactory::getInstance);
     private final LazyValue<MeterRegistry> meterRegistry = LazyValue.create(() -> metricsFactory.get().globalRegistry());
 
     @Override
     public <V> V proceed(InvocationContext ctx, Chain<V> chain, Object... args) throws Exception {
-        CounterData counter = counter(ctx);
+        TimerData timer = timer(ctx);
 
+        long now = System.nanoTime();
         try {
             var response = chain.proceed(args);
-            if (counter.countSuccess) {
-                counter.counter.increment();
+            if (timer.countSuccess) {
+                timer.timer().record(Duration.ofNanos(System.nanoTime() - now));
             }
             return response;
         } catch (Throwable t) {
-            if (counter.countThrown) {
-                counter.counter.increment();
+            if (timer.countThrown) {
+                timer.timer().record(Duration.ofNanos(System.nanoTime() - now));
             }
             throw t;
         }
     }
 
-    private CounterData counter(InvocationContext ctx) {
+    private TimerData timer(InvocationContext ctx) {
 
         TypedElementInfo typedElementInfo = ctx.elementInfo();
         CacheKey ck = new CacheKey(ctx.serviceInfo().serviceType(),
@@ -69,9 +72,9 @@ class CountedInterceptor implements Interception.Interceptor {
                                    typedElementInfo.parameterArguments());
         lock.readLock().lock();
         try {
-            CounterData counterData = counters.get(ck);
-            if (counterData != null) {
-                return counterData;
+            TimerData timerData = timers.get(ck);
+            if (timerData != null) {
+                return timerData;
             }
         } finally {
             lock.readLock().unlock();
@@ -79,48 +82,51 @@ class CountedInterceptor implements Interception.Interceptor {
 
         lock.writeLock().lock();
         try {
-            CounterData counterData = createCounter(ck, ctx, typedElementInfo);
-            counters.put(ck, counterData);
-            return counterData;
+            TimerData timerData = createTimer(ck, ctx, typedElementInfo);
+            timers.put(ck, timerData);
+            return timerData;
         } finally {
             lock.writeLock().unlock();
         }
     }
 
     // todo right now it cannot be a repeated annotation
-    private CounterData createCounter(CacheKey ck, InvocationContext ctx, TypedElementInfo typedElementInfo) {
+    private TimerData createTimer(CacheKey ck, InvocationContext ctx, TypedElementInfo typedElementInfo) {
         // first check if there is a method annotation
-        Optional<Annotation> methodCounted = typedElementInfo.findAnnotation(COUNTED);
-        Annotation typeCounted = MetricInterceptors.findAnnotation(ctx.typeAnnotations(), COUNTED).orElse(DEFAULTS);
+        Optional<Annotation> methodTimed = typedElementInfo.findAnnotation(TIMED);
+        Annotation typeTimed = MetricInterceptors.findAnnotation(ctx.typeAnnotations(), TIMED).orElse(DEFAULTS);
 
-        String name = MetricInterceptors.namePrefix(ck.clazz(), typeCounted);
-        if (methodCounted.isPresent()) {
-            name = MetricInterceptors.metricName(name, ck.methodName(), methodCounted.get(), Meter.Type.COUNTER);
+        String name = MetricInterceptors.namePrefix(ck.clazz(), typeTimed);
+        if (methodTimed.isPresent()) {
+            name = MetricInterceptors.metricName(name, ck.methodName(), methodTimed.get(), Meter.Type.TIMER);
         }
-        Annotation relevant = methodCounted.orElse(typeCounted);
+
+        Annotation relevant = methodTimed.orElse(typeTimed);
 
         String description = relevant.stringValue("description").orElse("Counter for method " + ck.methodName);
         String scope = relevant.stringValue("scope").orElse(Meter.Scope.APPLICATION);
         Metrics.ApplyOn applyOn = relevant.enumValue("applyOn", Metrics.ApplyOn.class).orElse(Metrics.ApplyOn.ALL);
         Iterable<Tag> tags = Metrics.tags(relevant.stringValues("tags").orElseGet(List::of).toArray(new String[0]));
+        String unit = relevant.stringValue("unit").orElse(Meter.BaseUnits.NANOSECONDS);
 
-        return new CounterData(name,
-                               applyOn == Metrics.ApplyOn.ALL || applyOn == Metrics.ApplyOn.FAILURE,
-                               applyOn == Metrics.ApplyOn.ALL || applyOn == Metrics.ApplyOn.SUCCESS,
-                               meterRegistry.get()
-                                       .getOrCreate(Counter.builder(name)
-                                                            .description(description)
-                                                            .scope(scope)
-                                                            .tags(tags)));
+        return new TimerData(name,
+                             applyOn == Metrics.ApplyOn.ALL || applyOn == Metrics.ApplyOn.FAILURE,
+                             applyOn == Metrics.ApplyOn.ALL || applyOn == Metrics.ApplyOn.SUCCESS,
+                             meterRegistry.get()
+                                     .getOrCreate(Timer.builder(name)
+                                                          .description(description)
+                                                          .scope(scope)
+                                                          .baseUnit(unit)
+                                                          .tags(tags)));
     }
 
     record CacheKey(TypeName clazz, String methodName, List<TypedElementInfo> parameters) {
     }
 
-    record CounterData(String counterName,
-                       boolean countThrown,
-                       boolean countSuccess,
-                       Counter counter) {
+    record TimerData(String name,
+                     boolean countThrown,
+                     boolean countSuccess,
+                     Timer timer) {
 
     }
 }
