@@ -107,12 +107,6 @@ public final class AptProcessor extends AbstractProcessor {
                     .orElse(null);
             if (originatingElement instanceof Element element) {
                 processingEnv.getMessager().printError(e.getMessage(), element);
-            } else if (originatingElement instanceof TypeName typeName) {
-                processingEnv.getMessager().printError(e.getMessage() + ", source: " + typeName.fqName());
-            } else {
-                if (originatingElement != null) {
-                    processingEnv.getMessager().printError(e.getMessage() + ", source: " + originatingElement);
-                }
             }
             throw e;
         } finally {

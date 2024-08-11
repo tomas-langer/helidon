@@ -16,12 +16,13 @@
 
 package io.helidon.scheduling;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
-@Prototype.Blueprint(decorator = TaskConfigDecorator.class)
+@Prototype.Blueprint(decorator = FixedRateDecorator.class)
 @Prototype.Configured
 interface FixedRateConfigBlueprint extends TaskConfigBlueprint, Prototype.Factory<FixedRate> {
 
@@ -31,10 +32,22 @@ interface FixedRateConfigBlueprint extends TaskConfigBlueprint, Prototype.Factor
      * {@link io.helidon.scheduling.FixedRateConfig.Builder#timeUnit(java.util.concurrent.TimeUnit) timeUnit()}.
      *
      * @return initial delay value
+     * @deprecated use #delayBy
      */
     @Option.Configured
-    @Option.DefaultLong(0)
+    @Option.Deprecated("delayBy")
+    @Option.Required
+    @Deprecated(forRemoval = true, since = "4.2.0")
     long initialDelay();
+
+    /**
+     * Initial delay of the first invocation.
+     *
+     * @return initial delay duration
+     */
+    @Option.Configured
+    @Option.Default("PT0S")
+    Duration delayBy();
 
     /**
      * Fixed rate delay between each invocation. Time unit is by default {@link java.util.concurrent.TimeUnit#SECONDS},
@@ -43,8 +56,19 @@ interface FixedRateConfigBlueprint extends TaskConfigBlueprint, Prototype.Factor
      * @return delay between each invocation
      */
     @Option.Configured
+    @Option.Deprecated("rate")
     @Option.Required
+    @Deprecated(forRemoval = true, since = "4.2.0")
     long delay();
+
+    /**
+     * Fixed rate delay between each invocation.
+     *
+     * @return delay between each invocation
+     */
+    @Option.Configured
+    @Option.Required
+    Duration rate();
 
     /**
      * Configure whether the delay between the invocations should be calculated from the time when previous task started or ended.
@@ -71,9 +95,11 @@ interface FixedRateConfigBlueprint extends TaskConfigBlueprint, Prototype.Factor
      * @return time unit for interpreting values
      *         in {@link io.helidon.scheduling.FixedRateConfig.Builder#delay(long)}
      *         and {@link io.helidon.scheduling.FixedRateConfig.Builder#initialDelay(long)}
+     * @deprecated as duration is used for new options, this option is not needed
      */
     @Option.Configured
     @Option.Default("TimeUnit.SECONDS")
+    @Deprecated(forRemoval = true, since = "4.2.0")
     TimeUnit timeUnit();
 
 }

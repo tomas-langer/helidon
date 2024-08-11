@@ -52,7 +52,8 @@ The following annotations can be used on methods:
 The following annotations can be used on parameters of endpoint methods:
 
 - `@Http.Entity` - bind the entity to this parameter
-- `@Http.HeaderParam("user-agent")"` - bind the header parameter value to this parameter (Parameter may be declared as an Optional<X>)
+- `@Http.HeaderParam("user-agent")"` - bind the header parameter value to this parameter (Parameter may be declared as an
+  Optional<X>)
 - `@Http.PathParam("name")` - bind the path template parameter to this parameter (Parameter may be declared as an Optional<X>)
 - `@Http.QueryParam("name")` - bind the query parameter to this parameter (Parameter may be declared as an Optional<X>)
 
@@ -92,6 +93,7 @@ Features that have POC implemented:
 | Context         | DONE   | `Context` instance can be a parameter of entry point method                             |
 | Fault Tolerance | DONE   | See annotations on `io.helidon.faulttolerance.FaultTolerance`                           | 
 | Metrics         | POC    | See annotations on `io.helidon.metrics.api.Metrics`, Counter and Timer done             |
+| Scheduling      | TODO   | See annotations on `io.helidon.scheduling.Scheduling`                                   |
 
 Features that require work:
 
@@ -111,8 +113,7 @@ Features that require work:
 | LRA               | TBD    | TBD                                                                                                                                        | 
 | Messaging         | TBD    | TBD                                                                                                                                        | 
 | Reactive          | TODO   | How to translate a reactive stream to Stream operations on `java.io.InputStream`, `java.io.OutputStream` that is compatible with Helidon 4 | 
-| WebClient         | TODO   | Typed client similar to rest client in MP, TBD                                                                                             | 
-| Scheduling        | TODO   | See annotations on `io.helidon.scheduling.Scheduling`                                                                                      | 
+| WebClient         | TODO   | Typed client similar to rest client in MP, TBD                                                                                             |
 | OCI integration   | TODO   | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK        | 
 | Vault integration | TODO   | Support similar to CDI                                                                                                                     | 
 | Batch             | TBD    | TBD                                                                                                                                        | 

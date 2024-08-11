@@ -17,11 +17,11 @@
 package io.helidon.scheduling;
 
 import java.lang.System.Logger.Level;
+import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
-import io.helidon.common.configurable.ScheduledThreadPoolSupplier;
 
 class FixedRateTask implements FixedRate {
 
@@ -29,34 +29,35 @@ class FixedRateTask implements FixedRate {
 
     private final AtomicLong iteration = new AtomicLong(0);
     private final ScheduledExecutorService executorService;
-    private final long initialDelay;
-    private final long delay;
-    private final TimeUnit timeUnit;
-    private final ScheduledConsumer actualTask;
-    private FixedRateConfig config = null;
+    private final Duration initialDelay;
+    private final Duration rate;
+    private final ScheduledConsumer<FixedRateInvocation> actualTask;
+    private final ScheduledFuture<?> future;
+    private final FixedRateConfig config;
 
     FixedRateTask(FixedRateConfig config) {
         this.config = config;
 
-        this.initialDelay = config.initialDelay();
-        this.delay = config.delay();
-        this.timeUnit = config.timeUnit();
+        this.initialDelay = config.delayBy();
+        this.rate = config.rate();
         this.actualTask = config.task();
 
         if (config.executor() == null) {
-            executorService = ScheduledThreadPoolSupplier.builder()
-                    .threadNamePrefix("scheduled-")
-                    .build()
-                    .get();
+            this.executorService = Scheduling.DEFAULT_SCHEDULER.get();
         } else {
             this.executorService = config.executor();
         }
 
-        switch (config.delayType()) {
-        case SINCE_PREVIOUS_START -> executorService.scheduleAtFixedRate(this::run, initialDelay, delay, timeUnit);
-        case SINCE_PREVIOUS_END -> executorService.scheduleWithFixedDelay(this::run, initialDelay, delay, timeUnit);
-        default -> throw new IllegalStateException("Unexpected delay type " + config.delayType());
-        }
+        this.future = switch (config.delayType()) {
+            case SINCE_PREVIOUS_START -> executorService.scheduleAtFixedRate(this::run,
+                                                                             initialDelay.toMillis(),
+                                                                             rate.toMillis(),
+                                                                             TimeUnit.MILLISECONDS);
+            case SINCE_PREVIOUS_END -> executorService.scheduleWithFixedDelay(this::run,
+                                                                              initialDelay.toMillis(),
+                                                                              rate.toMillis(),
+                                                                              TimeUnit.MILLISECONDS);
+        };
     }
 
     @Override
@@ -66,17 +67,21 @@ class FixedRateTask implements FixedRate {
 
     @Override
     public String description() {
-        String unit = timeUnit.toString().toLowerCase();
-        if (initialDelay == 0) {
-            return String.format("every %s %s", delay, unit);
+        if (initialDelay.isZero()) {
+            return String.format("every %s", rate);
         }
-        return String.format("every %s %s with initial delay %s %s",
-                delay, unit, initialDelay, unit);
+        return String.format("every %s with initial delay of %s ",
+                             rate, initialDelay);
     }
 
     @Override
     public ScheduledExecutorService executor() {
         return this.executorService;
+    }
+
+    @Override
+    public void close() {
+        future.cancel(false);
     }
 
     void run() {
@@ -85,17 +90,17 @@ class FixedRateTask implements FixedRate {
             actualTask.run(new FixedRateInvocation() {
                 @Override
                 public long initialDelay() {
-                    return initialDelay;
+                    return initialDelay.toMillis();
                 }
 
                 @Override
                 public long delay() {
-                    return delay;
+                    return rate.toMillis();
                 }
 
                 @Override
                 public TimeUnit timeUnit() {
-                    return timeUnit;
+                    return TimeUnit.MILLISECONDS;
                 }
 
                 @Override

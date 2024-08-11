@@ -46,6 +46,10 @@
             <artifactId>helidon-webserver-observe-health</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.scheduling</groupId>
+            <artifactId>helidon-scheduling</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.webserver.observe</groupId>
             <artifactId>helidon-webserver-observe-metrics</artifactId>
         </dependency>

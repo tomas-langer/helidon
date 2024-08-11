@@ -39,6 +39,7 @@ public class CronSchedulingTest {
 
     static final long ERROR_MARGIN_MILLIS = 500;
 
+    @SuppressWarnings("removal")
     @Test
     void cronTestDeprecated() {
         ScheduledExecutorService executorService = ScheduledThreadPoolSupplier.create().get();
@@ -75,6 +76,7 @@ public class CronSchedulingTest {
         meter.assertAverageDuration(Duration.ofSeconds(2), Duration.ofMillis(ERROR_MARGIN_MILLIS));
     }
 
+    @SuppressWarnings("removal")
     @Test
     void cronConcurrencyDisabledDeprecated() {
         ScheduledExecutorService executorService = ScheduledThreadPoolSupplier.create().get();
@@ -119,6 +121,7 @@ public class CronSchedulingTest {
         meter.assertNonConcurrent();
     }
 
+    @SuppressWarnings("removal")
     @Test
     void cronConcurrencyEnabledDeprecated() {
         IntervalMeter meter = new IntervalMeter();
@@ -165,6 +168,7 @@ public class CronSchedulingTest {
         meter.assertAverageDuration(Duration.ofSeconds(1), Duration.ofMillis(ERROR_MARGIN_MILLIS));
     }
 
+    @SuppressWarnings("removal")
     @Test
     void cronDefaultExecutorDeprecated() {
         IntervalMeter meter = new IntervalMeter();
@@ -182,8 +186,8 @@ public class CronSchedulingTest {
         task.executor().shutdown();
         meter.assertAverageDuration(Duration.ofSeconds(3), Duration.ofMillis(ERROR_MARGIN_MILLIS));
         threadNames.stream()
-                .map(s -> s.substring(0, Scheduling.CronBuilder.DEFAULT_THREAD_NAME_PREFIX.length()))
-                .forEach(s -> assertThat(s, Matchers.equalTo(Scheduling.CronBuilder.DEFAULT_THREAD_NAME_PREFIX)));
+                .map(s -> s.substring(0, Scheduling.DEFAULT_THREAD_NAME_PREFIX.length()))
+                .forEach(s -> assertThat(s, Matchers.equalTo(Scheduling.DEFAULT_THREAD_NAME_PREFIX)));
         assertThat(threadNames.size(), Matchers.greaterThan(0));
     }
 
@@ -204,11 +208,12 @@ public class CronSchedulingTest {
         task.executor().shutdown();
         meter.assertAverageDuration(Duration.ofSeconds(3), Duration.ofMillis(ERROR_MARGIN_MILLIS));
         threadNames.stream()
-                .map(s -> s.substring(0, Scheduling.CronBuilder.DEFAULT_THREAD_NAME_PREFIX.length()))
-                .forEach(s -> assertThat(s, Matchers.equalTo(Scheduling.CronBuilder.DEFAULT_THREAD_NAME_PREFIX)));
+                .map(s -> s.substring(0, Scheduling.DEFAULT_THREAD_NAME_PREFIX.length()))
+                .forEach(s -> assertThat(s, Matchers.equalTo(Scheduling.DEFAULT_THREAD_NAME_PREFIX)));
         assertThat(threadNames.size(), Matchers.greaterThan(0));
     }
 
+    @SuppressWarnings("removal")
     @Test
     void cronWrongExpressionDeprecated() {
         ScheduledExecutorService executorService = ScheduledThreadPoolSupplier.create().get();
@@ -243,6 +248,7 @@ public class CronSchedulingTest {
         }
     }
 
+    @SuppressWarnings("removal")
     @Test
     void cronMissingTaskDeprecated() {
         ScheduledExecutorService executorService = ScheduledThreadPoolSupplier.create().get();

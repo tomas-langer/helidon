@@ -37,4 +37,8 @@ public interface Task {
      */
     ScheduledExecutorService executor();
 
+    /**
+     * Close the created task. This will cancel the scheduled future.
+     */
+    void close();
 }
