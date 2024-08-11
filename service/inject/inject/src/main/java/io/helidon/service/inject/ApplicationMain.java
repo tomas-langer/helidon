@@ -142,7 +142,7 @@ public abstract class ApplicationMain {
 
         GlobalServiceRegistry.registry(registry);
         registry.all(Lookup.builder()
-                             .runLevel(Injection.RunLevel.STARTUP)
+                             .runLevel(Injection.RunLevel.SERVER)
                              .build());
         return registry;
     }

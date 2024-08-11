@@ -250,6 +250,12 @@ public final class Injection {
         int STARTUP = 10;
 
         /**
+         * Represents services that have the concept of "serving" something, such as webserver,
+         * messaging etc.
+         */
+        int SERVER = 50;
+
+        /**
          * Anything > 0 is left to the underlying provider implementation's discretion for meaning; this is just a default for
          * something that is deemed "other than startup".
          */

@@ -40,13 +40,12 @@ class TimeoutInterceptor extends InterceptorBase<Timeout> {
 
     private Timeout fromAnnotation(Annotation annotation) {
         String name = annotation.getValue("name").orElse("timeout-") + System.identityHashCode(annotation);
-        long timeout = annotation.getValue("time").map(Long::parseLong).orElse(10L);
-        ChronoUnit unit = annotation.getValue("timeUnit").map(ChronoUnit::valueOf).orElse(ChronoUnit.SECONDS);
+        Duration timeout = annotation.getValue("time").map(Duration::parse).orElseGet(() -> Duration.ofSeconds(10));
         boolean currentThread = annotation.getValue("currentThread").map(Boolean::parseBoolean).orElse(false);
 
         return TimeoutConfig.builder()
                 .name(name)
-                .timeout(Duration.of(timeout, unit))
+                .timeout(timeout)
                 .currentThread(currentThread)
                 .build();
     }

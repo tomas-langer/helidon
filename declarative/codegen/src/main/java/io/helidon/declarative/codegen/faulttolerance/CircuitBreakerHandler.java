@@ -1,7 +1,6 @@
 package io.helidon.declarative.codegen.faulttolerance;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -18,6 +17,7 @@ import io.helidon.common.types.TypedElementInfo;
 import io.helidon.service.codegen.RegistryCodegenContext;
 import io.helidon.service.codegen.ServiceCodegenTypes;
 
+import static io.helidon.codegen.Validator.validateDuration;
 import static io.helidon.declarative.codegen.faulttolerance.FtTypes.CIRCUIT_BREAKER;
 import static io.helidon.declarative.codegen.faulttolerance.FtTypes.CIRCUIT_BREAKER_ANNOTATION;
 import static io.helidon.declarative.codegen.faulttolerance.FtTypes.CIRCUIT_BREAKER_CONFIG;
@@ -42,6 +42,7 @@ class CircuitBreakerHandler extends FtHandler {
         // generate the class body
         circuitBreakerBody(classModel,
                            enclosingTypeName,
+                           element,
                            generatedType,
                            element.elementName(),
                            annotation);
@@ -55,6 +56,7 @@ class CircuitBreakerHandler extends FtHandler {
 
     private void circuitBreakerBody(ClassModel.Builder classModel,
                                     TypeName enclosingTypeName,
+                                    TypedElementInfo element,
                                     TypeName generatedType,
                                     String methodName,
                                     Annotation annotation) {
@@ -123,13 +125,20 @@ class CircuitBreakerHandler extends FtHandler {
                 .isStatic(true)
                 .returnType(CIRCUIT_BREAKER)
                 .name("produceBreaker")
-                .update(builder -> produceBreakerMethodBody(builder, annotation, customName))
+                .update(builder -> produceBreakerMethodBody(enclosingTypeName, element, builder, annotation, customName))
         );
     }
 
-    private void produceBreakerMethodBody(Method.Builder builder, Annotation annotation, String customName) {
-        long delayTime = annotation.longValue("delayTime").orElse(5L);
-        ChronoUnit unit = annotation.enumValue("timeUnit", ChronoUnit.class).orElse(ChronoUnit.SECONDS);
+    private void produceBreakerMethodBody(TypeName typeName,
+                                          TypedElementInfo element,
+                                          Method.Builder builder,
+                                          Annotation annotation,
+                                          String customName) {
+        String delayDuration = validateDuration(typeName,
+                                                element,
+                                                CIRCUIT_BREAKER_ANNOTATION,
+                                                "delay",
+                                                annotation.stringValue("delay").orElse("PT5S"));
         int errorRatio = annotation.intValue("errorRatio").orElse(60);
         int volume = annotation.intValue("volume").orElse(10);
         int successThreshold = annotation.intValue("successThreshold").orElse(1);
@@ -143,13 +152,9 @@ class CircuitBreakerHandler extends FtHandler {
                 .addContentLine(".skipOn(SKIP_ON)")
                 .addContent(".delay(")
                 .addContent(Duration.class)
-                .addContent(".of(")
-                .addContent(String.valueOf(delayTime))
-                .addContent(", ")
-                .addContent(ChronoUnit.class)
-                .addContent(".")
-                .addContent(unit.name())
-                .addContentLine("))")
+                .addContent(".parse(\"")
+                .addContent(delayDuration)
+                .addContentLine("\"))")
                 .addContent(".name(\"")
                 .addContent(customName)
                 .addContentLine("\")")

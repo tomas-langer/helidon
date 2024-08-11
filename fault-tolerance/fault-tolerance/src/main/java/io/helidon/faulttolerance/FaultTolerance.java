@@ -21,6 +21,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.util.LinkedList;
 import java.util.List;
@@ -185,22 +186,13 @@ public final class FaultTolerance {
         int calls() default 3;
 
         /**
-         * Amount to delay, unit is specified by {@link #timeUnit()} and defaults to milliseconds.
-         * Defaults to {@code 200}. Make sure you change this when changing {@link #timeUnit()}.
+         * Duration to delay
+         * Defaults to {@code 200} milliseconds.
          *
-         * @return amount of units to delay between retries (combines with retry policy)
+         * @return duration to delay, such as {@code PT1S} (1 second)
+         * @see java.time.Duration#parse(CharSequence)
          */
-        long delayTime() default 200;
-
-        /**
-         * Units used for specification of time for this retry.
-         * If changed, make sure you accordingly modify all times on this retry.
-         *
-         * @return chrono unit that defines the amounts of time on this retry
-         * @see #delayTime()
-         * @see #jitterTime()
-         */
-        ChronoUnit timeUnit() default ChronoUnit.MILLIS;
+        String delay() default "PT0.2S";
 
         /**
          * Delay retry policy factor. If unspecified (value of {@code -1}), Jitter retry policy would be used, unless
@@ -217,17 +209,18 @@ public final class FaultTolerance {
          * delaying retry policy is used. If both this value, and {@link #delayFactor()} are specified, delaying retry policy
          * would be used.
          *
-         * @return jitter, using {@link #timeUnit()}
+         * @return jitter duration
+         * @see java.time.Duration#parse(CharSequence)
          */
-        long jitterTime() default -1;
+        String jitter() default "PT-1S";
 
         /**
-         * Amount of overall timeout, unit is specified by {@link #timeUnit()} and defaults to milliseconds.
-         * Defaults to {@code 1000}. Make sure you change this when changing {@link #timeUnit()}.
+         * Duration of overall timeout.
+         * Defaults to {@code PT1S} (1 second).
          *
-         * @return amount of units to measure overall timeout of all retries
+         * @return duration of overall timeout
          */
-        long overallTimeout() default 1000;
+        String overallTimeout() default "PT1S";
 
         /**
          * These throwables will be considered retriable.
@@ -324,21 +317,12 @@ public final class FaultTolerance {
         String name() default "";
 
         /**
-         * Amount of time for timeout, unit is specified by {@link #timeUnit()} and defaults to seconds.
-         * Defaults to {@code 10}. Make sure you change this when changing {@link #timeUnit()}.
+         * Duration of timeout.
+         * Defaults to {@code PT10S} (10 seconds).
          *
-         * @return amount of units to timeout
+         * @return timeout duration
          */
-        long time() default 10;
-
-        /**
-         * Units used for specification of time for this timeout.
-         * If changed, make sure you accordingly modify all times on this timeout.
-         *
-         * @return chrono unit that defines the amounts of time on this timeout
-         * @see #time()
-         */
-        ChronoUnit timeUnit() default ChronoUnit.SECONDS;
+        String time() default "PT10S";
 
         /**
          * Flag to indicate that code must be executed in current thread instead
@@ -403,21 +387,12 @@ public final class FaultTolerance {
         String name() default "";
 
         /**
-         * Units used for specification of time for this circuit breaker.
-         * If changed, make sure you accordingly modify all times on this annotation.
+         * Delay duration.
+         * Defaults to {@code PT5S} (5 seconds).
          *
-         * @return chrono unit that defines the amounts of time on this circuit breaker, defaults to seconds
-         * @see #delayTime()
+         * @return duration to wait before transitioning from open to half-open state
          */
-        ChronoUnit timeUnit() default ChronoUnit.SECONDS;
-
-        /**
-         * Amount to delay, unit is specified by {@link #timeUnit()} and defaults to milliseconds.
-         * Defaults to {@code 5} seconds. Make sure you change this when changing {@link #timeUnit()}.
-         *
-         * @return amount of units to wait before transitioning from open to half-open state
-         */
-        long delayTime() default 5;
+        String delay() default "PT5S";
 
         /**
          * How many failures out of 100 will trigger the circuit to open.

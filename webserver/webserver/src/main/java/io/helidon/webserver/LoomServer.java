@@ -50,7 +50,7 @@ import io.helidon.webserver.http.DirectHandlers;
 import io.helidon.webserver.spi.ServerFeature;
 
 @Injection.Singleton
-@Injection.RunLevel(Injection.RunLevel.STARTUP)
+@Injection.RunLevel(Injection.RunLevel.SERVER)
 class LoomServer implements WebServer {
     private static final System.Logger LOGGER = System.getLogger(LoomServer.class.getName());
     private static final String EXIT_ON_STARTED_KEY = "exit.on.started";

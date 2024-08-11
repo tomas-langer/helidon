@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenUtil;
+import io.helidon.codegen.Validator;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.Constructor;
 import io.helidon.codegen.classmodel.ContentBuilder;
@@ -298,8 +299,8 @@ class SchedulingExtension implements RegistryCodegenExtension {
         String delayBy = annotation.stringValue("delayBy").orElse("PT0S");
         String delayType = annotation.stringValue("delayType").orElse("SINCE_PREVIOUS_START");
 
-        validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "rate", rate);
-        validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "delayBy", delayBy);
+        Validator.validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "rate", rate);
+        Validator.validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "delayBy", delayBy);
 
         // add for processing
         allScheduled.add(new FixedRate(typeInfo.typeName(),
@@ -309,25 +310,6 @@ class SchedulingExtension implements RegistryCodegenExtension {
                                        rate,
                                        delayBy,
                                        delayType));
-    }
-
-    private void validateDuration(TypeName enclosingType,
-                                  TypedElementInfo annotatedMethod,
-                                  TypeName annotationType,
-                                  String property,
-                                  String value) {
-        try {
-            Duration.parse(value);
-        } catch (Exception e) {
-            throw new CodegenException("Duration expression of annotation " + annotationType.fqName() + "."
-                                               + property + "(): "
-                                               + "\"" + value + "\" cannot be parsed. Duration expects an"
-                                               + " expression such as 'PT1S' (1 second), 'PT0.1S' (tenth of a second)."
-                                               + " Please check javadoc of " + Duration.class.getName() + " class.",
-                                       e,
-                                       annotatedMethod.originatingElement().orElseGet(() -> enclosingType.fqName() + "."
-                                               + annotatedMethod.elementName()));
-        }
     }
 
     private boolean checkAndHasArgument(TypeInfo typeInfo, TypedElementInfo element, TypeName fixedRateInvocation) {

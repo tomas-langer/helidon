@@ -1,7 +1,6 @@
 package io.helidon.declarative.codegen.faulttolerance;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -18,6 +17,7 @@ import io.helidon.common.types.TypedElementInfo;
 import io.helidon.service.codegen.RegistryCodegenContext;
 import io.helidon.service.codegen.ServiceCodegenTypes;
 
+import static io.helidon.codegen.Validator.validateDuration;
 import static io.helidon.declarative.codegen.faulttolerance.FtTypes.RETRY;
 import static io.helidon.declarative.codegen.faulttolerance.FtTypes.RETRY_ANNOTATION;
 import static io.helidon.declarative.codegen.faulttolerance.FtTypes.RETRY_CONFIG;
@@ -42,6 +42,7 @@ final class RetryHandler extends FtHandler {
         // generate the class body
         retryBody(classModel,
                   enclosingTypeName,
+                  element,
                   generatedType,
                   element.elementName(),
                   annotation);
@@ -55,6 +56,7 @@ final class RetryHandler extends FtHandler {
 
     private void retryBody(ClassModel.Builder classModel,
                            TypeName enclosingTypeName,
+                           TypedElementInfo element,
                            TypeName generatedType,
                            String methodName,
                            Annotation annotation) {
@@ -123,17 +125,37 @@ final class RetryHandler extends FtHandler {
                 .isStatic(true)
                 .returnType(RETRY)
                 .name("produceRetry")
-                .update(builder -> produceRetryMethodBody(builder, annotation, customName))
+                .update(builder -> produceRetryMethodBody(enclosingTypeName,
+                                                          element,
+                                                          builder,
+                                                          annotation,
+                                                          customName))
         );
     }
 
-    private void produceRetryMethodBody(Method.Builder builder, Annotation annotation, String customName) {
+    private void produceRetryMethodBody(TypeName typeName,
+                                        TypedElementInfo element,
+                                        Method.Builder builder,
+                                        Annotation annotation,
+                                        String customName) {
+
         int calls = annotation.intValue("calls").orElse(3);
-        long delayTime = annotation.longValue("delayTime").orElse(200L);
-        ChronoUnit unit = annotation.enumValue("timeUnit", ChronoUnit.class).orElse(ChronoUnit.MILLIS);
+        String delayDuration = validateDuration(typeName,
+                                                element,
+                                                RETRY_ANNOTATION,
+                                                "delay",
+                                                annotation.stringValue("delay").orElse("PT0.2S"));
         double delayFactor = annotation.doubleValue("delayFactor").orElse(-1.0);
-        long jitterTime = annotation.longValue("jitterTime").orElse(-1L);
-        long overallTimeout = annotation.longValue("overallTimeout").orElse(1000L);
+        String jitterDuration = validateDuration(typeName,
+                                             element,
+                                             RETRY_ANNOTATION,
+                                             "jitter",
+                                             annotation.stringValue("jitter").orElse("PT-1S"));
+        String overallTimeoutDuration = validateDuration(typeName,
+                                                         element,
+                                                         RETRY_ANNOTATION,
+                                                         "overallTimeout",
+                                                         annotation.stringValue("overallTimeout").orElse("PT1S"));
 
         /*
         First build the retry policy
@@ -142,7 +164,7 @@ final class RetryHandler extends FtHandler {
                 .addContent(RETRY)
                 .addContent(".");
 
-        if (jitterTime < 0 || delayFactor > 0) {
+        if (jitterDuration.equals("PT-1S") || delayFactor > 0) {
             delayFactor = delayFactor > 0 ? delayFactor : 2.0;
             // delaying
             builder.addContentLine("DelayingRetryPolicy.builder()")
@@ -158,26 +180,18 @@ final class RetryHandler extends FtHandler {
                     .increaseContentPadding()
                     .addContent(".jitter(")
                     .addContent(Duration.class)
-                    .addContent(".of(")
-                    .addContent(String.valueOf(jitterTime))
-                    .addContent(", ")
-                    .addContent(ChronoUnit.class)
-                    .addContent(".")
-                    .addContent(unit.name())
-                    .addContentLine("))");
+                    .addContent(".parse(\"")
+                    .addContent(jitterDuration)
+                    .addContentLine("\"))");
         }
         builder.addContent(".calls(")
                 .addContent(String.valueOf(calls))
                 .addContentLine(")");
         builder.addContent(".delay(")
                 .addContent(Duration.class)
-                .addContent(".of(")
-                .addContent(String.valueOf(delayTime))
-                .addContent(", ")
-                .addContent(ChronoUnit.class)
-                .addContent(".")
-                .addContent(unit.name())
-                .addContentLine("))");
+                .addContent(".parse(\"")
+                .addContent(delayDuration)
+                .addContentLine("\"))");
         builder.addContentLine(".build();")
                 .decreaseContentPadding()
                 .decreaseContentPadding();
@@ -196,13 +210,9 @@ final class RetryHandler extends FtHandler {
                 .addContentLine(".retryPolicy(policy)")
                 .addContent(".overallTimeout(")
                 .addContent(Duration.class)
-                .addContent(".of(")
-                .addContent(String.valueOf(overallTimeout))
-                .addContent(", ")
-                .addContent(ChronoUnit.class)
-                .addContent(".")
-                .addContent(unit.name())
-                .addContentLine("))")
+                .addContent(".parse(\"")
+                .addContent(overallTimeoutDuration)
+                .addContentLine("\"))")
                 .addContent(".name(\"")
                 .addContent(customName)
                 .addContentLine("\")")

@@ -128,7 +128,7 @@ class GreetEndpoint {
 
     @Http.GET
     @Http.Path("/ft/timeout")
-    @FaultTolerance.Timeout(time = 2)
+    @FaultTolerance.Timeout(time = "PT2S")
     String timeout(@Http.QueryParam("sleepSeconds") Optional<Integer> sleep) {
         try {
             Thread.sleep(sleep.orElse(0) * 1000);

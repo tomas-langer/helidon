@@ -63,7 +63,7 @@ public class InjectStartupProvider implements HelidonStartupProvider {
         registerShutdownHandler(m);
 
         registry.all(Lookup.builder()
-                             .runLevel(Injection.RunLevel.STARTUP)
+                             .runLevel(Injection.RunLevel.SERVER)
                              .build());
     }
 
