@@ -40,5 +40,6 @@ public interface Task {
     /**
      * Close the created task. This will cancel the scheduled future.
      */
-    void close();
+    default void close() {
+    }
 }

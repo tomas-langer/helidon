@@ -183,9 +183,12 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *      </tr>
  * </tbody>
  * </table>
+ *
+ * @deprecated use {@link io.helidon.scheduling.Scheduling.Cron} instead
  */
 @Retention(RUNTIME)
-@Target({METHOD})
+@Target(METHOD)
+@Deprecated(forRemoval = true, since = "4.2.0")
 public @interface Scheduled {
 
     /**

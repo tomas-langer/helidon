@@ -19,10 +19,9 @@ package io.helidon.scheduling;
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.configurable.ScheduledThreadPoolSupplier;
 
-class TaskConfigDecorator<T extends TaskConfig.BuilderBase<?, ?>> implements Prototype.BuilderDecorator<T> {
-
+class TaskConfigDecorator implements Prototype.BuilderDecorator<TaskConfig.BuilderBase<?, ?>> {
     @Override
-    public void decorate(T target) {
+    public void decorate(TaskConfig.BuilderBase<?, ?> target) {
         if (target.executor().isEmpty()) {
             target.executor(ScheduledThreadPoolSupplier.builder()
                                     .threadNamePrefix("scheduled-")
