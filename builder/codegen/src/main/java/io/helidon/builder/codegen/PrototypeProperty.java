@@ -113,13 +113,6 @@ record PrototypeProperty(MethodSignature signature,
         );
     }
 
-    private static TypeName propertyTypeName(TypedElementInfo element) {
-        return element.findAnnotation(Types.OPTION_TYPE)
-                .flatMap(Annotation::value)
-                .map(TypeName::create)
-                .orElseGet(element::typeName);
-    }
-
     Field.Builder fieldDeclaration(boolean isBuilder) {
         return typeHandler.fieldDeclaration(configuredOption(), isBuilder, !isBuilder);
     }
@@ -162,6 +155,13 @@ record PrototypeProperty(MethodSignature signature,
     boolean builderGetterOptional() {
         return typeHandler.builderGetterOptional(configuredOption.required(),
                                                  configuredOption.hasDefault());
+    }
+
+    private static TypeName propertyTypeName(TypedElementInfo element) {
+        return element.findAnnotation(Types.OPTION_TYPE)
+                .flatMap(Annotation::value)
+                .map(TypeName::create)
+                .orElseGet(element::typeName);
     }
 
     private static String setterName(String name, boolean beanStyleAccessors) {

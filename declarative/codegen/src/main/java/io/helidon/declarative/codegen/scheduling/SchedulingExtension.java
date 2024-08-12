@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenUtil;
-import io.helidon.codegen.Validator;
+import io.helidon.codegen.CodegenValidator;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.Constructor;
 import io.helidon.codegen.classmodel.ContentBuilder;
@@ -299,8 +299,8 @@ class SchedulingExtension implements RegistryCodegenExtension {
         String delayBy = annotation.stringValue("delayBy").orElse("PT0S");
         String delayType = annotation.stringValue("delayType").orElse("SINCE_PREVIOUS_START");
 
-        Validator.validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "rate", rate);
-        Validator.validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "delayBy", delayBy);
+        CodegenValidator.validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "rate", rate);
+        CodegenValidator.validateDuration(typeInfo.typeName(), element, FIXED_RATE_ANNOTATION, "delayBy", delayBy);
 
         // add for processing
         allScheduled.add(new FixedRate(typeInfo.typeName(),

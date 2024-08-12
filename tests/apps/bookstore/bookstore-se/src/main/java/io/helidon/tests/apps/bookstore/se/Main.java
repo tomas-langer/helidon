@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2023 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,7 +109,7 @@ public final class Main {
         serverBuilder
                 // Health at "/health", and metrics at "/metrics"
                 .addFeature(ObserveFeature.just(health, metrics))
-                .addRouting(createRouting(config))
+                .routing(routing -> createRouting(config, routing))
                 .config(config.get("server"))
                 .update(it -> configureJsonSupport(it, config))
                 .update(it -> configureSsl(it, ssl));
@@ -163,13 +163,11 @@ public final class Main {
     /**
      * Creates new {@link Routing}.
      *
-     * @param config configuration of this server
-     * @return routing configured with JSON support, a health check, and a service
+     * @param config  configuration of this server
+     * @param routing routing builder
      */
-    private static HttpRouting.Builder createRouting(Config config) {
-
-        return HttpRouting.builder()
-                .register(SERVICE_PATH, new BookService(config));
+    private static void createRouting(Config config, HttpRouting.Builder routing) {
+        routing.register(SERVICE_PATH, new BookService(config));
     }
 
     enum JsonLibrary {

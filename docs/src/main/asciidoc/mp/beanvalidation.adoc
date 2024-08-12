@@ -215,7 +215,7 @@ Supported types are:
 
 |`@Past`
 a|The annotated element must be an instant, date or time in the past.
-`Now` is defined by the `ClockProvider` attached to the `Validator` or `ValidatorFactory`. The default `clockProvider` defines the current time
+`Now` is defined by the `ClockProvider` attached to the `CodegenValidator` or `ValidatorFactory`. The default `clockProvider` defines the current time
 according to the virtual machine, applying the current default time zone if needed.
 
 Supported types are:
@@ -241,7 +241,7 @@ Supported types are:
 
 |`@PastOrPresent`
 a|The annotated element must be an instant, date or time in the past or in the present.
-`Now` is defined by the `ClockProvider` attached to the `Validator` or `ValidatorFactory`. The default `clockProvider` defines the current time
+`Now` is defined by the `ClockProvider` attached to the `CodegenValidator` or `ValidatorFactory`. The default `clockProvider` defines the current time
 according to the virtual machine, applying the current default time zone if needed.
 
 The notion of present is defined relatively to the type on which the constraint is
@@ -271,7 +271,7 @@ Supported types are:
 
 |`@Future`
 a|The annotated element must be an instant, date or time in the future.
-`Now` is defined by the `ClockProvider` attached to the `Validator` or `ValidatorFactory`. The default `clockProvider` defines the current time
+`Now` is defined by the `ClockProvider` attached to the `CodegenValidator` or `ValidatorFactory`. The default `clockProvider` defines the current time
 according to the virtual machine, applying the current default time zone if needed.
 
 Supported types are:
@@ -297,7 +297,7 @@ Supported types are:
 
 |`@FutureOrPresent`
 a|The annotated element must be an instant, date or time in the present or in the future.
-`Now` is defined by the `ClockProvider` attached to the `Validator` or `ValidatorFactory`. The default `clockProvider` defines the current time
+`Now` is defined by the `ClockProvider` attached to the `CodegenValidator` or `ValidatorFactory`. The default `clockProvider` defines the current time
 according to the virtual machine, applying the current default time zone if needed.
 
 The notion of present here is defined relatively to the type on which the constraint is
