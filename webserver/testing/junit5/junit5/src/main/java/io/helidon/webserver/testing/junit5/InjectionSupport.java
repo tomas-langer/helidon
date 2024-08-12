@@ -28,8 +28,8 @@ import io.helidon.webserver.WebServerService__ServiceDescriptor;
 /**
  * Check if injection is enabled. If so, also provides support for testing with injection registry.
  */
-class InjectionSupport {
-    private static final LazyValue<Boolean> enabled = LazyValue.create(() -> {
+final class InjectionSupport {
+    private static final LazyValue<Boolean> ENABLED = LazyValue.create(() -> {
         try {
             Class.forName("io.helidon.service.inject.ApplicationMain");
             return true;
@@ -38,16 +38,26 @@ class InjectionSupport {
         }
     });
 
-    public static Object param(Class<?> paramType) {
-        return GlobalServiceRegistry.registry();
+    private InjectionSupport() {
+    }
+
+    static Object param(Class<?> paramType) {
+        return GlobalServiceRegistry.registry()
+                .get(paramType);
     }
 
     static boolean supportedType(Class<?> paramType) {
-        return InjectRegistry.class.equals(paramType) || ServiceRegistry.class.equals(paramType);
+        if (InjectRegistry.class.equals(paramType) || ServiceRegistry.class.equals(paramType)) {
+            return true;
+        }
+        // we do not want to get the instance here (yet)
+        return !GlobalServiceRegistry.registry()
+                .allServices(paramType)
+                .isEmpty();
     }
 
     static boolean enabled() {
-        return enabled.get();
+        return ENABLED.get();
     }
 
     static void setup(WebServerConfig.Builder serverBuilder) {

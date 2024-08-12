@@ -18,7 +18,6 @@ package io.helidon.declarative.tests.http;
 
 import java.util.Map;
 
-import io.helidon.faulttolerance.CircuitBreakerOpenException;
 import io.helidon.faulttolerance.FaultToleranceException;
 import io.helidon.http.Status;
 import io.helidon.service.registry.Service;
@@ -30,7 +29,7 @@ import jakarta.json.JsonBuilderFactory;
 import jakarta.json.JsonObject;
 
 @Service.Provider
-public class FaultToleranceErrorHandler implements ErrorHandlerProvider<FaultToleranceException> {
+class FaultToleranceErrorHandler implements ErrorHandlerProvider<FaultToleranceException> {
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());
 
     @Override

@@ -291,7 +291,6 @@ class SchedulingExtension implements RegistryCodegenExtension {
         checkTypeIsService(typeInfo, FIXED_RATE_ANNOTATION);
         // there can be a method argument, but it must be of correct type
         boolean hasInvocationArgument = checkAndHasArgument(typeInfo, element, FIXED_RATE_INVOCATION);
-        ;
 
         // read annotation values
         Annotation annotation = element.annotation(FIXED_RATE_ANNOTATION);
@@ -330,8 +329,8 @@ class SchedulingExtension implements RegistryCodegenExtension {
         Optional<ClassModel.Builder> descriptor = ctx.descriptor(typeInfo.typeName());
         if (descriptor.isEmpty()) {
             throw new CodegenException("Type annotated with @" + FIXED_RATE_ANNOTATION + " is not a service"
-                                               + " itself. It must be annotated with @Injection.Singleton."
-                    , typeInfo.originatingElement().orElseGet(typeInfo::typeName));
+                                               + " itself. It must be annotated with @Injection.Singleton.",
+                                       typeInfo.originatingElement().orElseGet(typeInfo::typeName));
         }
     }
 

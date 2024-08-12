@@ -75,11 +75,11 @@ public class Status {
     public static final Status CREATED_201 = new Status(CREATED_201_INT, "Created", true);
 
     /**
-     * 202 Accepted, see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">HTTP/1.1 documentation</a>
+     * 202 Accepted, see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">HTTP/1.1 documentation</a>.
      */
     public static final int ACCEPTED_202_INT = 202;
     /**
-     * 202 Accepted, see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">HTTP/1.1 documentation</a>
+     * 202 Accepted, see <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.2.3">HTTP/1.1 documentation</a>.
      */
     public static final Status ACCEPTED_202 = new Status(ACCEPTED_202_INT, "Accepted", true);
 

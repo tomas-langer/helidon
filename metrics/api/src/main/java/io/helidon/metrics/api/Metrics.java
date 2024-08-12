@@ -206,9 +206,23 @@ public interface Metrics {
         return result;
     }
 
+    /**
+     * When to apply a specific metric.
+     */
     enum ApplyOn {
+        /**
+         * On all successful invocations.
+         * A successful invocation does not throw an exception.
+         */
         SUCCESS,
+        /**
+         * On all failed invocations.
+         * A failed invocation throws an exception.
+         */
         FAILURE,
+        /**
+         * On both {@link #SUCCESS} and {@link #FAILURE} invocations.
+         */
         ALL
     }
 

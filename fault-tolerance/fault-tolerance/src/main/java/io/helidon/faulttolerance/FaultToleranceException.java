@@ -16,12 +16,28 @@
 
 package io.helidon.faulttolerance;
 
-public abstract class FaultToleranceException extends RuntimeException{
+import java.util.Objects;
+
+/**
+ * A fault-tolerance exception.
+ */
+public abstract class FaultToleranceException extends RuntimeException {
+    /**
+     * Create a new instance with customized message.
+     *
+     * @param message error message
+     */
     public FaultToleranceException(String message) {
-        super(message);
+        super(Objects.requireNonNull(message));
     }
 
+    /**
+     * Create a new instance with customized message and cause.
+     *
+     * @param message error message
+     * @param cause the cause of this exception
+     */
     public FaultToleranceException(String message, Throwable cause) {
-        super(message, cause);
+        super(Objects.requireNonNull(message), Objects.requireNonNull(cause));
     }
 }

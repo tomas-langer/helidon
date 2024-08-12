@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.faulttolerance;
-
-class AsyncException extends RuntimeException {
-    AsyncException(Throwable cause) {
-        super(cause);
-    }
-}
+/**
+ * Code generation for Helidon Webserver (HTTP endpoints etc.).
+ */
+package io.helidon.declarative.codegen.webserver;

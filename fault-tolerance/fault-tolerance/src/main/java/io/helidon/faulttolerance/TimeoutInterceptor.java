@@ -17,7 +17,6 @@
 package io.helidon.faulttolerance;
 
 import java.time.Duration;
-import java.time.temporal.ChronoUnit;
 
 import io.helidon.common.Weight;
 import io.helidon.common.types.Annotation;

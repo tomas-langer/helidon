@@ -17,7 +17,6 @@
 package io.helidon.security;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -29,7 +28,7 @@ import io.helidon.common.Builder;
 
 /**
  * Security level stores annotations bound to the specific class and method.
- *
+ * <p>
  * The first level represents {@link EndpointConfig.AnnotationScope#APPLICATION} level annotations.
  * Other levels are representations of resource, sub-resource and method used on path to get to the target method.
  */
@@ -208,12 +207,6 @@ public class SecurityLevel {
          */
         public SecurityLevelBuilder withClassAnnotations(Map<Class<? extends Annotation>, List<Annotation>> classAnnotations) {
             this.classAnnotations = classAnnotations;
-            return this;
-        }
-
-        public SecurityLevelBuilder addMethodAnnotation(Annotation annotation) {
-            this.methodAnnotations.computeIfAbsent(annotation.annotationType(), it -> new ArrayList<>())
-                    .add(annotation);
             return this;
         }
 

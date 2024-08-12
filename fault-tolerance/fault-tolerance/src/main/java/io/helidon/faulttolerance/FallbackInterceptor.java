@@ -50,7 +50,8 @@ class FallbackInterceptor extends InterceptorBase<Fallback> {
             List<TypedElementInfo> params = ctx.elementInfo().parameterArguments();
 
             CacheRecord cacheRecord = new CacheRecord(typeName, methodName, params);
-            FaultToleranceGenerated.FallbackMethod<V, Object> fallbackMethod = generatedMethod(FaultToleranceGenerated.FallbackMethod.class, cacheRecord)
+            FaultToleranceGenerated.FallbackMethod<V, Object> fallbackMethod =
+                    generatedMethod(FaultToleranceGenerated.FallbackMethod.class, cacheRecord)
                     .orElseGet(() -> new FailingFallbackMethod(cacheRecord));
 
             try {
