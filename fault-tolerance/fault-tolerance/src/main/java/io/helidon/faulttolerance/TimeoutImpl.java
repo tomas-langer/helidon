@@ -110,9 +110,12 @@ class TimeoutImpl implements Timeout {
         Throwable throwable = SupplierHelper.unwrapThrowable(t);
         if (throwable instanceof InterruptedException) {
             return new TimeoutException("Call interrupted", throwable);
-
         } else if (throwable instanceof java.util.concurrent.TimeoutException) {
-            return new TimeoutException("Timeout reached", throwable.getCause());
+            var cause = throwable.getCause();
+            if (cause == null) {
+                return new TimeoutException("Timeout reached", throwable);
+            }
+            return new TimeoutException("Timeout reached", cause);
         } else if (interrupted != null && interrupted.get()) {
             return new TimeoutException("Supplier execution interrupted", t);
         }

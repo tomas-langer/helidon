@@ -27,7 +27,6 @@ import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -36,6 +35,7 @@ import io.helidon.common.GenericType;
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.Weighted;
 import io.helidon.common.Weights;
+import io.helidon.common.context.ContextValue;
 import io.helidon.common.media.type.MediaType;
 import io.helidon.config.ConfigMapperManager.MapperProviders;
 import io.helidon.config.spi.ConfigContext;
@@ -625,19 +625,15 @@ class BuilderImpl implements Config.Builder {
     }
 
     static final class GlobalConfigHolder {
-        private static final AtomicReference<Config> GLOBAL_CONFIG = new AtomicReference<>();
+        private static final ContextValue<Config> CONTEXT_VALUE = ContextValue.create(Config.class, Config::create);
+
 
         static Config get() {
-            Config config = GLOBAL_CONFIG.get();
-            if (config == null) {
-                config = Config.create();
-                GLOBAL_CONFIG.set(config);
-            }
-            return config;
+            return CONTEXT_VALUE.get();
         }
 
         static void set(Config config) {
-            GLOBAL_CONFIG.set(config);
+            CONTEXT_VALUE.set(config);
         }
     }
 

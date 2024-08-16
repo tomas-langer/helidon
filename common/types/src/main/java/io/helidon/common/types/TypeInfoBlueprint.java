@@ -16,6 +16,7 @@
 
 package io.helidon.common.types;
 
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,8 @@ import java.util.Set;
 
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
+
+import static io.helidon.common.types.TypeNames.INHERITED;
 
 /**
  * Represents the model object for a type.

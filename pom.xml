@@ -230,6 +230,7 @@
         <module>metadata</module>
         <module>testing</module>
         <module>declarative</module>
+        <module>testing</module>
     </modules>
 
     <build>

@@ -21,6 +21,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import io.helidon.common.context.Context;
+import io.helidon.common.context.Contexts;
 import io.helidon.common.testing.junit5.OptionalMatcher;
 import io.helidon.metrics.api.Metrics;
 import io.helidon.metrics.providers.micrometer.MicrometerPrometheusFormatter;
@@ -62,13 +64,12 @@ public class MetricsTest extends MetricsBaseTest {
 
     @Test
     public void testCounted3() {
+        System.out.println(Contexts.context().map(Context::id));
         CountedBean bean = newBean(CountedBean.class);
         IntStream.range(0, 8).forEach(i -> bean.method3());
         Counter counter = getMetric(bean, "method3");
         assertThat(counter.getCount(), is(8L));
     }
-
-
 
     @Test
     @DisabledIfSystemProperty(named = PERF_TEST_PROP_PREFIX + "enabled", matches = "false")
@@ -109,6 +110,7 @@ public class MetricsTest extends MetricsBaseTest {
 
     @Test
     public void testInjection() {
+        System.out.println("testInjection: " + Contexts.context().map(Context::id));
         InjectedBean bean = newBean(InjectedBean.class);
         assertThat(bean.counter, notNullValue());
         assertThat(bean.timer, notNullValue());

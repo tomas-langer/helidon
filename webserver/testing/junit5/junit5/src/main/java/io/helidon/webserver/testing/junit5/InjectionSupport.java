@@ -41,6 +41,12 @@ final class InjectionSupport {
     private InjectionSupport() {
     }
 
+    public static void config(int port) {
+        GlobalServiceRegistry.registry()
+                .get(TestConfigSource.class)
+                .set("test.server.port", String.valueOf(port));
+    }
+
     static Object param(Class<?> paramType) {
         return GlobalServiceRegistry.registry()
                 .get(paramType);

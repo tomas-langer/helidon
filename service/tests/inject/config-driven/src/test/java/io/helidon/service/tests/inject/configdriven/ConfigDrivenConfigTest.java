@@ -28,6 +28,7 @@ import io.helidon.service.inject.InjectRegistryManager;
 import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.inject.api.Lookup;
 import io.helidon.service.inject.api.Qualifier;
+import io.helidon.testing.junit5.Testing;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -39,13 +40,14 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
+@Testing.Test
 public class ConfigDrivenConfigTest {
     private static InjectRegistryManager registryManager;
     private static InjectRegistry registry;
 
     @BeforeAll
     static void init() {
-        Config config = Config.create(ConfigSources.create(configNodes()));
+        Config config = Config.just(ConfigSources.create(configNodes()));
         GlobalConfig.config(() -> config, true);
         registryManager = InjectRegistryManager.create();
         registry = registryManager.registry();

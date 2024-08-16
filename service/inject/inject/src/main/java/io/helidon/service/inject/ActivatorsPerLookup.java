@@ -112,6 +112,9 @@ final class ActivatorsPerLookup {
         @Override
         protected Optional<List<QualifiedInstance<T>>> targetInstances(Lookup lookup) {
             if (lookup.contracts().contains(TypeNames.SUPPLIER)) {
+                if (serviceInstance == null) {
+                    return Optional.empty();
+                }
                 // the user requested the provider, not the provided
                 T instance = serviceInstance.get(currentPhase);
                 return Optional.of(List.of(QualifiedInstance.create(instance, provider.descriptor().qualifiers())));
@@ -122,6 +125,9 @@ final class ActivatorsPerLookup {
         @SuppressWarnings("unchecked")
         @Override
         protected Optional<List<QualifiedInstance<T>>> targetInstances() {
+            if (serviceInstance == null) {
+                return Optional.empty();
+            }
             Supplier<T> instanceSupplier = (Supplier<T>) serviceInstance.get(currentPhase);
             return Optional.of(List.of(QualifiedInstance.create(instanceSupplier.get(),
                                                                 provider.descriptor().qualifiers())));

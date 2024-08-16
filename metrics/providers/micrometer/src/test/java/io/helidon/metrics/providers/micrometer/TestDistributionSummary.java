@@ -21,8 +21,10 @@ import java.util.List;
 import io.helidon.metrics.api.DistributionSummary;
 import io.helidon.metrics.api.MeterRegistry;
 import io.helidon.metrics.api.Metrics;
+import io.helidon.testing.junit5.Testing;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -30,10 +32,10 @@ import static org.hamcrest.Matchers.is;
 
 class TestDistributionSummary {
 
-    private static MeterRegistry meterRegistry;
+    private MeterRegistry meterRegistry;
 
-    @BeforeAll
-    static void prep() {
+    @BeforeEach
+    void prep() {
         meterRegistry = Metrics.globalRegistry();
     }
 

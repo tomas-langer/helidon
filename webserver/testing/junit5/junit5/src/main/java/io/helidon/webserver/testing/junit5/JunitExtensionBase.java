@@ -25,6 +25,7 @@ import io.helidon.testing.junit5.TestJunitExtension;
 
 import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.jupiter.api.extension.InvocationInterceptor;
 
 abstract class JunitExtensionBase extends TestJunitExtension implements AfterAllCallback {
     private Class<?> testClass;
@@ -34,6 +35,7 @@ abstract class JunitExtensionBase extends TestJunitExtension implements AfterAll
 
     @Override
     public void afterAll(ExtensionContext extensionContext) {
+        super.afterAll(extensionContext);
         callAfterStop();
         super.afterAll(extensionContext);
     }

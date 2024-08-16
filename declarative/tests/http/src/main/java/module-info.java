@@ -17,6 +17,7 @@
 module io.helidon.declarative.tests.http {
     requires io.helidon.http;
     requires io.helidon.common.media.type;
+    requires io.helidon.webclient.api;
     requires io.helidon.webserver;
     requires io.helidon.service.inject;
     requires jakarta.json;

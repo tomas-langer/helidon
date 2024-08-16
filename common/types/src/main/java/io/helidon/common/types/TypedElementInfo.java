@@ -79,6 +79,11 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         private final Set<Modifier> elementModifiers = new LinkedHashSet<>();
         private final Set<String> modifiers = new LinkedHashSet<>();
         private AccessModifier accessModifier;
+        private boolean isAnnotationsMutated;
+        private boolean isComponentTypesMutated;
+        private boolean isElementTypeAnnotationsMutated;
+        private boolean isInheritedAnnotationsMutated;
+        private boolean isParameterArgumentsMutated;
         private ElementKind kind;
         private Object originatingElement;
         private String defaultValue;
@@ -95,7 +100,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         }
 
         /**
-         * Update this builder from an existing prototype instance.
+         * Update this builder from an existing prototype instance. This method disables automatic service discovery.
          *
          * @param prototype existing prototype to update this builder from
          * @return updated builder instance
@@ -107,16 +112,31 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
             elementTypeKind(prototype.elementTypeKind());
             kind(prototype.kind());
             defaultValue(prototype.defaultValue());
+            if (!isElementTypeAnnotationsMutated) {
+                elementTypeAnnotations.clear();
+            }
             addElementTypeAnnotations(prototype.elementTypeAnnotations());
+            if (!isComponentTypesMutated) {
+                componentTypes.clear();
+            }
             addComponentTypes(prototype.componentTypes());
             addModifiers(prototype.modifiers());
             addElementModifiers(prototype.elementModifiers());
             accessModifier(prototype.accessModifier());
             enclosingType(prototype.enclosingType());
+            if (!isParameterArgumentsMutated) {
+                parameterArguments.clear();
+            }
             addParameterArguments(prototype.parameterArguments());
             addThrowsChecked(prototype.throwsChecked());
             originatingElement(prototype.originatingElement());
+            if (!isAnnotationsMutated) {
+                annotations.clear();
+            }
             addAnnotations(prototype.annotations());
+            if (!isInheritedAnnotationsMutated) {
+                inheritedAnnotations.clear();
+            }
             addInheritedAnnotations(prototype.inheritedAnnotations());
             return self();
         }
@@ -134,17 +154,52 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
             builder.elementTypeKind().ifPresent(this::elementTypeKind);
             builder.kind().ifPresent(this::kind);
             builder.defaultValue().ifPresent(this::defaultValue);
-            addElementTypeAnnotations(builder.elementTypeAnnotations());
-            addComponentTypes(builder.componentTypes());
-            addModifiers(builder.modifiers());
-            addElementModifiers(builder.elementModifiers());
+            if (isElementTypeAnnotationsMutated) {
+                if (builder.isElementTypeAnnotationsMutated) {
+                    addElementTypeAnnotations(builder.elementTypeAnnotations);
+                }
+            } else {
+                elementTypeAnnotations.clear();
+                addElementTypeAnnotations(builder.elementTypeAnnotations);
+            }
+            if (isComponentTypesMutated) {
+                if (builder.isComponentTypesMutated) {
+                    addComponentTypes(builder.componentTypes);
+                }
+            } else {
+                componentTypes.clear();
+                addComponentTypes(builder.componentTypes);
+            }
+            addModifiers(builder.modifiers);
+            addElementModifiers(builder.elementModifiers);
             builder.accessModifier().ifPresent(this::accessModifier);
             builder.enclosingType().ifPresent(this::enclosingType);
-            addParameterArguments(builder.parameterArguments());
-            addThrowsChecked(builder.throwsChecked());
+            if (isParameterArgumentsMutated) {
+                if (builder.isParameterArgumentsMutated) {
+                    addParameterArguments(builder.parameterArguments);
+                }
+            } else {
+                parameterArguments.clear();
+                addParameterArguments(builder.parameterArguments);
+            }
+            addThrowsChecked(builder.throwsChecked);
             builder.originatingElement().ifPresent(this::originatingElement);
-            addAnnotations(builder.annotations());
-            addInheritedAnnotations(builder.inheritedAnnotations());
+            if (isAnnotationsMutated) {
+                if (builder.isAnnotationsMutated) {
+                    addAnnotations(builder.annotations);
+                }
+            } else {
+                annotations.clear();
+                addAnnotations(builder.annotations);
+            }
+            if (isInheritedAnnotationsMutated) {
+                if (builder.isInheritedAnnotationsMutated) {
+                    addInheritedAnnotations(builder.inheritedAnnotations);
+                }
+            } else {
+                inheritedAnnotations.clear();
+                addInheritedAnnotations(builder.inheritedAnnotations);
+            }
             return self();
         }
 
@@ -286,7 +341,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         }
 
         /**
-         * The list of known annotations on the type name referenced by {@link #typeName()}.
+         * The list of known annotations on the type name referenced by {@link io.helidon.common.types.TypedElementInfo#typeName()}.
          *
          * @param elementTypeAnnotations the list of annotations on this element's (return) type.
          * @return updated builder instance
@@ -294,13 +349,14 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER elementTypeAnnotations(List<? extends Annotation> elementTypeAnnotations) {
             Objects.requireNonNull(elementTypeAnnotations);
+            isElementTypeAnnotationsMutated = true;
             this.elementTypeAnnotations.clear();
             this.elementTypeAnnotations.addAll(elementTypeAnnotations);
             return self();
         }
 
         /**
-         * The list of known annotations on the type name referenced by {@link #typeName()}.
+         * The list of known annotations on the type name referenced by {@link io.helidon.common.types.TypedElementInfo#typeName()}.
          *
          * @param elementTypeAnnotations the list of annotations on this element's (return) type.
          * @return updated builder instance
@@ -308,6 +364,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER addElementTypeAnnotations(List<? extends Annotation> elementTypeAnnotations) {
             Objects.requireNonNull(elementTypeAnnotations);
+            isElementTypeAnnotationsMutated = true;
             this.elementTypeAnnotations.addAll(elementTypeAnnotations);
             return self();
         }
@@ -321,6 +378,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER componentTypes(List<? extends TypeName> componentTypes) {
             Objects.requireNonNull(componentTypes);
+            isComponentTypesMutated = true;
             this.componentTypes.clear();
             this.componentTypes.addAll(componentTypes);
             return self();
@@ -335,6 +393,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER addComponentTypes(List<? extends TypeName> componentTypes) {
             Objects.requireNonNull(componentTypes);
+            isComponentTypesMutated = true;
             this.componentTypes.addAll(componentTypes);
             return self();
         }
@@ -493,6 +552,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER parameterArguments(List<? extends TypedElementInfo> parameterArguments) {
             Objects.requireNonNull(parameterArguments);
+            isParameterArgumentsMutated = true;
             this.parameterArguments.clear();
             this.parameterArguments.addAll(parameterArguments);
             return self();
@@ -509,6 +569,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER addParameterArguments(List<? extends TypedElementInfo> parameterArguments) {
             Objects.requireNonNull(parameterArguments);
+            isParameterArgumentsMutated = true;
             this.parameterArguments.addAll(parameterArguments);
             return self();
         }
@@ -525,6 +586,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         public BUILDER addParameterArgument(TypedElementInfo parameterArgument) {
             Objects.requireNonNull(parameterArgument);
             this.parameterArguments.add(parameterArgument);
+            isParameterArgumentsMutated = true;
             return self();
         }
 
@@ -609,6 +671,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER annotations(List<? extends Annotation> annotations) {
             Objects.requireNonNull(annotations);
+            isAnnotationsMutated = true;
             this.annotations.clear();
             this.annotations.addAll(annotations);
             return self();
@@ -625,6 +688,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER addAnnotations(List<? extends Annotation> annotations) {
             Objects.requireNonNull(annotations);
+            isAnnotationsMutated = true;
             this.annotations.addAll(annotations);
             return self();
         }
@@ -667,6 +731,8 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          * <p>
          * The returned list does not contain {@link #annotations()}. If a meta-annotation is present on multiple
          * annotations, it will be returned once for each such declaration.
+         * <p>
+         * This method does not return annotations on super types or interfaces!
          *
          * @param inheritedAnnotations list of all meta annotations of this element
          * @return updated builder instance
@@ -674,6 +740,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER inheritedAnnotations(List<? extends Annotation> inheritedAnnotations) {
             Objects.requireNonNull(inheritedAnnotations);
+            isInheritedAnnotationsMutated = true;
             this.inheritedAnnotations.clear();
             this.inheritedAnnotations.addAll(inheritedAnnotations);
             return self();
@@ -685,6 +752,8 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          * <p>
          * The returned list does not contain {@link #annotations()}. If a meta-annotation is present on multiple
          * annotations, it will be returned once for each such declaration.
+         * <p>
+         * This method does not return annotations on super types or interfaces!
          *
          * @param inheritedAnnotations list of all meta annotations of this element
          * @return updated builder instance
@@ -692,6 +761,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          */
         public BUILDER addInheritedAnnotations(List<? extends Annotation> inheritedAnnotations) {
             Objects.requireNonNull(inheritedAnnotations);
+            isInheritedAnnotationsMutated = true;
             this.inheritedAnnotations.addAll(inheritedAnnotations);
             return self();
         }
@@ -702,6 +772,8 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          * <p>
          * The returned list does not contain {@link #annotations()}. If a meta-annotation is present on multiple
          * annotations, it will be returned once for each such declaration.
+         * <p>
+         * This method does not return annotations on super types or interfaces!
          *
          * @param inheritedAnnotation list of all meta annotations of this element
          * @return updated builder instance
@@ -710,6 +782,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         public BUILDER addInheritedAnnotation(Annotation inheritedAnnotation) {
             Objects.requireNonNull(inheritedAnnotation);
             this.inheritedAnnotations.add(inheritedAnnotation);
+            isInheritedAnnotationsMutated = true;
             return self();
         }
 
@@ -719,6 +792,8 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          * <p>
          * The returned list does not contain {@link #annotations()}. If a meta-annotation is present on multiple
          * annotations, it will be returned once for each such declaration.
+         * <p>
+         * This method does not return annotations on super types or interfaces!
          *
          * @param consumer list of all meta annotations of this element
          * @return updated builder instance
@@ -794,7 +869,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         }
 
         /**
-         * The list of known annotations on the type name referenced by {@link #typeName()}.
+         * The list of known annotations on the type name referenced by {@link io.helidon.common.types.TypedElementInfo#typeName()}.
          *
          * @return the element type annotations
          */
@@ -905,6 +980,8 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
          * <p>
          * The returned list does not contain {@link #annotations()}. If a meta-annotation is present on multiple
          * annotations, it will be returned once for each such declaration.
+         * <p>
+         * This method does not return annotations on super types or interfaces!
          *
          * @return the inherited annotations
          */

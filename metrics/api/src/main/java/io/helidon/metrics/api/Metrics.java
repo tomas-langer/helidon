@@ -50,7 +50,7 @@ public interface Metrics {
      * @return new meter registry
      */
     static MeterRegistry createMeterRegistry(MetricsConfig metricsConfig) {
-        return MetricsFactory.getInstance().createMeterRegistry(metricsConfig);
+        return MetricsFactory.getInstance(metricsConfig.config()).createMeterRegistry(metricsConfig);
     }
 
     /**

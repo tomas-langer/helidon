@@ -1,0 +1,659 @@
+package io.helidon.declarative.codegen.http.webserver;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+
+import io.helidon.codegen.CodegenException;
+import io.helidon.codegen.CodegenUtil;
+import io.helidon.codegen.ElementInfoPredicates;
+import io.helidon.codegen.TypeHierarchy;
+import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Method;
+import io.helidon.common.HelidonServiceLoader;
+import io.helidon.common.types.AccessModifier;
+import io.helidon.common.types.Annotation;
+import io.helidon.common.types.Annotations;
+import io.helidon.common.types.ElementKind;
+import io.helidon.common.types.TypeInfo;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypeNames;
+import io.helidon.common.types.TypedElementInfo;
+import io.helidon.declarative.codegen.ConstantField;
+import io.helidon.declarative.codegen.Constants;
+import io.helidon.declarative.codegen.http.RestExtensionBase;
+import io.helidon.declarative.codegen.http.RestUtil;
+import io.helidon.declarative.codegen.http.model.ComputedHeader;
+import io.helidon.declarative.codegen.http.model.HeaderValue;
+import io.helidon.declarative.codegen.http.model.HttpMethod;
+import io.helidon.declarative.codegen.http.model.HttpStatus;
+import io.helidon.declarative.codegen.http.model.RestMethod;
+import io.helidon.declarative.codegen.http.model.RestMethodParameter;
+import io.helidon.declarative.codegen.http.model.ServerEndpoint;
+import io.helidon.declarative.codegen.http.webserver.spi.HttpParameterCodegenProvider;
+import io.helidon.service.codegen.RegistryCodegenContext;
+import io.helidon.service.codegen.RegistryRoundContext;
+import io.helidon.service.codegen.ServiceCodegenTypes;
+import io.helidon.service.codegen.spi.RegistryCodegenExtension;
+
+import static io.helidon.declarative.codegen.DeclarativeTypes.SINGLETON_ANNOTATION;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_ENTITY_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_HEADER_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_METHOD;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_METHOD_ANNOTATION;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_PATH_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_QUERY_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_STATUS;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_COMPUTED_HEADERS;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_ENDPOINT;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_HEADERS;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_LISTENER;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_STATUS;
+import static java.util.function.Predicate.not;
+
+class RestServerExtension extends RestExtensionBase implements RegistryCodegenExtension {
+    private static final TypeName GENERATOR = TypeName.create(RestServerExtension.class);
+    private static final String REQUEST_PARAM_NAME = "helidonDeclarative__server_req";
+    private static final String RESPONSE_PARAM_NAME = "helidonDeclarative__server_res";
+    private static final String METHOD_RESPONSE_NAME = "helidonDeclarative__response";
+    private static final List<HttpParameterCodegenProvider> PARAM_PROVIDERS =
+            HelidonServiceLoader.builder(ServiceLoader.load(HttpParameterCodegenProvider.class))
+                    .addService(new ParamProviderHttpEntity())
+                    .addService(new ParamProviderHttpHeader())
+                    .addService(new ParamProviderHttpPathParam())
+                    .addService(new ParamProviderHttpQuery())
+                    .addService(new ParamProviderHttpReqRes())
+                    .addService(new ParamProviderSecurityContext())
+                    .addService(new ParamProviderContext())
+                    .build()
+                    .asList();
+
+    private final RegistryCodegenContext ctx;
+
+    RestServerExtension(RegistryCodegenContext ctx) {
+        this.ctx = ctx;
+    }
+
+    @Override
+    public void process(RegistryRoundContext roundContext) {
+        // for each @RestServer.Endpoint generate a service that implements it
+        Collection<TypeInfo> clientApis = roundContext.annotatedTypes(REST_SERVER_ENDPOINT);
+
+        List<ServerEndpoint> endpoints = clientApis.stream()
+                .map(this::toEndpoint)
+                .collect(Collectors.toUnmodifiableList());
+
+        for (ServerEndpoint endpoint : endpoints) {
+            process(endpoint);
+        }
+    }
+
+    private static void addSetupMethod(ClassModel.Builder endpointService, String path) {
+        endpointService.addMethod(setup -> setup
+                .accessModifier(AccessModifier.PUBLIC)
+                .addAnnotation(Annotations.OVERRIDE)
+                .name("setup")
+                .addParameter(routing -> routing
+                        .name("routing")
+                        .type(WebServerCodegenTypes.SERVER_HTTP_ROUTING_BUILDER))
+                .addContent("routing.register(\"")
+                .addContent(path)
+                .addContentLine("\", this::routing);"));
+    }
+
+    private static void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton) {
+        endpointService.addConstructor(ctr -> ctr
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_INJECT))
+                .addParameter(param -> param
+                        .type(singleton ? endpoint : RestUtil.supplierOf(endpoint))
+                        .name("endpoint"))
+                .addContentLine("this.endpoint = endpoint;")
+        );
+    }
+
+    private static void addFields(ClassModel.Builder endpointService, TypeName endpointType, boolean singleton) {
+        endpointService.addField(endpointField -> endpointField
+                .accessModifier(AccessModifier.PRIVATE)
+                .isFinal(true)
+                .type(singleton ? endpointType : RestUtil.supplierOf(endpointType))
+                .name("endpoint")
+        );
+    }
+
+    private ServerEndpoint toEndpoint(TypeInfo typeInfo) {
+        var builder = ServerEndpoint.builder()
+                .type(typeInfo);
+
+        List<Annotation> typeAnnotations = TypeHierarchy.hierarchyAnnotations(ctx, typeInfo);
+        builder.annotations(typeAnnotations);
+
+        Annotations.findFirst(REST_SERVER_LISTENER, typeAnnotations)
+                .ifPresent(listener -> {
+                    listener.stringValue().ifPresent(builder::listener);
+                    listener.booleanValue("required").ifPresent(builder::listenerRequired);
+                });
+
+        RestUtil.path(typeAnnotations, builder);
+        RestUtil.produces(typeAnnotations, builder);
+        RestUtil.consumes(typeAnnotations, builder);
+        RestUtil.headers(typeAnnotations, builder, REST_SERVER_HEADERS);
+        RestUtil.computedHeaders(typeAnnotations, builder, REST_SERVER_COMPUTED_HEADERS);
+
+        // methods - each class method annotated with HTTP Method meta-annotation is a valid one
+        Map<String, AtomicInteger> uniqueMethodNames = new HashMap<>();
+
+        typeInfo.elementInfo()
+                .stream()
+                .filter(ElementInfoPredicates::isMethod)
+                .filter(not(ElementInfoPredicates::isPrivate))
+                .filter(not(ElementInfoPredicates::isStatic))
+                .forEach(it -> toMethod(typeInfo, builder, uniqueMethodNames, it));
+
+        return builder.build();
+    }
+
+    private void toMethod(TypeInfo endpoint,
+                          ServerEndpoint.Builder endpointBuilder,
+                          Map<String, AtomicInteger> uniqueMethodNames,
+                          TypedElementInfo method) {
+        List<Annotation> annotations = TypeHierarchy.hierarchyAnnotations(ctx, endpoint, method);
+
+        Optional<Annotation> httpMethodAnnotation = Annotations.findFirst(HTTP_METHOD_ANNOTATION, annotations);
+        if (httpMethodAnnotation.isEmpty()) {
+            // this method does not have an Http.Method meta annotation present, we can skip it
+            return;
+        }
+
+        String methodName = method.elementName();
+        int counter = uniqueMethodNames.computeIfAbsent(methodName,
+                                                        it -> new AtomicInteger())
+                .getAndIncrement();
+        String uniqueName = counter == 0
+                ? methodName
+                : methodName + "_" + counter;
+
+        var builder = RestMethod.builder()
+                .returnType(method.typeName())
+                .type(endpoint)
+                .name(methodName)
+                .uniqueName(uniqueName)
+                .method(method)
+                .annotations(annotations)
+                .httpMethod(RestUtil.httpMethodFromAnnotation(method, httpMethodAnnotation.get()));
+
+        RestUtil.path(annotations, builder);
+        RestUtil.consumes(annotations, builder);
+        RestUtil.produces(annotations, builder);
+        RestUtil.headers(annotations, builder, REST_SERVER_HEADERS);
+        RestUtil.computedHeaders(annotations, builder, REST_SERVER_COMPUTED_HEADERS);
+
+        if (builder.consumes().isEmpty()) {
+            builder.consumes(endpointBuilder.consumes());
+        }
+        if (builder.produces().isEmpty()) {
+            builder.produces(endpointBuilder.produces());
+        }
+        builder.addHeaders(endpointBuilder.headers());
+        builder.addComputedHeaders(endpointBuilder.computedHeaders());
+
+        Annotations.findFirst(REST_SERVER_STATUS, annotations)
+                .ifPresent(annotation -> {
+                    int code = annotation.intValue().orElse(200);
+                    Optional<String> reason = annotation
+                            .stringValue("reason")
+                            .filter(not(String::isBlank));
+                    builder.status(new HttpStatus(code, reason));
+                });
+
+        int index = 0;
+        for (TypedElementInfo parameterInfo : method.parameterArguments()) {
+            processEndpointParameter(endpoint, method, parameterInfo, builder, index);
+            index++;
+        }
+
+        endpointBuilder.addMethod(builder.build());
+    }
+
+    private void processEndpointParameter(TypeInfo typeInfo,
+                                          TypedElementInfo methodInfo,
+                                          TypedElementInfo parameterInfo,
+                                          RestMethod.Builder method,
+                                          int index) {
+        List<Annotation> annotations = TypeHierarchy.hierarchyAnnotations(ctx, typeInfo, methodInfo, parameterInfo, index);
+        var parameter = RestMethodParameter.builder()
+                .annotations(annotations)
+                .name(parameterInfo.elementName())
+                .typeName(parameterInfo.typeName())
+                .index(index)
+                .method(methodInfo)
+                .type(typeInfo)
+                .parameter(parameterInfo)
+                .build();
+
+        method.addParameter(parameter);
+        if (Annotations.findFirst(HTTP_HEADER_PARAM_ANNOTATION, annotations).isPresent()) {
+            method.addHeaderParameter(parameter);
+        }
+        if (Annotations.findFirst(HTTP_QUERY_PARAM_ANNOTATION, annotations).isPresent()) {
+            method.addQueryParameter(parameter);
+        }
+        if (Annotations.findFirst(HTTP_PATH_PARAM_ANNOTATION, annotations).isPresent()) {
+            method.addPathParameter(parameter);
+        }
+        if (Annotations.findFirst(HTTP_ENTITY_PARAM_ANNOTATION, annotations).isPresent()) {
+            method.entityParameter(parameter);
+        }
+    }
+
+    private void process(ServerEndpoint endpoint) {
+        TypeInfo type = endpoint.type();
+        if (type.kind() == ElementKind.INTERFACE) {
+            // interfaces are ignored, we must have an implementation
+            return;
+        }
+        TypeName endpointTypeName = type.typeName();
+
+        var headerNameConstants = Constants.<String>create("HEADER_NAME_");
+        var headerValueConstants = Constants.<HeaderValue>create("HEADER_");
+        var mediaTypeConstants = Constants.<String>create("MEDIA_TYPE_");
+        var httpMethodConstants = Constants.<String>create("METHOD_");
+        var httpStatusConstants = Constants.<HttpStatus>create("STATUS_");
+
+        headerValueConstants.addAll(endpoint.headers());
+        addComputedHeaderConstants(endpoint.computedHeaders(), headerNameConstants);
+
+        // now for each method
+        for (RestMethod method : endpoint.methods()) {
+            headerValueConstants.addAll(method.headers());
+            method.computedHeaders()
+                    .stream()
+                    .map(ComputedHeader::name)
+                    .forEach(headerNameConstants::add);
+            mediaTypeConstants.addAll(method.produces());
+            mediaTypeConstants.addAll(method.consumes());
+            addMethodConstant(method.httpMethod(), httpMethodConstants);
+            method.status().ifPresent(httpStatusConstants::add);
+
+            // parameters
+            for (RestMethodParameter parameter : method.headerParameters()) {
+                addHeaderNameConstants(TypeHierarchy.hierarchyAnnotations(ctx,
+                                                                          parameter.type(),
+                                                                          parameter.method(),
+                                                                          parameter.parameter(),
+                                                                          parameter.index()),
+                                       headerNameConstants);
+            }
+        }
+
+        // we have all the necessary constants, time to build the implementation
+        String classNameBase = endpointTypeName.classNameWithEnclosingNames().replace('.', '_');
+        String className = classNameBase + "__HttpFeature";
+        TypeName generatedType = TypeName.builder()
+                .packageName(endpointTypeName.packageName())
+                .className(className)
+                .build();
+
+        ClassModel.Builder classModel = ClassModel.builder()
+                .copyright(CodegenUtil.copyright(GENERATOR,
+                                                 endpointTypeName,
+                                                 generatedType))
+                .addAnnotation(CodegenUtil.generatedAnnotation(GENERATOR,
+                                                               endpointTypeName,
+                                                               generatedType,
+                                                               "1",
+                                                               ""))
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+                .type(generatedType)
+                .addAnnotation(SINGLETON_ANNOTATION)
+                .addInterface(WebServerCodegenTypes.SERVER_HTTP_FEATURE);
+
+        // create constants
+        mediaTypeConstants(classModel, mediaTypeConstants);
+        headerNameConstants(classModel, headerNameConstants);
+        headerValueConstants(classModel, headerValueConstants);
+        httpMethodConstants(classModel, httpMethodConstants);
+        statusConstants(classModel, httpStatusConstants);
+
+        boolean singleton = type.hasAnnotation(ServiceCodegenTypes.INJECTION_SINGLETON);
+        // adds the endpoint field (may be a supplier)
+        addFields(classModel, endpointTypeName, singleton);
+        // constructor injecting the field(s)
+        addConstructor(classModel, endpointTypeName, singleton);
+        // HttpFeature.setup(HttpRouting.Builder routing)
+        addSetupMethod(classModel, endpoint.path().orElse("/"));
+        // private void routing(HttpRules rules)
+        addRoutingMethod(classModel,
+                         endpoint,
+                         httpMethodConstants,
+                         mediaTypeConstants);
+
+        int methodIndex = 0;
+        for (RestMethod restMethod : endpoint.methods()) {
+            addEndpointMethod(endpointTypeName,
+                              classModel,
+                              singleton,
+                              mediaTypeConstants,
+                              headerNameConstants,
+                              headerValueConstants,
+                              httpStatusConstants,
+                              restMethod,
+                              methodIndex);
+            methodIndex++;
+        }
+
+        ctx.addType(generatedType, classModel, endpointTypeName, type.originatingElement().orElse(endpointTypeName));
+    }
+
+    private void addEndpointMethod(TypeName endpointTypeName,
+                                   ClassModel.Builder classModel,
+                                   boolean singleton,
+                                   Constants<String> mediaTypeConstants,
+                                   Constants<String> headerNameConstants,
+                                   Constants<HeaderValue> headerValueConstants,
+                                   Constants<HttpStatus> httpStatusConstants,
+                                   RestMethod restMethod,
+                                   int methodIndex) {
+
+        classModel.addMethod(method -> method
+                .accessModifier(AccessModifier.PRIVATE)
+                .name(restMethod.uniqueName())
+                .addParameter(req -> req
+                        .type(WebServerCodegenTypes.SERVER_REQUEST)
+                        .name(REQUEST_PARAM_NAME))
+                .addParameter(res -> res
+                        .type(WebServerCodegenTypes.SERVER_RESPONSE)
+                        .name(RESPONSE_PARAM_NAME))
+                .update(it -> restMethod.method().throwsChecked()
+                        .forEach(checked -> it.addThrows(thrown -> thrown.type(checked))))
+                .update(it -> endpointMethodBody(endpointTypeName,
+                                                 classModel,
+                                                 singleton,
+                                                 mediaTypeConstants,
+                                                 headerNameConstants,
+                                                 headerValueConstants,
+                                                 httpStatusConstants,
+                                                 it,
+                                                 restMethod,
+                                                 methodIndex)));
+    }
+
+    private void endpointMethodBody(TypeName endpointType,
+                                    ClassModel.Builder classModel,
+                                    boolean singleton,
+                                    Constants<String> mediaTypeConstants,
+                                    Constants<String> headerNameConstants,
+                                    Constants<HeaderValue> headerValueConstants,
+                                    Constants<HttpStatus> httpStatusConstants,
+                                    Method.Builder method,
+                                    RestMethod restMethod,
+                                    int methodIndex) {
+        // parameters
+        for (RestMethodParameter parameter : restMethod.parameters()) {
+            String paramName = parameter.name();
+            method.addContent("var ")
+                    .addContent(paramName)
+                    .addContent(" = ");
+            invokeParamHandler(endpointType,
+                               classModel,
+                               method,
+                               restMethod,
+                               parameter,
+                               methodIndex,
+                               mediaTypeConstants,
+                               headerNameConstants,
+                               headerValueConstants);
+            method.addContentLine("");
+        }
+
+        boolean hasResponse = false;
+        if (!restMethod.returnType().boxed().equals(TypeNames.BOXED_VOID)) {
+            method.addContent("var ")
+                    .addContent(METHOD_RESPONSE_NAME)
+                    .addContent(" = ");
+            hasResponse = true;
+        }
+
+        List<RestMethodParameter> params = restMethod.parameters();
+        if (singleton) {
+            method.addContent("this.endpoint.");
+        } else {
+            method.addContent("this.endpoint.get().");
+        }
+        method.addContent(restMethod.name())
+                .addContent("(");
+        if (params.isEmpty()) {
+            method.addContentLine(");");
+        } else if (params.size() == 1) {
+            method.addContent(params.getFirst().name())
+                    .addContentLine(");");
+        } else {
+            // more than one parameter, multiline
+            method.addContentLine("")
+                    .increaseContentPadding()
+                    .increaseContentPadding();
+            Iterator<RestMethodParameter> iterator = params.iterator();
+            while (iterator.hasNext()) {
+                RestMethodParameter next = iterator.next();
+                method.addContent(next.name());
+                if (iterator.hasNext()) {
+                    method.addContentLine(",");
+                }
+            }
+            method.addContentLine(");")
+                    .decreaseContentPadding()
+                    .decreaseContentPadding();
+        }
+
+        if (restMethod.produces().size() == 1) {
+            String mediaType = restMethod.produces().getFirst();
+            if (!"*/*".equals(mediaType)) {
+                method.addContent(RESPONSE_PARAM_NAME)
+                        .addContent(".headers().contentType(")
+                        .addContent(mediaTypeConstants.get(mediaType))
+                        .addContentLine(");");
+            }
+        }
+
+        if (restMethod.status().isPresent()) {
+            HttpStatus httpStatus = restMethod.status().get();
+
+            method.addContent(RESPONSE_PARAM_NAME)
+                    .addContent(".status(")
+                    .addContent(httpStatusConstants.get(httpStatus))
+                    .addContentLine(");");
+        }
+
+        method.addContent(RESPONSE_PARAM_NAME)
+                .addContent(".send(");
+        if (hasResponse) {
+            // we consider the response to be an entity to be sent (unmodified) over the response
+            method.addContent(METHOD_RESPONSE_NAME);
+        }
+        method.addContentLine(");");
+    }
+
+    private void invokeParamHandler(TypeName endpointType,
+                                    ClassModel.Builder classModel,
+                                    Method.Builder method,
+                                    RestMethod restMethod,
+                                    RestMethodParameter param,
+                                    int methodIndex,
+                                    Constants<String> mediaTypeConstants,
+                                    Constants<String> headerNameConstants,
+                                    Constants<HeaderValue> headerValueConstants) {
+        for (HttpParameterCodegenProvider paramProvider : PARAM_PROVIDERS) {
+            try {
+                if (paramProvider.codegen(new ParamCodegenContextImpl(param.annotations(),
+                                                                      param.typeName(),
+                                                                      classModel,
+                                                                      method,
+                                                                      REQUEST_PARAM_NAME,
+                                                                      RESPONSE_PARAM_NAME,
+                                                                      endpointType,
+                                                                      restMethod.name(),
+                                                                      param.name(),
+                                                                      methodIndex,
+                                                                      param.index(),
+                                                                      mediaTypeConstants,
+                                                                      headerNameConstants,
+                                                                      headerValueConstants))) {
+                    return;
+                }
+            } catch (Exception e) {
+                throw new CodegenException("Failed to process parameter '" + param.typeName().resolvedName() + " "
+                                                   + param.name() + "' that is " + (param.index() + 1) + " parameter of method "
+                                                   + endpointType.fqName() + "." + restMethod.name()
+                                                   + ", as the parameter handler ("
+                                                   + paramProvider.getClass().getName() + ") threw an exception.",
+                                           e);
+            }
+        }
+        throw new CodegenException("Failed to process parameter '" + param.typeName().resolvedName() + " "
+                                           + param.name() + "' that is " + (param.index() + 1) + " parameter of method "
+                                           + endpointType.fqName() + "." + restMethod.name()
+                                           + ", as there is no parameter handler registered for it.");
+    }
+
+    private void addRoutingMethod(ClassModel.Builder classModel,
+                                  ServerEndpoint endpoint,
+                                  Constants<String> httpMethodConstants,
+                                  Constants<String> mediaTypeConstants) {
+
+        classModel.addMethod(routing -> routing
+                .accessModifier(AccessModifier.PRIVATE)
+                .name("routing")
+                .addParameter(rules -> rules
+                        .type(WebServerCodegenTypes.SERVER_HTTP_RULES)
+                        .name("rules"))
+                .update(it -> routingMethodBody(it,
+                                                endpoint,
+                                                httpMethodConstants,
+                                                mediaTypeConstants)));
+    }
+
+    private void routingMethodBody(Method.Builder method,
+                                   ServerEndpoint endpoint,
+                                   Constants<String> httpMethodConstants,
+                                   Constants<String> mediaTypeConstants) {
+
+        for (RestMethod restMethod : endpoint.methods()) {
+            if (restMethod.produces().isEmpty() && restMethod.consumes().isEmpty()) {
+                addSimpleRoute(method, restMethod, httpMethodConstants);
+            } else {
+                addHttpRoute(method, restMethod, httpMethodConstants, mediaTypeConstants);
+            }
+        }
+    }
+
+    private void addSimpleRoute(Method.Builder routing, RestMethod restMethod, Constants<String> httpMethodConstants) {
+        routing.addContent("rules.");
+
+        HttpMethod httpMethod = restMethod.httpMethod();
+        if (httpMethod.builtIn()) {
+            routing.addContent(httpMethod.name().toLowerCase(Locale.ROOT))
+                    .addContent("(");
+        } else {
+            routing.addContent("route(" + httpMethodConstants.get(httpMethod.name()) + ", ");
+        }
+
+        String path = restMethod.path().orElse("/");
+
+        routing.addContent("\"")
+                .addContent(path)
+                .addContent("\", ");
+
+        routing.addContent("this::")
+                .addContent(restMethod.uniqueName())
+                .addContentLine(");");
+    }
+
+    private void addHttpRoute(Method.Builder routing,
+                              RestMethod restMethod,
+                              Constants<String> httpMethodConstants,
+                              Constants<String> mediaTypeConstants) {
+        routing.addContent("rules.route(")
+                .addContent(WebServerCodegenTypes.SERVER_HTTP_ROUTE)
+                .addContentLine(".builder()")
+                .increaseContentPadding()
+                .increaseContentPadding()
+                .addContent(".methods(");
+
+        HttpMethod httpMethod = restMethod.httpMethod();
+        if (httpMethod.builtIn()) {
+            routing.addContent(HTTP_METHOD)
+                    .addContent(".")
+                    .addContent(httpMethod.name());
+        } else {
+            routing.addContent(httpMethodConstants.get(httpMethod.name()));
+        }
+
+        routing.addContentLine(")"); // end of methods(Method.GET)
+
+        boolean consumesExists = !restMethod.consumes().isEmpty();
+
+        routing.addContent(".headers(headers -> ");
+
+        if (consumesExists) {
+            routing.addContent("headers.testContentType(");
+            routing.addContent(restMethod.consumes()
+                                       .stream()
+                                       .map(mediaTypeConstants::get)
+                                       .collect(Collectors.joining(", ")));
+            routing.addContent(")");
+        }
+
+        if (!restMethod.produces().isEmpty()) {
+            if (consumesExists) {
+                routing.addContent(" && ");
+            }
+            routing.addContent("headers.isAccepted(");
+            routing.addContent(restMethod.produces()
+                                       .stream()
+                                       .map(mediaTypeConstants::get)
+                                       .collect(Collectors.joining(", ")));
+            routing.addContent(")");
+        }
+
+        routing.addContentLine(")");
+
+        String path = restMethod.path().orElse("/");
+        routing.addContent(".path(\"")
+                .addContent(path)
+                .addContentLine("\")")
+                .addContent(".handler(this::")
+                .addContent(restMethod.uniqueName())
+                .addContentLine(")");
+
+        routing.addContentLine(".build());")
+                .decreaseContentPadding()
+                .decreaseContentPadding();
+    }
+
+    private void statusConstants(ClassModel.Builder classModel, Constants<HttpStatus> constants) {
+        constants.forEach((status, constant) -> {
+            classModel.addField(headerValue -> headerValue
+                    .update(ConstantField::privateConstant)
+                    .type(HTTP_STATUS)
+                    .name(constant)
+                    .addContent(HTTP_STATUS)
+                    .addContent(".create(")
+                    .addContent(String.valueOf(status.code()))
+                    .update(it -> {
+                        if (status.reason().isPresent()) {
+                            it.addContent(", \"")
+                                    .addContent(status.reason().get())
+                                    .addContent("\"");
+                        }
+                    })
+                    .addContent(")"));
+        });
+    }
+}

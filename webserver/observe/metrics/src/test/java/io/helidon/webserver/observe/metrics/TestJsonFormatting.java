@@ -30,6 +30,7 @@ import io.helidon.metrics.api.ScopingConfig;
 import io.helidon.metrics.api.SystemTagsManager;
 import io.helidon.metrics.api.Tag;
 import io.helidon.metrics.api.Timer;
+import io.helidon.testing.junit5.Testing;
 
 import jakarta.json.JsonObject;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 
+@Testing.Test
 class TestJsonFormatting {
     private static final String SCOPE_TAG_NAME = "the-scope";
 

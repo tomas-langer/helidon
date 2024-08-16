@@ -120,6 +120,7 @@ public final class Service {
     @Documented
     @Retention(RetentionPolicy.CLASS)
     @Target(ElementType.TYPE)
+    @Inherited
     public @interface Contract {
     }
 

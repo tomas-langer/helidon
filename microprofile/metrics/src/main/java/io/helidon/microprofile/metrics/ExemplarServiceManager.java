@@ -74,7 +74,7 @@ class ExemplarServiceManager {
         List<ExemplarService> exemplarServices =
             HelidonServiceLoader.create(ServiceLoader.load(ExemplarService.class)).asList();
         if (!exemplarServices.isEmpty()) {
-            LOGGER.log(Level.INFO, "Using metrics ExemplarServices " + exemplarServices.toString());
+            LOGGER.log(Level.INFO, "Using metrics ExemplarServices " + exemplarServices);
         }
 
         return exemplarServices;

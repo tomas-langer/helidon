@@ -24,6 +24,8 @@ module io.helidon.service.tests.inject.toolbox {
     requires io.helidon.config.yaml;
     requires io.helidon.http;
     requires io.helidon.common.context;
+    requires io.helidon.metrics.api;
 
     exports io.helidon.service.tests.inject.toolbox;
+    exports io.helidon.service.tests.inject.toolbox.impl to io.helidon.service.registry;
 }

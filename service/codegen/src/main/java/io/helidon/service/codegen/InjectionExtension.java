@@ -35,6 +35,7 @@ import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.ElementInfoPredicates;
+import io.helidon.codegen.TypeHierarchy;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.codegen.classmodel.Field;
@@ -1075,8 +1076,10 @@ class InjectionExtension implements RegistryCodegenExtension {
         }
 
         // add contracts from interfaces and types annotated as @Contract
-        typeInfo.findAnnotation(ServiceCodegenTypes.SERVICE_ANNOTATION_CONTRACT)
-                .ifPresent(it -> collectedContracts.add(typeInfo.typeName()));
+        if (Annotations.findFirst(ServiceCodegenTypes.SERVICE_ANNOTATION_CONTRACT,
+                                  TypeHierarchy.hierarchyAnnotations(ctx, typeInfo)).isPresent()) {
+            collectedContracts.add(typeInfo.typeName());
+        }
 
         // add contracts from @ExternalContracts
         typeInfo.findAnnotation(ServiceCodegenTypes.SERVICE_ANNOTATION_EXTERNAL_CONTRACTS)

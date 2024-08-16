@@ -21,6 +21,7 @@ import io.helidon.service.inject.InjectRegistryManager;
 import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.inject.api.Lookup;
 import io.helidon.service.inject.api.Qualifier;
+import io.helidon.testing.junit5.Testing;
 
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -30,13 +31,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 
+@Testing.Test
 public class ConfigDrivenConfigServiceTest {
     private static InjectRegistryManager registryManager;
     private static InjectRegistry registry;
 
     @BeforeAll
     static void init() {
-        GlobalConfig.config(() -> null, true);
         // config is loaded through its service
         registryManager = InjectRegistryManager.create();
         registry = registryManager.registry();

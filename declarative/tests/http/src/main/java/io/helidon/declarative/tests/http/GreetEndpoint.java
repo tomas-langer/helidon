@@ -34,6 +34,7 @@ import io.helidon.metrics.api.Metrics;
 import io.helidon.security.SecurityContext;
 import io.helidon.service.inject.api.Configuration;
 import io.helidon.service.inject.api.Injection;
+import io.helidon.webserver.http.RestServer;
 
 import jakarta.json.Json;
 import jakarta.json.JsonBuilderFactory;
@@ -54,8 +55,8 @@ import jakarta.json.JsonObject;
  * The message is returned as a JSON object.
  */
 @Injection.Singleton
-@Http.Path("/greet")
-class GreetEndpoint {
+@RestServer.Endpoint
+class GreetEndpoint implements GreetEndpointApi {
 
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());
     private static final AtomicInteger RETRY_CALLS = new AtomicInteger();
@@ -74,38 +75,22 @@ class GreetEndpoint {
     /**
      * Return a worldly greeting message in plaintext.
      */
-    @Http.GET
-    @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
     @Metrics.Counted
     @Metrics.Timed
-    JsonObject getDefaultMessageHandler() {
+    @Override
+    public JsonObject getDefaultMessageHandler() {
         return response("World");
     }
 
-    /**
-     * Return a worldly greeting message.
-     */
-    @Http.GET
-    @Http.Produces("text/plain")
-    String getDefaultMessageHandlerPlain(Context context) {
-        return stringResponse("World");
-    }
-
-    @Http.GET
-    @Http.Path("/ft/fallback")
     @FaultTolerance.Fallback(value = "fallback", applyOn = IllegalStateException.class)
-    String failingFallback(@Http.HeaderParam(HeaderNames.HOST_STRING) String host) {
+    @Override
+    public String failingFallback(@Http.HeaderParam(HeaderNames.HOST_STRING) String host) {
         throw new IllegalStateException("Failed");
     }
 
-    String fallback(String host) {
-        return "Failed back";
-    }
-
-    @Http.GET
-    @Http.Path("/ft/retry")
     @FaultTolerance.Retry(name = "named")
-    String retriable() {
+    @Override
+    public String retriable() {
         int i = RETRY_CALLS.incrementAndGet();
         if (i % 2 == 0) {
             return "Success";
@@ -113,10 +98,9 @@ class GreetEndpoint {
         throw new IllegalStateException("Failed");
     }
 
-    @Http.GET
-    @Http.Path("/ft/breaker")
     @FaultTolerance.CircuitBreaker(name = "named")
-    String breaker() {
+    @Override
+    public String breaker() {
         Instant now = Instant.now();
         Duration duration = Duration.between(lastCall, now);
         lastCall = Instant.now();
@@ -126,10 +110,9 @@ class GreetEndpoint {
         throw new HttpException("Failed", Status.FORBIDDEN_403);
     }
 
-    @Http.GET
-    @Http.Path("/ft/timeout")
-    @FaultTolerance.Timeout(time = "PT2S")
-    String timeout(@Http.QueryParam("sleepSeconds") Optional<Integer> sleep) {
+    @FaultTolerance.Timeout(time = "PT1S")
+    @Override
+    public String timeout(@Http.QueryParam("sleepSeconds") Optional<Integer> sleep) {
         try {
             Thread.sleep(sleep.orElse(0) * 1000);
         } catch (InterruptedException e) {
@@ -138,15 +121,17 @@ class GreetEndpoint {
         return "Success";
     }
 
-    /**
-     * Return a greeting message using the name that was provided.
-     */
-    @Http.GET
-    @Http.Path("/{name}")
-    @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
-    @FaultTolerance.CircuitBreaker(name = "named") // we must be able to have two or more on the same type
-    JsonObject getMessageHandler(@Http.PathParam("name") String name) {
+    @FaultTolerance.CircuitBreaker(name = "named")
+    @Override
+    // we must be able to have two or more on the same type
+    public JsonObject getMessageHandler(String name) {
         return response(name);
+    }
+
+    @Http.GET
+    @Http.Path("/test/multiple/methods/with/same/name")
+    public String getMessageHandler() {
+        return "Success";
     }
 
     /**
@@ -154,17 +139,24 @@ class GreetEndpoint {
      *
      * @param greetingMessage the entity
      */
-    @Http.PUT
-    @Http.Path("/greeting")
-    @Http.Status(Status.NO_CONTENT_204_INT)
-    @Http.Consumes(MediaTypes.APPLICATION_JSON_STRING)
-    void updateGreetingHandler(@Http.Entity JsonObject greetingMessage) {
+    @RestServer.Status(Status.NO_CONTENT_204_INT)
+    @Override
+    public void updateGreetingHandler(@Http.Entity JsonObject greetingMessage) {
         if (!greetingMessage.containsKey("greeting")) {
             // mapped by QuickstartErrorHandler
             throw new QuickstartException(Status.BAD_REQUEST_400, "No greeting provided");
         }
 
         greeting.set(greetingMessage.getString("greeting"));
+    }
+
+    /**
+     * Return a worldly greeting message.
+     */
+    @Http.GET
+    @Http.Produces("text/plain")
+    String getDefaultMessageHandlerPlain(Context context) {
+        return stringResponse("World");
     }
 
     /**
@@ -177,8 +169,8 @@ class GreetEndpoint {
     @Http.Path("/greeting")
     @Http.Consumes(MediaTypes.APPLICATION_JSON_STRING)
     @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
-    JsonObject updateGreetingHandlerReturningCurrent(@Http.Entity JsonObject greetingMessage,
-                                                     SecurityContext securityContext) {
+    JsonObject updateGreetingHandlerWithSecurity(@Http.Entity JsonObject greetingMessage,
+                                                 SecurityContext securityContext) {
         if (!greetingMessage.containsKey("greeting")) {
             // mapped by QuickstartErrorHandler
             throw new QuickstartException(Status.BAD_REQUEST_400, "No greeting provided");
@@ -186,6 +178,21 @@ class GreetEndpoint {
         JsonObject response = response(securityContext.userName());
         greeting.set(greetingMessage.getString("greeting"));
         return response;
+    }
+
+    @Override
+    public JsonObject updateGreetingHandlerReturningCurrent(JsonObject greetingMessage) {
+        if (!greetingMessage.containsKey("greeting")) {
+            // mapped by QuickstartErrorHandler
+            throw new QuickstartException(Status.BAD_REQUEST_400, "No greeting provided");
+        }
+        JsonObject response = response("World");
+        greeting.set(greetingMessage.getString("greeting"));
+        return response;
+    }
+
+    String fallback(String host) {
+        return "Fallback " + host;
     }
 
     private JsonObject response(String name) {

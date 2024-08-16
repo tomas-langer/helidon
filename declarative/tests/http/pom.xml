@@ -18,7 +18,7 @@
 -->
 
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <parent>
         <groupId>io.helidon.declarative.tests</groupId>
@@ -101,6 +101,10 @@
             <scope>runtime</scope>
         </dependency>
         <dependency>
+            <groupId>io.helidon.webclient</groupId>
+            <artifactId>helidon-webclient</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.security.providers</groupId>
             <artifactId>helidon-security-providers-http-auth</artifactId>
             <scope>runtime</scope>
@@ -113,11 +117,6 @@
         <dependency>
             <groupId>io.helidon.webserver.testing.junit5</groupId>
             <artifactId>helidon-webserver-testing-junit5</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.webclient</groupId>
-            <artifactId>helidon-webclient</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -152,12 +151,12 @@
                 </configuration>
                 <dependencies>
                     <!-- This is not needed for applications that are not part of Helidon Maven reactor -->
-        <dependency>
+                    <dependency>
                         <groupId>io.helidon.bundles</groupId>
                         <artifactId>helidon-bundles-apt</artifactId>
                         <version>${helidon.version}</version>
-        </dependency>
-    </dependencies>
+                    </dependency>
+                </dependencies>
             </plugin>
             <plugin>
                 <groupId>io.helidon.service</groupId>

@@ -117,7 +117,8 @@ Features that require work:
 | OCI integration   | TODO   | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK        | 
 | Vault integration | TODO   | Support similar to CDI                                                                                                                     | 
 | Batch             | TBD    | TBD                                                                                                                                        | 
-| Support in MP     | TODO   | Note that all annotations mentioned above are also supported by Helidon MP                                                                 | 
+| Support in MP     | TODO   | Note that all annotations mentioned above are also supported by Helidon MP                                                                 |
+| Data              | TODO   | New feature                                                                                                                                |
 
 # Testing
 

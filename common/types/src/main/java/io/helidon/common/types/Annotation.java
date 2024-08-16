@@ -182,7 +182,7 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
          */
         public BUILDER from(Annotation.BuilderBase<?, ?> builder) {
             builder.typeName().ifPresent(this::typeName);
-            addValues(builder.values());
+            addValues(builder.values);
             return self();
         }
 

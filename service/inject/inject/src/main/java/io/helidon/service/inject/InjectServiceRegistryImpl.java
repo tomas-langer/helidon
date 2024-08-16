@@ -31,10 +31,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import io.helidon.common.LazyValue;
+import io.helidon.common.config.Config;
+import io.helidon.common.config.GlobalConfig;
 import io.helidon.common.configurable.LruCache;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
@@ -42,6 +45,7 @@ import io.helidon.metrics.api.Counter;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MeterRegistry;
 import io.helidon.metrics.api.Metrics;
+import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.service.inject.InjectRegistryManager.TypedQualifiedProviderKey;
 import io.helidon.service.inject.ServiceSupplies.ServiceSupplyList;
 import io.helidon.service.inject.api.ActivationRequest;
@@ -87,10 +91,10 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
     private final Map<TypeName, Set<InjectServiceInfo>> qualifiedProvidersByQualifier;
     private final Map<TypedQualifiedProviderKey, Set<InjectServiceInfo>> typedQualifiedProviders;
 
-    private final Counter lookupCounter;
-    private final Counter lookupScanCounter;
-    private final Counter cacheLookupCounter;
-    private final Counter cacheHitCounter;
+    private final RegistryCounter lookupCounter;
+    private final RegistryCounter lookupScanCounter;
+    private final RegistryCounter cacheLookupCounter;
+    private final RegistryCounter cacheHitCounter;
     private final boolean cacheEnabled;
     private final LruCache<Lookup, List<InjectServiceInfo>> cache;
 
@@ -122,6 +126,17 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
         this.cacheEnabled = config.lookupCacheEnabled();
         this.cache = cacheEnabled ? config.lookupCache().orElseGet(LruCache::create) : null;
 
+        // no-op counters (registry needs config, too early
+        this.lookupCounter = new RegistryCounter();
+        this.lookupScanCounter = new RegistryCounter();
+        if (cacheEnabled) {
+            this.cacheLookupCounter = new RegistryCounter();
+            this.cacheHitCounter = new RegistryCounter();
+        } else {
+            this.cacheLookupCounter = null;
+            this.cacheHitCounter = null;
+        }
+
         this.servicesByType = servicesByType;
         this.servicesByContract = servicesByContract;
         this.qualifiedProvidersByQualifier = qualifiedProvidersByQualifier;
@@ -144,32 +159,6 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
 
         this.scopeHandlerServices = scopeHandlers;
         this.scopeHandlerInstances = scopeHandlerInstances;
-
-        /*
-        Set-up metrics
-         */
-        MeterRegistry meterRegistry = Metrics.globalRegistry();
-        this.lookupCounter = meterRegistry
-                .getOrCreate(Counter.builder("io.helidon.inject.lookups")
-                                     .description("Number of lookups in the service registry")
-                                     .scope(Meter.Scope.VENDOR));
-        this.lookupScanCounter = meterRegistry
-                .getOrCreate(Counter.builder("io.helidon.inject.scanLookups")
-                                     .description("Number of lookups that require registry scan")
-                                     .scope(Meter.Scope.VENDOR));
-        if (cacheEnabled) {
-            this.cacheLookupCounter = meterRegistry
-                    .getOrCreate(Counter.builder("io.helidon.inject.cacheLookups")
-                                         .description("Number of lookups in cache in the service registry")
-                                         .scope(Meter.Scope.VENDOR));
-            this.cacheHitCounter = meterRegistry
-                    .getOrCreate(Counter.builder("io.helidon.inject.cacheHits")
-                                         .description("Number of cache hits in the service registry")
-                                         .scope(Meter.Scope.VENDOR));
-        } else {
-            this.cacheLookupCounter = null;
-            this.cacheHitCounter = null;
-        }
 
         /*
         For each known service descriptor, create an appropriate service manager
@@ -198,6 +187,33 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
 
         singletonScopeHandler.activate();
         dependentScopeHandler.activate();
+
+        // make sure config is initialized as it should be
+        if (config.limitRuntimePhase().ordinal() >= Activator.Phase.ACTIVE.ordinal()) {
+            Config registryConfig = first(Config.class).orElseGet(GlobalConfig::config);
+            GlobalConfig.config(() -> registryConfig, true);
+
+            // Set-up metrics using metric registry
+            MeterRegistry meterRegistry = Metrics.createMeterRegistry(MetricsConfig.create(Config.empty()));
+            this.lookupCounter.consumer = meterRegistry
+                    .getOrCreate(Counter.builder("io.helidon.inject.lookups")
+                                         .description("Number of lookups in the service registry")
+                                         .scope(Meter.Scope.VENDOR))::increment;
+            this.lookupScanCounter.consumer = meterRegistry
+                    .getOrCreate(Counter.builder("io.helidon.inject.scanLookups")
+                                         .description("Number of lookups that require registry scan")
+                                         .scope(Meter.Scope.VENDOR))::increment;
+            if (cacheEnabled) {
+                this.cacheLookupCounter.consumer = meterRegistry
+                        .getOrCreate(Counter.builder("io.helidon.inject.cacheLookups")
+                                             .description("Number of lookups in cache in the service registry")
+                                             .scope(Meter.Scope.VENDOR))::increment;
+                this.cacheHitCounter.consumer = meterRegistry
+                        .getOrCreate(Counter.builder("io.helidon.inject.cacheHits")
+                                             .description("Number of cache hits in the service registry")
+                                             .scope(Meter.Scope.VENDOR))::increment;
+            }
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -533,5 +549,59 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
                     .getFirst() // List.getFirst() - Qualified instance
                     .get();
         });
+    }
+
+    private static class RegistryCounter implements Counter {
+        private volatile Consumer<Long> consumer;
+
+        RegistryCounter() {
+            consumer = it -> {
+            };
+        }
+
+        @Override
+        public void increment() {
+            increment(1);
+        }
+
+        @Override
+        public void increment(long amount) {
+            consumer.accept(amount);
+        }
+
+        @Override
+        public long count() {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
+
+        @Override
+        public Id id() {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
+
+        @Override
+        public Optional<String> baseUnit() {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
+
+        @Override
+        public Optional<String> description() {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
+
+        @Override
+        public Type type() {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
+
+        @Override
+        public Optional<String> scope() {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
+
+        @Override
+        public <R> R unwrap(Class<? extends R> c) {
+            throw new UnsupportedOperationException("This is not a full counter");
+        }
     }
 }

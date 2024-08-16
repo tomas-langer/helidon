@@ -105,6 +105,7 @@ public class Scheduling {
      *
      * @deprecated use {@link io.helidon.scheduling.FixedRateConfig.Builder} instead
      */
+    @SuppressWarnings("removal")
     @Deprecated(since = "4.0.2", forRemoval = true)
     public static final class FixedRateBuilder implements io.helidon.common.Builder<FixedRateBuilder, Task> {
 
@@ -205,7 +206,8 @@ public class Scheduling {
 
     /**
      * Scheduled to be invoked periodically at fixed rate. Fixed rate tasks are never invoked concurrently.
-     * Value is interpreted as seconds by default, can be overridden by {@link #timeUnit()}.
+     *
+     * @see #value()
      */
     @Retention(RetentionPolicy.CLASS)
     @Documented

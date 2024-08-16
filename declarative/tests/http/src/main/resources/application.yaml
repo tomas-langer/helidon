@@ -23,7 +23,7 @@ server:
   features:
     security:
       paths:
-        - path: "/greet/*"
+        - path: "/greet/greeting"
           methods: [ "post" ]
           # implies authentication and authorization
           roles-allowed: [ "admin" ]

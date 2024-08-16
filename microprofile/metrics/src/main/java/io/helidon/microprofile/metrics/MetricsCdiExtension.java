@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.helidon.common.Errors;
+import io.helidon.common.context.Context;
 import io.helidon.common.context.Contexts;
 import io.helidon.config.Config;
 import io.helidon.config.ConfigSources;
@@ -321,6 +322,8 @@ public class MetricsCdiExtension extends HelidonRestCdiExtension {
         MetricsObserver observer = configure();
 
         registerMetricsForAnnotatedSites();
+
+        System.out.println("CDI Extension: " + Contexts.context().map(Context::id));
         registerAnnotatedGauges(bm);
         registerRestRequestMetrics();
 

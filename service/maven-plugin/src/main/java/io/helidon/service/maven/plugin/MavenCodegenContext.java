@@ -72,11 +72,11 @@ class MavenCodegenContext extends CodegenContextBase implements CodegenContext {
 
     @Override
     public Optional<TypeInfo> typeInfo(TypeName typeName) {
-        throw new CodegenException("Cannot create type info, no scan provided");
+        return Optional.empty();
     }
 
     @Override
     public Optional<TypeInfo> typeInfo(TypeName typeName, Predicate<TypedElementInfo> elementPredicate) {
-        throw new CodegenException("Cannot create type info, no scan provided");
+        return Optional.empty();
     }
 }
