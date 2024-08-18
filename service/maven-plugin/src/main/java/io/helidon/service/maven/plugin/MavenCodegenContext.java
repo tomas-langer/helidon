@@ -23,7 +23,6 @@ import java.util.function.Predicate;
 
 import io.helidon.codegen.CodegenContext;
 import io.helidon.codegen.CodegenContextBase;
-import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenLogger;
 import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.CodegenScope;

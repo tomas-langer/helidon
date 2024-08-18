@@ -14,23 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.tests.http;
-
-import io.helidon.http.Http;
-import io.helidon.webclient.api.RestClient;
-
 /**
- * API for typed client for the Greet endpoint HTTP API.
+ * HTTP Rest model.
  */
-@RestClient.Endpoint
-public interface GreetEndpointClient extends GreetEndpointApi {
-    /**
-     * Return a worldly greeting message.
-     *
-     * @return greeting
-     */
-    @Http.GET
-    @Http.Produces("text/plain")
-    @RestClient.ComputedHeader(name = "X-Computed", producerClass = ClientHeaderProducer.class)
-    String getDefaultMessageHandlerPlain();
-}
+package io.helidon.declarative.codegen.http.model;

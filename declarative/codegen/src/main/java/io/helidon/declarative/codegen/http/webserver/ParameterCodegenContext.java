@@ -110,7 +110,24 @@ public interface ParameterCodegenContext {
      */
     int paramIndex();
 
+    /**
+     * Constants of media types.
+     *
+     * @return media type constants
+     */
     Constants<String> mediaTypeConstants();
+
+    /**
+     * Constants of header names.
+     *
+     * @return header names constants
+     */
     Constants<String> headerNameConstants();
+
+    /**
+     * Constants of header values.
+     *
+     * @return header value constants
+     */
     Constants<HeaderValue> headerValueConstants();
 }

@@ -23,6 +23,15 @@ public class TimeoutException extends FaultToleranceException {
     private static final long serialVersionUID = 1900924677490550714L;
 
     /**
+     * A new timeout exception with custom message.
+     *
+     * @param message detail message
+     */
+    public TimeoutException(String message) {
+        super(message);
+    }
+
+    /**
      * Constructs a {@code TimeoutException} with the specified detail
      * message.
      *

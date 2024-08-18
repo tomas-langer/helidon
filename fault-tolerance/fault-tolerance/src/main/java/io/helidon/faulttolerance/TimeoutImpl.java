@@ -85,7 +85,7 @@ class TimeoutImpl implements Timeout {
             try {
                 T result = supplier.get();
                 if (interrupted.get()) {
-                    throw new TimeoutException("Supplier execution interrupted", null);
+                    throw new TimeoutException("Supplier execution interrupted");
                 }
                 return result;
             } catch (Throwable t) {

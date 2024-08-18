@@ -1,1 +1,0 @@
-io.helidon.declarative.tests.http.GreetEndpointClient.uri: "http://localhost:${test.server.port}"

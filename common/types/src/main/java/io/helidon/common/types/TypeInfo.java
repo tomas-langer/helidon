@@ -435,7 +435,8 @@ public interface TypeInfo extends TypeInfoBlueprint, Prototype.Api {
          * @return updated builder instance
          * @see #referencedTypeNamesToAnnotations()
          */
-        public BUILDER referencedTypeNamesToAnnotations(Map<? extends TypeName, List<Annotation>> referencedTypeNamesToAnnotations) {
+        public BUILDER referencedTypeNamesToAnnotations(
+                Map<? extends TypeName, List<Annotation>> referencedTypeNamesToAnnotations) {
             Objects.requireNonNull(referencedTypeNamesToAnnotations);
             this.referencedTypeNamesToAnnotations.clear();
             this.referencedTypeNamesToAnnotations.putAll(referencedTypeNamesToAnnotations);

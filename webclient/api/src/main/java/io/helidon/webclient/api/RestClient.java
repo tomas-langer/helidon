@@ -202,6 +202,7 @@ public final class RestClient {
     /**
      * Header producer, to use with {@link io.helidon.webclient.api.RestClient.ComputedHeader#producerClass()}.
      */
+    @Service.Contract
     public interface HeaderProducer {
         /**
          * Produce an instance of a named header.
@@ -216,6 +217,7 @@ public final class RestClient {
      * Error handler, must be a {@link io.helidon.service.registry.ServiceRegistry} service.
      * Handles a response, and (possibly) returns an exception to be thrown.
      */
+    @Service.Contract
     public interface ErrorHandler {
         /**
          * By default, we expect error handlers to handle exceptional responses.
@@ -263,10 +265,29 @@ public final class RestClient {
                                                          Class<?> type);
     }
 
+    /**
+     * Error handling is used by the typed REST client to error handle responses. Default implementation is part of
+     * Helidon, and a custom implementation is not required, unless you want to handle responses differently.
+     */
     @Service.Contract
     public interface ErrorHandling {
+        /**
+         * Handle untyped client response.
+         *
+         * @param uri requested URI
+         * @param requestHeaders request headers
+         * @param response response
+         */
         void handle(String uri, ClientRequestHeaders requestHeaders, HttpClientResponse response);
 
+        /**
+         * Handle an exception for a typed response.
+         *
+         * @param uri invoked URI
+         * @param requestHeaders headers of the request
+         * @param response response
+         * @param type type of the response
+         */
         void handle(String uri, ClientRequestHeaders requestHeaders, ClientResponseTyped<?> response, Class<?> type);
     }
 

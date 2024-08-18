@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019, 2022 Oracle and/or its affiliates.
+ * Copyright (c) 2019, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -97,8 +97,6 @@ final class MetaConfigFinder {
     }
 
     static Optional<String> profile() {
-        // check if meta configuration is configured using system property
-        String metaConfigFile = System.getProperty(META_CONFIG_SYSTEM_PROPERTY);
         // check name of the profile
         String profileName = System.getenv(CONFIG_PROFILE_ENVIRONMENT_VARIABLE);
         if (profileName == null) {
@@ -112,7 +110,6 @@ final class MetaConfigFinder {
 
     static List<ConfigSource> configSources(List<String> supportedSuffixes,
                                             String profileName) {
-        ClassLoader cl = Thread.currentThread().getContextClassLoader();
         return supportedSuffixes.stream()
                 .flatMap(suffix -> configSources("application-" + profileName + "." + suffix))
                 .collect(Collectors.toUnmodifiableList());

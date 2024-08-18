@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2022, 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,15 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
-import io.helidon.config.Config;
-import io.helidon.config.ConfigSources;
-import io.helidon.config.spi.ConfigSource;
 import io.helidon.http.HttpException;
 import io.helidon.http.Status;
 import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.inject.api.Lookup;
 import io.helidon.service.inject.api.Qualifier;
+import io.helidon.testing.TestConfig;
 import io.helidon.webclient.api.RestClient;
 import io.helidon.webclient.http1.Http1Client;
-import io.helidon.webserver.http.HttpRules;
 import io.helidon.webserver.testing.junit5.ServerTest;
-import io.helidon.webserver.testing.junit5.SetUpRoute;
 
 import jakarta.json.Json;
 import jakarta.json.JsonBuilderFactory;
@@ -43,8 +39,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-//@Tests.AddConfigValue(key = "mykey", value = "myvalue")
-//@Tests.AddConfigFile(value = "application.yaml", weight = 145.0)
+@TestConfig.Value(key = "io.helidon.declarative.tests.http.GreetEndpointClient.uri",
+                  value = "http://localhost:${test.server.port}")
+/* The following code works
+@TestConfig.Values("""
+        io.helidon.declarative.tests.http.GreetEndpointClient.uri=http://localhost:${test.server.port}
+        """)
+ */
 @ServerTest
 public class MainTest {
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());
@@ -61,10 +62,13 @@ public class MainTest {
         this.serverUri = serverUri;
     }
 
-//    @Tests.ConfigSource
-//    static ConfigSource myConfig() {
-//        return ConfigSources.create(Map.of("port", "49")).build();
-//    }
+    /* The following code works
+    @TestConfig.Source
+    static ConfigSource myConfig() {
+        return ConfigSources.create(Map.of("io.helidon.declarative.tests.http.GreetEndpointClient.uri",
+                                           "http://localhost:${test.server.port}")).build();
+    }
+    */
 
     @Test
     void testRootRoute() {
@@ -106,9 +110,9 @@ public class MainTest {
     @Test
     void testTypedClient() {
         GreetEndpointClient typedClient = registry.get(Lookup.builder()
-                                        .addContract(GreetEndpointClient.class)
-                                        .addQualifier(Qualifier.create(RestClient.Client.class))
-                                        .build());
+                                                               .addContract(GreetEndpointClient.class)
+                                                               .addQualifier(Qualifier.create(RestClient.Client.class))
+                                                               .build());
 
         String message = typedClient.getDefaultMessageHandlerPlain();
         assertThat(message, is("Hello World!"));

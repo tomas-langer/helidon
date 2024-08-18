@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.helidon.declarative.codegen.http.restclient;
 
 import java.util.ArrayList;
@@ -26,7 +42,6 @@ import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.declarative.codegen.Constants;
 import io.helidon.declarative.codegen.http.RestExtensionBase;
-import io.helidon.declarative.codegen.http.RestUtil;
 import io.helidon.declarative.codegen.http.model.ClientEndpoint;
 import io.helidon.declarative.codegen.http.model.ComputedHeader;
 import io.helidon.declarative.codegen.http.model.HeaderValue;
@@ -98,11 +113,11 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                             .ifPresent(builder::clientName);
                 });
 
-        RestUtil.path(typeAnnotations, builder);
-        RestUtil.produces(typeAnnotations, builder);
-        RestUtil.consumes(typeAnnotations, builder);
-        RestUtil.headers(typeAnnotations, builder, REST_CLIENT_HEADERS);
-        RestUtil.computedHeaders(typeAnnotations, builder, REST_CLIENT_COMPUTED_HEADERS);
+        path(typeAnnotations, builder);
+        produces(typeAnnotations, builder);
+        consumes(typeAnnotations, builder);
+        headers(typeAnnotations, builder, REST_CLIENT_HEADERS);
+        computedHeaders(typeAnnotations, builder, REST_CLIENT_COMPUTED_HEADERS);
 
         Map<MethodSignature, MethodOrigin> discoveredMethods = new LinkedHashMap<>();
 
@@ -140,14 +155,14 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                 .uniqueName(method.elementName()) // this is not unique, but we do not need it in client
                 .method(method)
                 .annotations(annotations)
-                .httpMethod(RestUtil.httpMethodFromAnnotation(method,
-                                                              Annotations.findFirst(HTTP_METHOD_ANNOTATION, annotations).get()));
+                .httpMethod(httpMethodFromAnnotation(method,
+                                                     Annotations.findFirst(HTTP_METHOD_ANNOTATION, annotations).get()));
 
-        RestUtil.path(annotations, builder);
-        RestUtil.consumes(annotations, builder);
-        RestUtil.produces(annotations, builder);
-        RestUtil.headers(annotations, builder, REST_CLIENT_HEADERS);
-        RestUtil.computedHeaders(annotations, builder, REST_CLIENT_COMPUTED_HEADERS);
+        path(annotations, builder);
+        consumes(annotations, builder);
+        produces(annotations, builder);
+        headers(annotations, builder, REST_CLIENT_HEADERS);
+        computedHeaders(annotations, builder, REST_CLIENT_COMPUTED_HEADERS);
 
         if (builder.consumes().isEmpty()) {
             builder.consumes(endpointBuilder.consumes());
@@ -327,6 +342,7 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                                                           mediaTypeToConstant)));
     }
 
+    @SuppressWarnings("checkstyle:MethodLength") // readability is better if the whole method is generated here
     private void generateMethodParamsAndBody(io.helidon.codegen.classmodel.Method.Builder it,
                                              ClientEndpoint endpoint,
                                              RestMethod method,
@@ -507,8 +523,9 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
         return Annotations.findFirst(HTTP_QUERY_PARAM_ANNOTATION,
                                      parameter.annotations())
                 .flatMap(Annotation::value)
-                .orElseThrow(() -> new CodegenException("Parameter is recognized as @Http.QueryParam yet it is not annotated: " +
-                                                                parameter.name(), parameter.parameter().originatingElement()
+                .orElseThrow(() -> new CodegenException("Parameter is recognized as @Http.QueryParam yet it is not annotated: "
+                                                                + parameter.name(), parameter.parameter()
+                                                                .originatingElement()
                                                                 .orElseGet(() -> parameter.method()
                                                                         .elementName() + "(" + parameter.name() + ")")));
     }
@@ -517,8 +534,9 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
         return Annotations.findFirst(HTTP_PATH_PARAM_ANNOTATION,
                                      parameter.annotations())
                 .flatMap(Annotation::value)
-                .orElseThrow(() -> new CodegenException("Parameter is recognized as @Http.HeaderParam yet it is not annotated: " +
-                                                                parameter.name(), parameter.parameter().originatingElement()
+                .orElseThrow(() -> new CodegenException("Parameter is recognized as @Http.HeaderParam yet it is not annotated: "
+                                                                + parameter.name(), parameter.parameter()
+                                                                .originatingElement()
                                                                 .orElseGet(() -> parameter.method()
                                                                         .elementName() + "(" + parameter.name() + ")")));
     }
@@ -529,8 +547,9 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                 return annotation.value().orElseThrow();
             }
         }
-        throw new CodegenException("Parameter is recognized as @Http.HeaderParam yet it is not annotated: " +
-                                           parameter.name(), parameter.parameter().originatingElement()
+        throw new CodegenException("Parameter is recognized as @Http.HeaderParam yet it is not annotated: "
+                                           + parameter.name(), parameter.parameter()
+                                           .originatingElement()
                                            .orElseGet(() -> parameter.method()
                                                    .elementName() + "(" + parameter.name() + ")"));
     }

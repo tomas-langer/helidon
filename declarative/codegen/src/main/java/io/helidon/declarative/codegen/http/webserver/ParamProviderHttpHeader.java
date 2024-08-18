@@ -20,14 +20,11 @@ import java.util.Optional;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.classmodel.ContentBuilder;
-import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
+import io.helidon.declarative.codegen.Constants;
 import io.helidon.declarative.codegen.http.webserver.spi.HttpParameterCodegenProvider;
 
-import static io.helidon.codegen.CodegenUtil.toConstantName;
-import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_HEADER_NAME;
-import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_HEADER_NAMES;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_HEADER_PARAM_ANNOTATION;
 
 class ParamProviderHttpHeader extends AbstractParametersProvider implements HttpParameterCodegenProvider {
@@ -45,25 +42,8 @@ class ParamProviderHttpHeader extends AbstractParametersProvider implements Http
         String headerParamName = headerParam.value()
                 .orElseThrow(() -> new CodegenException("@HeaderParam annotation must have a value."));
 
-        String headerConstantName = ctx.headerNameConstants().find(headerParamName)
-                .orElseGet(() -> {
-                    String constantName = toConstantName("header_" + headerParamName
-                                                                 + "_" + ctx.methodIndex()
-                                                                 + "_" + ctx.paramIndex());
-                    // add the header name constant
-                    ctx.classBuilder().addField(header -> header
-                            .accessModifier(AccessModifier.PRIVATE)
-                            .isStatic(true)
-                            .isFinal(true)
-                            .type(HTTP_HEADER_NAME)
-                            .name(constantName)
-                            .addContent(HTTP_HEADER_NAMES)
-                            .addContent(".create(\"")
-                            .addContent(headerParamName)
-                            .addContent("\")"));
-
-                    return constantName;
-                });
+        Constants<String> headerNameConstants = ctx.headerNameConstants();
+        String headerConstantName = headerNameConstants.add(headerParamName);
 
         ContentBuilder<?> contentBuilder = ctx.contentBuilder();
         String serverRequestParamName = ctx.serverRequestParamName();

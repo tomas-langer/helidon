@@ -120,6 +120,11 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>io.helidon.testing</groupId>
+            <artifactId>helidon-testing</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
             <scope>test</scope>

@@ -23,7 +23,16 @@ import io.helidon.service.codegen.RegistryCodegenContext;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 import io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider;
 
+/**
+ * Registry codegen extension provider for generating Typed REST Clients.
+ */
 public class RestClientExtensionProvider implements RegistryCodegenExtensionProvider {
+    /**
+     * Default constructor required by {@link java.util.ServiceLoader}.
+     */
+    public RestClientExtensionProvider() {
+    }
+
     @Override
     public Set<TypeName> supportedAnnotations() {
         return Set.of(RestClientTypes.REST_CLIENT_ENDPOINT);

@@ -22,6 +22,8 @@ import io.helidon.common.LazyValue;
 import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.registry.GlobalServiceRegistry;
 import io.helidon.service.registry.ServiceRegistry;
+import io.helidon.service.registry.ServiceRegistryConfig;
+import io.helidon.service.registry.ServiceRegistryManager;
 import io.helidon.webserver.WebServerConfig;
 import io.helidon.webserver.WebServerService__ServiceDescriptor;
 
@@ -41,10 +43,12 @@ final class InjectionSupport {
     private InjectionSupport() {
     }
 
-    public static void config(int port) {
-        GlobalServiceRegistry.registry()
-                .get(TestConfigSource.class)
-                .set("test.server.port", String.valueOf(port));
+    public static void createRegistry(Class<?> testClass) {
+        ServiceRegistryConfig.Builder registryConfig = ServiceRegistryConfig.builder();
+        io.helidon.testing.ServiceRegistrySupport.setUp(registryConfig, testClass);
+
+        ServiceRegistryManager manager = ServiceRegistryManager.create(registryConfig.build());
+        GlobalServiceRegistry.registry(manager.registry());
     }
 
     static Object param(Class<?> paramType) {

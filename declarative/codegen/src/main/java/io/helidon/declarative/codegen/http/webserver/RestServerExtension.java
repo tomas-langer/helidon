@@ -1,3 +1,19 @@
+/*
+ * Copyright (c) 2024 Oracle and/or its affiliates.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package io.helidon.declarative.codegen.http.webserver;
 
 import java.util.Collection;
@@ -26,10 +42,8 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.declarative.codegen.ConstantField;
 import io.helidon.declarative.codegen.Constants;
 import io.helidon.declarative.codegen.http.RestExtensionBase;
-import io.helidon.declarative.codegen.http.RestUtil;
 import io.helidon.declarative.codegen.http.model.ComputedHeader;
 import io.helidon.declarative.codegen.http.model.HeaderValue;
 import io.helidon.declarative.codegen.http.model.HttpMethod;
@@ -108,22 +122,22 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .addContentLine("\", this::routing);"));
     }
 
-    private static void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton) {
+    private void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton) {
         endpointService.addConstructor(ctr -> ctr
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_INJECT))
                 .addParameter(param -> param
-                        .type(singleton ? endpoint : RestUtil.supplierOf(endpoint))
+                        .type(singleton ? endpoint : supplierOf(endpoint))
                         .name("endpoint"))
                 .addContentLine("this.endpoint = endpoint;")
         );
     }
 
-    private static void addFields(ClassModel.Builder endpointService, TypeName endpointType, boolean singleton) {
+    private void addFields(ClassModel.Builder endpointService, TypeName endpointType, boolean singleton) {
         endpointService.addField(endpointField -> endpointField
                 .accessModifier(AccessModifier.PRIVATE)
                 .isFinal(true)
-                .type(singleton ? endpointType : RestUtil.supplierOf(endpointType))
+                .type(singleton ? endpointType : supplierOf(endpointType))
                 .name("endpoint")
         );
     }
@@ -141,11 +155,11 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                     listener.booleanValue("required").ifPresent(builder::listenerRequired);
                 });
 
-        RestUtil.path(typeAnnotations, builder);
-        RestUtil.produces(typeAnnotations, builder);
-        RestUtil.consumes(typeAnnotations, builder);
-        RestUtil.headers(typeAnnotations, builder, REST_SERVER_HEADERS);
-        RestUtil.computedHeaders(typeAnnotations, builder, REST_SERVER_COMPUTED_HEADERS);
+        path(typeAnnotations, builder);
+        produces(typeAnnotations, builder);
+        consumes(typeAnnotations, builder);
+        headers(typeAnnotations, builder, REST_SERVER_HEADERS);
+        computedHeaders(typeAnnotations, builder, REST_SERVER_COMPUTED_HEADERS);
 
         // methods - each class method annotated with HTTP Method meta-annotation is a valid one
         Map<String, AtomicInteger> uniqueMethodNames = new HashMap<>();
@@ -187,13 +201,13 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .uniqueName(uniqueName)
                 .method(method)
                 .annotations(annotations)
-                .httpMethod(RestUtil.httpMethodFromAnnotation(method, httpMethodAnnotation.get()));
+                .httpMethod(httpMethodFromAnnotation(method, httpMethodAnnotation.get()));
 
-        RestUtil.path(annotations, builder);
-        RestUtil.consumes(annotations, builder);
-        RestUtil.produces(annotations, builder);
-        RestUtil.headers(annotations, builder, REST_SERVER_HEADERS);
-        RestUtil.computedHeaders(annotations, builder, REST_SERVER_COMPUTED_HEADERS);
+        path(annotations, builder);
+        consumes(annotations, builder);
+        produces(annotations, builder);
+        headers(annotations, builder, REST_SERVER_HEADERS);
+        computedHeaders(annotations, builder, REST_SERVER_COMPUTED_HEADERS);
 
         if (builder.consumes().isEmpty()) {
             builder.consumes(endpointBuilder.consumes());
@@ -315,13 +329,6 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .addAnnotation(SINGLETON_ANNOTATION)
                 .addInterface(WebServerCodegenTypes.SERVER_HTTP_FEATURE);
 
-        // create constants
-        mediaTypeConstants(classModel, mediaTypeConstants);
-        headerNameConstants(classModel, headerNameConstants);
-        headerValueConstants(classModel, headerValueConstants);
-        httpMethodConstants(classModel, httpMethodConstants);
-        statusConstants(classModel, httpStatusConstants);
-
         boolean singleton = type.hasAnnotation(ServiceCodegenTypes.INJECTION_SINGLETON);
         // adds the endpoint field (may be a supplier)
         addFields(classModel, endpointTypeName, singleton);
@@ -349,9 +356,17 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
             methodIndex++;
         }
 
+        // create constants (after all parameter providers are handled)
+        mediaTypeConstants(classModel, mediaTypeConstants);
+        headerNameConstants(classModel, headerNameConstants);
+        headerValueConstants(classModel, headerValueConstants);
+        httpMethodConstants(classModel, httpMethodConstants);
+        statusConstants(classModel, httpStatusConstants);
+
         ctx.addType(generatedType, classModel, endpointTypeName, type.originatingElement().orElse(endpointTypeName));
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber") // this is a private method
     private void addEndpointMethod(TypeName endpointTypeName,
                                    ClassModel.Builder classModel,
                                    boolean singleton,
@@ -385,6 +400,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                                                  methodIndex)));
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber") // this is a private method
     private void endpointMethodBody(TypeName endpointType,
                                     ClassModel.Builder classModel,
                                     boolean singleton,
@@ -480,6 +496,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         method.addContentLine(");");
     }
 
+    @SuppressWarnings("checkstyle:ParameterNumber") // this is a private method
     private void invokeParamHandler(TypeName endpointType,
                                     ClassModel.Builder classModel,
                                     Method.Builder method,
@@ -640,7 +657,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
     private void statusConstants(ClassModel.Builder classModel, Constants<HttpStatus> constants) {
         constants.forEach((status, constant) -> {
             classModel.addField(headerValue -> headerValue
-                    .update(ConstantField::privateConstant)
+                    .update(this::privateConstant)
                     .type(HTTP_STATUS)
                     .name(constant)
                     .addContent(HTTP_STATUS)
