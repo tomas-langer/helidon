@@ -34,20 +34,23 @@ Such an application will provide:
 
 Create endpoints, services etc. using Helidon Service and Helidon Service Inject annotations and APIs.
 
-### HTTP endpoint
+### HTTP Server endpoint
 
 The following annotations can be used on services:
 
-- `@Http.Path("/service")` - a service annotated with this annotation will be considered an endpoint service
-- `@Http.Listener("admin")` - a service annotated with this annotation will be bound to `admin` listener of the WebServer, if
+- `@RestServer.Endpoint` - a service annotated with this annotation will be considered an endpoint service
+- `@RestServer.Listener("admin")` - a service annotated with this annotation will be bound to `admin` listener of the WebServer, if
   available
+- `@Http.Path("/service")` - the service path (base path prefixed to all the methods)
 
 The following annotations can be used on methods:
 
 - `@Http.Path("/{name}")` - the method will be available on `/service/{name}` path
 - `@Http.GET`, `@Http.POST` etc. - methods annotated with one of these annotations (or `Http.HttpMethod` directly) will serve as
   endpoint methods binding to the defined method
-- `@Http.Status(Status.NO_CONTENT_204_INT)` - return the provided status code unless an exception is thrown
+- `@RestServer.Status(Status.NO_CONTENT_204_INT)` - return the provided status code unless an exception is thrown
+- `@RestServer.Header(name = "X-Header", value = "X-Value")` - define an explicit header
+- `@RestServer.ComputedHeader(name = "X-Computed", producerClass = ServerHeaderProducer.class)` - header computed by a service
 
 The following annotations can be used on parameters of endpoint methods:
 
@@ -94,6 +97,7 @@ Features that have POC implemented:
 | Fault Tolerance | DONE   | See annotations on `io.helidon.faulttolerance.FaultTolerance`                           | 
 | Metrics         | POC    | See annotations on `io.helidon.metrics.api.Metrics`, Counter and Timer done             |
 | Scheduling      | TODO   | See annotations on `io.helidon.scheduling.Scheduling`                                   |
+| WebClient       | TODO   | Typed client similar to rest client in MP                                               |
 
 Features that require work:
 
@@ -113,7 +117,6 @@ Features that require work:
 | LRA               | TBD    | TBD                                                                                                                                        | 
 | Messaging         | TBD    | TBD                                                                                                                                        | 
 | Reactive          | TODO   | How to translate a reactive stream to Stream operations on `java.io.InputStream`, `java.io.OutputStream` that is compatible with Helidon 4 | 
-| WebClient         | TODO   | Typed client similar to rest client in MP, TBD                                                                                             |
 | OCI integration   | TODO   | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK        | 
 | Vault integration | TODO   | Support similar to CDI                                                                                                                     | 
 | Batch             | TBD    | TBD                                                                                                                                        | 

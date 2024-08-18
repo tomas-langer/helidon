@@ -17,6 +17,7 @@
 package io.helidon.declarative.codegen.http;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.classmodel.ClassModel;
@@ -27,7 +28,7 @@ import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.declarative.codegen.Constants;
+import io.helidon.declarative.codegen.FieldNames;
 import io.helidon.declarative.codegen.http.model.ComputedHeader;
 import io.helidon.declarative.codegen.http.model.HeaderValue;
 import io.helidon.declarative.codegen.http.model.HttpAnnotated;
@@ -61,7 +62,7 @@ public abstract class RestExtensionBase {
      * @param constants   header name constants
      */
     protected void addHeaderNameConstants(List<Annotation> annotations,
-                                          Constants<String> constants) {
+                                          FieldNames<String> constants) {
         for (Annotation annotation : annotations) {
             if (annotation.typeName().equals(HTTP_HEADER_PARAM_ANNOTATION)) {
                 annotation.stringValue().ifPresent(constants::add);
@@ -76,7 +77,7 @@ public abstract class RestExtensionBase {
      * @param constants header name constants
      */
     protected void addComputedHeaderConstants(List<ComputedHeader> headers,
-                                              Constants<String> constants) {
+                                              FieldNames<String> constants) {
         headers.stream()
                 .map(ComputedHeader::name)
                 .forEach(constants::add);
@@ -90,7 +91,7 @@ public abstract class RestExtensionBase {
      * @param constants HTTP method constants
      */
     protected void addMethodConstant(HttpMethod method,
-                                     Constants<String> constants) {
+                                     FieldNames<String> constants) {
         if (!method.builtIn()) {
             constants.add(method.name());
         }
@@ -102,7 +103,7 @@ public abstract class RestExtensionBase {
      * @param classModel class model to add constant to
      * @param constants  HTTP method constants (mapping of constant name to HTTP method)
      */
-    protected void httpMethodConstants(ClassModel.Builder classModel, Constants<String> constants) {
+    protected void httpMethodConstants(ClassModel.Builder classModel, FieldNames<String> constants) {
         constants.forEach((method, constant) -> {
             classModel.addField(headerValue -> headerValue
                     .update(this::privateConstant)
@@ -121,7 +122,7 @@ public abstract class RestExtensionBase {
      * @param classModel class model to add constant to
      * @param constants  HTTP header value constants (mapping of constant name to a header value)
      */
-    protected void headerValueConstants(ClassModel.Builder classModel, Constants<HeaderValue> constants) {
+    protected void headerValueConstants(ClassModel.Builder classModel, FieldNames<HeaderValue> constants) {
         constants.forEach((header, constant) -> {
             classModel.addField(headerValue -> headerValue
                     .update(this::privateConstant)
@@ -142,7 +143,7 @@ public abstract class RestExtensionBase {
      * @param classModel class model to add constant to
      * @param constants  HTTP header name constants (mapping of constant name to a header name)
      */
-    protected void headerNameConstants(ClassModel.Builder classModel, Constants<String> constants) {
+    protected void headerNameConstants(ClassModel.Builder classModel, FieldNames<String> constants) {
         constants.forEach((name, constant) -> {
             classModel.addField(headerValue -> headerValue
                     .update(this::privateConstant)
@@ -161,7 +162,7 @@ public abstract class RestExtensionBase {
      * @param classModel class model to add constant to
      * @param constants  HTTP media type constants (mapping of constant name to an HTTP media type string)
      */
-    protected void mediaTypeConstants(ClassModel.Builder classModel, Constants<String> constants) {
+    protected void mediaTypeConstants(ClassModel.Builder classModel, FieldNames<String> constants) {
         constants.forEach((value, constant) -> {
             classModel.addField(headerValue -> headerValue
                     .update(this::privateConstant)
@@ -232,44 +233,68 @@ public abstract class RestExtensionBase {
     /**
      * Find headers in the annotations and set it on the builder.
      *
-     * @param annotations    all element annotations
-     * @param builder        element builder
-     * @param annotationType type of the annotation to be found
+     * @param annotations            all element annotations
+     * @param builder                element builder
+     * @param repeatedAnnotationType type of the annotation to be found (repeated)
+     * @param singleAnnotationType   type of the annotation to be found (single)
      */
     protected void headers(List<Annotation> annotations,
                            HttpAnnotated.BuilderBase<?, ?> builder,
-                           TypeName annotationType) {
-        Annotations.findFirst(annotationType, annotations)
+                           TypeName repeatedAnnotationType,
+                           TypeName singleAnnotationType) {
+        AtomicBoolean found = new AtomicBoolean(false);
+        Annotations.findFirst(repeatedAnnotationType, annotations)
                 .flatMap(Annotation::annotationValues)
                 .stream()
                 .flatMap(List::stream)
                 .forEach(headerAnnotation -> {
+                    found.set(true);
                     String name = headerAnnotation.stringValue("name").orElseThrow();
                     String value = headerAnnotation.stringValue("value").orElseThrow();
                     builder.addHeader(new HeaderValue(name, value));
                 });
+
+        if (!found.get()) {
+            Annotations.findFirst(singleAnnotationType, annotations)
+                    .ifPresent(headerAnnotation -> {
+                        String name = headerAnnotation.stringValue("name").orElseThrow();
+                        String value = headerAnnotation.stringValue("value").orElseThrow();
+                        builder.addHeader(new HeaderValue(name, value));
+                    });
+        }
     }
 
     /**
      * Find computed headers in the annotations and set it on the builder.
      *
-     * @param annotations    all element annotations
-     * @param builder        element builder
-     * @param annotationType type of the annotation to be found
+     * @param annotations            all element annotations
+     * @param builder                element builder
+     * @param repeatedAnnotationType type of the annotation to be found (repeated)
+     * @param singleAnnotationType   type of the annotation to be found (single)
      */
     protected void computedHeaders(List<Annotation> annotations,
                                    HttpAnnotated.BuilderBase<?, ?> builder,
-                                   TypeName annotationType) {
-        Annotations.findFirst(annotationType, annotations)
+                                   TypeName repeatedAnnotationType,
+                                   TypeName singleAnnotationType) {
+        AtomicBoolean found = new AtomicBoolean(false);
+        Annotations.findFirst(repeatedAnnotationType, annotations)
                 .flatMap(Annotation::annotationValues)
                 .stream()
                 .flatMap(List::stream)
                 .forEach(headerAnnotation -> {
+                    found.set(true);
                     String name = headerAnnotation.stringValue("name").orElseThrow();
                     TypeName producer = headerAnnotation.typeValue("producerClass").orElseThrow();
-                    boolean required = headerAnnotation.booleanValue("required").orElse(true);
-                    builder.addComputedHeader(new ComputedHeader(name, producer, required));
+                    builder.addComputedHeader(new ComputedHeader(name, producer));
                 });
+        if (!found.get()) {
+            Annotations.findFirst(singleAnnotationType, annotations)
+                    .ifPresent(headerAnnotation -> {
+                        String name = headerAnnotation.stringValue("name").orElseThrow();
+                        TypeName producer = headerAnnotation.typeValue("producerClass").orElseThrow();
+                        builder.addComputedHeader(new ComputedHeader(name, producer));
+                    });
+        }
     }
 
     /**

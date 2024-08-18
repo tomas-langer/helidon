@@ -22,7 +22,7 @@ import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
-import io.helidon.declarative.codegen.Constants;
+import io.helidon.declarative.codegen.FieldNames;
 import io.helidon.declarative.codegen.http.model.HeaderValue;
 
 record ParamCodegenContextImpl(List<Annotation> qualifiers,
@@ -36,7 +36,7 @@ record ParamCodegenContextImpl(List<Annotation> qualifiers,
                                String paramName,
                                int methodIndex,
                                int paramIndex,
-                               Constants<String> mediaTypeConstants,
-                               Constants<String> headerNameConstants,
-                               Constants<HeaderValue> headerValueConstants) implements ParameterCodegenContext {
+                               FieldNames<String> mediaTypeConstants,
+                               FieldNames<String> headerNameConstants,
+                               FieldNames<HeaderValue> headerValueConstants) implements ParameterCodegenContext {
 }

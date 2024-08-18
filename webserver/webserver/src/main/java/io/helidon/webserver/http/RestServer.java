@@ -25,6 +25,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.Optional;
 
+import io.helidon.http.HeaderName;
 import io.helidon.service.registry.Service;
 
 /**
@@ -96,20 +97,10 @@ public final class RestServer {
 
         /**
          * A producer type, must be a {@link io.helidon.service.registry.ServiceRegistry} service.
-         * <p>
-         * The producer may not produce a value, see {@link #required()}.
          *
          * @return producer to get header value from
          */
         Class<? extends HeaderProducer> producerClass();
-
-        /**
-         * If the {@link #producerClass()} produces an empty optional, and required is set to {@code true}
-         * (default), we will throw an exception. Otherwise, the header will not be configured on the request.
-         *
-         * @return whether the header must be provided
-         */
-        boolean required() default true;
     }
 
     /**
@@ -137,7 +128,7 @@ public final class RestServer {
          * @param name name to create
          * @return value for the header
          */
-        Optional<String> produceHeader(String name);
+        Optional<String> produceHeader(HeaderName name);
     }
 
     /**

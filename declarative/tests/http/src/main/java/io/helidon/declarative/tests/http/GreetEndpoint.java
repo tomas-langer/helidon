@@ -56,6 +56,7 @@ import jakarta.json.JsonObject;
  */
 @Injection.Singleton
 @RestServer.Endpoint
+@RestServer.Listener(value = "@default", required = true)
 class GreetEndpoint implements GreetEndpointApi {
 
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());
@@ -89,6 +90,8 @@ class GreetEndpoint implements GreetEndpointApi {
     }
 
     @FaultTolerance.Retry(name = "named")
+    @RestServer.Header(name = "X-Header", value = "X-Value")
+    @RestServer.ComputedHeader(name = "X-Computed", producerClass = ServerHeaderProducer.class)
     @Override
     public String retriable() {
         int i = RETRY_CALLS.incrementAndGet();

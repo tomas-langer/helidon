@@ -42,7 +42,7 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.declarative.codegen.Constants;
+import io.helidon.declarative.codegen.FieldNames;
 import io.helidon.declarative.codegen.http.RestExtensionBase;
 import io.helidon.declarative.codegen.http.model.ComputedHeader;
 import io.helidon.declarative.codegen.http.model.HeaderValue;
@@ -65,8 +65,10 @@ import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_METHOD_ANNOTATI
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_PATH_PARAM_ANNOTATION;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_QUERY_PARAM_ANNOTATION;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_STATUS;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_COMPUTED_HEADER;
 import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_COMPUTED_HEADERS;
 import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_ENDPOINT;
+import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_HEADER;
 import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_HEADERS;
 import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_LISTENER;
 import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_STATUS;
@@ -122,13 +124,26 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .addContentLine("\", this::routing);"));
     }
 
-    private void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton) {
+    private void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton,
+                                FieldNames<TypeName> headerProducers) {
         endpointService.addConstructor(ctr -> ctr
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_INJECT))
                 .addParameter(param -> param
                         .type(singleton ? endpoint : supplierOf(endpoint))
                         .name("endpoint"))
+                .update(builder -> {
+                    headerProducers.forEach((producerType, producerField) -> {
+                        builder.addParameter(producer -> producer
+                                .type(producerType)
+                                .name(producerField));
+                        builder.addContent("this.")
+                                .addContent(producerField)
+                                .addContent(" = ")
+                                .addContent(producerField)
+                                .addContentLine(";");
+                    });
+                })
                 .addContentLine("this.endpoint = endpoint;")
         );
     }
@@ -158,8 +173,8 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         path(typeAnnotations, builder);
         produces(typeAnnotations, builder);
         consumes(typeAnnotations, builder);
-        headers(typeAnnotations, builder, REST_SERVER_HEADERS);
-        computedHeaders(typeAnnotations, builder, REST_SERVER_COMPUTED_HEADERS);
+        headers(typeAnnotations, builder, REST_SERVER_HEADERS, REST_SERVER_HEADER);
+        computedHeaders(typeAnnotations, builder, REST_SERVER_COMPUTED_HEADERS, REST_SERVER_COMPUTED_HEADER);
 
         // methods - each class method annotated with HTTP Method meta-annotation is a valid one
         Map<String, AtomicInteger> uniqueMethodNames = new HashMap<>();
@@ -206,8 +221,8 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         path(annotations, builder);
         consumes(annotations, builder);
         produces(annotations, builder);
-        headers(annotations, builder, REST_SERVER_HEADERS);
-        computedHeaders(annotations, builder, REST_SERVER_COMPUTED_HEADERS);
+        headers(annotations, builder, REST_SERVER_HEADERS, REST_SERVER_HEADER);
+        computedHeaders(annotations, builder, REST_SERVER_COMPUTED_HEADERS, REST_SERVER_COMPUTED_HEADER);
 
         if (builder.consumes().isEmpty()) {
             builder.consumes(endpointBuilder.consumes());
@@ -275,11 +290,12 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         }
         TypeName endpointTypeName = type.typeName();
 
-        var headerNameConstants = Constants.<String>create("HEADER_NAME_");
-        var headerValueConstants = Constants.<HeaderValue>create("HEADER_");
-        var mediaTypeConstants = Constants.<String>create("MEDIA_TYPE_");
-        var httpMethodConstants = Constants.<String>create("METHOD_");
-        var httpStatusConstants = Constants.<HttpStatus>create("STATUS_");
+        var headerNameConstants = FieldNames.<String>create("HEADER_NAME_");
+        var headerValueConstants = FieldNames.<HeaderValue>create("HEADER_");
+        var mediaTypeConstants = FieldNames.<String>create("MEDIA_TYPE_");
+        var httpMethodConstants = FieldNames.<String>create("METHOD_");
+        var httpStatusConstants = FieldNames.<HttpStatus>create("STATUS_");
+        var headerProducers = FieldNames.<TypeName>create("headerProducer_");
 
         headerValueConstants.addAll(endpoint.headers());
         addComputedHeaderConstants(endpoint.computedHeaders(), headerNameConstants);
@@ -295,6 +311,10 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
             mediaTypeConstants.addAll(method.consumes());
             addMethodConstant(method.httpMethod(), httpMethodConstants);
             method.status().ifPresent(httpStatusConstants::add);
+            method.computedHeaders()
+                    .stream()
+                    .map(ComputedHeader::producer)
+                    .forEach(headerProducers::add);
 
             // parameters
             for (RestMethodParameter parameter : method.headerParameters()) {
@@ -332,10 +352,20 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         boolean singleton = type.hasAnnotation(ServiceCodegenTypes.INJECTION_SINGLETON);
         // adds the endpoint field (may be a supplier)
         addFields(classModel, endpointTypeName, singleton);
+        headerProducers.forEach((producerType, producerField) -> {
+            classModel.addField(producer -> producer
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .isFinal(true)
+                    .type(producerType)
+                    .name(producerField));
+        });
+
         // constructor injecting the field(s)
-        addConstructor(classModel, endpointTypeName, singleton);
+        addConstructor(classModel, endpointTypeName, singleton, headerProducers);
         // HttpFeature.setup(HttpRouting.Builder routing)
         addSetupMethod(classModel, endpoint.path().orElse("/"));
+        // socket() and socketRequired()
+        addSocketMethods(classModel, endpoint);
         // private void routing(HttpRules rules)
         addRoutingMethod(classModel,
                          endpoint,
@@ -352,6 +382,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                               headerValueConstants,
                               httpStatusConstants,
                               restMethod,
+                              headerProducers,
                               methodIndex);
             methodIndex++;
         }
@@ -366,15 +397,40 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         ctx.addType(generatedType, classModel, endpointTypeName, type.originatingElement().orElse(endpointTypeName));
     }
 
+    private void addSocketMethods(ClassModel.Builder classModel, ServerEndpoint endpoint) {
+        Optional<String> listener = endpoint.listener();
+        if (listener.isEmpty()) {
+            return;
+        }
+        classModel.addMethod(socket -> socket
+                .accessModifier(AccessModifier.PUBLIC)
+                .returnType(TypeNames.STRING)
+                .name("socket")
+                .addAnnotation(Annotations.OVERRIDE)
+                .addContent("return \"")
+                .addContent(listener.get())
+                .addContentLine("\";"));
+
+        if (endpoint.listenerRequired()) {
+            classModel.addMethod(socket -> socket
+                    .accessModifier(AccessModifier.PUBLIC)
+                    .returnType(TypeNames.PRIMITIVE_BOOLEAN)
+                    .name("socketRequired")
+                    .addAnnotation(Annotations.OVERRIDE)
+                    .addContentLine("return true;"));
+        }
+    }
+
     @SuppressWarnings("checkstyle:ParameterNumber") // this is a private method
     private void addEndpointMethod(TypeName endpointTypeName,
                                    ClassModel.Builder classModel,
                                    boolean singleton,
-                                   Constants<String> mediaTypeConstants,
-                                   Constants<String> headerNameConstants,
-                                   Constants<HeaderValue> headerValueConstants,
-                                   Constants<HttpStatus> httpStatusConstants,
+                                   FieldNames<String> mediaTypeConstants,
+                                   FieldNames<String> headerNameConstants,
+                                   FieldNames<HeaderValue> headerValueConstants,
+                                   FieldNames<HttpStatus> httpStatusConstants,
                                    RestMethod restMethod,
+                                   FieldNames<TypeName> headerProducers,
                                    int methodIndex) {
 
         classModel.addMethod(method -> method
@@ -397,6 +453,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                                                  httpStatusConstants,
                                                  it,
                                                  restMethod,
+                                                 headerProducers,
                                                  methodIndex)));
     }
 
@@ -404,12 +461,13 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
     private void endpointMethodBody(TypeName endpointType,
                                     ClassModel.Builder classModel,
                                     boolean singleton,
-                                    Constants<String> mediaTypeConstants,
-                                    Constants<String> headerNameConstants,
-                                    Constants<HeaderValue> headerValueConstants,
-                                    Constants<HttpStatus> httpStatusConstants,
+                                    FieldNames<String> mediaTypeConstants,
+                                    FieldNames<String> headerNameConstants,
+                                    FieldNames<HeaderValue> headerValueConstants,
+                                    FieldNames<HttpStatus> httpStatusConstants,
                                     Method.Builder method,
                                     RestMethod restMethod,
+                                    FieldNames<TypeName> headerProducers,
                                     int methodIndex) {
         // parameters
         for (RestMethodParameter parameter : restMethod.parameters()) {
@@ -487,6 +545,23 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                     .addContentLine(");");
         }
 
+        // now each header value, header producer, and header parameter
+        for (HeaderValue header : restMethod.headers()) {
+            method.addContent("helidonDeclarative__server_res.header(")
+                    .addContent(headerValueConstants.get(header))
+                    .addContentLine(");");
+        }
+        for (ComputedHeader computedHeader : restMethod.computedHeaders()) {
+            String headerNameConstant = headerNameConstants.get(computedHeader.name());
+
+            method.addContent(headerProducers.get(computedHeader.producer()))
+                    .addContent(".produceHeader(")
+                    .addContent(headerNameConstant)
+                    .addContent(").ifPresent(declarative__it -> helidonDeclarative__server_res.header(")
+                    .addContent(headerNameConstant)
+                    .addContentLine(", declarative__it));");
+        }
+
         method.addContent(RESPONSE_PARAM_NAME)
                 .addContent(".send(");
         if (hasResponse) {
@@ -503,9 +578,9 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                                     RestMethod restMethod,
                                     RestMethodParameter param,
                                     int methodIndex,
-                                    Constants<String> mediaTypeConstants,
-                                    Constants<String> headerNameConstants,
-                                    Constants<HeaderValue> headerValueConstants) {
+                                    FieldNames<String> mediaTypeConstants,
+                                    FieldNames<String> headerNameConstants,
+                                    FieldNames<HeaderValue> headerValueConstants) {
         for (HttpParameterCodegenProvider paramProvider : PARAM_PROVIDERS) {
             try {
                 if (paramProvider.codegen(new ParamCodegenContextImpl(param.annotations(),
@@ -541,8 +616,8 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
 
     private void addRoutingMethod(ClassModel.Builder classModel,
                                   ServerEndpoint endpoint,
-                                  Constants<String> httpMethodConstants,
-                                  Constants<String> mediaTypeConstants) {
+                                  FieldNames<String> httpMethodConstants,
+                                  FieldNames<String> mediaTypeConstants) {
 
         classModel.addMethod(routing -> routing
                 .accessModifier(AccessModifier.PRIVATE)
@@ -558,8 +633,8 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
 
     private void routingMethodBody(Method.Builder method,
                                    ServerEndpoint endpoint,
-                                   Constants<String> httpMethodConstants,
-                                   Constants<String> mediaTypeConstants) {
+                                   FieldNames<String> httpMethodConstants,
+                                   FieldNames<String> mediaTypeConstants) {
 
         for (RestMethod restMethod : endpoint.methods()) {
             if (restMethod.produces().isEmpty() && restMethod.consumes().isEmpty()) {
@@ -570,7 +645,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         }
     }
 
-    private void addSimpleRoute(Method.Builder routing, RestMethod restMethod, Constants<String> httpMethodConstants) {
+    private void addSimpleRoute(Method.Builder routing, RestMethod restMethod, FieldNames<String> httpMethodConstants) {
         routing.addContent("rules.");
 
         HttpMethod httpMethod = restMethod.httpMethod();
@@ -594,8 +669,8 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
 
     private void addHttpRoute(Method.Builder routing,
                               RestMethod restMethod,
-                              Constants<String> httpMethodConstants,
-                              Constants<String> mediaTypeConstants) {
+                              FieldNames<String> httpMethodConstants,
+                              FieldNames<String> mediaTypeConstants) {
         routing.addContent("rules.route(")
                 .addContent(WebServerCodegenTypes.SERVER_HTTP_ROUTE)
                 .addContentLine(".builder()")
@@ -654,7 +729,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .decreaseContentPadding();
     }
 
-    private void statusConstants(ClassModel.Builder classModel, Constants<HttpStatus> constants) {
+    private void statusConstants(ClassModel.Builder classModel, FieldNames<HttpStatus> constants) {
         constants.forEach((status, constant) -> {
             classModel.addField(headerValue -> headerValue
                     .update(this::privateConstant)

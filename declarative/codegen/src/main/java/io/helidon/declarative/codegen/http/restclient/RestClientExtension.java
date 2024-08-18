@@ -31,6 +31,7 @@ import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.codegen.TypeHierarchy;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.Constructor;
+import io.helidon.codegen.classmodel.Method;
 import io.helidon.codegen.classmodel.Parameter;
 import io.helidon.common.types.AccessModifier;
 import io.helidon.common.types.Annotation;
@@ -40,7 +41,7 @@ import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
-import io.helidon.declarative.codegen.Constants;
+import io.helidon.declarative.codegen.FieldNames;
 import io.helidon.declarative.codegen.http.RestExtensionBase;
 import io.helidon.declarative.codegen.http.model.ClientEndpoint;
 import io.helidon.declarative.codegen.http.model.ComputedHeader;
@@ -58,10 +59,13 @@ import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_HEADER_VALUES;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_METHOD_ANNOTATION;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_PATH_PARAM_ANNOTATION;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_QUERY_PARAM_ANNOTATION;
+import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_COMPUTED_HEADER;
 import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_COMPUTED_HEADERS;
 import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_ENDPOINT;
 import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_ERROR_HANDLING;
+import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_HEADER;
 import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_HEADERS;
+import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_HEADER_PRODUCER;
 import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.REST_CLIENT_QUALIFIER_INSTANCE;
 import static io.helidon.declarative.codegen.http.restclient.RestClientTypes.WEB_CLIENT;
 import static io.helidon.service.codegen.ServiceCodegenTypes.CONFIG_COMMON_CONFIG;
@@ -116,8 +120,8 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
         path(typeAnnotations, builder);
         produces(typeAnnotations, builder);
         consumes(typeAnnotations, builder);
-        headers(typeAnnotations, builder, REST_CLIENT_HEADERS);
-        computedHeaders(typeAnnotations, builder, REST_CLIENT_COMPUTED_HEADERS);
+        headers(typeAnnotations, builder, REST_CLIENT_HEADERS, REST_CLIENT_HEADER);
+        computedHeaders(typeAnnotations, builder, REST_CLIENT_COMPUTED_HEADERS, REST_CLIENT_COMPUTED_HEADER);
 
         Map<MethodSignature, MethodOrigin> discoveredMethods = new LinkedHashMap<>();
 
@@ -161,8 +165,8 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
         path(annotations, builder);
         consumes(annotations, builder);
         produces(annotations, builder);
-        headers(annotations, builder, REST_CLIENT_HEADERS);
-        computedHeaders(annotations, builder, REST_CLIENT_COMPUTED_HEADERS);
+        headers(annotations, builder, REST_CLIENT_HEADERS, REST_CLIENT_HEADER);
+        computedHeaders(annotations, builder, REST_CLIENT_COMPUTED_HEADERS, REST_CLIENT_COMPUTED_HEADER);
 
         if (builder.consumes().isEmpty()) {
             builder.consumes(endpointBuilder.consumes());
@@ -222,10 +226,11 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                                        type.originatingElement().orElseGet(type::typeName));
         }
 
-        var headerNameConstants = Constants.<String>create("HEADER_NAME_");
-        var headerValueConstants = Constants.<HeaderValue>create("HEADER_");
-        var mediaTypeConstants = Constants.<String>create("MEDIA_TYPE_");
-        var httpMethodConstants = Constants.<String>create("METHOD_");
+        var headerNameConstants = FieldNames.<String>create("HEADER_NAME_");
+        var headerValueConstants = FieldNames.<HeaderValue>create("HEADER_");
+        var mediaTypeConstants = FieldNames.<String>create("MEDIA_TYPE_");
+        var httpMethodConstants = FieldNames.<String>create("METHOD_");
+        var headerProducers = FieldNames.<TypeName>create("headerProducer_");
 
         headerValueConstants.addAll(endpoint.headers());
         addComputedHeaderConstants(endpoint.computedHeaders(), headerNameConstants);
@@ -237,6 +242,10 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                     .stream()
                     .map(ComputedHeader::name)
                     .forEach(headerNameConstants::add);
+            method.computedHeaders()
+                    .stream()
+                    .map(ComputedHeader::producer)
+                    .forEach(headerProducers::add);
             mediaTypeConstants.addAll(method.produces());
             mediaTypeConstants.addAll(method.consumes());
             addMethodConstant(method.httpMethod(), httpMethodConstants);
@@ -305,28 +314,35 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                 .isFinal(true)
                 .type(REST_CLIENT_ERROR_HANDLING)
                 .name("errorHandling"));
+        headerProducers.forEach((producerType, producerField) -> {
+            classModel.addField(producer -> producer
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .isFinal(true)
+                    .type(REST_CLIENT_HEADER_PRODUCER)
+                    .name(producerField));
+        });
 
-        generateConstructor(classModel, endpoint);
+        addConstructor(classModel, endpoint, headerProducers);
         for (RestMethod method : endpoint.methods()) {
             generateMethod(classModel,
-                           endpoint,
                            method,
                            headerNameConstants,
                            headerValueConstants,
                            httpMethodConstants,
-                           mediaTypeConstants);
+                           mediaTypeConstants,
+                           headerProducers);
         }
 
         ctx.addType(generatedType, classModel, type.typeName(), type.originatingElement().orElseGet(type::typeName));
     }
 
     private void generateMethod(ClassModel.Builder classModel,
-                                ClientEndpoint endpoint,
                                 RestMethod method,
-                                Constants<String> headerNameToConstant,
-                                Constants<HeaderValue> headerValueToConstant,
-                                Constants<String> customMethodToConstant,
-                                Constants<String> mediaTypeToConstant) {
+                                FieldNames<String> headerNameToConstant,
+                                FieldNames<HeaderValue> headerValueToConstant,
+                                FieldNames<String> customMethodToConstant,
+                                FieldNames<String> mediaTypeToConstant,
+                                FieldNames<TypeName> headerProducers) {
 
         classModel.addMethod(restMethod -> restMethod
                 .addAnnotation(Annotations.OVERRIDE)
@@ -334,22 +350,23 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                 .name(method.name())
                 .returnType(method.returnType())
                 .update(it -> generateMethodParamsAndBody(it,
-                                                          endpoint,
                                                           method,
                                                           headerNameToConstant,
                                                           headerValueToConstant,
                                                           customMethodToConstant,
-                                                          mediaTypeToConstant)));
+                                                          mediaTypeToConstant,
+                                                          headerProducers)));
     }
 
-    @SuppressWarnings("checkstyle:MethodLength") // readability is better if the whole method is generated here
-    private void generateMethodParamsAndBody(io.helidon.codegen.classmodel.Method.Builder it,
-                                             ClientEndpoint endpoint,
+    // readability is better if the whole method is generated here, and it is a private method
+    @SuppressWarnings({"checkstyle:MethodLength", "checkstyle:ParameterNumber"})
+    private void generateMethodParamsAndBody(Method.Builder it,
                                              RestMethod method,
-                                             Constants<String> headerNameToConstant,
-                                             Constants<HeaderValue> headerValueToConstant,
-                                             Constants<String> customMethodToConstant,
-                                             Constants<String> mediaTypeToConstant) {
+                                             FieldNames<String> headerNameToConstant,
+                                             FieldNames<HeaderValue> headerValueToConstant,
+                                             FieldNames<String> customMethodToConstant,
+                                             FieldNames<String> mediaTypeToConstant,
+                                             FieldNames<TypeName> headerProducers) {
         method.parameters()
                 .forEach(param -> it.addParameter(newParam -> newParam
                         .name(param.name())
@@ -428,6 +445,16 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
             it.addContent("declarative__builder.header(")
                     .addContent(headerValueToConstant.get(header))
                     .addContentLine(");");
+        }
+        for (ComputedHeader computedHeader : method.computedHeaders()) {
+            String headerNameConstant = headerNameToConstant.get(computedHeader.name());
+
+            it.addContent(headerProducers.get(computedHeader.producer()))
+                    .addContent(".produceHeader(")
+                    .addContent(headerNameConstant)
+                    .addContent(").ifPresent(declarative__it -> declarative__builder.header(")
+                    .addContent(headerNameConstant)
+                    .addContentLine(", declarative__it));");
         }
         for (RestMethodParameter headerParameter : method.headerParameters()) {
             it.addContent("declarative__builder.header(")
@@ -554,7 +581,9 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                                                    .elementName() + "(" + parameter.name() + ")"));
     }
 
-    private void generateConstructor(ClassModel.Builder classModel, ClientEndpoint endpoint) {
+    private void addConstructor(ClassModel.Builder classModel,
+                                ClientEndpoint endpoint,
+                                FieldNames<TypeName> headerProducers) {
         classModel.addConstructor(ctr -> ctr
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addParameter(errorHandling -> errorHandling
@@ -566,6 +595,18 @@ class RestClientExtension extends RestExtensionBase implements RegistryCodegenEx
                 .addParameter(registryClient -> registryClient
                         .name("registryClient")
                         .update(it -> registryClientParameter(it, endpoint)))
+                .update(builder -> {
+                    headerProducers.forEach((producerType, producerField) -> {
+                        builder.addParameter(producer -> producer
+                                .type(producerType)
+                                .name(producerField));
+                        builder.addContent("this.")
+                                .addContent(producerField)
+                                .addContent(" = ")
+                                .addContent(producerField)
+                                .addContentLine(";");
+                    });
+                })
                 .addContentLine("this.errorHandling = errorHandling;")
                 .addContentLine("")
                 .addContent("var endpointConfig = config.get(\"")

@@ -22,7 +22,7 @@ import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.classmodel.ContentBuilder;
 import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
-import io.helidon.declarative.codegen.Constants;
+import io.helidon.declarative.codegen.FieldNames;
 import io.helidon.declarative.codegen.http.model.HeaderValue;
 
 /**
@@ -115,19 +115,19 @@ public interface ParameterCodegenContext {
      *
      * @return media type constants
      */
-    Constants<String> mediaTypeConstants();
+    FieldNames<String> mediaTypeConstants();
 
     /**
      * Constants of header names.
      *
      * @return header names constants
      */
-    Constants<String> headerNameConstants();
+    FieldNames<String> headerNameConstants();
 
     /**
      * Constants of header values.
      *
      * @return header value constants
      */
-    Constants<HeaderValue> headerValueConstants();
+    FieldNames<HeaderValue> headerValueConstants();
 }

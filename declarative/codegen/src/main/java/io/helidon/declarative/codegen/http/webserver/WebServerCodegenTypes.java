@@ -22,7 +22,9 @@ final class WebServerCodegenTypes {
     static final TypeName REST_SERVER_STATUS = TypeName.create("io.helidon.webserver.http.RestServer.Status");
     static final TypeName REST_SERVER_ENDPOINT = TypeName.create("io.helidon.webserver.http.RestServer.Endpoint");
     static final TypeName REST_SERVER_LISTENER = TypeName.create("io.helidon.webserver.http.RestServer.Listener");
+    static final TypeName REST_SERVER_HEADER = TypeName.create("io.helidon.webserver.http.RestServer.Header");
     static final TypeName REST_SERVER_HEADERS = TypeName.create("io.helidon.webserver.http.RestServer.Headers");
+    static final TypeName REST_SERVER_COMPUTED_HEADER = TypeName.create("io.helidon.webserver.http.RestServer.ComputedHeader");
     static final TypeName REST_SERVER_COMPUTED_HEADERS = TypeName.create("io.helidon.webserver.http.RestServer.ComputedHeaders");
 
     static final TypeName SERVER_REQUEST = TypeName.create("io.helidon.webserver.http.ServerRequest");

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2018, 2024 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package io.helidon.declarative.codegen.http.model;
+package io.helidon.declarative.tests.http;
 
-import io.helidon.common.types.TypeName;
+import java.util.Optional;
 
-/**
- * Definition of a computed header, defined by an annotation.
- *
- * @param name     name of the header
- * @param producer producer class, must be available through service registry
- */
-public record ComputedHeader(String name, TypeName producer) {
+import io.helidon.http.HeaderName;
+import io.helidon.service.registry.Service;
+import io.helidon.webserver.http.RestServer;
+
+@Service.Provider
+class ServerHeaderProducer implements RestServer.HeaderProducer {
+    @Override
+    public Optional<String> produceHeader(HeaderName name) {
+        return Optional.of("Server-Produced");
+    }
 }
