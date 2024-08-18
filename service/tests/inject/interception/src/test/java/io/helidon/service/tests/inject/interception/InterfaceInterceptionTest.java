@@ -16,6 +16,7 @@
 
 package io.helidon.service.tests.inject.interception;
 
+import io.helidon.common.types.TypeName;
 import io.helidon.service.inject.InjectRegistryManager;
 import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.inject.api.InvocationException;
@@ -26,6 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.nullValue;
@@ -62,6 +64,8 @@ class InterfaceInterceptionTest {
                                  RepeatingInterceptor.lastCall(),
                                  nullValue())
         );
+
+        assertThat(ConstructorInterceptor.CONSTRUCTED, hasItems(TypeName.create(TheOtherService.class)));
     }
 
     @AfterAll

@@ -23,6 +23,7 @@ class TheOtherService implements OtherContract {
     private boolean throwException;
 
     @Modify
+    @Construct
     TheOtherService() {
     }
 
