@@ -103,22 +103,22 @@ Features that require work:
 
 | Feature           | Status | Description                                                                                                                                | 
 |-------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------|
+| Routing WebSocket | TODO   | See annotations on `io.helidon.websocket.WebSocket`                                                                                        |
+| Vault integration | TODO   | Support similar to CDI, single integration if possible                                                                                     |
+| Tracing           | TODO   | See annotations on `io.helidon.tracing.Tracing`                                                                                            | 
+| Health            | TODO   | Implement a `HealthCheckProvider` and mark it as a `@Service.Provider`                                                                     |
+| Validation        | TODO   | See annotations on `io.helidon.validation.Validation`                                                                                      |
 | CORS              | TODO   | See annotations on `io.helidon.cors.Cors`                                                                                                  | 
 | Security          | TODO   | See `io.helidon.security.annotations`, also security should support all annotations we support in MP                                       | 
 | Routing gRPC      | TODO   | See annotations on `io.helidon.grpc.api.Grpc`                                                                                              | 
-| Routing WebSocket | TODO   | See annotations on `io.helidon.websocket.WebSocket`                                                                                        | 
 | OpenAPI           | TODO   | See annotations on `io.helidon.openapi.OpenApi`                                                                                            | 
-| Tracing           | TODO   | See annotations on `io.helidon.tracing.Tracing`                                                                                            | 
-| Health            | TODO   | Implement a `HealthCheckProvider` and mark it as a `@Service.Provider`                                                                     | 
 | Observe/Info      | N/A    | N/A                                                                                                                                        | 
-| Validation        | TODO   | See annotations on `io.helidon.validation.Validation`                                                                                      | 
 | Database          | TODO   | Introduction of Helidon Data                                                                                                               | 
 | GraphQL           | TBD    | TBD                                                                                                                                        | 
 | LRA               | TBD    | TBD                                                                                                                                        | 
 | Messaging         | TBD    | TBD                                                                                                                                        | 
 | Reactive          | TODO   | How to translate a reactive stream to Stream operations on `java.io.InputStream`, `java.io.OutputStream` that is compatible with Helidon 4 | 
-| OCI integration   | TODO   | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK        | 
-| Vault integration | TODO   | Support similar to CDI                                                                                                                     | 
+| OCI integration   | TODO   | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK        |
 | Batch             | TBD    | TBD                                                                                                                                        | 
 | Support in MP     | TODO   | Note that all annotations mentioned above are also supported by Helidon MP                                                                 |
 | Data              | TODO   | New feature                                                                                                                                |
