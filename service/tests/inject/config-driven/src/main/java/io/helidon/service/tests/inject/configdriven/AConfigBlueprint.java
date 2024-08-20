@@ -26,5 +26,6 @@ import io.helidon.service.inject.api.ConfigDriven;
 interface AConfigBlueprint {
     @Option.Configured
     @Option.Default("defaultValue")
+    @Track
     String value();
 }

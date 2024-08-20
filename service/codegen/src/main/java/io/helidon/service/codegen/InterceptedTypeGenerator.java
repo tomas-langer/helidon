@@ -37,6 +37,10 @@ import static io.helidon.codegen.CodegenUtil.toConstantName;
 class InterceptedTypeGenerator {
     private static final TypeName GENERATOR = TypeName.create(InterceptedTypeGenerator.class);
     private static final TypeName RUNTIME_EXCEPTION_TYPE = TypeName.create(RuntimeException.class);
+    public static final String INTERCEPT_META_PARAM = "helidonInject__interceptMeta";
+    public static final String SERVICE_DESCRIPTOR_PARAM = "helidonInject__serviceDescriptor";
+    public static final String TYPE_QUALIFIERS_PARAM = "helidonInject__typeQualifiers";
+    public static final String TYPE_ANNOTATIONS_PARAM = "helidonInject__typeAnnotations";
     private final TypeName serviceType;
     private final TypeName descriptorType;
     private final TypeName interceptedType;
@@ -55,6 +59,29 @@ class InterceptedTypeGenerator {
         this.interceptedMethods = MethodDefinition.toDefinitions(interceptedMethods);
     }
 
+    static void generateElementInfoFields(ClassModel.Builder classModel, List<MethodDefinition> interceptedMethods) {
+        for (MethodDefinition interceptedMethod : interceptedMethods) {
+            classModel.addField(methodField -> methodField
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .isStatic(true)
+                    .isFinal(true)
+                    .type(TypeNames.TYPED_ELEMENT_INFO)
+                    .name(interceptedMethod.constantName())
+                    .addContentCreate(interceptedMethod.info()));
+        }
+    }
+
+    static void generateInvokerFields(ClassModel.Builder classModel,
+                                      List<MethodDefinition> interceptedMethods) {
+        for (MethodDefinition interceptedMethod : interceptedMethods) {
+            classModel.addField(methodField -> methodField
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .isFinal(true)
+                    .type(invokerType(interceptedMethod.info().typeName()))
+                    .name(interceptedMethod.invokerName()));
+        }
+    }
+
     ClassModel.Builder generate() {
         ClassModel.Builder classModel = ClassModel.builder()
                 .copyright(CodegenUtil.copyright(GENERATOR,
@@ -70,12 +97,12 @@ class InterceptedTypeGenerator {
                 .type(interceptedType)
                 .superType(serviceType);
 
-        generateElementInfoFields(classModel);
-        generateInvokerFields(classModel);
+        generateElementInfoFields(classModel, interceptedMethods);
+        generateInvokerFields(classModel, interceptedMethods);
 
         generateConstructor(classModel);
 
-        generateInterceptedMethods(classModel);
+        generateInterceptedMethods(classModel, interceptedMethods);
 
         return classModel;
     }
@@ -86,7 +113,7 @@ class InterceptedTypeGenerator {
                 .build();
     }
 
-    private void generateInterceptedMethods(ClassModel.Builder classModel) {
+    static void generateInterceptedMethods(ClassModel.Builder classModel, List<MethodDefinition> interceptedMethods) {
         for (MethodDefinition interceptedMethod : interceptedMethods) {
             TypedElementInfo info = interceptedMethod.info();
             String invoker = interceptedMethod.invokerName();
@@ -150,38 +177,56 @@ class InterceptedTypeGenerator {
         classModel.addConstructor(constructor -> constructor
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addParameter(interceptMeta -> interceptMeta.type(ServiceCodegenTypes.INTERCEPTION_METADATA)
-                        .name("helidonInject__interceptMeta"))
+                        .name(INTERCEPT_META_PARAM))
                 .addParameter(descriptor -> descriptor.type(descriptorType)
-                        .name("helidonInject__serviceDescriptor"))
+                        .name(SERVICE_DESCRIPTOR_PARAM))
                 .addParameter(qualifiers -> qualifiers.type(InjectionExtension.SET_OF_QUALIFIERS)
-                        .name("helidonInject__typeQualifiers"))
+                        .name(TYPE_QUALIFIERS_PARAM))
                 .addParameter(qualifiers -> qualifiers.type(InjectionExtension.LIST_OF_ANNOTATIONS)
-                        .name("helidonInject__typeAnnotations"))
+                        .name(TYPE_ANNOTATIONS_PARAM))
                 .update(this::addConstructorParameters)
                 .update(this::callSuperConstructor)
-                .update(this::createInvokers)
+                .update(it -> createInvokers(it,
+                                             interceptedMethods,
+                                             INTERCEPT_META_PARAM,
+                                             SERVICE_DESCRIPTOR_PARAM,
+                                             TYPE_QUALIFIERS_PARAM,
+                                             TYPE_ANNOTATIONS_PARAM,
+                                             "super"))
         );
     }
 
-    private void createInvokers(Constructor.Builder cModel) {
+    static void createInvokers(Constructor.Builder cModel,
+                               List<MethodDefinition> interceptedMethods,
+                               String interceptMetaName,
+                               String descriptorName,
+                               String qualifiersName,
+                               String annotationsName,
+                               String invocationTargetName) {
         boolean hasGenericType = false;
 
         for (MethodDefinition interceptedMethod : interceptedMethods) {
             cModel.addContent("this.")
                     .addContent(interceptedMethod.invokerName)
-                    .addContentLine(" = helidonInject__interceptMeta.createInvoker(")
+                    .addContent(" = ")
+                    .addContent(interceptMetaName)
+                    .addContentLine(".createInvoker(")
                     .increaseContentPadding()
                     .addContentLine("this,")
-                    .addContentLine("helidonInject__serviceDescriptor,")
-                    .addContentLine("helidonInject__typeQualifiers,")
-                    .addContentLine("helidonInject__typeAnnotations,")
+                    .addContent(descriptorName)
+                    .addContentLine(",")
+                    .addContent(qualifiersName)
+                    .addContentLine(",")
+                    .addContent(annotationsName)
+                    .addContentLine(",")
                     .addContent(interceptedMethod.constantName())
                     .addContentLine(",")
                     .addContent("helidonInject__params -> ");
             if (interceptedMethod.isVoid()) {
                 cModel.addContentLine("{");
             }
-            cModel.addContent("super.")
+            cModel.addContent(invocationTargetName)
+                    .addContent(".")
                     .addContent(interceptedMethod.info().elementName())
                     .addContent("(");
 
@@ -237,33 +282,11 @@ class InterceptedTypeGenerator {
         });
     }
 
-    private void generateInvokerFields(ClassModel.Builder classModel) {
-        for (MethodDefinition interceptedMethod : interceptedMethods) {
-            classModel.addField(methodField -> methodField
-                    .accessModifier(AccessModifier.PRIVATE)
-                    .isFinal(true)
-                    .type(invokerType(interceptedMethod.info().typeName()))
-                    .name(interceptedMethod.invokerName()));
-        }
-    }
-
-    private void generateElementInfoFields(ClassModel.Builder classModel) {
-        for (MethodDefinition interceptedMethod : interceptedMethods) {
-            classModel.addField(methodField -> methodField
-                    .accessModifier(AccessModifier.PRIVATE)
-                    .isStatic(true)
-                    .isFinal(true)
-                    .type(TypeNames.TYPED_ELEMENT_INFO)
-                    .name(interceptedMethod.constantName())
-                    .addContentCreate(interceptedMethod.info()));
-        }
-    }
-
-    private record MethodDefinition(TypedElementInfo info,
-                                    String constantName,
-                                    String invokerName,
-                                    boolean isVoid,
-                                    Set<TypeName> exceptionTypes) {
+    record MethodDefinition(TypedElementInfo info,
+                            String constantName,
+                            String invokerName,
+                            boolean isVoid,
+                            Set<TypeName> exceptionTypes) {
 
         public static List<MethodDefinition> toDefinitions(List<TypedElements.ElementMeta> interceptedMethods) {
             List<TypedElements.ElementMeta> sortedMethods = new ArrayList<>(interceptedMethods);

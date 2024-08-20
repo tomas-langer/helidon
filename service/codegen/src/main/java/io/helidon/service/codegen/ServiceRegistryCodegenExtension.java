@@ -32,6 +32,7 @@ import io.helidon.codegen.CodegenContext;
 import io.helidon.codegen.CodegenFiler;
 import io.helidon.codegen.CodegenOptions;
 import io.helidon.codegen.ModuleInfo;
+import io.helidon.codegen.TypeHierarchy;
 import io.helidon.codegen.classmodel.ClassModel;
 import io.helidon.codegen.spi.CodegenExtension;
 import io.helidon.common.Weighted;
@@ -39,7 +40,6 @@ import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeInfo;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
-import io.helidon.common.types.TypedElementInfo;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 import io.helidon.service.codegen.spi.RegistryCodegenExtensionProvider;
 import io.helidon.service.metadata.DescriptorMetadata;
@@ -217,7 +217,7 @@ class ServiceRegistryCodegenExtension implements CodegenExtension {
         List<TypeInfoAndAnnotations> result = new ArrayList<>();
 
         for (TypeInfo typeInfo : allTypes) {
-            result.add(new TypeInfoAndAnnotations(typeInfo, annotations(typeInfo)));
+            result.add(new TypeInfoAndAnnotations(typeInfo, TypeHierarchy.nestedAnnotations(ctx, typeInfo)));
         }
         return result;
     }
@@ -259,54 +259,6 @@ class ServiceRegistryCodegenExtension implements CodegenExtension {
                 Set.copyOf(extAnnots),
                 Map.copyOf(extAnnotToType),
                 List.copyOf(extTypes.values()));
-    }
-
-    private Set<TypeName> annotations(TypeInfo theTypeInfo) {
-        Set<TypeName> result = new HashSet<>();
-
-        // on type
-        theTypeInfo.annotations()
-                .stream()
-                .map(Annotation::typeName)
-                .forEach(result::add);
-        theTypeInfo.inheritedAnnotations()
-                .stream()
-                .map(Annotation::typeName)
-                .forEach(result::add);
-
-        // on fields, methods etc.
-        theTypeInfo.elementInfo()
-                .stream()
-                .map(TypedElementInfo::annotations)
-                .flatMap(List::stream)
-                .map(Annotation::typeName)
-                .forEach(result::add);
-        theTypeInfo.elementInfo()
-                .stream()
-                .map(TypedElementInfo::inheritedAnnotations)
-                .flatMap(List::stream)
-                .map(Annotation::typeName)
-                .forEach(result::add);
-
-        // on parameters
-        theTypeInfo.elementInfo()
-                .stream()
-                .map(TypedElementInfo::parameterArguments)
-                .flatMap(List::stream)
-                .map(TypedElementInfo::annotations)
-                .flatMap(List::stream)
-                .map(Annotation::typeName)
-                .forEach(result::add);
-        theTypeInfo.elementInfo()
-                .stream()
-                .map(TypedElementInfo::parameterArguments)
-                .flatMap(List::stream)
-                .map(TypedElementInfo::inheritedAnnotations)
-                .flatMap(List::stream)
-                .map(Annotation::typeName)
-                .forEach(result::add);
-
-        return result;
     }
 
     private String topLevelPackage(Set<DescriptorMetadata> typeNames) {

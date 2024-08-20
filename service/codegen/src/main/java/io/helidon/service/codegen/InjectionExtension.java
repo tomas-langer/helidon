@@ -161,7 +161,7 @@ class InjectionExtension implements RegistryCodegenExtension {
 
     private void generateDescriptor(Collection<TypeInfo> services,
                                     TypeInfo typeInfo) {
-        if (typeInfo.kind() == ElementKind.INTERFACE) {
+        if (typeInfo.kind() == ElementKind.INTERFACE || typeInfo.kind() == ElementKind.ANNOTATION_TYPE) {
             // we cannot support multiple inheritance, so descriptors for interfaces do not make sense
             return;
         }
@@ -1361,7 +1361,7 @@ class InjectionExtension implements RegistryCodegenExtension {
                 .addContent(")\"");
     }
 
-    private void annotationsField(ClassModel.Builder classModel, TypeInfo typeInfo) {
+    static void annotationsField(ClassModel.Builder classModel, TypeInfo typeInfo) {
         classModel.addField(annotations -> annotations
                 .isStatic(true)
                 .isFinal(true)

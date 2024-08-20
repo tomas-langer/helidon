@@ -159,6 +159,10 @@ public final class ServiceCodegenTypes {
      */
     public static final TypeName INTERCEPTION_TRIGGER = TypeName.create("io.helidon.service.inject.api.Interception.Trigger");
     /**
+     * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.registry.Interception.Factory}.
+     */
+    public static final TypeName INTERCEPTION_FACTORY = TypeName.create("io.helidon.service.inject.api.Interception.Factory");
+    /**
      * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.registry.Qualifier}.
      */
     public static final TypeName INJECT_QUALIFIER = TypeName.create("io.helidon.service.inject.api.Qualifier");

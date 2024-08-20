@@ -14,17 +14,25 @@
  * limitations under the License.
  */
 
-package io.helidon.service.tests.inject.interception;
+package io.helidon.service.tests.inject.configdriven;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.util.HashSet;
+import java.util.Set;
 
+import io.helidon.common.types.TypeName;
+import io.helidon.service.inject.api.Injection;
 import io.helidon.service.inject.api.Interception;
+import io.helidon.service.inject.api.InvocationContext;
 
-@Interception.Trigger
-@Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.CONSTRUCTOR)
-@interface Construct {
+@Injection.Singleton
+@Injection.NamedByClass(Track.class)
+class TrackInterceptor implements Interception.Interceptor {
+    static final Set<TypeName> INVOKED = new HashSet<>();
+
+    @Override
+    public <V> V proceed(InvocationContext ctx, Chain<V> chain, Object... args) throws Exception {
+        INVOKED.add(ctx.serviceInfo().serviceType());
+
+        return chain.proceed(args);
+    }
 }

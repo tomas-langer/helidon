@@ -18,7 +18,6 @@ package io.helidon.webclient.api;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -77,8 +76,6 @@ public final class RestClient {
     @Target(ElementType.TYPE)
     @Retention(RetentionPolicy.CLASS)
     @Documented
-    @Inherited
-    @Service.Contract
     public @interface Endpoint {
         /**
          * The URI of this API. When left blank (default), the URI must be specified in configuration.

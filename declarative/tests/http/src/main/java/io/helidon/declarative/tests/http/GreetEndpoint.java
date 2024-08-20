@@ -54,9 +54,9 @@ import jakarta.json.JsonObject;
  * <p>
  * The message is returned as a JSON object.
  */
-@Injection.Singleton
 @RestServer.Endpoint
 @RestServer.Listener(value = "@default", required = true)
+@Injection.Singleton
 class GreetEndpoint implements GreetEndpointApi {
 
     private static final JsonBuilderFactory JSON = Json.createBuilderFactory(Map.of());

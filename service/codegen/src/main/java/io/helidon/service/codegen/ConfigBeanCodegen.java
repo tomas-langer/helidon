@@ -35,8 +35,10 @@ import static io.helidon.service.codegen.ServiceCodegenTypes.CONFIG_COMMON_CONFI
 import static io.helidon.service.codegen.ServiceCodegenTypes.CONFIG_EXCEPTION;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_INJECT;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_NAMED;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_NAMED_BY_CLASS;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_SINGLETON;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_QUALIFIER;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INTERCEPTION_FACTORY;
 import static io.helidon.service.codegen.ServiceCodegenTypes.QUALIFIED_INSTANCE;
 
 class ConfigBeanCodegen implements RegistryCodegenExtension {
@@ -46,9 +48,11 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
     private static final Annotation WILDCARD_NAME_ANNOTATION = Annotation.create(INJECTION_NAMED, "*");
 
     private final RegistryCodegenContext ctx;
+    private final InterceptionSupport interceptionSupport;
 
     ConfigBeanCodegen(RegistryCodegenContext ctx) {
         this.ctx = ctx;
+        this.interceptionSupport = InterceptionSupport.create(ctx);
     }
 
     @Override
@@ -66,6 +70,15 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
             TypeName generatedType = cb.generatedType();
             TypeName servicesProviderType = servicesProviderType(cb.configBeanType());
 
+            boolean intercepted = interceptionSupport.intercepted(typeInfo);
+            TypeName factoryType;
+            if (intercepted) {
+                interceptionSupport.generateDelegateInterception(typeInfo, cb.configBeanType());
+                factoryType = factoryType(cb.configBeanType());
+            } else {
+                factoryType = null;
+            }
+
             ClassModel.Builder classModel = ClassModel.builder()
                     .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                     .addAnnotation(SINGLETON_ANNOTATION)
@@ -78,13 +91,31 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
                             .isFinal(true)
                             .name("config")
                             .type(CONFIG_COMMON_CONFIG))
+                    .update(it -> {
+                        if (intercepted) {
+                            it.addField(factory -> factory
+                                    .name("factory")
+                                    .accessModifier(AccessModifier.PRIVATE)
+                                    .isFinal(true)
+                                    .type(factoryType));
+                        }
+                    })
                     .addConstructor(ctr -> ctr
                             .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                             .addAnnotation(INJECT_ANNOTATION)
                             .addParameter(configParam -> configParam
                                     .name("config")
                                     .type(CONFIG_COMMON_CONFIG))
-                            .addContentLine("this.config = config;"))
+                            .addContentLine("this.config = config;")
+                            .update(it -> {
+                                if (intercepted) {
+                                    it.addParameter(factory -> factory
+                                                    .name("factory")
+                                                    .type(factoryType)
+                                                    .addAnnotation(namedByClassAnnotation(cb.configBeanType())))
+                                            .addContentLine("this.factory = factory;");
+                                }
+                            }))
                     .addMethod(servicesMethod -> servicesMethod
                             .accessModifier(AccessModifier.PUBLIC)
                             .addAnnotation(OVERRIDE)
@@ -94,10 +125,23 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
                             .addContent(cb.annotation().configKey())
                             .addContentLine("\");")
                             .addContentLine("")
-                            .update(it -> generateServicesMethod(it, cb)));
+                            .update(it -> generateServicesMethod(it, cb, intercepted)));
 
             ctx.addType(generatedType, classModel, annotatedType, typeInfo.originatingElement().orElse(annotatedType));
         }
+    }
+
+    private Annotation namedByClassAnnotation(TypeName typeName) {
+        return Annotation.builder()
+                .typeName(INJECTION_NAMED_BY_CLASS)
+                .putValue("value", typeName)
+                .build();
+    }
+
+    private TypeName factoryType(TypeName typeName) {
+        return TypeName.builder(INTERCEPTION_FACTORY)
+                .addTypeArgument(typeName)
+                .build();
     }
 
     private TypeName qualifiedInstanceList(TypeName typeName) {
@@ -108,13 +152,15 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
                 .build();
     }
 
-    private void generateServicesMethod(Method.Builder method, ConfigBean cb) {
+    private void generateServicesMethod(Method.Builder method, ConfigBean cb, boolean intercepted) {
         ConfigBeanAnnotation cbAnnot = cb.annotation();
         TypeName cbType = cb.configBeanType();
         String configKey = cbAnnot.configKey();
         boolean wantDefault = cbAnnot.wantDefault();
         boolean atLeastOne = cbAnnot.atLeastOne();
         boolean repeatable = cbAnnot.repeatable();
+
+        TypeName descriptor = ctx.descriptorType(cb.generatedType());
 
         if (atLeastOne) {
             method.addContentLine("if (!config.exists()) {")
@@ -163,9 +209,9 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
         }
 
         if (repeatable) {
-            generateServicesMethodRepeatable(method, cbType, wantDefault);
+            generateServicesMethodRepeatable(method, cbType, wantDefault, intercepted, descriptor);
         } else {
-            generateServicesMethodSingle(method, cbType, wantDefault, atLeastOne);
+            generateServicesMethodSingle(method, cbType, wantDefault, atLeastOne, intercepted, descriptor);
         }
 
         // we have all the named instances, now resolve default
@@ -191,7 +237,9 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
 
     private void generateServicesMethodRepeatable(Method.Builder method,
                                                   TypeName cbType,
-                                                  boolean wantDefault) {
+                                                  boolean wantDefault,
+                                                  boolean intercepted,
+                                                  TypeName descriptorType) {
 
         method.addContent("var childNodes = config.asNodeList().orElseGet(")
                 .addContent(List.class)
@@ -215,8 +263,15 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
         }
         method.addContent("var instance = ")
                 .addContent(cbType)
-                .addContentLine(".create(childNode);")
-                .addContent("result.add(")
+                .addContentLine(".create(childNode);");
+
+        if (intercepted) {
+            method.addContent("instance = factory.create(")
+                    .addContent(descriptorType)
+                    .addContentLine(".INSTANCE, instance);");
+        }
+
+        method.addContent("result.add(")
                 .addContent(QUALIFIED_INSTANCE)
                 .addContent(".create(instance, ")
                 .update(this::addConfigBeanQualifier)
@@ -228,23 +283,34 @@ class ConfigBeanCodegen implements RegistryCodegenExtension {
     private void generateServicesMethodSingle(Method.Builder method,
                                               TypeName cbType,
                                               boolean wantDefault,
-                                              boolean atLeastOne) {
+                                              boolean atLeastOne,
+                                              boolean intercepted,
+                                              TypeName descriptorType) {
 
         if (atLeastOne) {
-            createSingleInstantAndAddToResult(method, cbType, wantDefault);
+            createSingleInstanceAndAddToResult(method, cbType, wantDefault, intercepted, descriptorType);
 
         } else {
             method.addContentLine("if (config.exists()) {");
-            createSingleInstantAndAddToResult(method, cbType, wantDefault);
+            createSingleInstanceAndAddToResult(method, cbType, wantDefault, intercepted, descriptorType);
             method.addContentLine("}");
         }
     }
 
-    private void createSingleInstantAndAddToResult(Method.Builder method, TypeName cbType, boolean wantDefault) {
+    private void createSingleInstanceAndAddToResult(Method.Builder method,
+                                                    TypeName cbType,
+                                                    boolean wantDefault,
+                                                    boolean intercepted,
+                                                    TypeName descriptorType) {
         // var instance = AConfig.create(config);
         method.addContent("var instance = ")
                 .addContent(cbType)
                 .addContentLine(".create(config);");
+        if (intercepted) {
+            method.addContent("instance = factory.create(")
+                    .addContent(descriptorType)
+                    .addContentLine(".INSTANCE, instance);");
+        }
         // var name = config.get("name").asString().orElse(Injection.Named.DEFAULT_NAME);
         method.addContent("var name = config.get(\"name\").asString().orElse(")
                 .addContent(INJECTION_NAMED)

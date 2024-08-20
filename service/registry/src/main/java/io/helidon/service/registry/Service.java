@@ -120,8 +120,8 @@ public final class Service {
     @Documented
     @Retention(RetentionPolicy.CLASS)
     @Target(ElementType.TYPE)
-    @Inherited
     public @interface Contract {
+        // contract should not be @Inherited, as we do not want types implementing a contract inherit this trait
     }
 
     /**

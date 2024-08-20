@@ -26,6 +26,7 @@ import java.lang.annotation.Target;
 import java.util.Optional;
 
 import io.helidon.http.HeaderName;
+import io.helidon.service.inject.api.Injection;
 import io.helidon.service.registry.Service;
 
 /**
@@ -42,6 +43,7 @@ public final class RestServer {
     @Retention(RetentionPolicy.CLASS)
     @Documented
     @Inherited
+    @Injection.Singleton
     public @interface Endpoint {
     }
 

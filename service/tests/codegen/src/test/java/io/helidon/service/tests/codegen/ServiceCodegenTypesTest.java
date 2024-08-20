@@ -132,6 +132,7 @@ class ServiceCodegenTypesTest {
         checkField(toCheck, checked, fields, "INVOKER", Invoker.class);
         checkField(toCheck, checked, fields, "INVOCATION_EXCEPTION", InvocationException.class);
         checkField(toCheck, checked, fields, "INTERCEPTION_TRIGGER", Interception.Trigger.class);
+        checkField(toCheck, checked, fields, "INTERCEPTION_FACTORY", Interception.Factory.class);
         checkField(toCheck, checked, fields, "INTERCEPTION_METADATA", GeneratedInjectService.InterceptionMetadata.class);
 
         checkField(toCheck, checked, fields, "BUILDER_BLUEPRINT", Prototype.Blueprint.class);
@@ -141,7 +142,9 @@ class ServiceCodegenTypesTest {
         checkField(toCheck, checked, fields, "CONFIG_EXCEPTION", ConfigException.class);
         checkField(toCheck, checked, fields, "CONFIG_META_CONFIGURED", Configured.class);
 
-        assertThat(toCheck, IsEmptyCollection.empty());
+        assertThat("If the collection is not empty, please add appropriate checkField line to this test",
+                   toCheck,
+                   IsEmptyCollection.empty());
     }
 
     private void checkField(Set<String> namesToCheck,

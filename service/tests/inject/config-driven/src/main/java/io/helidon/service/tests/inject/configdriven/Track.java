@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.helidon.service.tests.inject.interception;
+package io.helidon.service.tests.inject.configdriven;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -23,8 +23,8 @@ import java.lang.annotation.Target;
 
 import io.helidon.service.inject.api.Interception;
 
-@Interception.Trigger
+@Target(ElementType.METHOD)
 @Retention(RetentionPolicy.SOURCE)
-@Target(ElementType.CONSTRUCTOR)
-@interface Construct {
+@Interception.Trigger
+@interface Track {
 }
