@@ -86,12 +86,13 @@ public abstract class ApplicationMain {
      * @return a new config builder
      */
     protected InjectConfig.Builder configBuilder(String[] arguments) {
-        boolean configured = GlobalConfig.configured();
-        Config config = GlobalConfig.config();
-        if (!configured) {
-            // reset to empty
-            GlobalConfig.config(() -> null, true);
+        Config config;
+        if (GlobalConfig.configured()) {
+            config = GlobalConfig.config();
+        } else {
+            config = Config.create();
         }
+
         return InjectConfig.builder()
                 .config(config.get("registry"))
                 .discoverServices(discoverServices())

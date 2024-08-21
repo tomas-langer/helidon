@@ -45,7 +45,6 @@ import io.helidon.metrics.api.Counter;
 import io.helidon.metrics.api.Meter;
 import io.helidon.metrics.api.MeterRegistry;
 import io.helidon.metrics.api.Metrics;
-import io.helidon.metrics.api.MetricsConfig;
 import io.helidon.service.inject.InjectRegistryManager.TypedQualifiedProviderKey;
 import io.helidon.service.inject.ServiceSupplies.ServiceSupplyList;
 import io.helidon.service.inject.api.ActivationRequest;
@@ -194,7 +193,7 @@ class InjectServiceRegistryImpl implements InjectRegistry, InjectRegistrySpi {
             GlobalConfig.config(() -> registryConfig, true);
 
             // Set-up metrics using metric registry
-            MeterRegistry meterRegistry = Metrics.createMeterRegistry(MetricsConfig.create(Config.empty()));
+            MeterRegistry meterRegistry = Metrics.globalRegistry();
             this.lookupCounter.consumer = meterRegistry
                     .getOrCreate(Counter.builder("io.helidon.inject.lookups")
                                          .description("Number of lookups in the service registry")

@@ -163,6 +163,16 @@ public interface Context {
     String id();
 
     /**
+     * Parent context of this context.
+     * Global context will always return empty optional, all other contexts should return the parent.
+     *
+     * @return parent context of this context
+     */
+    default Optional<Context> parent() {
+        return Optional.empty();
+    }
+
+    /**
      * Fluent API builder for {@link Context}.
      */
     class Builder implements io.helidon.common.Builder<Builder, Context> {
