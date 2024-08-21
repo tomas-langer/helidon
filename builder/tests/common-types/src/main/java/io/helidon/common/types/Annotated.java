@@ -43,8 +43,6 @@ public interface Annotated {
      * <p>
      * The returned list does not contain {@link #annotations()}. If a meta-annotation is present on multiple
      * annotations, it will be returned once for each such declaration.
-     * <p>
-     * This method does not return annotations on super types or interfaces!
      *
      * @return list of all meta annotations of this element
      */
@@ -105,15 +103,4 @@ public interface Annotated {
                 .stream()
                 .anyMatch(it -> annotationType.equals(it.typeName()));
     }
-
-    /**
-     * Annotations on this type, supertype and/or interface that are {@link java.lang.annotation.Inherited} if this is a type,
-     * and on implemented/overridden methods if this is a method.
-     * <p>
-     * Note that each annotation type can only be present once. If the same type is present on two levels, only the level
-     * closest to the current element will be returned.
-     *
-     * @return list of annotations that are declared on this element or ancestors
-     */
-    List<Annotation> hierarchyAnnotations();
 }
