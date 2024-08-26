@@ -49,15 +49,6 @@ public final class ServiceCodegenTypes {
      */
     public static final TypeName INJECTION_QUALIFIER = TypeName.create("io.helidon.service.inject.api.Injection.Qualifier");
     /**
-     * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.inject.api.Injection.PostConstruct}.
-     */
-    public static final TypeName INJECTION_POST_CONSTRUCT =
-            TypeName.create("io.helidon.service.inject.api.Injection.PostConstruct");
-    /**
-     * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.inject.api.Injection.PreDestroy}.
-     */
-    public static final TypeName INJECTION_PRE_DESTROY = TypeName.create("io.helidon.service.inject.api.Injection.PreDestroy");
-    /**
      * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.inject.api.Injection.Main}.
      */
     public static final TypeName INJECTION_MAIN = TypeName.create("io.helidon.service.inject.api.Injection.Main");

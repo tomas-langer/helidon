@@ -45,6 +45,7 @@ import io.helidon.common.tls.Tls;
 import io.helidon.http.encoding.ContentEncodingContext;
 import io.helidon.http.media.MediaContext;
 import io.helidon.service.inject.api.Injection;
+import io.helidon.service.registry.Service;
 import io.helidon.spi.HelidonShutdownHandler;
 import io.helidon.webserver.http.DirectHandlers;
 import io.helidon.webserver.spi.ServerFeature;
@@ -201,12 +202,12 @@ class LoomServer implements WebServer {
         return context;
     }
 
-    @Injection.PostConstruct
+    @Service.PostConstruct
     void postConstruct() {
         start();
     }
 
-    @Injection.PreDestroy
+    @Service.PreDestroy
     void preDestroy() {
         stop();
     }

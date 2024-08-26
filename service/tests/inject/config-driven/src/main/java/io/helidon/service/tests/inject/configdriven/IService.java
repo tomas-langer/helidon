@@ -28,7 +28,7 @@ class IService implements IContract {
     /**
      * For Testing.
      */
-    @Injection.PostConstruct
+    @Service.PostConstruct
     public void initialize() {
         assert (!running);
         running = true;
@@ -37,7 +37,7 @@ class IService implements IContract {
     /**
      * For Testing.
      */
-    @Injection.PreDestroy
+    @Service.PreDestroy
     public void shutdown() {
         running = false;
     }

@@ -1821,7 +1821,7 @@ class InjectionExtension implements RegistryCodegenExtension {
 
     private void postConstructMethod(TypeInfo typeInfo, ClassModel.Builder classModel, TypeName serviceType) {
         // postConstruct()
-        lifecycleMethod(typeInfo, ServiceCodegenTypes.INJECTION_POST_CONSTRUCT).ifPresent(method -> {
+        lifecycleMethod(typeInfo, ServiceCodegenTypes.SERVICE_ANNOTATION_POST_CONSTRUCT).ifPresent(method -> {
             classModel.addMethod(postConstruct -> postConstruct.name("postConstruct")
                     .addAnnotation(Annotations.OVERRIDE)
                     .addParameter(instance -> instance.type(serviceType)
@@ -1832,7 +1832,7 @@ class InjectionExtension implements RegistryCodegenExtension {
 
     private void preDestroyMethod(TypeInfo typeInfo, ClassModel.Builder classModel, TypeName serviceType) {
         // preDestroy
-        lifecycleMethod(typeInfo, ServiceCodegenTypes.INJECTION_PRE_DESTROY).ifPresent(method -> {
+        lifecycleMethod(typeInfo, ServiceCodegenTypes.SERVICE_ANNOTATION_PRE_DESTROY).ifPresent(method -> {
             classModel.addMethod(preDestroy -> preDestroy.name("preDestroy")
                     .addAnnotation(Annotations.OVERRIDE)
                     .addParameter(instance -> instance.type(serviceType)

@@ -52,7 +52,7 @@ public interface Activator<T> {
     ActivationResult activate(ActivationRequest activationRequest);
 
     /**
-     * Deactivate a managed service. This will trigger any {@link io.helidon.service.inject.api.Injection.PreDestroy}
+     * Deactivate a managed service. This will trigger any {@link io.helidon.service.registry.Service.PreDestroy}
      * method on the underlying service instance. The service will reach terminal
      * {@link io.helidon.service.inject.api.Activator.Phase#DESTROYED} phase, regardless of result of this call.
      *

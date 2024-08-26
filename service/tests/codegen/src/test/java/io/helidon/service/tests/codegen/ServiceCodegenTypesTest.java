@@ -102,8 +102,6 @@ class ServiceCodegenTypesTest {
         checkField(toCheck, checked, fields, "INJECTION_NAMED", Injection.Named.class);
         checkField(toCheck, checked, fields, "INJECTION_NAMED_BY_CLASS", Injection.NamedByClass.class);
         checkField(toCheck, checked, fields, "INJECTION_QUALIFIER", Injection.Qualifier.class);
-        checkField(toCheck, checked, fields, "INJECTION_POST_CONSTRUCT", Injection.PostConstruct.class);
-        checkField(toCheck, checked, fields, "INJECTION_PRE_DESTROY", Injection.PreDestroy.class);
         checkField(toCheck, checked, fields, "INJECTION_INSTANCE", Injection.Instance.class);
         checkField(toCheck, checked, fields, "INJECTION_CREATE_FOR", Injection.CreateFor.class);
         checkField(toCheck, checked, fields, "INJECTION_RUN_LEVEL", Injection.RunLevel.class);

@@ -71,7 +71,7 @@ public final class GeneratedInjectService {
         }
 
         /**
-         * Invoke {@link Injection.PostConstruct} annotated method(s).
+         * Invoke {@link Service.PostConstruct} annotated method(s).
          *
          * @param instance instance to use
          */
@@ -79,7 +79,7 @@ public final class GeneratedInjectService {
         }
 
         /**
-         * Invoke {@link Injection.PreDestroy} annotated method(s).
+         * Invoke {@link Service.PreDestroy} annotated method(s).
          *
          * @param instance instance to use
          */

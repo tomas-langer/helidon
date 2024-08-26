@@ -33,7 +33,7 @@ class InnerTypes {
     static class InnerService implements InnerContract {
         static final AtomicInteger postConstructCount = new AtomicInteger();
 
-        @Injection.PostConstruct
+        @Service.PostConstruct
         void postConstruct() {
             postConstructCount.incrementAndGet();
         }

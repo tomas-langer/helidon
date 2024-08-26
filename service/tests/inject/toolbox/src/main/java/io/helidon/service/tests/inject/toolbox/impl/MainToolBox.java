@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 
 import io.helidon.service.inject.api.Injection;
+import io.helidon.service.registry.Service;
 import io.helidon.service.tests.inject.toolbox.Hammer;
 import io.helidon.service.tests.inject.toolbox.Preferred;
 import io.helidon.service.tests.inject.toolbox.Tool;
@@ -86,12 +87,12 @@ public class MainToolBox implements ToolBox {
         this.setPreferredHammer = hammer;
     }
 
-    @Injection.PostConstruct
+    @Service.PostConstruct
     void postConstruct() {
         postConstructCallCount++;
     }
 
-    @Injection.PreDestroy
+    @Service.PreDestroy
     void preDestroy() {
         preDestroyCallCount++;
     }

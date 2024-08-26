@@ -26,12 +26,12 @@ class LifecycleReceiver {
     LifecycleReceiver() {
     }
 
-    @Injection.PostConstruct
+    @Service.PostConstruct
     void postConstruct() {
         this.postConstructCalled = true;
     }
 
-    @Injection.PreDestroy
+    @Service.PreDestroy
     void preDestroy() {
         this.preDestroyCalled = true;
     }
