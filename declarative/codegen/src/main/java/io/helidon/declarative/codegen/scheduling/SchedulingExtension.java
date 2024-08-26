@@ -133,7 +133,7 @@ class SchedulingExtension implements RegistryCodegenExtension {
                                Map<TypeName, String> serviceToFields,
                                List<Scheduled> allScheduled) {
         Method.Builder postConstruct = Method.builder()
-                .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_PRE_DESTROY))
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_PRE_DESTROY))
                 .name("preDestroy")
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE);
 
@@ -150,7 +150,7 @@ class SchedulingExtension implements RegistryCodegenExtension {
                                   Map<TypeName, String> serviceToFields,
                                   List<Scheduled> allScheduled) {
         Method.Builder postConstruct = Method.builder()
-                .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_POST_CONSTRUCT))
+                .addAnnotation(Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_POST_CONSTRUCT))
                 .name("postConstruct")
                 .accessModifier(AccessModifier.PACKAGE_PRIVATE);
 

@@ -64,8 +64,6 @@ public class InjectionExtensionProvider implements RegistryCodegenExtensionProvi
     @Override
     public Set<TypeName> supportedAnnotations() {
         return Set.of(ServiceCodegenTypes.INJECTION_SINGLETON,
-                      ServiceCodegenTypes.SERVICE_ANNOTATION_PRE_DESTROY,
-                      ServiceCodegenTypes.SERVICE_ANNOTATION_POST_CONSTRUCT,
                       ServiceCodegenTypes.INJECTION_INJECT,
                       ServiceCodegenTypes.INJECTION_INSTANCE,
                       ServiceCodegenTypes.INJECTION_REQUEST_SCOPE,

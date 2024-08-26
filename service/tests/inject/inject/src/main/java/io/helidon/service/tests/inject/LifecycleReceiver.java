@@ -17,6 +17,7 @@
 package io.helidon.service.tests.inject;
 
 import io.helidon.service.inject.api.Injection;
+import io.helidon.service.registry.Service;
 
 @Injection.Singleton
 class LifecycleReceiver {

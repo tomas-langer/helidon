@@ -45,8 +45,8 @@ public class MapJakartaProvider implements AnnotationMapperProvider {
             JakartaTypes.INJECT_SINGLETON, Annotation.create(ServiceCodegenTypes.INJECTION_SINGLETON),
             JakartaTypes.INJECT_QUALIFIER, Annotation.create(ServiceCodegenTypes.INJECTION_QUALIFIER),
             JakartaTypes.INJECT_INJECT, Annotation.create(ServiceCodegenTypes.INJECTION_INJECT),
-            JakartaTypes.INJECT_POST_CONSTRUCT, Annotation.create(ServiceCodegenTypes.INJECTION_POST_CONSTRUCT),
-            JakartaTypes.INJECT_PRE_DESTROY, Annotation.create(ServiceCodegenTypes.INJECTION_PRE_DESTROY)
+            JakartaTypes.INJECT_POST_CONSTRUCT, Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_POST_CONSTRUCT),
+            JakartaTypes.INJECT_PRE_DESTROY, Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_PRE_DESTROY)
     );
 
     /**

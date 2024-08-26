@@ -17,6 +17,7 @@
 package io.helidon.service.tests.inject.configdriven;
 
 import io.helidon.service.inject.api.Injection;
+import io.helidon.service.registry.Service;
 
 @Injection.CreateFor(IConfigBlueprint.class)
 @Injection.Named("jane")

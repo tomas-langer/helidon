@@ -46,8 +46,8 @@ public class MapJavaxProvider implements AnnotationMapperProvider {
             JavaxTypes.INJECT_SINGLETON, Annotation.create(ServiceCodegenTypes.INJECTION_SINGLETON),
             JavaxTypes.INJECT_QUALIFIER, Annotation.create(ServiceCodegenTypes.INJECTION_QUALIFIER),
             JavaxTypes.INJECT_INJECT, Annotation.create(ServiceCodegenTypes.INJECTION_INJECT),
-            JavaxTypes.INJECT_POST_CONSTRUCT, Annotation.create(ServiceCodegenTypes.INJECTION_POST_CONSTRUCT),
-            JavaxTypes.INJECT_PRE_DESTROY, Annotation.create(ServiceCodegenTypes.INJECTION_PRE_DESTROY)
+            JavaxTypes.INJECT_POST_CONSTRUCT, Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_POST_CONSTRUCT),
+            JavaxTypes.INJECT_PRE_DESTROY, Annotation.create(ServiceCodegenTypes.SERVICE_ANNOTATION_PRE_DESTROY)
     );
 
     /**
