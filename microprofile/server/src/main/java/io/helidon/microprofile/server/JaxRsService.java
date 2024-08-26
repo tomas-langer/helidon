@@ -509,7 +509,14 @@ class JaxRsService implements HttpService {
                 contentLengthConsumer.accept(position);
             }
             ensureDelegate();
-            flush();
+            if (position == 0 && !written) {
+                // no op if nothing was written
+                return;
+            }
+            ensureDelegate();
+            delegate.write(buffer, 0, position);
+            written = true;
+            position = 0;
             delegate.close();
         }
 
