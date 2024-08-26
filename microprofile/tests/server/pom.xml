@@ -70,5 +70,10 @@
             <artifactId>helidon-webclient-http1</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.helidon.common.testing</groupId>
+            <artifactId>helidon-common-testing-http-junit5</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>
