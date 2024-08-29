@@ -69,22 +69,6 @@ public final class GeneratedInjectService {
                             Set<String> injected,
                             T instance) {
         }
-
-        /**
-         * Invoke {@link Service.PostConstruct} annotated method(s).
-         *
-         * @param instance instance to use
-         */
-        default void postConstruct(T instance) {
-        }
-
-        /**
-         * Invoke {@link Service.PreDestroy} annotated method(s).
-         *
-         * @param instance instance to use
-         */
-        default void preDestroy(T instance) {
-        }
     }
 
     /**

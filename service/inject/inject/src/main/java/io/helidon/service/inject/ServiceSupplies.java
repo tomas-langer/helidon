@@ -74,6 +74,29 @@ final class ServiceSupplies {
         }
     }
 
+    static class ServiceInstanceSupply<T> extends ServiceSupplyBase<T> implements Supplier<ServiceInstance<T>> {
+        private final Supplier<ServiceInstance<T>> value;
+
+        ServiceInstanceSupply(Lookup lookup, List<ServiceManager<T>> managers) {
+            super(lookup, managers);
+            Supplier<ServiceInstance<T>> supplier;
+
+            supplier = () -> explodeFilterAndSort(lookup, managers)
+                    .stream()
+                    .findFirst()
+                    .orElseThrow(() -> new ServiceRegistryException(
+                            "Neither of matching services could provide a value. Descriptors: " + managers + ", "
+                                    + "lookup: " + super.lookup));
+
+            this.value = supplier;
+        }
+
+        @Override
+        public ServiceInstance<T> get() {
+            return value.get();
+        }
+    }
+
     static class ServiceSupply<T> extends ServiceSupplyBase<T> implements Supplier<T> {
         private final Supplier<T> value;
 
@@ -115,6 +138,20 @@ final class ServiceSupplies {
         }
     }
 
+    static class ServiceInstanceSupplyOptional<T> extends ServiceSupplyBase<T> implements Supplier<Optional<ServiceInstance<T>>> {
+        // supply a single instance at runtime based on the manager
+        ServiceInstanceSupplyOptional(Lookup lookup, List<ServiceManager<T>> managers) {
+            super(lookup, managers);
+        }
+
+        @Override
+        public Optional<ServiceInstance<T>> get() {
+            return explodeFilterAndSort(super.lookup, super.managers)
+                    .stream()
+                    .findFirst();
+        }
+    }
+
     static class ServiceSupplyList<T> extends ServiceSupplyBase<T> implements Supplier<List<T>> {
         // supply a single instance at runtime based on the manager
         ServiceSupplyList(Lookup lookup, List<ServiceManager<T>> managers) {
@@ -128,6 +165,20 @@ final class ServiceSupplies {
 
             return stream.map(Supplier::get)
                     .toList();
+        }
+    }
+
+    static class ServiceInstanceSupplyList<T> extends ServiceSupplyBase<T> implements Supplier<List<ServiceInstance<T>>> {
+        // supply a single instance at runtime based on the manager
+        ServiceInstanceSupplyList(Lookup lookup, List<ServiceManager<T>> managers) {
+            super(lookup, managers);
+        }
+
+        @Override
+        public List<ServiceInstance<T>> get() {
+            return explodeFilterAndSort(super.lookup, super.managers)
+                    .stream()
+                    .collect(Collectors.toUnmodifiableList());
         }
     }
 

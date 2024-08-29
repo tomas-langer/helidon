@@ -31,7 +31,11 @@ import java.util.concurrent.locks.ReentrantLock;
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.config.Config;
 import io.helidon.common.context.Contexts;
+import io.helidon.common.types.TypeName;
+import io.helidon.common.types.TypedElementInfo;
 import io.helidon.jersey.common.InvokedResource;
+import io.helidon.metadata.reflection.AnnotationFactory;
+import io.helidon.metadata.reflection.TypedElementFactory;
 import io.helidon.security.AuditEvent;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
@@ -224,7 +228,7 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
                     }
                     responseContext.setStatus(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
                     LOGGER.log(Level.ERROR, "Authorization failure. Request for" + fc.getResourcePath()
-                            + " has failed, as it was marked"
+                            + " has failed, as it was marked "
                             + "as explicitly authorized, yet authorization was never called on security context. The "
                             + "method was invoked and may have changed data. Marking as internal server error");
                     fc.setShouldFinish(true);
@@ -327,13 +331,18 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
                                                    .build();
         definition.getSecurityLevels().add(securityLevel);
 
+        TypeName realClassType = TypeName.create(realClass);
+        List<io.helidon.common.types.Annotation> annotations = AnnotationFactory.create(realClass);
+
         for (AnnotationAnalyzer analyzer : analyzers) {
             AnnotationAnalyzer.AnalyzerResponse analyzerResponse;
 
             if (null == parent) {
-                analyzerResponse = analyzer.analyze(realClass);
+                analyzerResponse = analyzer.analyze(realClassType, annotations);
             } else {
-                analyzerResponse = analyzer.analyze(realClass, parent.analyzerResponse(analyzer));
+                analyzerResponse = analyzer.analyze(realClassType,
+                                                    annotations,
+                                                    parent.analyzerResponse(analyzer));
             }
 
             definition.analyzerResponse(analyzer, analyzerResponse);
@@ -438,8 +447,12 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
                                                               .withMethodAnnotations(methodAnnotations)
                                                               .build();
                 methodDef.getSecurityLevels().set(methodDef.getSecurityLevels().size() - 1, newSecurityLevel);
+                TypeName declaringType = TypeName.create(method.getDeclaringClass());
+                TypedElementInfo methodInfo = TypedElementFactory.create(method);
                 for (AnnotationAnalyzer analyzer : analyzers) {
-                    AnnotationAnalyzer.AnalyzerResponse analyzerResponse = analyzer.analyze(method,
+                    AnnotationAnalyzer.AnalyzerResponse analyzerResponse = analyzer.analyze(
+                            declaringType,
+                            methodInfo,
                             current.analyzerResponse(analyzer));
 
                     methodDef.analyzerResponse(analyzer, analyzerResponse);
@@ -486,9 +499,12 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
             resourceMethodSecurityLock.unlock();
         }
 
+        TypeName typeName = TypeName.create(definitionMethod.getDeclaringClass());
+        TypedElementInfo method = TypedElementFactory.create(definitionMethod);
         for (AnnotationAnalyzer analyzer : analyzers) {
-            AnnotationAnalyzer.AnalyzerResponse analyzerResponse = analyzer.analyze(definitionMethod,
-                    resClassSecurity.analyzerResponse(analyzer));
+            AnnotationAnalyzer.AnalyzerResponse analyzerResponse = analyzer.analyze(typeName,
+                                                                                    method,
+                                                                                    resClassSecurity.analyzerResponse(analyzer));
 
             methodDef.analyzerResponse(analyzer, analyzerResponse);
         }

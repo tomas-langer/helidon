@@ -1133,6 +1133,10 @@
             <artifactId>helidon-metadata-hson</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.helidon.metadata</groupId>
+            <artifactId>helidon-metadata-reflection</artifactId>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.service</groupId>
             <artifactId>helidon-service-codegen-javax</artifactId>
         </dependency>

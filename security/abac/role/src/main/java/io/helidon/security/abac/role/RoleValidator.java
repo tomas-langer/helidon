@@ -193,6 +193,16 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
     }
 
     /**
+     * Mark a type or method as public.
+     */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Documented
+    @Inherited
+    public @interface PermitAll {
+    }
+
+    /**
      * A definition of "roles allowed" for a specific subject type.
      * If user/service is in any of the roles, access will be granted.
      */

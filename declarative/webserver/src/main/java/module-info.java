@@ -15,6 +15,8 @@
  */
 
 module io.helidon.declarative.webserver {
+    exports io.helidon.declarative.webserver;
     requires io.helidon.webserver;
     requires io.helidon.service.registry;
+    requires io.helidon.service.inject.api;
 }

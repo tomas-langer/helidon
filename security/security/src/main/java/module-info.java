@@ -31,6 +31,7 @@ module io.helidon.security {
 
     requires io.helidon.common.context;
     requires io.helidon.common.uri;
+    requires io.helidon.service.registry;
 
     requires static io.helidon.common.features.api;
     requires static io.helidon.config.metadata;
@@ -47,6 +48,7 @@ module io.helidon.security {
 
     exports io.helidon.security.internal to
             io.helidon.microprofile.security,
+            io.helidon.declarative.tests.http, // TODO change to correct module
             io.helidon.webserver.security;
 
     // needed for CDI integration

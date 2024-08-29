@@ -25,6 +25,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import io.helidon.service.inject.ServiceSupplies.ServiceInstanceSupply;
+import io.helidon.service.inject.ServiceSupplies.ServiceInstanceSupplyList;
+import io.helidon.service.inject.ServiceSupplies.ServiceInstanceSupplyOptional;
 import io.helidon.service.inject.ServiceSupplies.ServiceSupply;
 import io.helidon.service.inject.ServiceSupplies.ServiceSupplyList;
 import io.helidon.service.inject.ServiceSupplies.ServiceSupplyOptional;
@@ -70,6 +73,14 @@ class ServicePlanBinder implements InjectionPlanBinder.Binder {
     }
 
     @Override
+    public InjectionPlanBinder.Binder bindServiceInstance(Dependency dependency, ServiceInfo descriptor) {
+        var supply = new ServiceInstanceSupply<>(Lookup.create(dependency), List.of(registry.serviceManager(descriptor)));
+        injectionPlan.put(dependency, new IpPlan<>(supply, descriptor));
+
+        return this;
+    }
+
+    @Override
     public InjectionPlanBinder.Binder bindOptional(Dependency dependency, ServiceInfo... descriptors) {
         ServiceSupplyOptional<?> supply = new ServiceSupplyOptional<>(Lookup.create(dependency),
                                                                       toManagers(descriptors));
@@ -79,9 +90,27 @@ class ServicePlanBinder implements InjectionPlanBinder.Binder {
     }
 
     @Override
+    public InjectionPlanBinder.Binder bindOptionalOfServiceInstance(Dependency dependency, ServiceInfo... descriptors) {
+        var supply = new ServiceInstanceSupplyOptional<>(Lookup.create(dependency),
+                                                         toManagers(descriptors));
+
+        injectionPlan.put(dependency, new IpPlan<>(supply, descriptors));
+        return this;
+    }
+
+    @Override
     public InjectionPlanBinder.Binder bindList(Dependency dependency, ServiceInfo... descriptors) {
         ServiceSupplyList<?> supply = new ServiceSupplyList<>(Lookup.create(dependency),
                                                               toManagers(descriptors));
+
+        injectionPlan.put(dependency, new IpPlan<>(supply, descriptors));
+        return this;
+    }
+
+    @Override
+    public InjectionPlanBinder.Binder bindServiceInstanceList(Dependency dependency, ServiceInfo... descriptors) {
+        var supply = new ServiceInstanceSupplyList<>(Lookup.create(dependency),
+                                                     toManagers(descriptors));
 
         injectionPlan.put(dependency, new IpPlan<>(supply, descriptors));
         return this;

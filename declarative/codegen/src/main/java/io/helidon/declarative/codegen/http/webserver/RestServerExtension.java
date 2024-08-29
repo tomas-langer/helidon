@@ -32,6 +32,7 @@ import io.helidon.codegen.CodegenUtil;
 import io.helidon.codegen.ElementInfoPredicates;
 import io.helidon.codegen.TypeHierarchy;
 import io.helidon.codegen.classmodel.ClassModel;
+import io.helidon.codegen.classmodel.Constructor;
 import io.helidon.codegen.classmodel.Method;
 import io.helidon.common.HelidonServiceLoader;
 import io.helidon.common.types.AccessModifier;
@@ -57,6 +58,7 @@ import io.helidon.service.codegen.RegistryRoundContext;
 import io.helidon.service.codegen.ServiceCodegenTypes;
 import io.helidon.service.codegen.spi.RegistryCodegenExtension;
 
+import static io.helidon.codegen.CodegenUtil.toConstantName;
 import static io.helidon.declarative.codegen.DeclarativeTypes.SINGLETON_ANNOTATION;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_ENTITY_PARAM_ANNOTATION;
 import static io.helidon.declarative.codegen.http.HttpTypes.HTTP_HEADER_PARAM_ANNOTATION;
@@ -74,6 +76,10 @@ import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenType
 import static io.helidon.declarative.codegen.http.webserver.WebServerCodegenTypes.REST_SERVER_STATUS;
 import static java.util.function.Predicate.not;
 
+/*
+Generates:
+- Endpoint__HttpFeature.java
+ */
 class RestServerExtension extends RestExtensionBase implements RegistryCodegenExtension {
     private static final TypeName GENERATOR = TypeName.create(RestServerExtension.class);
     private static final String REQUEST_PARAM_NAME = "helidonDeclarative__server_req";
@@ -124,14 +130,16 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .addContentLine("\", this::routing);"));
     }
 
-    private void addConstructor(ClassModel.Builder endpointService, TypeName endpoint, boolean singleton,
-                                FieldNames<TypeName> headerProducers) {
-        endpointService.addConstructor(ctr -> ctr
-                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
+    private void constructor(Constructor.Builder constructor,
+                             TypeName endpoint,
+                             boolean singleton,
+                             FieldNames<TypeName> headerProducers) {
+        constructor.accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .addAnnotation(Annotation.create(ServiceCodegenTypes.INJECTION_INJECT))
                 .addParameter(param -> param
                         .type(singleton ? endpoint : supplierOf(endpoint))
                         .name("endpoint"))
+                .addContentLine("this.endpoint = endpoint;")
                 .update(builder -> {
                     headerProducers.forEach((producerType, producerField) -> {
                         builder.addParameter(producer -> producer
@@ -143,9 +151,67 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                                 .addContent(producerField)
                                 .addContentLine(";");
                     });
-                })
-                .addContentLine("this.endpoint = endpoint;")
+                });
+    }
+
+    private void methodHandlers(ClassModel.Builder classModel,
+                                Constructor.Builder constructor,
+                                TypeName descriptorType,
+                                List<RestMethod> methods) {
+        // create constants with method metadata
+        // create fields for each handler
+        // create handlers in constructor
+
+        constructor.addParameter(httpEntryPoints -> httpEntryPoints
+                .type(WebServerCodegenTypes.DECLARATIVE_ENTRY_POINTS)
+                .name("entryPoints")
         );
+
+        constructor
+                .addContent("var descriptor = ")
+                .addContent(descriptorType)
+                .addContentLine(".INSTANCE;");
+        constructor
+                .addContent("var annotations = ")
+                .addContent(descriptorType)
+                .addContentLine(".ANNOTATIONS;")
+                .addContentLine("");
+
+        for (RestMethod method : methods) {
+            String uniqueName = method.uniqueName();
+            String constant = toConstantName("METHOD_" + uniqueName);
+            String field = "handler_" + uniqueName;
+
+            classModel.addField(handlerField -> handlerField
+                    .accessModifier(AccessModifier.PRIVATE)
+                    .isFinal(true)
+                    .type(WebServerCodegenTypes.SERVER_HTTP_HANDLER)
+                    .name(field)
+            );
+
+            classModel.addField(methodMeta -> methodMeta
+                    .update(this::privateConstant)
+                    .type(TypedElementInfo.class)
+                    .name(constant)
+                    .addContentCreate(method.method())
+            );
+
+            constructor.addContent("this.")
+                    .addContent(field)
+                    .addContentLine(" = entryPoints.handler(")
+                    .increaseContentPadding()
+                    .increaseContentPadding()
+                    .addContentLine("descriptor,")
+                    .addContentLine("descriptor.qualifiers(),")
+                    .addContentLine("annotations,")
+                    .addContent(constant)
+                    .addContentLine(",")
+                    .addContent("this::")
+                    .addContent(method.uniqueName())
+                    .addContentLine(");")
+                    .decreaseContentPadding()
+                    .decreaseContentPadding();
+        }
     }
 
     private void addFields(ClassModel.Builder endpointService, TypeName endpointType, boolean singleton) {
@@ -361,7 +427,10 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         });
 
         // constructor injecting the field(s)
-        addConstructor(classModel, endpointTypeName, singleton, headerProducers);
+        var constructor = Constructor.builder();
+        constructor(constructor, endpointTypeName, singleton, headerProducers);
+        methodHandlers(classModel, constructor, ctx.descriptorType(type.typeName()), endpoint.methods());
+        classModel.addConstructor(constructor);
         // HttpFeature.setup(HttpRouting.Builder routing)
         addSetupMethod(classModel, endpoint.path().orElse("/"));
         // socket() and socketRequired()
@@ -662,7 +731,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
                 .addContent(path)
                 .addContent("\", ");
 
-        routing.addContent("this::")
+        routing.addContent("handler_")
                 .addContent(restMethod.uniqueName())
                 .addContentLine(");");
     }
@@ -720,7 +789,7 @@ class RestServerExtension extends RestExtensionBase implements RegistryCodegenEx
         routing.addContent(".path(\"")
                 .addContent(path)
                 .addContentLine("\")")
-                .addContent(".handler(this::")
+                .addContent(".handler(handler_")
                 .addContent(restMethod.uniqueName())
                 .addContentLine(")");
 

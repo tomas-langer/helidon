@@ -1518,6 +1518,11 @@
                 <artifactId>helidon-metadata-hson</artifactId>
                 <version>${helidon.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.helidon.metadata</groupId>
+                <artifactId>helidon-metadata-reflection</artifactId>
+                <version>${helidon.version}</version>
+            </dependency>
 
             <!-- Injection Integrations related -->
             <dependency>

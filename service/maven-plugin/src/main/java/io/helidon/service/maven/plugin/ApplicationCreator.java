@@ -57,6 +57,7 @@ import io.helidon.service.registry.ServiceLoader__ServiceDescriptor;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_PLAN_BINDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECTION_POINT_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_BINDING;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_SERVICE_INSTANCE;
 import static io.helidon.service.codegen.ServiceCodegenTypes.QUALIFIED_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICES_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICE_ANNOTATION_CONTRACT;
@@ -473,7 +474,7 @@ class ApplicationCreator {
                                   boolean supportNulls) {
 
         /*
-        Very similar code is used for runtime discovery in ServiceManager.planForIp
+        Very similar code is used for runtime discovery in ServiceProvider.planForIp
         make sure this is doing the same thing!
         Here we code generate the calls to the application class
          */
@@ -492,6 +493,9 @@ class ApplicationCreator {
             if (typeOfList.isSupplier()) {
                 // inject List<Supplier<Contract>>
                 method.addContent(".bindListOfSuppliers(");
+            } else if (typeOfList.equals(INJECT_SERVICE_INSTANCE)) {
+                typeOfList = typeOfList.typeArguments().getFirst();
+                method.addContent(".bindServiceInstanceList(");
             } else {
                 // inject List<Contract>
                 method.addContent(".bindList(");
@@ -517,6 +521,9 @@ class ApplicationCreator {
             if (typeOfOptional.isSupplier()) {
                 // inject Optional<Supplier<Contract>>
                 method.addContent(".bindOptionalOfSupplier(");
+            } else if (typeOfOptional.equals(INJECT_SERVICE_INSTANCE)) {
+                // inject Optional<ServiceInstance<Contract>>
+                method.addContent(".bindOptionalOfServiceInstance(");
             } else {
                 // inject Optional<Contract>
                 method.addContent(".bindOptional(");
@@ -576,6 +583,26 @@ class ApplicationCreator {
                 method.addContent(", ");
                 descriptors.next().accept(method);
                 method.addContentLine(")");
+            }
+        } else if (ipType.equals(INJECT_SERVICE_INSTANCE)) {
+            TypeName typeOfService = ipType.typeArguments().getFirst();
+            // inject Contract
+            if (discovered.isEmpty()) {
+                if (supportNulls) {
+                    method.addContent(".bindNull(")
+                            .update(ipId::accept)
+                            .addContentLine(")");
+                } else {
+                    // null binding is not supported at runtime
+                    throw new CodegenException("Injection point requires a value, but no provider discovered: "
+                                                       + injectionPoint);
+                }
+            } else {
+                method.addContent(".bindServiceInstance(")
+                        .update(ipId::accept)
+                        .addContent(", ")
+                        .update(descriptors.next()::accept)
+                        .addContentLine(")");
             }
         } else {
             // inject Contract

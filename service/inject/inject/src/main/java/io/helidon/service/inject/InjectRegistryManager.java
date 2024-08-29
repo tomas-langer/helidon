@@ -217,10 +217,12 @@ public class InjectRegistryManager implements ServiceRegistryManager {
                                                      typedQualifiedProviders);
 
             // now check if we have an application, and if so, apply it
-            for (GeneratedService.Descriptor<Binding> application : applications) {
-                // applications cannot have dependencies
-                Binding appInstance = (Binding) application.instantiate(DependencyContext.create(Map.of()));
-                appInstance.configure(new ApplicationPlanBinder(appInstance, registry));
+            if (config.useBinding()) {
+                for (GeneratedService.Descriptor<Binding> application : applications) {
+                    // applications cannot have dependencies
+                    Binding appInstance = (Binding) application.instantiate(DependencyContext.create(Map.of()));
+                    appInstance.configure(new ApplicationPlanBinder(appInstance, registry));
+                }
             }
 
             return registry;

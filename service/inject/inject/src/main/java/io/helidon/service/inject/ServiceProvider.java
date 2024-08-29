@@ -28,6 +28,7 @@ import io.helidon.service.inject.api.GeneratedInjectService.InterceptionMetadata
 import io.helidon.service.inject.api.InjectServiceInfo;
 import io.helidon.service.inject.api.Injection;
 import io.helidon.service.inject.api.Lookup;
+import io.helidon.service.inject.api.ServiceInstance;
 import io.helidon.service.registry.Dependency;
 import io.helidon.service.registry.ServiceInfo;
 import io.helidon.service.registry.ServiceRegistryException;
@@ -131,7 +132,7 @@ class ServiceProvider<T> {
     private void planForIp(InjectionPlanBinder.Binder injectionPlan,
                            Dependency injectionPoint) {
         /*
-         very similar code is used in ApplicationCreator.injectionPlan
+         very similar code is used in ApplicationCreator.buildTimeBinding
          make sure this is kept in sync!
          */
         Lookup lookup = Lookup.create(injectionPoint);
@@ -165,6 +166,8 @@ class ServiceProvider<T> {
             if (typeOfList.isSupplier()) {
                 // inject List<Supplier<Contract>>
                 injectionPlan.bindListOfSuppliers(injectionPoint, descriptors);
+            } else if (typeOfList.equals(ServiceInstance.TYPE)) {
+                injectionPlan.bindServiceInstanceList(injectionPoint, descriptors);
             } else {
                 // inject List<Contract>
                 injectionPlan.bindList(injectionPoint, descriptors);
@@ -177,6 +180,8 @@ class ServiceProvider<T> {
                 TypeName typeOfOptional = ipType.typeArguments().getFirst();
                 if (typeOfOptional.isSupplier()) {
                     injectionPlan.bindOptionalOfSupplier(injectionPoint, discovered.getFirst());
+                } else if (typeOfOptional.equals(ServiceInstance.TYPE)) {
+                    injectionPlan.bindOptionalOfServiceInstance(injectionPoint, discovered.getFirst());
                 } else {
                     injectionPlan.bindOptional(injectionPoint, discovered.getFirst());
                 }
@@ -208,7 +213,11 @@ class ServiceProvider<T> {
                                                    + ": expected to resolve a service matching injection point "
                                                            + injectionPoint);
             }
-            injectionPlan.bind(injectionPoint, discovered.getFirst());
+            if (ipType.equals(ServiceInstance.TYPE)) {
+                injectionPlan.bindServiceInstance(injectionPoint, discovered.getFirst());
+            } else {
+                injectionPlan.bind(injectionPoint, discovered.getFirst());
+            }
         }
     }
 

@@ -70,6 +70,7 @@ import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_IP_SUPPORT;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_QUALIFIED_PROVIDER_DESCRIPTOR;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_SCOPE_HANDLER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_SCOPE_HANDLER_DESCRIPTOR;
+import static io.helidon.service.codegen.ServiceCodegenTypes.INJECT_SERVICE_INSTANCE;
 import static io.helidon.service.codegen.ServiceCodegenTypes.QUALIFIED_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICES_PROVIDER;
 import static io.helidon.service.codegen.ServiceCodegenTypes.SERVICE_ANNOTATION_PROVIDER;
@@ -249,9 +250,10 @@ class InjectionExtension implements RegistryCodegenExtension {
         injectionPointFields(classModel, typeInfo, genericTypes, params);
         // dependencies require IP IDs, so they really must be last
         dependenciesField(classModel, params);
+        // annotations of the type
+        annotationsField(classModel, typeInfo);
 
         if (canIntercept) {
-            annotationsField(classModel, typeInfo);
             // if constructor intercepted, add its element
             if (constructorIntercepted) {
                 constructorElementField(classModel, constructorInjectElement);
@@ -848,6 +850,9 @@ class InjectionExtension implements RegistryCodegenExtension {
           - Optional<Supplier>
           - List<ServiceProvider>
           - List<Supplier>
+          - ServiceInstance
+          - List<ServiceInstance>
+          - Optional<ServiceInstance>
          */
 
         if (typeName.isOptional()) {
@@ -855,19 +860,44 @@ class InjectionExtension implements RegistryCodegenExtension {
                 throw new IllegalArgumentException("Injection point with Optional type must have a declared type argument: "
                                                            + description);
             }
-            return contract(description, typeName.typeArguments().getFirst());
+            TypeName firstType = typeName.typeArguments().getFirst();
+            if (firstType.equals(INJECT_SERVICE_INSTANCE)) {
+                if (typeName.typeArguments().isEmpty()) {
+                    throw new IllegalArgumentException("Injection point with Optional<ServiceInstance> type must have a"
+                                                               + " declared type argument: " + description);
+                }
+                return contract(description, firstType.typeArguments().getFirst());
+            } else {
+                return contract(description, firstType);
+            }
         }
         if (typeName.isList()) {
             if (typeName.typeArguments().isEmpty()) {
                 throw new IllegalArgumentException("Injection point with List type must have a declared type argument: "
                                                            + description);
             }
-            return contract(description, typeName.typeArguments().getFirst());
+            TypeName firstType = typeName.typeArguments().getFirst();
+            if (firstType.equals(INJECT_SERVICE_INSTANCE)) {
+                if (typeName.typeArguments().isEmpty()) {
+                    throw new IllegalArgumentException("Injection point with List<ServiceInstance> type must have a"
+                                                               + " declared type argument: " + description);
+                }
+                return contract(description, firstType.typeArguments().getFirst());
+            } else {
+                return contract(description, firstType);
+            }
         }
         if (typeName.isSupplier()) {
             if (typeName.typeArguments().isEmpty()) {
                 throw new IllegalArgumentException("Injection point with Supplier type must have a declared type argument: "
                                                            + description);
+            }
+            return contract(description, typeName.typeArguments().getFirst());
+        }
+        if (typeName.equals(INJECT_SERVICE_INSTANCE)) {
+            if (typeName.typeArguments().isEmpty()) {
+                throw new IllegalArgumentException("Injection point with ServiceInstance type must have a"
+                                                           + " declared type argument: " + description);
             }
             return contract(description, typeName.typeArguments().getFirst());
         }
@@ -1363,6 +1393,7 @@ class InjectionExtension implements RegistryCodegenExtension {
 
     static void annotationsField(ClassModel.Builder classModel, TypeInfo typeInfo) {
         classModel.addField(annotations -> annotations
+                .accessModifier(AccessModifier.PACKAGE_PRIVATE)
                 .isStatic(true)
                 .isFinal(true)
                 .name("ANNOTATIONS")

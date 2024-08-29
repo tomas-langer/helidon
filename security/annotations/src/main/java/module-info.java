@@ -20,6 +20,7 @@
 module io.helidon.security.annotations {
 
     requires transitive io.helidon.security;
+    requires transitive io.helidon.common.types;
 
     exports io.helidon.security.annotations;
 

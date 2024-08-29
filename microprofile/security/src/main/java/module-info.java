@@ -35,6 +35,7 @@ module io.helidon.microprofile.security {
     requires io.helidon.security.integration.common;
     requires io.helidon.security.providers.abac;
     requires io.helidon.security.providers.common;
+    requires io.helidon.metadata.reflection;
 
     requires static io.helidon.common.features.api;
 

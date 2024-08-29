@@ -80,6 +80,15 @@ interface AnnotationBlueprint {
     Map<String, Object> values();
 
     /**
+     * A list of inherited annotations (from the whole hierarchy).
+     *
+     * @return list of all annotations declared on the annotation type, or inherited from them
+     */
+    @Option.Redundant
+    @Option.Singular
+    List<Annotation> metaAnnotations();
+
+    /**
      * The value property.
      *
      * @return the string value of value property

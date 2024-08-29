@@ -105,6 +105,10 @@ public final class ServiceCodegenTypes {
      */
     public static final TypeName INJECT_LOOKUP = TypeName.create("io.helidon.service.inject.api.Lookup");
     /**
+     * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.inject.api.ServiceInstance}.
+     */
+    public static final TypeName INJECT_SERVICE_INSTANCE = TypeName.create("io.helidon.service.inject.api.ServiceInstance");
+    /**
      * {@link io.helidon.common.types.TypeName} for {@code io.helidon.service.registry.ServiceDescriptor}.
      */
     public static final TypeName INJECT_SERVICE_DESCRIPTOR = TypeName.create(

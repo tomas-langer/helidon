@@ -34,6 +34,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>io.helidon.declarative</groupId>
+            <artifactId>helidon-declarative-webserver</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.helidon.webserver</groupId>
             <artifactId>helidon-webserver</artifactId>
         </dependency>
@@ -94,6 +99,14 @@
         <dependency>
             <groupId>io.helidon.webserver</groupId>
             <artifactId>helidon-webserver-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.security.abac</groupId>
+            <artifactId>helidon-security-abac-role</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.helidon.security</groupId>
+            <artifactId>helidon-security-annotations</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.security.providers</groupId>

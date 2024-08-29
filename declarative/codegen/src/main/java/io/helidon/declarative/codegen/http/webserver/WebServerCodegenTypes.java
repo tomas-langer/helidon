@@ -30,9 +30,12 @@ final class WebServerCodegenTypes {
     static final TypeName SERVER_REQUEST = TypeName.create("io.helidon.webserver.http.ServerRequest");
     static final TypeName SERVER_RESPONSE = TypeName.create("io.helidon.webserver.http.ServerResponse");
     static final TypeName SERVER_HTTP_ROUTE = TypeName.create("io.helidon.webserver.http.HttpRoute");
+    static final TypeName SERVER_HTTP_HANDLER = TypeName.create("io.helidon.webserver.http.Handler");
     static final TypeName SERVER_HTTP_FEATURE = TypeName.create("io.helidon.webserver.http.HttpFeature");
     static final TypeName SERVER_HTTP_ROUTING_BUILDER = TypeName.create("io.helidon.webserver.http.HttpRouting.Builder");
     static final TypeName SERVER_HTTP_RULES = TypeName.create("io.helidon.webserver.http.HttpRules");
+
+    static final TypeName DECLARATIVE_ENTRY_POINTS = TypeName.create("io.helidon.declarative.webserver.HttpEntryPoints");
 
     private WebServerCodegenTypes() {
     }

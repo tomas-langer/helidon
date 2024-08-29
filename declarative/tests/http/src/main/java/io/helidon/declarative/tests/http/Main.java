@@ -16,6 +16,7 @@
 
 package io.helidon.declarative.tests.http;
 
+import io.helidon.service.inject.InjectConfig;
 import io.helidon.service.inject.api.InjectRegistry;
 import io.helidon.service.inject.api.Injection;
 import io.helidon.webserver.WebServer;
@@ -44,6 +45,11 @@ public final class Main extends GeneratedMain {
      */
     public static void main(String[] args) {
         new Main().start(args);
+    }
+
+    @Override
+    protected void afterServiceDescriptors(InjectConfig.Builder configBuilder) {
+        configBuilder.useBinding(false);
     }
 
     @Override

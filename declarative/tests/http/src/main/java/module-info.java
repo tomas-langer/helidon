@@ -28,6 +28,10 @@ module io.helidon.declarative.tests.http {
     // todo remove - now needed for interceptors
     requires io.helidon.metrics;
     requires io.helidon.faulttolerance;
+    requires io.helidon.declarative.webserver;
+    requires io.helidon.security.abac.role;
+    requires io.helidon.security.integration.common;
+    requires io.helidon.security.annotations;
 
     exports io.helidon.declarative.tests.http;
 }

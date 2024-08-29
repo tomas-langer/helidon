@@ -17,8 +17,10 @@
 package io.helidon.common.types;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -27,6 +29,7 @@ import java.util.function.Supplier;
 
 import io.helidon.builder.api.Prototype;
 import io.helidon.common.Errors;
+import io.helidon.common.Generated;
 
 /**
  * An annotation with defined values.
@@ -153,7 +156,9 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
      */
     abstract class BuilderBase<BUILDER extends Annotation.BuilderBase<BUILDER, PROTOTYPE>, PROTOTYPE extends Annotation> implements Prototype.Builder<BUILDER, PROTOTYPE> {
 
+        private final List<Annotation> metaAnnotations = new ArrayList<>();
         private final Map<String, Object> values = new LinkedHashMap<>();
+        private boolean isMetaAnnotationsMutated;
         private TypeName typeName;
 
         /**
@@ -171,6 +176,10 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
         public BUILDER from(Annotation prototype) {
             typeName(prototype.typeName());
             addValues(prototype.values());
+            if (!isMetaAnnotationsMutated) {
+                metaAnnotations.clear();
+            }
+            addMetaAnnotations(prototype.metaAnnotations());
             return self();
         }
 
@@ -183,6 +192,14 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
         public BUILDER from(Annotation.BuilderBase<?, ?> builder) {
             builder.typeName().ifPresent(this::typeName);
             addValues(builder.values);
+            if (isMetaAnnotationsMutated) {
+                if (builder.isMetaAnnotationsMutated) {
+                    addMetaAnnotations(builder.metaAnnotations);
+                }
+            } else {
+                metaAnnotations.clear();
+                addMetaAnnotations(builder.metaAnnotations);
+            }
             return self();
         }
 
@@ -294,6 +311,64 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
         }
 
         /**
+         * A list of inherited annotations (from the whole hierarchy).
+         *
+         * @param metaAnnotations list of all annotations declared on the annotation type, or inherited from them
+         * @return updated builder instance
+         * @see #metaAnnotations()
+         */
+        public BUILDER metaAnnotations(List<? extends Annotation> metaAnnotations) {
+            Objects.requireNonNull(metaAnnotations);
+            isMetaAnnotationsMutated = true;
+            this.metaAnnotations.clear();
+            this.metaAnnotations.addAll(metaAnnotations);
+            return self();
+        }
+
+        /**
+         * A list of inherited annotations (from the whole hierarchy).
+         *
+         * @param metaAnnotations list of all annotations declared on the annotation type, or inherited from them
+         * @return updated builder instance
+         * @see #metaAnnotations()
+         */
+        public BUILDER addMetaAnnotations(List<? extends Annotation> metaAnnotations) {
+            Objects.requireNonNull(metaAnnotations);
+            isMetaAnnotationsMutated = true;
+            this.metaAnnotations.addAll(metaAnnotations);
+            return self();
+        }
+
+        /**
+         * A list of inherited annotations (from the whole hierarchy).
+         *
+         * @param metaAnnotation list of all annotations declared on the annotation type, or inherited from them
+         * @return updated builder instance
+         * @see #metaAnnotations()
+         */
+        public BUILDER addMetaAnnotation(Annotation metaAnnotation) {
+            Objects.requireNonNull(metaAnnotation);
+            this.metaAnnotations.add(metaAnnotation);
+            isMetaAnnotationsMutated = true;
+            return self();
+        }
+
+        /**
+         * A list of inherited annotations (from the whole hierarchy).
+         *
+         * @param consumer list of all annotations declared on the annotation type, or inherited from them
+         * @return updated builder instance
+         * @see #metaAnnotations()
+         */
+        public BUILDER addMetaAnnotation(Consumer<Annotation.Builder> consumer) {
+            Objects.requireNonNull(consumer);
+            var builder = Annotation.builder();
+            consumer.accept(builder);
+            this.metaAnnotations.add(builder.build());
+            return self();
+        }
+
+        /**
          * The type name, e.g., {@link java.util.Objects} -> "java.util.Objects".
          *
          * @return the type name
@@ -309,6 +384,15 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
          */
         public Map<String, Object> values() {
             return values;
+        }
+
+        /**
+         * A list of inherited annotations (from the whole hierarchy).
+         *
+         * @return the meta annotations
+         */
+        public List<Annotation> metaAnnotations() {
+            return metaAnnotations;
         }
 
         @Override
@@ -341,6 +425,7 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
          */
         protected static class AnnotationImpl implements Annotation {
 
+            private final List<Annotation> metaAnnotations;
             private final Map<String, Object> values;
             private final TypeName typeName;
 
@@ -352,6 +437,7 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
             protected AnnotationImpl(Annotation.BuilderBase<?, ?> builder) {
                 this.typeName = builder.typeName().get();
                 this.values = Collections.unmodifiableMap(new LinkedHashMap<>(builder.values()));
+                this.metaAnnotations = List.copyOf(builder.metaAnnotations());
             }
 
             @Override
@@ -367,6 +453,11 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
             @Override
             public Map<String, Object> values() {
                 return values;
+            }
+
+            @Override
+            public List<Annotation> metaAnnotations() {
+                return metaAnnotations;
             }
 
             @Override
@@ -386,7 +477,7 @@ public interface Annotation extends AnnotationBlueprint, Prototype.Api, Comparab
                     return false;
                 }
                 return Objects.equals(typeName, other.typeName())
-                        && Objects.equals(values, other.values());
+                    && Objects.equals(values, other.values());
             }
 
             @Override

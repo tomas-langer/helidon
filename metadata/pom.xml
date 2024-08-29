@@ -39,6 +39,7 @@
 
     <modules>
         <module>hson</module>
+        <module>reflection</module>
     </modules>
 
     <build>

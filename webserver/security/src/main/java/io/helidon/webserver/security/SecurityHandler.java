@@ -220,6 +220,7 @@ public final class SecurityHandler implements Handler, RuntimeType.Api<SecurityH
 
     @Override
     public void handle(ServerRequest req, ServerResponse res) {
+        System.out.println("Security handler");
         Context context = Contexts.context()
                 .orElseGet(req::context);
         //process security

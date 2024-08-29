@@ -148,6 +148,12 @@ public interface InjectionPlanBinder {
          */
         Binder bindNull(Dependency dependency);
 
+        Binder bindServiceInstance(Dependency dependency, ServiceInfo descriptor);
+
+        Binder bindServiceInstanceList(Dependency dependency, ServiceInfo... descriptors);
+
+        Binder bindOptionalOfServiceInstance(Dependency dependency, ServiceInfo... descriptor);
+
         /**
          * Commits the bindings for this service provider.
          */

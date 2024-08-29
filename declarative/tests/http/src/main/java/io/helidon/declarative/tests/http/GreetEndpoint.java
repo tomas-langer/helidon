@@ -32,6 +32,7 @@ import io.helidon.http.HttpException;
 import io.helidon.http.Status;
 import io.helidon.metrics.api.Metrics;
 import io.helidon.security.SecurityContext;
+import io.helidon.security.abac.role.RoleValidator;
 import io.helidon.service.inject.api.Configuration;
 import io.helidon.service.inject.api.Injection;
 import io.helidon.webserver.http.RestServer;
@@ -172,6 +173,7 @@ class GreetEndpoint implements GreetEndpointApi {
     @Http.Path("/greeting")
     @Http.Consumes(MediaTypes.APPLICATION_JSON_STRING)
     @Http.Produces(MediaTypes.APPLICATION_JSON_STRING)
+    @RoleValidator.Roles("admin")
     JsonObject updateGreetingHandlerWithSecurity(@Http.Entity JsonObject greetingMessage,
                                                  SecurityContext securityContext) {
         if (!greetingMessage.containsKey("greeting")) {
