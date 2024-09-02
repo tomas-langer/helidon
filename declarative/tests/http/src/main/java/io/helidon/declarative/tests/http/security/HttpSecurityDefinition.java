@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 import io.helidon.common.types.Annotation;
@@ -29,6 +30,30 @@ class HttpSecurityDefinition {
     private AuditEvent.AuditSeverity auditOkSeverity;
     private AuditEvent.AuditSeverity auditErrorSeverity;
     private Boolean requiresAuthorization;
+
+    String authorizer() {
+        return authorizer;
+    }
+
+    boolean requiresAuthorization() {
+        if (null != requiresAuthorization) {
+            return requiresAuthorization;
+        }
+
+        int count = 0;
+        for (SecurityLevel securityLevel : securityLevels) {
+            count += securityLevel.annotations().size();
+        }
+        return (count != 0) || authorizeByDefault;
+    }
+
+    Optional<String> authenticator() {
+        return Optional.ofNullable(authenticator);
+    }
+
+    boolean authenticationOptional() {
+        return authnOptional;
+    }
 
     String auditMessageFormat() {
         return auditMessageFormat;
@@ -162,8 +187,16 @@ class HttpSecurityDefinition {
         this.failOnFailureIfOptional = failOnFailureIfOptional;
     }
 
+    boolean failOnFailureIfOptional() {
+        return failOnFailureIfOptional;
+    }
+
     void authorizeAnnotatedOnly(boolean annotatedOnly) {
         this.authorizeByDefault = !annotatedOnly;
+    }
+
+    boolean requiresAuthentication() {
+        return requiresAuthentication;
     }
 
     void requiresAuthentication(boolean requires) {

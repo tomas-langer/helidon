@@ -34,4 +34,5 @@ module io.helidon.declarative.tests.http {
     requires io.helidon.security.annotations;
 
     exports io.helidon.declarative.tests.http;
+    exports io.helidon.declarative.tests.http.security;
 }

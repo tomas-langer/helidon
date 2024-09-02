@@ -16,6 +16,7 @@
 
 package io.helidon.service.maven.plugin;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -69,6 +70,11 @@ public class QualifierConfig implements Qualifier {
             return Map.of();
         }
         return Map.of("value", value);
+    }
+
+    @Override
+    public List<Annotation> metaAnnotations() {
+        return List.of();
     }
 
     @Override

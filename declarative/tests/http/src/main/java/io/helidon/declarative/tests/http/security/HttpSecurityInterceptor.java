@@ -1,9 +1,12 @@
 package io.helidon.declarative.tests.http.security;
 
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 
@@ -15,16 +18,23 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
 import io.helidon.common.uri.UriInfo;
 import io.helidon.declarative.webserver.HttpEntryPointInterceptor;
+import io.helidon.http.HttpException;
 import io.helidon.http.Status;
 import io.helidon.security.AuditEvent;
+import io.helidon.security.AuthenticationResponse;
+import io.helidon.security.AuthorizationResponse;
 import io.helidon.security.EndpointConfig;
 import io.helidon.security.Security;
+import io.helidon.security.SecurityClientBuilder;
 import io.helidon.security.SecurityContext;
 import io.helidon.security.SecurityEnvironment;
 import io.helidon.security.SecurityLevel;
+import io.helidon.security.SecurityResponse;
 import io.helidon.security.annotations.Audited;
 import io.helidon.security.annotations.Authenticated;
 import io.helidon.security.annotations.Authorized;
+import io.helidon.security.integration.common.AtnTracing;
+import io.helidon.security.integration.common.AtzTracing;
 import io.helidon.security.integration.common.SecurityTracing;
 import io.helidon.security.internal.SecurityAuditEvent;
 import io.helidon.security.providers.common.spi.AnnotationAnalyzer;
@@ -41,6 +51,7 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
     private final Security security;
     private final Config config;
     private final List<AnnotationAnalyzer> annotationAnalyzers;
+    private final List<SecurityResponseMapper> responseMappers;
 
     private final Map<TypeName, HttpSecurityDefinition> typeSecurityDefinitions = new HashMap<>();
     private final ReentrantReadWriteLock typeSecurityDefinitionLock = new ReentrantReadWriteLock();
@@ -49,10 +60,12 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
 
     HttpSecurityInterceptor(Security security,
                             Config config,
-                            List<AnnotationAnalyzer> annotationAnalyzers) {
+                            List<AnnotationAnalyzer> annotationAnalyzers,
+                            List<SecurityResponseMapper> responseMappers) {
         this.security = security;
         this.config = config.get("server.features.security.declarative");
         this.annotationAnalyzers = annotationAnalyzers;
+        this.responseMappers = responseMappers;
     }
 
     @Override
@@ -127,7 +140,7 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
                 return;
             }
             if (res.isSent()) {
-                LOGGER.log(System.Logger.Level.ERROR, "Authorization failure. Request for"
+                LOGGER.log(Level.ERROR, "Authorization failure. Request for"
                         + req.prologue().uriPath().absolute().path()
                         + " has failed, it was marked for explicit authorization, "
                         + "yet authorization was never called on security context. The "
@@ -135,7 +148,7 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
                         + " Endpoint: " + ctx.serviceInfo().serviceType().fqName() + ", method: "
                         + ctx.elementInfo().elementName());
             } else {
-                LOGGER.log(System.Logger.Level.ERROR, "Authorization failure. Request for"
+                LOGGER.log(Level.ERROR, "Authorization failure. Request for"
                         + req.prologue().uriPath().absolute().path()
                         + " has failed, it was marked for explicit authorization, "
                         + "yet authorization was never called on security context. The "
@@ -177,7 +190,102 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
                            SecurityTracing tracing,
                            HttpSecurityDefinition definition,
                            SecurityContext securityContext) {
+        if (definition.atzExplicit()) {
+            // authorization is explicitly done by user, we MUST skip it here
+            if (LOGGER.isLoggable(Level.TRACE)) {
+                LOGGER.log(Level.TRACE, "Endpoint {0} uses explicit authorization, skipping", req.path().absolute().path());
+            }
+            return;
+        }
 
+        AtzTracing atzTracing = tracing.atzTracing();
+        try {
+            //now authorize (also authorize anonymous requests, as we may have a path-based authorization that allows public
+            // access
+            if (definition.requiresAuthorization()) {
+                if (LOGGER.isLoggable(Level.TRACE)) {
+                    LOGGER.log(Level.TRACE, "Endpoint {0} requires authorization", req.path().absolute().path());
+                }
+                SecurityClientBuilder<AuthorizationResponse> clientBuilder = securityContext.atzClientBuilder()
+                        .tracingSpan(atzTracing.findParent().orElse(null))
+                        .explicitProvider(definition.authorizer());
+
+                processAuthorization(req, res, ictx, clientBuilder);
+            } else {
+                if (LOGGER.isLoggable(Level.TRACE)) {
+                    LOGGER.log(Level.TRACE, "Endpoint {0} does not require authorization. Method security: {1}",
+                               req.path().absolute().path(),
+                               definition);
+                }
+            }
+        } finally {
+            if (ictx.traceSuccess()) {
+                atzTracing.finish();
+            } else {
+                Throwable throwable = ictx.traceThrowable();
+                if (null == throwable) {
+                    atzTracing.error(ictx.traceDescription());
+                } else {
+                    atzTracing.error(throwable);
+                }
+            }
+        }
+    }
+
+    private void processAuthorization(ServerRequest req,
+                                      ServerResponse res,
+                                      HttpSecurityInterceptorContext ictx,
+                                      SecurityClientBuilder<AuthorizationResponse> clientBuilder) {
+        // now fully synchronous
+        AuthorizationResponse response = clientBuilder.submit();
+        SecurityResponse.SecurityStatus responseStatus = response.status();
+
+        switch (responseStatus) {
+        case SUCCESS -> {
+            //everything is fine, we can continue with processing
+        }
+        case FAILURE_FINISH -> {
+            ictx.traceSuccess(false);
+            ictx.traceDescription(response.description().orElse(responseStatus.toString()));
+            ictx.traceThrowable(response.throwable().orElse(null));
+            ictx.shouldFinish(true);
+            abortRequest(res, ictx, response, status(response.statusCode(), Status.FORBIDDEN_403), Map.of());
+        }
+        case SUCCESS_FINISH -> {
+            ictx.shouldFinish(true);
+            abortRequest(res, ictx, response, status(response.statusCode(), Status.OK_200), Map.of());
+        }
+        case FAILURE -> {
+            ictx.traceSuccess(false);
+            ictx.traceDescription(response.description().orElse(responseStatus.toString()));
+            ictx.traceThrowable(response.throwable().orElse(null));
+            ictx.shouldFinish(true);
+            abortRequest(res,
+                         ictx,
+                         response,
+                         status(response.statusCode(), Status.FORBIDDEN_403),
+                         Map.of());
+        }
+        case ABSTAIN -> {
+            ictx.traceSuccess(false);
+            ictx.traceDescription(response.description().orElse(responseStatus.toString()));
+            ictx.shouldFinish(true);
+            abortRequest(res,
+                         ictx,
+                         response,
+                         status(response.statusCode(), Status.FORBIDDEN_403),
+                         Map.of());
+        }
+        //noinspection DuplicatedCode
+        default -> {
+            ictx.traceSuccess(false);
+            ictx.traceDescription(response.description().orElse("UNKNOWN_RESPONSE: " + responseStatus));
+            ictx.shouldFinish(true);
+            SecurityException throwable = new SecurityException("Invalid SecurityStatus returned: " + responseStatus);
+            ictx.traceThrowable(throwable);
+            throw throwable;
+        }
+        }
     }
 
     private void authenticate(ServerRequest req,
@@ -187,6 +295,151 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
                               HttpSecurityDefinition definition,
                               SecurityContext securityContext) {
 
+        AtnTracing atnTracing = tracing.atnTracing();
+        try {
+            if (!definition.requiresAuthentication()) {
+                return;
+            }
+            var clientBuilder = securityContext
+                    .atnClientBuilder()
+                    .optional(definition.authenticationOptional())
+                    .update(it -> atnTracing.findParent().ifPresent(it::tracingSpan))
+                    .update(it -> definition.authenticator().ifPresent(it::explicitProvider));
+            authenticate(req, res, ictx, atnTracing, definition, clientBuilder);
+        } finally {
+            if (ictx.traceSuccess()) {
+                securityContext.user()
+                        .ifPresent(atnTracing::logUser);
+
+                securityContext.service()
+                        .ifPresent(atnTracing::logService);
+
+                atnTracing.finish();
+            } else {
+                Throwable ctxThrowable = ictx.traceThrowable();
+                if (null == ctxThrowable) {
+                    atnTracing.error(ictx.traceDescription());
+                } else {
+                    atnTracing.error(ctxThrowable);
+                }
+            }
+        }
+    }
+
+    private void authenticate(ServerRequest req,
+                              ServerResponse res,
+                              HttpSecurityInterceptorContext ictx,
+                              AtnTracing atnTracing,
+                              HttpSecurityDefinition methodSecurity,
+                              SecurityClientBuilder<AuthenticationResponse> clientBuilder) {
+        AuthenticationResponse response = clientBuilder.submit();
+
+        SecurityResponse.SecurityStatus responseStatus = response.status();
+
+        atnTracing.logStatus(responseStatus);
+
+        switch (responseStatus) {
+        case SUCCESS -> {
+            response.requestHeaders()
+                    .forEach((name, values) -> res.header(name, values.toArray(new String[0])));
+        }
+        case FAILURE_FINISH -> {
+            if (methodSecurity.authenticationOptional()) {
+                LOGGER.log(Level.TRACE, "Authentication failed, but was optional, so assuming anonymous");
+            } else {
+                ictx.traceSuccess(false);
+                ictx.traceDescription(response.description().orElse(responseStatus.toString()));
+                ictx.traceThrowable(response.throwable().orElse(null));
+                ictx.shouldFinish(true);
+
+                Status status = status(response.statusCode(), Status.UNAUTHORIZED_401);
+
+                abortRequest(res, ictx, response, status, Map.of());
+            }
+        }
+        case SUCCESS_FINISH -> {
+            ictx.shouldFinish(true);
+            Status status = status(response.statusCode(), Status.OK_200);
+            abortRequest(res, ictx, response, status, Map.of());
+        }
+        case ABSTAIN -> {
+            if (methodSecurity.authenticationOptional()) {
+                LOGGER.log(Level.TRACE, "Authentication failed, but was optional, so assuming anonymous");
+            } else {
+                ictx.traceSuccess(false);
+                ictx.traceDescription(response.description().orElse(responseStatus.toString()));
+                ictx.shouldFinish(true);
+                abortRequest(res,
+                             ictx,
+                             response,
+                             Status.UNAUTHORIZED_401,
+                             Map.of());
+            }
+        }
+        case FAILURE -> {
+            if (methodSecurity.authenticationOptional() && !methodSecurity.failOnFailureIfOptional()) {
+                LOGGER.log(Level.TRACE, "Authentication failed, but was optional, so assuming anonymous");
+            } else {
+                ictx.traceDescription(response.description().orElse(responseStatus.toString()));
+                ictx.traceThrowable(response.throwable().orElse(null));
+                ictx.traceSuccess(false);
+                abortRequest(res,
+                             ictx,
+                             response,
+                             Status.UNAUTHORIZED_401,
+                             Map.of());
+                ictx.shouldFinish(true);
+            }
+        }
+        //noinspection DuplicatedCode
+        default -> {
+            ictx.traceSuccess(false);
+            ictx.traceDescription(response.description().orElse("UNKNOWN_RESPONSE: " + responseStatus));
+            ictx.shouldFinish(true);
+            SecurityException throwable = new SecurityException("Invalid SecurityStatus returned: " + responseStatus);
+            ictx.traceThrowable(throwable);
+            throw throwable;
+        }
+        }
+    }
+
+    private void abortRequest(ServerResponse res,
+                              HttpSecurityInterceptorContext ictx,
+                              SecurityResponse response,
+                              Status defaultStatus,
+                              Map<String, List<String>> defaultHeaders) {
+        Status status = status(response.statusCode(), defaultStatus);
+        Map<String, List<String>> responseHeaders = response.responseHeaders();
+
+        var usedHeaders = responseHeaders.isEmpty() ? defaultHeaders : responseHeaders;
+        for (Map.Entry<String, List<String>> entry : usedHeaders.entrySet()) {
+            res.header(entry.getKey(), entry.getValue().toArray(new String[0]));
+        }
+
+        // Run security response mappers if available, or revert to old logic for compatibility
+        AtomicReference<String> entity = new AtomicReference<>("Security did not allow this request to proceed");
+        if (!responseMappers.isEmpty()) {
+            responseMappers.forEach(m -> entity.set(Objects.requireNonNull(m.aborted(res, response, entity.get()))));
+        } else if (config.get("debug").asBoolean().orElse(false)) {
+            response.description()
+                    .ifPresent(entity::set);
+        }
+
+        if (config.get("do-not-throw").asBoolean().orElse(false)) {
+            if (res.isSent()) {
+                res.send(entity.get());
+            }
+        } else {
+            throw new HttpException(entity.get(), status, true);
+        }
+    }
+
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    private Status status(OptionalInt statusCode, Status defaultStatus) {
+        if (statusCode.isPresent()) {
+            return Status.create(statusCode.getAsInt());
+        }
+        return defaultStatus;
     }
 
     private void audit(ServerRequest req,
@@ -252,9 +505,10 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
 
         securityAnnotations(methodSecurity, method.annotations());
         SecurityLevel currentLevel = methodSecurity.lastSecurityLevel();
-        currentLevel = SecurityLevel.create(currentLevel)
-                .withMethodName(method.elementName())
-                .withMethodAnnotations(method.annotations())
+        currentLevel = SecurityLevel.builder()
+                .from(currentLevel)
+                .methodName(method.elementName())
+                .methodAnnotations(method.annotations())
                 .build();
         methodSecurity.lastSecurityLevel(currentLevel);
 
@@ -310,52 +564,21 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
         config.get("authorize-annotated-only").asBoolean().ifPresent(definition::authorizeAnnotatedOnly);
         config.get("fail-on-failure-if-optional").asBoolean().ifPresent(definition::failOnFailureIfOptional);
 
-        securityAnnotations(definition, ctx.typeAnnotations());
+        List<Annotation> typeAnnotations = ctx.typeAnnotations();
 
-        SecurityLevel securityLevel = SecurityLevel.create(ctx.serviceInfo().serviceType().fqName())
-                .withClassAnnotations(ctx.typeAnnotations())
+        securityAnnotations(definition, typeAnnotations);
+
+        SecurityLevel securityLevel = SecurityLevel.builder()
+                .typeName(ctx.serviceInfo().serviceType())
+                .classAnnotations(typeAnnotations)
                 .build();
         definition.addSecurityLevel(securityLevel);
 
         for (AnnotationAnalyzer analyzer : annotationAnalyzers) {
-            definition.analyzerResponse(analyzer, analyzer.analyze(ctx.serviceInfo().serviceType(), annotations));
+            definition.analyzerResponse(analyzer, analyzer.analyze(ctx.serviceInfo().serviceType(), typeAnnotations));
         }
 
         return definition;
-    }
-
-    private Optional<Boolean> enabledFromAnnotation(InvocationContext ctx, TypeName annotationType) {
-        // first go through explicit annotations on method, then method meta-annotations,
-        // then type annotations, then type meta annotations
-
-        for (Annotation annotation : ctx.elementInfo().annotations()) {
-            if (annotation.typeName().equals(annotationType)) {
-                return annotation.booleanValue();
-            }
-        }
-
-        for (Annotation annotation : ctx.elementInfo().annotations()) {
-            for (Annotation metaAnnotation : annotation.metaAnnotations()) {
-                if (metaAnnotation.typeName().equals(annotationType)) {
-                    return metaAnnotation.booleanValue();
-                }
-            }
-        }
-
-        for (Annotation annotation : ctx.typeAnnotations()) {
-            if (annotation.typeName().equals(annotationType)) {
-                return annotation.booleanValue();
-            }
-        }
-        for (Annotation annotation : ctx.typeAnnotations()) {
-            for (Annotation metaAnnotation : annotation.metaAnnotations()) {
-                if (metaAnnotation.typeName().equals(annotationType)) {
-                    return metaAnnotation.booleanValue();
-                }
-            }
-        }
-
-        return Optional.empty();
     }
 
     private record Signature(TypeName declaringType,

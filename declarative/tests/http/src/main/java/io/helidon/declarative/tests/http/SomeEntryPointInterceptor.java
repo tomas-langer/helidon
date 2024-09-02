@@ -7,7 +7,7 @@ import io.helidon.service.inject.api.Interception;
 import io.helidon.service.inject.api.InvocationContext;
 
 @Injection.Singleton
-@Weight(102)
+@Weight(1000)
 class SomeEntryPointInterceptor implements EntryPointInterceptor {
     @Override
     public <T> T proceed(InvocationContext invocationContext, Interception.Interceptor.Chain<T> chain, Object... args)
