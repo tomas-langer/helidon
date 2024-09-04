@@ -43,7 +43,8 @@ module io.helidon.declarative.codegen {
             with io.helidon.declarative.codegen.faulttolerance.FtExtensionProvider,
                     io.helidon.declarative.codegen.scheduling.SchedulingExtensionProvider,
                     io.helidon.declarative.codegen.http.restclient.RestClientExtensionProvider,
-                    io.helidon.declarative.codegen.http.webserver.RestServerExtensionProvider;
+                    io.helidon.declarative.codegen.http.webserver.RestServerExtensionProvider,
+                    io.helidon.declarative.codegen.http.websocket.WsExtensionProvider;
 
     provides io.helidon.codegen.spi.AnnotationMapperProvider
             with io.helidon.declarative.codegen.http.restclient.RestClientAnnotationMapperProvider;

@@ -37,7 +37,14 @@ public class WsRoute implements Route {
         this.listenerSupplier = listenerSupplier;
     }
 
-    static WsRoute create(String path, WsListener listener) {
+    /**
+     * Create a new route for the specified path and a listener.
+     *
+     * @param path path to handle
+     * @param listener WebSocket listener for the path
+     * @return a new route
+     */
+    public static WsRoute create(String path, WsListener listener) {
         PathMatcher pathMatcher = PathMatchers.create(path);
         return new WsRoute(pathMatcher, () -> listener);
     }

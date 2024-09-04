@@ -152,6 +152,8 @@ class ApplicationCreator {
         classModel.addMethod(configureMethod -> configureMethod
                 .addAnnotation(Annotations.OVERRIDE)
                 .name("configure")
+                // constructors of services for service loader are usually deprecated in Helidon
+                .addAnnotation(Annotation.create(SuppressWarnings.class, "deprecation"))
                 .addParameter(binderParam -> binderParam
                         .name("binder")
                         .type(INJECTION_PLAN_BINDER))
@@ -235,9 +237,9 @@ class ApplicationCreator {
                     .addContentCreate(providerInterface)
                     .addContent(", ")
                     .addContent(providerImpl)
-                    .addContent(".class, () -> new ")
+                    .addContent(".class, ")
                     .addContent(providerImpl)
-                    .addContent("(), ")
+                    .addContent("::new, ")
                     .addContent(String.valueOf(sl.weight()))
                     .addContent(")");
         } else {

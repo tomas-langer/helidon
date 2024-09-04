@@ -32,6 +32,8 @@ module io.helidon.declarative.tests.http {
     requires io.helidon.security.abac.role;
     requires io.helidon.security.integration.common;
     requires io.helidon.security.annotations;
+    requires io.helidon.websocket;
+    requires io.helidon.webserver.websocket;
 
     exports io.helidon.declarative.tests.http;
     exports io.helidon.declarative.tests.http.security;

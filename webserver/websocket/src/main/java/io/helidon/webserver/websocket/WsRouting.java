@@ -52,7 +52,7 @@ public class WsRouting implements Routing {
     }
 
     /**
-     * Emtpy WebSocket routing.
+     * Empty WebSocket routing.
      *
      * @return empty routing
      */
@@ -127,7 +127,13 @@ public class WsRouting implements Routing {
             return route(WsRoute.create(path, listener));
         }
 
-        private Builder route(WsRoute wsRoute) {
+        /**
+         * Add {@link io.helidon.webserver.websocket.WsRoute} to this routing.
+         *
+         * @param wsRoute route to add
+         * @return updated builder
+         */
+        public Builder route(WsRoute wsRoute) {
             routes.add(wsRoute);
             return this;
         }

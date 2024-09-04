@@ -20,6 +20,16 @@ app:
 server:
   port: 8080
   host: 0.0.0.0
+  features:
+    security:
+      endpoint:
+        "io.helidon.test.GreetEndpoint":
+          config:
+            roles-allowed: "admin"
+          methods:
+            - name: "myMethod" # need to support full signature if two methods have same name
+              config:
+                abac.policy.policy-statements: ["statement expression language"]
 #  features:
 #    security:
 #      paths:
@@ -27,6 +37,39 @@ server:
 #          methods: [ "post" ]
 #          # implies authentication and authorization
 #          roles-allowed: [ "admin" ]
+
+type-config:
+  "io.helidon.test.GreetEndpointClient":
+    type:
+      security:
+        abac:
+          role:
+            user-roles-allowed: [ "admin", "owner" ]
+    methods:
+      - name: "myMethod"
+        security:
+          abac:
+            policy:
+              policy-statements: "policy-el"
+        annotations:
+          - type: "io.helidon.security.abac.role.RoleValidator.Roles"
+            values:
+              - key: "value"
+                value: ["admin", "owner"]
+                type: "java.lang.String[]"
+              - key: "subjectType"
+                value:
+                  enum:
+                    type: "io.helidon.security.SubjectType"
+                    value: "USER"
+    server.endpoint.path:
+    security.el.expression: "..."
+    client.url:
+    security:
+      ...
+    metrics:
+      ...
+
 
 security:
   providers:

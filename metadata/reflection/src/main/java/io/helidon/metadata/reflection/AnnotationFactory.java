@@ -457,6 +457,7 @@ public final class AnnotationFactory {
         }
 
         private int handleHashCode(Object proxy) {
+            // this is prescribed by Java specification, to have same hash code as instance from reflection
             if (cachedHash != 0) {
                 return cachedHash;
             }
