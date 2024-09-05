@@ -128,7 +128,7 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
                             builder.permitAll(false);
                             builder.denyAll(false);
                         }
-                    } else if (annotation instanceof PermitAll) {
+                    } else if (annotation instanceof PermitAll || annotation instanceof jakarta.annotation.security.PermitAll) {
                         builder.permitAll(true);
                         builder.denyAll(false);
                     } else if (annotation instanceof DenyAll) {
@@ -163,7 +163,12 @@ public final class RoleValidator implements AbacValidator<RoleValidator.RoleConf
     @Override
     public Collection<Class<? extends Annotation>> supportedAnnotations() {
         //Order of the annotations matters because of annotation handling.
-        return List.of(RolesAllowed.class, Roles.class, RolesContainer.class, PermitAll.class, DenyAll.class);
+        return List.of(RolesAllowed.class,
+                       Roles.class,
+                       RolesContainer.class,
+                       PermitAll.class,
+                       jakarta.annotation.security.PermitAll.class,
+                       DenyAll.class);
     }
 
     private void validate(Set<String> rolesAllowed, Errors.Collector collector, Optional<Subject> subject, SubjectType type) {

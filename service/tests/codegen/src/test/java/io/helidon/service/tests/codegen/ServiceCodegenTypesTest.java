@@ -47,6 +47,7 @@ import io.helidon.service.inject.api.Invoker;
 import io.helidon.service.inject.api.Ip;
 import io.helidon.service.inject.api.Lookup;
 import io.helidon.service.inject.api.Qualifier;
+import io.helidon.service.inject.api.ServiceInstance;
 import io.helidon.service.registry.Dependency;
 import io.helidon.service.registry.DependencyContext;
 import io.helidon.service.registry.GeneratedService;
@@ -124,6 +125,7 @@ class ServiceCodegenTypesTest {
         checkField(toCheck, checked, fields, "INJECT_IP_SUPPORT", IpSupport.class);
         checkField(toCheck, checked, fields, "INJECT_CONFIG", InjectConfig.class);
         checkField(toCheck, checked, fields, "INJECT_REGISTRY_MANAGER", InjectRegistryManager.class);
+        checkField(toCheck, checked, fields, "INJECT_SERVICE_INSTANCE", ServiceInstance.class);
         checkField(toCheck, checked, fields, "INJECT_REGISTRY", InjectRegistry.class);
         checkField(toCheck, checked, fields, "INJECT_APPLICATION_MAIN", ApplicationMain.class);
 

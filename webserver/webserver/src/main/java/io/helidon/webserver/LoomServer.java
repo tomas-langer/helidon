@@ -70,10 +70,10 @@ class LoomServer implements WebServer {
     private volatile boolean alreadyStarted = false;
 
     @Injection.Inject
-    LoomServer(WebServerService service) {
+    LoomServer(List<WebServerRegistryService> services) {
         // only used by service registry
         this(WebServerConfig.builder()
-                     .update(service::updateServerBuilder)
+                     .update(it -> services.forEach(service -> service.updateBuilder(it)))
                      .buildPrototype());
     }
 

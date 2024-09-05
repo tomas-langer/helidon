@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import io.helidon.common.types.TypeName;
 import io.helidon.security.AuthorizationResponse;
 import io.helidon.security.EndpointConfig;
 import io.helidon.security.ProviderRequest;
@@ -41,15 +40,15 @@ import static org.mockito.Mockito.when;
 /**
  * Unit test for {@link io.helidon.security.providers.abac.AbacProvider}.
  */
-public class AbacProviderTest {
+@SuppressWarnings("removal")
+public class AbacProviderDeprecatedApiTest {
     @Test
     public void testMissingValidator() {
         AbacProvider provider = AbacProvider.create();
         Attrib1 attrib = Mockito.mock(Attrib1.class);
         doReturn(Attrib1.class).when(attrib).annotationType();
 
-        SecurityLevel level = SecurityLevel.builder()
-                .typeName(TypeName.create("mock"))
+        SecurityLevel level = SecurityLevel.create("mock")
                 .withClassAnnotations(Map.of(Attrib1.class, List.of(attrib)))
                 .build();
 

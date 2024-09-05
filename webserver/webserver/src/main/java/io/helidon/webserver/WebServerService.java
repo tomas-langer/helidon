@@ -40,7 +40,7 @@ import io.helidon.webserver.spi.ServerFeature;
 Combines configuration done by hand with services discovered using the registry.
  */
 @Injection.Singleton
-class WebServerService {
+class WebServerService implements WebServerRegistryService {
     private final Optional<Config> config;
     private final List<ServerFeature> serverFeatures;
     private final List<HttpFeature> httpFeatures;
@@ -74,6 +74,11 @@ class WebServerService {
         this.directHandlers = directHandlers;
         this.httpErrorHandlers = httpErrorHandlers;
         this.requestedUriDiscoveryContext = requestedUriDiscoveryContext;
+    }
+
+    @Override
+    public void updateBuilder(WebServerConfig.BuilderBase<?, ?> builder) {
+        updateServerBuilder(builder);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

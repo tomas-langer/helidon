@@ -18,9 +18,11 @@ package io.helidon.security.abac.role;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import io.helidon.common.Errors;
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.security.EndpointConfig;
 import io.helidon.security.Principal;
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -327,20 +330,24 @@ class RoleValidatorTest {
     void testDenyAllAndPermitAll() {
         RoleValidator validator = RoleValidator.create();
         PermitAll permitAll = mock(PermitAll.class);
+        doReturn(PermitAll.class).when(permitAll).annotationType();
         DenyAll denyAll = mock(DenyAll.class);
+        doReturn(DenyAll.class).when(denyAll).annotationType();
 
-        SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
-        SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
         List<SecurityLevel> securityLevels = new ArrayList<>();
-        securityLevels.add(appSecurityLevel);
-        securityLevels.add(classSecurityLevel);
+        securityLevels.add(SecurityLevel.builder()
+                                   .typeName(TypeName.create(RoleValidatorTest.class))
+                                   .methodName("firstLevel")
+                                   .build());
+        securityLevels.add(SecurityLevel.builder()
+                                   .typeName(TypeName.create(RoleValidatorTest.class))
+                                   .methodName("secondLevel")
+                                   .withClassAnnotations(Map.of(DenyAll.class, List.of(denyAll)))
+                                   .withMethodAnnotations(Map.of(PermitAll.class, List.of(permitAll)))
+                                   .build());
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(DenyAll.class, EndpointConfig.AnnotationScope.CLASS))
-                .thenReturn(List.of(denyAll));
-        when(classSecurityLevel.filterAnnotations(PermitAll.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(permitAll));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 

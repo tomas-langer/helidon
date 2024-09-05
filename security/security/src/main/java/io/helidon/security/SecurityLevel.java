@@ -408,7 +408,9 @@ public class SecurityLevel {
          *
          * @param methodAnnotations new method level annotations
          * @return updated builder instance
+         * @deprecated use {@link #methodAnnotations(java.util.List)} instead
          */
+        @Deprecated(forRemoval = true, since = "4.2.0")
         public SecurityLevelBuilder withMethodAnnotations(Map<Class<? extends Annotation>, List<Annotation>> methodAnnotations) {
             return methodAnnotations(methodAnnotations.values()
                                              .stream()

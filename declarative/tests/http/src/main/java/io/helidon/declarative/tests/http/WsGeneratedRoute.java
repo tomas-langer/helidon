@@ -10,6 +10,7 @@ import io.helidon.http.HttpPrologue;
 import io.helidon.http.PathMatcher;
 import io.helidon.http.PathMatchers;
 import io.helidon.service.inject.api.Injection;
+import io.helidon.service.registry.Service;
 import io.helidon.webserver.websocket.WsRoute;
 import io.helidon.websocket.WebSocket;
 import io.helidon.websocket.WsCloseCodes;
@@ -18,7 +19,7 @@ import io.helidon.websocket.WsListener;
 import io.helidon.websocket.WsSession;
 
 @Injection.Singleton
-public class WsGeneratedRoute implements Supplier<WsRoute> {
+public class WsGeneratedRoute implements Service.InstanceProvider<WsRoute> {
     private final Supplier<WsChatEndpoint> endpoint;
 
     WsGeneratedRoute(Supplier<WsChatEndpoint> endpoint) {

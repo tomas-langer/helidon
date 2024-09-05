@@ -68,7 +68,7 @@ public interface AnnotationAnalyzer {
                                      List<Annotation> annotations) {
         // the default must fallback to reflection, as only this method is going to be called now
         try {
-            return analyze(Class.forName(applicationType.fqName()));
+            return analyze(Class.forName(applicationType.name()));
         } catch (ClassNotFoundException e) {
             throw new SecurityException("Cannot analyze endpoint class, as it cannot be obtained", e);
         }
@@ -102,7 +102,7 @@ public interface AnnotationAnalyzer {
     default AnalyzerResponse analyze(TypeName endpointType, List<Annotation> annotations, AnalyzerResponse previousResponse) {
         // the default must fallback to reflection, as only this method is going to be called now
         try {
-            return analyze(Class.forName(endpointType.fqName()), previousResponse);
+            return analyze(Class.forName(endpointType.name()), previousResponse);
         } catch (ClassNotFoundException e) {
             throw new SecurityException("Cannot analyze endpoint class, as it cannot be obtained", e);
         }
@@ -137,7 +137,7 @@ public interface AnnotationAnalyzer {
     default AnalyzerResponse analyze(TypeName typeName, TypedElementInfo method, AnalyzerResponse previousResponse) {
         // the default must fallback to reflection, as only this method is going to be called now
         try {
-            Class<?> aClass = Class.forName(typeName.fqName());
+            Class<?> aClass = Class.forName(typeName.name());
             for (Method declaredMethod : aClass.getDeclaredMethods()) {
                 // find the right method
                 if (!declaredMethod.getName().equals(method.elementName())) {

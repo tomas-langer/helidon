@@ -36,6 +36,7 @@ import io.helidon.common.types.TypedElementInfo;
 import io.helidon.jersey.common.InvokedResource;
 import io.helidon.metadata.reflection.AnnotationFactory;
 import io.helidon.metadata.reflection.TypedElementFactory;
+import io.helidon.microprofile.server.JaxRsCdiExtension;
 import io.helidon.security.AuditEvent;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityContext;
@@ -305,6 +306,15 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
      */
     private SecurityDefinition securityForClass(Class<?> theClass, SecurityDefinition parent) {
         Class<?> realClass = getRealClass(theClass);
+
+        if (theClass.getEnclosingClass() != null && theClass.getEnclosingClass().equals(JaxRsCdiExtension.class)) {
+            // inner class of the CDI extension - there is no real application
+            var definition = new SecurityDefinition(featureConfig().shouldAuthorizeAnnotatedOnly(),
+                                          featureConfig().failOnFailureIfOptional());
+            analyzers.forEach(analyzer -> definition.analyzerResponse(analyzer, AnnotationAnalyzer.AnalyzerResponse.abstain()));
+            return definition;
+        }
+
         Authenticated atn = realClass.getAnnotation(Authenticated.class);
         Authorized atz = realClass.getAnnotation(Authorized.class);
         Audited audited = realClass.getAnnotation(Audited.class);
