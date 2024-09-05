@@ -61,6 +61,10 @@ public final class Service {
      *     supports the capability to return {@link java.util.Optional} in case the service cannot provide a value; such
      *     a service will be ignored and only other implementations (with lower weight) would be used. Supplier will be
      *     called each time the dependency is used, or each time a method on registry is called to request an instance</li>
+     *     <li>Implementing a {@link io.helidon.service.registry.Service.InstanceProvider}</li> of the contract; when using
+     *     instance supplier, service registry also supports returning {@link java.util.Optional} (see above for Supplier).
+     *     The method {@link io.helidon.service.registry.Service.InstanceProvider#get()} will be called only once, and the
+     *     return instance will be re-used to satisfy service dependencies.
      * </ul>
      */
     @Documented
@@ -187,5 +191,27 @@ public final class Service {
          * @return contracts of this service descriptor
          */
         Class<?>[] contracts();
+    }
+
+    /**
+     * This interface can be implemented by a {@link io.helidon.service.registry.Service.Provider} to provide a single
+     * instance that will be <b>reused</b>, as opposed to a {@link java.util.function.Supplier}, when a new instance is
+     * used for each dependency.
+     *
+     * @param <T> type of the provided contract
+     */
+    @Contract
+    public interface InstanceProvider<T> {
+        /**
+         * Type of this interface.
+         */
+        TypeName TYPE = TypeName.create(InstanceProvider.class);
+
+        /**
+         * Get the instance.
+         *
+         * @return instance to be used by registry
+         */
+        T get();
     }
 }

@@ -203,6 +203,10 @@ class CoreServiceRegistry implements ServiceRegistry {
         if (descriptorMeta.contracts().contains(TypeNames.SUPPLIER)) {
             return new ServiceAndInstance(serviceInstance,
                                           () -> instanceFromSupplier(descriptorMeta.descriptor(), serviceInstance));
+        } else if (descriptorMeta.contracts().contains(Service.InstanceProvider.TYPE)) {
+            return new ServiceAndInstance(serviceInstance,
+                                          LazyValue.create(() -> instanceFromProvider(descriptorMeta.descriptor(),
+                                                                                      serviceInstance)));
         } else {
             return new ServiceAndInstance(serviceInstance);
         }
@@ -239,6 +243,23 @@ class CoreServiceRegistry implements ServiceRegistry {
         } else {
             throw new ServiceRegistryException("Service " + descriptor.serviceType().fqName()
                                                        + " exposes Supplier as an interface, yet it does not"
+                                                       + " implement it.");
+        }
+    }
+
+    private Optional<Object> instanceFromProvider(Descriptor<?> descriptor, LazyValue<Optional<Object>> serviceInstanceSupplier) {
+        Optional<Object> serviceInstance = serviceInstanceSupplier.get();
+        if (serviceInstance.isEmpty()) {
+            return Optional.empty();
+        }
+        Object actualInstance = serviceInstance.get();
+
+        // the service has a InstanceProvider contract, so its instance should implement an InstanceProvider
+        if (actualInstance instanceof Service.InstanceProvider<?> provider) {
+            return fromSupplierValue(provider.get());
+        } else {
+            throw new ServiceRegistryException("Service " + descriptor.serviceType().fqName()
+                                                       + " exposes Service.InstanceProvider as an interface, yet it does not"
                                                        + " implement it.");
         }
     }
