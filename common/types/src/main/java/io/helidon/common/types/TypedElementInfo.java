@@ -85,6 +85,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         private boolean isInheritedAnnotationsMutated;
         private boolean isParameterArgumentsMutated;
         private ElementKind kind;
+        private ElementSignature signature;
         private Object originatingElement;
         private String defaultValue;
         private String description;
@@ -130,6 +131,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
             addParameterArguments(prototype.parameterArguments());
             addThrowsChecked(prototype.throwsChecked());
             originatingElement(prototype.originatingElement());
+            signature(prototype.signature());
             if (!isAnnotationsMutated) {
                 annotations.clear();
             }
@@ -184,6 +186,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
             }
             addThrowsChecked(builder.throwsChecked);
             builder.originatingElement().ifPresent(this::originatingElement);
+            builder.signature().ifPresent(this::signature);
             if (isAnnotationsMutated) {
                 if (builder.isAnnotationsMutated) {
                     addAnnotations(builder.annotations);
@@ -705,6 +708,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         public BUILDER addAnnotation(Annotation annotation) {
             Objects.requireNonNull(annotation);
             this.annotations.add(annotation);
+            isAnnotationsMutated = true;
             return self();
         }
 
@@ -964,6 +968,17 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         }
 
         /**
+         * Signature of this element.
+         *
+         * @return the signature
+         * @see io.helidon.common.types.ElementSignature
+         * @see #signature()
+         */
+        public Optional<ElementSignature> signature() {
+            return Optional.ofNullable(signature);
+        }
+
+        /**
          * List of declared and known annotations for this element.
          * Note that "known" implies that the annotation is visible, which depends
          * upon the context in which it was build (such as the {@link java.lang.annotation.Retention of the annotation}).
@@ -1015,6 +1030,9 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
             }
             if (accessModifier == null) {
                 collector.fatal(getClass(), "Property \"accessModifier\" must not be null, but not set");
+            }
+            if (signature == null) {
+                collector.fatal(getClass(), "Property \"signature\" must not be null, but not set");
             }
             collector.collect().checkValid();
         }
@@ -1077,12 +1095,27 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
         }
 
         /**
+         * Signature of this element.
+         *
+         * @param signature signature of this element
+         * @return updated builder instance
+         * @see io.helidon.common.types.ElementSignature
+         * @see #signature()
+         */
+        BUILDER signature(ElementSignature signature) {
+            Objects.requireNonNull(signature);
+            this.signature = signature;
+            return self();
+        }
+
+        /**
          * Generated implementation of the prototype, can be extended by descendant prototype implementations.
          */
         protected static class TypedElementInfoImpl implements TypedElementInfo {
 
             private final AccessModifier accessModifier;
             private final ElementKind kind;
+            private final ElementSignature signature;
             private final List<Annotation> annotations;
             private final List<Annotation> elementTypeAnnotations;
             private final List<Annotation> inheritedAnnotations;
@@ -1120,6 +1153,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
                 this.parameterArguments = List.copyOf(builder.parameterArguments());
                 this.throwsChecked = Collections.unmodifiableSet(new LinkedHashSet<>(builder.throwsChecked()));
                 this.originatingElement = builder.originatingElement();
+                this.signature = builder.signature().get();
                 this.annotations = List.copyOf(builder.annotations());
                 this.inheritedAnnotations = List.copyOf(builder.inheritedAnnotations());
             }
@@ -1210,6 +1244,11 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
             }
 
             @Override
+            public ElementSignature signature() {
+                return signature;
+            }
+
+            @Override
             public List<Annotation> annotations() {
                 return annotations;
             }
@@ -1233,6 +1272,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
                         && Objects.equals(enclosingType, other.enclosingType())
                         && Objects.equals(parameterArguments, other.parameterArguments())
                         && Objects.equals(throwsChecked, other.throwsChecked())
+                        && Objects.equals(signature, other.signature())
                         && Objects.equals(annotations, other.annotations())
                         && Objects.equals(inheritedAnnotations, other.inheritedAnnotations());
             }
@@ -1245,6 +1285,7 @@ public interface TypedElementInfo extends TypedElementInfoBlueprint, Prototype.A
                                     enclosingType,
                                     parameterArguments,
                                     throwsChecked,
+                                    signature,
                                     annotations,
                                     inheritedAnnotations);
             }

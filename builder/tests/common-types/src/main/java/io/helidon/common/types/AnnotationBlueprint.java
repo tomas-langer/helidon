@@ -662,4 +662,19 @@ interface AnnotationBlueprint {
         return AnnotationSupport.asEnums(typeName(), values(), property, type);
     }
 
+    /**
+     * Check if {@link #metaAnnotations()} contains an annotation of the provided type.
+     * <p>
+     * Note: we ignore {@link java.lang.annotation.Target}, {@link java.lang.annotation.Inherited},
+     * {@link java.lang.annotation.Documented}, and {@link java.lang.annotation.Retention}.
+     *
+     * @param annotationType type of annotation
+     * @return {@code true} if the annotation is declared on this annotation, or is inherited from a declared annotation
+     */
+    default boolean hasMetaAnnotation(TypeName annotationType) {
+        return metaAnnotations()
+                .stream()
+                .map(Annotation::typeName)
+                .anyMatch(annotationType::equals);
+    }
 }

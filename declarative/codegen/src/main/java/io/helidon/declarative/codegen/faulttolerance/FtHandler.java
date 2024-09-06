@@ -20,7 +20,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import io.helidon.codegen.CodegenException;
 import io.helidon.codegen.CodegenUtil;
@@ -95,9 +94,7 @@ abstract class FtHandler {
 
     Annotation namedAnnotation(TypeName enclosingTypeName,
                                TypedElementInfo element) {
-        return namedAnnotation(enclosingTypeName.fqName()
-                                       + "." + element.elementName()
-                                       + "(" + paramsForNamed(element.parameterArguments()) + ")");
+        return namedAnnotation(enclosingTypeName.fqName() + "." + element.signature().text());
     }
 
     Annotation namedAnnotation(String name) {
@@ -188,13 +185,6 @@ abstract class FtHandler {
                 .copyright(CodegenUtil.copyright(generator, enclosingType, generatedType))
                 .type(generatedType)
                 .sortStaticFields(false);
-    }
-
-    private String paramsForNamed(List<TypedElementInfo> params) {
-        return params.stream()
-                .map(TypedElementInfo::typeName)
-                .map(TypeName::fqName)
-                .collect(Collectors.joining(","));
     }
 
     private TypeName generatedTypeName(TypeName typeName, TypedElementInfo element, int index) {

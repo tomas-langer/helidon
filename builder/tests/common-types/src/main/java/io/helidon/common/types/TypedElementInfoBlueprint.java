@@ -167,4 +167,13 @@ interface TypedElementInfoBlueprint extends Annotated {
      */
     @Option.Redundant
     Optional<Object> originatingElement();
+
+    /**
+     * Signature of this element.
+     *
+     * @return signature of this element
+     * @see io.helidon.common.types.ElementSignature
+     */
+    @Option.Access("")
+    ElementSignature signature();
 }
