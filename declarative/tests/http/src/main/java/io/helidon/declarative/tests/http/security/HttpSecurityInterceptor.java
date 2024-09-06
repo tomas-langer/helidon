@@ -573,7 +573,7 @@ class HttpSecurityInterceptor implements HttpEntryPointInterceptor {
         securityAnnotations(definition, typeAnnotations);
 
         SecurityLevel securityLevel = SecurityLevel.builder()
-                .typeName(ctx.serviceInfo().serviceType())
+                .type(ctx.serviceInfo().serviceType())
                 .classAnnotations(typeAnnotations)
                 .build();
         definition.addSecurityLevel(securityLevel);

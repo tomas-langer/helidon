@@ -56,6 +56,7 @@ import io.helidon.common.LazyValue;
 import io.helidon.common.config.Config;
 import io.helidon.common.configurable.Resource;
 import io.helidon.common.pki.Keys;
+import io.helidon.common.types.TypeName;
 import io.helidon.config.metadata.Configured;
 import io.helidon.config.metadata.ConfiguredOption;
 import io.helidon.config.metadata.ConfiguredValue;
@@ -70,6 +71,7 @@ import io.helidon.security.Role;
 import io.helidon.security.Security;
 import io.helidon.security.SecurityEnvironment;
 import io.helidon.security.SecurityException;
+import io.helidon.security.SecurityLevel;
 import io.helidon.security.SecurityResponse;
 import io.helidon.security.Subject;
 import io.helidon.security.SubjectType;
@@ -116,6 +118,7 @@ public class JwtAuthProvider implements AuthenticationProvider, OutboundSecurity
      */
     public static final String CONFIG_EXPECTED_AUDIENCES = "mp.jwt.verify.audiences";
 
+    private static final TypeName LOGIN_CONFIG = TypeName.create(LoginConfig.class);
     private static final String CONFIG_EXPECTED_MAX_TOKEN_AGE = "mp.jwt.verify.token.age";
     private static final String CONFIG_CLOCK_SKEW = "mp.jwt.verify.clock.skew";
     /**
@@ -220,8 +223,12 @@ public class JwtAuthProvider implements AuthenticationProvider, OutboundSecurity
         }
 
         //Obtains Application level of security
-        List<LoginConfig> loginConfigs = providerRequest.endpointConfig().securityLevels().get(0)
-                .filterAnnotations(LoginConfig.class, EndpointConfig.AnnotationScope.CLASS);
+        List<SecurityLevel> securityLevels = providerRequest.endpointConfig().securityLevels();
+        if (securityLevels.isEmpty()) {
+            return AuthenticationResponse.abstain();
+        }
+        List<io.helidon.common.types.Annotation> loginConfigs = securityLevels.getFirst()
+                .filterAnnotations(LOGIN_CONFIG, EndpointConfig.AnnotationScope.CLASS);
 
         try {
             return loginConfigs.stream()
@@ -234,7 +241,7 @@ public class JwtAuthProvider implements AuthenticationProvider, OutboundSecurity
         }
     }
 
-    AuthenticationResponse authenticate(ProviderRequest providerRequest, LoginConfig loginConfig) {
+    AuthenticationResponse authenticate(ProviderRequest providerRequest, io.helidon.common.types.Annotation loginConfig) {
         Optional<String> maybeToken;
         try {
             Map<String, List<String>> headers = providerRequest.env().headers();

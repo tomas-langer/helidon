@@ -23,6 +23,7 @@ import io.helidon.common.types.Annotation;
 import io.helidon.common.types.Annotations;
 import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypedElementInfo;
+import io.helidon.security.providers.abac.AbacProvider;
 import io.helidon.security.providers.common.spi.AnnotationAnalyzer;
 
 import jakarta.annotation.security.PermitAll;
@@ -33,13 +34,6 @@ import jakarta.annotation.security.PermitAll;
  */
 @Weight(Weighted.DEFAULT_WEIGHT) // Helidon service loader loaded and ordered
 public class RoleAnnotationAnalyzer implements AnnotationAnalyzer {
-    private static final TypeName PERMIT_ALL = TypeName.create(PermitAll.class);
-    private static final TypeName PERMIT_ALL_HELIDON = TypeName.create(RoleValidator.PermitAll.class);
-    private static final TypeName ROLES_ALLOWED_JAKARTA = TypeName.create("jakarta.annotation.security.RolesAllowed");
-    private static final TypeName ROLES_ALLOWED_JAVAX = TypeName.create("javax.annotation.security.RolesAllowed");
-    private static final TypeName ROLE_HELIDON = TypeName.create(RoleValidator.Roles.class);
-    private static final TypeName ROLES_HELIDON = TypeName.create(RoleValidator.RolesContainer.class);
-
     @Override
     public AnalyzerResponse analyze(Class<?> maybeAnnotated) {
         return AnalyzerResponse.abstain();
@@ -61,7 +55,10 @@ public class RoleAnnotationAnalyzer implements AnnotationAnalyzer {
     }
 
     private static AnalyzerResponse analyze(List<Annotation> annotations, AnalyzerResponse previousResponse) {
-        if (hasAnnotation(annotations, PERMIT_ALL, PERMIT_ALL_HELIDON)) {
+        if (hasAnnotation(annotations,
+                          AbacProvider.PERMIT_ALL_JAKARTA_TYPE,
+                          AbacProvider.PERMIT_ALL_JAVAX_TYPE,
+                          RoleValidator.PermitAll.TYPE)) {
             // permit all wins
             return AnalyzerResponse.builder(previousResponse)
                     .authenticationResponse(Flag.OPTIONAL)
@@ -69,7 +66,11 @@ public class RoleAnnotationAnalyzer implements AnnotationAnalyzer {
                     .build();
         }
 
-        if (hasAnnotation(annotations, ROLES_ALLOWED_JAKARTA, ROLES_ALLOWED_JAVAX, ROLES_HELIDON, ROLE_HELIDON)) {
+        if (hasAnnotation(annotations,
+                          AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE,
+                          AbacProvider.ROLES_ALLOWED_JAVAX_TYPE,
+                          RoleValidator.RolesContainer.TYPE,
+                          RoleValidator.Roles.TYPE)) {
             // when roles allowed are defined, we require authentication (roles allowed is handled by authentication)
             return AnalyzerResponse.builder(previousResponse)
                     .authenticationResponse(Flag.REQUIRED)

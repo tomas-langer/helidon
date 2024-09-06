@@ -17,9 +17,7 @@
 package io.helidon.microprofile.security;
 
 import java.lang.System.Logger.Level;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -180,6 +178,7 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) {
         jakarta.ws.rs.core.SecurityContext jSecurityContext = requestContext.getSecurityContext();
@@ -333,16 +332,15 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
             definition.requiresAuthentication(true);
         }
 
-        Map<Class<? extends Annotation>, List<Annotation>> customAnnotsMap = new HashMap<>();
-        addCustomAnnotations(customAnnotsMap, realClass);
-
-        SecurityLevel securityLevel = SecurityLevel.create(realClass.getName())
-                                                   .withClassAnnotations(customAnnotsMap)
-                                                   .build();
-        definition.getSecurityLevels().add(securityLevel);
-
         TypeName realClassType = TypeName.create(realClass);
         List<io.helidon.common.types.Annotation> annotations = AnnotationFactory.create(realClass);
+
+        var securityLevel = SecurityLevel.builder()
+                .type(realClassType)
+                .classAnnotations(annotations)
+                .build();
+
+        definition.getSecurityLevels().add(securityLevel);
 
         for (AnnotationAnalyzer analyzer : analyzers) {
             AnnotationAnalyzer.AnalyzerResponse analyzerResponse;
@@ -448,13 +446,13 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
                 current = securityForClass(clazz, current);
                 SecurityDefinition methodDef = processMethod(current.copyMe(), method);
 
-                SecurityLevel currentSecurityLevel = methodDef.getSecurityLevels().get(methodDef.getSecurityLevels().size() - 1);
+                SecurityLevel currentSecurityLevel = methodDef.getSecurityLevels()
+                        .getLast();
 
-                Map<Class<? extends Annotation>, List<Annotation>> methodAnnotations = new HashMap<>();
-                addCustomAnnotations(methodAnnotations, method);
-                SecurityLevel newSecurityLevel = SecurityLevel.create(currentSecurityLevel)
-                                                              .withMethodName(method.getName())
-                                                              .withMethodAnnotations(methodAnnotations)
+                SecurityLevel newSecurityLevel = SecurityLevel.builder()
+                                                              .from(currentSecurityLevel)
+                                                              .methodName(method.getName())
+                                                              .methodAnnotations(AnnotationFactory.create(method))
                                                               .build();
                 methodDef.getSecurityLevels().set(methodDef.getSecurityLevels().size() - 1, newSecurityLevel);
                 TypeName declaringType = TypeName.create(method.getDeclaringClass());
@@ -495,12 +493,11 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
 
         int index = methodDef.getSecurityLevels().size() - 1;
         SecurityLevel currentSecurityLevel = methodDef.getSecurityLevels().get(index);
-        Map<Class<? extends Annotation>, List<Annotation>> methodLevelAnnotations = new HashMap<>();
-        addCustomAnnotations(methodLevelAnnotations, definitionMethod);
 
-        methodDef.getSecurityLevels().set(index, SecurityLevel.create(currentSecurityLevel)
-                                                              .withMethodName(definitionMethod.getName())
-                                                              .withMethodAnnotations(methodLevelAnnotations)
+        methodDef.getSecurityLevels().set(index, SecurityLevel.builder()
+                                                              .from(currentSecurityLevel)
+                                                              .methodName(definitionMethod.getName())
+                                                              .methodAnnotations(AnnotationFactory.create(definitionMethod))
                                                               .build());
         try {
             resourceMethodSecurityLock.lock();
@@ -531,26 +528,6 @@ public class SecurityFilter extends SecurityFilterCommon implements ContainerReq
                                                               aClass -> securityForClass(definitionClass, appClassSecurity));
         } finally {
             resourceClassSecurityLock.unlock();
-        }
-    }
-
-    private void addCustomAnnotations(Map<Class<? extends Annotation>, List<Annotation>> customAnnotsMap, Class<?> theClass) {
-        Annotation[] annotations = theClass.getAnnotations();
-        for (Annotation annotation : annotations) {
-            addToMap(annotation.annotationType(), customAnnotsMap, annotation);
-        }
-    }
-
-    private void addToMap(Class<? extends Annotation> annotClass,
-                          Map<Class<? extends Annotation>, List<Annotation>> customAnnotsMap,
-                          Annotation... annot) {
-        customAnnotsMap.computeIfAbsent(annotClass, key -> new LinkedList<>()).addAll(Arrays.asList(annot));
-    }
-
-    private void addCustomAnnotations(Map<Class<? extends Annotation>, List<Annotation>> customAnnotsMap, Method theMethod) {
-        Annotation[] annotations = theMethod.getAnnotations();
-        for (Annotation annotation : annotations) {
-            addToMap(annotation.annotationType(), customAnnotsMap, annotation);
         }
     }
 

@@ -74,13 +74,13 @@ public class SecurityLevel {
      * @return new builder
      * @see io.helidon.common.types.TypeName#create(String)
      * @deprecated use {@link #builder()}
-     *         and {@link io.helidon.security.SecurityLevel.SecurityLevelBuilder#typeName(io.helidon.common.types.TypeName)}
+     *         and {@link io.helidon.security.SecurityLevel.SecurityLevelBuilder#type(io.helidon.common.types.TypeName)}
      *         instead
      */
     @Deprecated(forRemoval = true, since = "4.2.0")
     public static SecurityLevelBuilder create(String className) {
         Objects.requireNonNull(className);
-        return builder().typeName(TypeName.create(className));
+        return builder().type(TypeName.create(className));
     }
 
     /**
@@ -126,7 +126,6 @@ public class SecurityLevel {
      *         {@link #filterAnnotations(io.helidon.common.types.TypeName, io.helidon.security.EndpointConfig.AnnotationScope)}
      *         instead
      */
-    @SuppressWarnings("unchecked")
     @Deprecated(forRemoval = true, since = "4.2.0")
     public <T extends Annotation> List<T> filterAnnotations(Class<T> annotationType, EndpointConfig.AnnotationScope scope) {
         return switch (scope) {
@@ -333,7 +332,13 @@ public class SecurityLevel {
         private SecurityLevelBuilder() {
         }
 
-        public SecurityLevelBuilder typeName(TypeName typeName) {
+        public SecurityLevelBuilder type(Class<?> type) {
+            Objects.requireNonNull(type);
+
+            return type(TypeName.create(type));
+        }
+
+        public SecurityLevelBuilder type(TypeName typeName) {
             Objects.requireNonNull(typeName);
 
             this.typeName = typeName;
@@ -391,6 +396,42 @@ public class SecurityLevel {
                                             .collect(Collectors.toUnmodifiableList()));
         }
 
+        public SecurityLevelBuilder addClassAnnotation(Annotation annotation) {
+            Objects.requireNonNull(annotation);
+
+            return addClassAnnotation(AnnotationFactory.create(annotation));
+        }
+
+        public SecurityLevelBuilder addClassAnnotation(io.helidon.common.types.Annotation annotation) {
+            Objects.requireNonNull(annotation);
+
+            if (this.classAnnots == null) {
+                this.classAnnots = new HashMap<>();
+            }
+            this.classAnnots.computeIfAbsent(annotation.typeName(),
+                                             it -> new ArrayList<>())
+                    .add(annotation);
+            return this;
+        }
+
+        public SecurityLevelBuilder addMethodAnnotation(Annotation annotation) {
+            Objects.requireNonNull(annotation);
+
+            return addMethodAnnotation(AnnotationFactory.create(annotation));
+        }
+
+        public SecurityLevelBuilder addMethodAnnotation(io.helidon.common.types.Annotation annotation) {
+            Objects.requireNonNull(annotation);
+
+            if (this.methodAnnots == null) {
+                this.methodAnnots = new HashMap<>();
+            }
+            this.methodAnnots.computeIfAbsent(annotation.typeName(),
+                                             it -> new ArrayList<>())
+                    .add(annotation);
+            return this;
+        }
+
         public SecurityLevelBuilder classAnnotations(List<io.helidon.common.types.Annotation> annotations) {
             Objects.requireNonNull(annotations);
 
@@ -436,7 +477,7 @@ public class SecurityLevel {
             // make sure we copy stuff that was not configured here
             if (copyFrom != null) {
                 if (typeName == null) {
-                    typeName(copyFrom.typeName());
+                    type(copyFrom.typeName());
                 }
                 if (methodName == null) {
                     methodName(copyFrom.methodName());

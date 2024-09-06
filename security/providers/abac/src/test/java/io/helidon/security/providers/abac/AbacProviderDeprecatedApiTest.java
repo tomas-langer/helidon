@@ -49,7 +49,7 @@ public class AbacProviderDeprecatedApiTest {
         doReturn(Attrib1.class).when(attrib).annotationType();
 
         SecurityLevel level = SecurityLevel.create("mock")
-                .withClassAnnotations(Map.of(Attrib1.class, List.of(attrib)))
+                .addClassAnnotation(attrib)
                 .build();
 
         EndpointConfig ec = EndpointConfig.builder()
@@ -78,7 +78,7 @@ public class AbacProviderDeprecatedApiTest {
         doReturn(new String[] {"admin"}).when(attrib).value();
 
         SecurityLevel level = SecurityLevel.create("mock")
-                .withClassAnnotations(Map.of(RolesAllowed.class, List.of(attrib)))
+                .addClassAnnotation(attrib)
                 .build();
 
         EndpointConfig ec = EndpointConfig.builder()
@@ -107,7 +107,7 @@ public class AbacProviderDeprecatedApiTest {
         doReturn(Attrib1.class).when(attrib).annotationType();
 
         SecurityLevel level = SecurityLevel.create("mock")
-                .withClassAnnotations(Map.of(Attrib1.class, List.of(attrib)))
+                .addClassAnnotation(attrib)
                 .build();
 
         EndpointConfig ec = EndpointConfig.builder()
@@ -136,7 +136,7 @@ public class AbacProviderDeprecatedApiTest {
         doReturn(Attrib1.class).when(attrib).annotationType();
 
         SecurityLevel level = SecurityLevel.create("mock")
-                .withClassAnnotations(Map.of(Attrib1.class, List.of(attrib)))
+                .addClassAnnotation(attrib)
                 .build();
 
         EndpointConfig ec = EndpointConfig.builder()

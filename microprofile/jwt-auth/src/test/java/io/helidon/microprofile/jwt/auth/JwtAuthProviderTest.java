@@ -16,7 +16,6 @@
 
 package io.helidon.microprofile.jwt.auth;
 
-import java.lang.annotation.Annotation;
 import java.net.URI;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -27,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import io.helidon.common.configurable.Resource;
+import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.security.AuthenticationResponse;
 import io.helidon.security.EndpointConfig;
@@ -65,6 +65,7 @@ import static org.mockito.Mockito.when;
  * Unit test for {@link JwtAuthProvider}.
  */
 public class JwtAuthProviderTest {
+    private static final TypeName LOGIN_CONFIG = TypeName.create(LoginConfig.class);
     private static final String WRONG_TOKEN =
             "yJ4NXQjUzI1NiI6IlZjeXl1TVdxSGp4UjRVNmYzOTV3YmhUZXNZRmFaWXFSbDdBbUxjZE5sNXciLCJ4NXQiOiJTdEZFTlFaM2NMNndQaHFxODZnVmJTTG54TkUiLCJraWQiOiJTSUdOSU5HX0tFWSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiJIU01BcHAtY2xpZW50X0FQUElEIiwidXNlci50ZW5hbnQubmFtZSI6ImlkY3MtNzNmYTNlZDY5ZTgxNDFhN2I5MDFmYWY3Zjg3M2U3OGUiLCJzdWJfbWFwcGluZ2F0dHIiOiJ1c2VyTmFtZSIsImlzcyI6Imh0dHBzOlwvXC9pZGVudGl0eS5vcmFjbGVjbG91ZC5jb21cLyIsInRva190eXBlIjoiQVQiLCJjbGllbnRfaWQiOiJIU01BcHAtY2xpZW50X0FQUElEIiwiYXVkIjoiaHR0cDpcL1wvc2NhMDBjangudXMub3JhY2xlLmNvbTo3Nzc3Iiwic3ViX3R5cGUiOiJjbGllbnQiLCJzY29wZSI6InVybjpvcGM6cmVzb3VyY2U6Y29uc3VtZXI6OmFsbCIsImNsaWVudF90ZW5hbnRuYW1lIjoiaWRjcy03M2ZhM2VkNjllODE0MWE3YjkwMWZhZjdmODczZTc4ZSIsImV4cCI6MTU1MDU5NTk0MiwiaWF0IjoxNTUwNTA5NTQyLCJ0ZW5hbnRfaXNzIjoiaHR0cHM6XC9cL2lkY3MtNzNmYTNlZDY5ZTgxNDFhN2I5MDFmYWY3Zjg3M2U3OGUuaWRlbnRpdHkuYzlkZXYxLm9jOXFhZGV2LmNvbSIsImNsaWVudF9ndWlkIjoiN2JmZDM3MjM1ZGY3NDVjNDg5ZjYxZDM1ZTYzZGQ4ZmUiLCJjbGllbnRfbmFtZSI6IkhTTUFwcC1jbGllbnQiLCJ0ZW5hbnQiOiJpZGNzLTczZmEzZWQ2OWU4MTQxYTdiOTAxZmFmN2Y4NzNlNzhlIiwianRpIjoiYzRkNjlhZjUtOGQ4OC00N2Q2LTkzMDctN2RjMmI3NWY4MDQyIn0.ZsngUzzso_sW6rMg3jB-lueiC2sknIDRlgvjumMjp5rRSdLux2X4XZIm2Oa15JbcrnC6I4sgqB0xU1Wte-TW4hbBDLFhaJKYKiNaHBE0L7J73ZK7ITg7dORKkyjLrofGt0m8Rse1OlE9AWevz-l27gtQMO_mctGfHri2BxiMbSN1HwOjWW3kGoqPgCJZJfh2TiFlocEpsXDH4qB1qwhuIoT91gw3kIJlQov0_a9uGEepMU_RWMRjVZCIvuV2hPq_mdeWy2IhkHPxq422CLZ9MDOfbv8F6dY6DralCH4mmKbGM3dbqpZokWQxXG7LG9vWX1PFWw0N9clYHJ4QqBJ4pA";
 
@@ -95,23 +96,12 @@ public class JwtAuthProviderTest {
         securityLevels.add(classSecurityLevel);
 
         when(ec.securityLevels()).thenReturn(securityLevels);
-        when(appSecurityLevel.filterAnnotations(LoginConfig.class, EndpointConfig.AnnotationScope.CLASS))
-                .thenReturn(List.of(new LoginConfig() {
-                    @Override
-                    public Class<? extends Annotation> annotationType() {
-                        return LoginConfig.class;
-                    }
-
-                    @Override
-                    public String authMethod() {
-                        return JwtAuthAnnotationAnalyzer.LOGIN_CONFIG_METHOD;
-                    }
-
-                    @Override
-                    public String realmName() {
-                        return "helidon-realm";
-                    }
-                }));
+        when(appSecurityLevel.filterAnnotations(LOGIN_CONFIG, EndpointConfig.AnnotationScope.CLASS))
+                .thenReturn(List.of(io.helidon.common.types.Annotation.builder()
+                                            .typeName(LOGIN_CONFIG)
+                                            .putValue("authMethod", JwtAuthAnnotationAnalyzer.LOGIN_CONFIG_METHOD)
+                                            .putValue("realmName", "helidon-realm")
+                                            .build()));
 
         when(atnRequest.env()).thenReturn(se);
         when(atnRequest.endpointConfig()).thenReturn(ec);
@@ -449,13 +439,13 @@ public class JwtAuthProviderTest {
         List<SecurityLevel> securityLevels = new ArrayList<>();
         securityLevels.add(appSecurityLevel);
 
-        LoginConfig lc = mock(LoginConfig.class);
-        when(lc.authMethod()).thenReturn(JwtAuthAnnotationAnalyzer.LOGIN_CONFIG_METHOD);
-        when(lc.realmName()).thenReturn("");
-
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(appSecurityLevel.filterAnnotations(LoginConfig.class, EndpointConfig.AnnotationScope.CLASS))
-                .thenReturn(List.of(lc));
+        when(appSecurityLevel.filterAnnotations(LOGIN_CONFIG, EndpointConfig.AnnotationScope.CLASS))
+                .thenReturn(List.of(io.helidon.common.types.Annotation.builder()
+                                            .typeName(LOGIN_CONFIG)
+                                            .putValue("authMethod", JwtAuthAnnotationAnalyzer.LOGIN_CONFIG_METHOD)
+                                            .putValue("realmName", "")
+                                            .build()));
         when(atnRequest.endpointConfig()).thenReturn(ep);
 
         return atnRequest;

@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import io.helidon.common.Weight;
 import io.helidon.common.Weighted;
 import io.helidon.common.config.Config;
+import io.helidon.common.types.Annotation;
 import io.helidon.security.providers.common.spi.AnnotationAnalyzer;
 
 import jakarta.annotation.security.RolesAllowed;
@@ -42,6 +43,10 @@ public class JwtAuthAnnotationAnalyzer implements AnnotationAnalyzer {
 
     static boolean isMpJwt(LoginConfig config) {
         return LOGIN_CONFIG_METHOD.equals(config.authMethod());
+    }
+
+    static boolean isMpJwt(Annotation config) {
+        return LOGIN_CONFIG_METHOD.equals(config.stringValue("authMethod").orElse(""));
     }
 
     @Override

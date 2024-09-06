@@ -18,10 +18,10 @@ package io.helidon.security.abac.role;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import io.helidon.common.Errors;
+import io.helidon.common.types.Annotation;
 import io.helidon.common.types.TypeName;
 import io.helidon.config.Config;
 import io.helidon.security.EndpointConfig;
@@ -31,10 +31,10 @@ import io.helidon.security.Role;
 import io.helidon.security.SecurityLevel;
 import io.helidon.security.Subject;
 import io.helidon.security.SubjectType;
+import io.helidon.security.providers.abac.AbacProvider;
 
 import jakarta.annotation.security.DenyAll;
 import jakarta.annotation.security.PermitAll;
-import jakarta.annotation.security.RolesAllowed;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -59,9 +59,6 @@ class RoleValidatorTest {
     @Test
     void testRolesAllowedPermit() {
         RoleValidator validator = RoleValidator.create();
-        RolesAllowed annot = mock(RolesAllowed.class);
-        String[] roleArray = new String[] {"admin"};
-        when(annot.value()).thenReturn(roleArray);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -71,8 +68,11 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(RolesAllowed.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -91,9 +91,6 @@ class RoleValidatorTest {
     @Test
     void testRolesAllowedDeny() {
         RoleValidator validator = RoleValidator.create();
-        RolesAllowed annot = mock(RolesAllowed.class);
-        String[] roleArray = new String[] {"admin"};
-        when(annot.value()).thenReturn(roleArray);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -103,8 +100,11 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(RolesAllowed.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -125,10 +125,6 @@ class RoleValidatorTest {
     @Test
     void testUserRoles() {
         RoleValidator validator = RoleValidator.create();
-        RoleValidator.Roles annot = mock(RoleValidator.Roles.class);
-        String[] roleArray = new String[] {"admin"};
-        when(annot.value()).thenReturn(roleArray);
-        when(annot.subjectType()).thenReturn(SubjectType.USER);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -138,8 +134,12 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(RoleValidator.Roles.TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .putValue("subjectType", SubjectType.USER)
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -158,10 +158,6 @@ class RoleValidatorTest {
     @Test
     void testUserRolesDeny() {
         RoleValidator validator = RoleValidator.create();
-        RoleValidator.Roles annot = mock(RoleValidator.Roles.class);
-        String[] roleArray = new String[] {"admin"};
-        when(annot.subjectType()).thenReturn(SubjectType.USER);
-        when(annot.value()).thenReturn(roleArray);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -171,8 +167,12 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(RoleValidator.Roles.TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .putValue("subjectType", SubjectType.USER)
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -193,10 +193,6 @@ class RoleValidatorTest {
     @Test
     void testServiceRoles() {
         RoleValidator validator = RoleValidator.create();
-        RoleValidator.Roles annot = mock(RoleValidator.Roles.class);
-        String[] roleArray = new String[] {"admin"};
-        when(annot.value()).thenReturn(roleArray);
-        when(annot.subjectType()).thenReturn(SubjectType.SERVICE);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -206,8 +202,12 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(RoleValidator.Roles.TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .putValue("subjectType", SubjectType.SERVICE)
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -229,10 +229,6 @@ class RoleValidatorTest {
     @Test
     void testServiceRolesDeny() {
         RoleValidator validator = RoleValidator.create();
-        RoleValidator.Roles annot = mock(RoleValidator.Roles.class);
-        String[] roleArray = new String[] {"admin"};
-        when(annot.value()).thenReturn(roleArray);
-        when(annot.subjectType()).thenReturn(SubjectType.SERVICE);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -242,8 +238,12 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(RoleValidator.Roles.TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(RoleValidator.Roles.TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .putValue("subjectType", SubjectType.SERVICE)
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -267,7 +267,6 @@ class RoleValidatorTest {
     @Test
     void testDenyAll() {
         RoleValidator validator = RoleValidator.create();
-        DenyAll annot = mock(DenyAll.class);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -277,8 +276,8 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(DenyAll.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.DENY_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.create(AbacProvider.DENY_ALL_JAKARTA_TYPE)));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -299,7 +298,6 @@ class RoleValidatorTest {
     @Test
     void testPermitAll() {
         RoleValidator validator = RoleValidator.create();
-        PermitAll annot = mock(PermitAll.class);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -309,8 +307,8 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(PermitAll.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(annot));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.PERMIT_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.create(AbacProvider.PERMIT_ALL_JAKARTA_TYPE)));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -336,14 +334,14 @@ class RoleValidatorTest {
 
         List<SecurityLevel> securityLevels = new ArrayList<>();
         securityLevels.add(SecurityLevel.builder()
-                                   .typeName(TypeName.create(RoleValidatorTest.class))
+                                   .type(TypeName.create(RoleValidatorTest.class))
                                    .methodName("firstLevel")
                                    .build());
         securityLevels.add(SecurityLevel.builder()
-                                   .typeName(TypeName.create(RoleValidatorTest.class))
+                                   .type(TypeName.create(RoleValidatorTest.class))
                                    .methodName("secondLevel")
-                                   .withClassAnnotations(Map.of(DenyAll.class, List.of(denyAll)))
-                                   .withMethodAnnotations(Map.of(PermitAll.class, List.of(permitAll)))
+                                   .addClassAnnotation(denyAll)
+                                   .addMethodAnnotation(permitAll)
                                    .build());
 
         EndpointConfig ep = mock(EndpointConfig.class);
@@ -366,10 +364,6 @@ class RoleValidatorTest {
     @Test
     void testDenyAllAndRoles() {
         RoleValidator validator = RoleValidator.create();
-        DenyAll denyAll = mock(DenyAll.class);
-        RolesAllowed rolesAllowed = mock(RolesAllowed.class);
-        String[] roleArray = new String[] {"admin"};
-        when(rolesAllowed.value()).thenReturn(roleArray);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -379,10 +373,13 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(DenyAll.class, EndpointConfig.AnnotationScope.CLASS))
-                .thenReturn(List.of(denyAll));
-        when(classSecurityLevel.filterAnnotations(RolesAllowed.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(rolesAllowed));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.DENY_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.CLASS))
+                .thenReturn(List.of(Annotation.create(AbacProvider.DENY_ALL_JAKARTA_TYPE)));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -401,11 +398,6 @@ class RoleValidatorTest {
     @Test
     void testPermitAllAndRolesAndDenyAll() {
         RoleValidator validator = RoleValidator.create();
-        PermitAll permitAll = mock(PermitAll.class);
-        DenyAll denyAll = mock(DenyAll.class);
-        RolesAllowed rolesAllowed = mock(RolesAllowed.class);
-        String[] roleArray = new String[] {"admin"};
-        when(rolesAllowed.value()).thenReturn(roleArray);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -415,12 +407,15 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(PermitAll.class, EndpointConfig.AnnotationScope.CLASS))
-                .thenReturn(List.of(permitAll));
-        when(classSecurityLevel.filterAnnotations(DenyAll.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(denyAll));
-        when(classSecurityLevel.filterAnnotations(RolesAllowed.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(rolesAllowed));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.PERMIT_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.CLASS))
+                .thenReturn(List.of(Annotation.create(AbacProvider.PERMIT_ALL_JAKARTA_TYPE)));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.DENY_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.create(AbacProvider.DENY_ALL_JAKARTA_TYPE)));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
@@ -441,11 +436,6 @@ class RoleValidatorTest {
     @Test
     void testAllAccessAnnotationsOnTheSameLevel() {
         RoleValidator validator = RoleValidator.create();
-        PermitAll permitAll = mock(PermitAll.class);
-        DenyAll denyAll = mock(DenyAll.class);
-        RolesAllowed rolesAllowed = mock(RolesAllowed.class);
-        String[] roleArray = new String[] {"admin"};
-        when(rolesAllowed.value()).thenReturn(roleArray);
 
         SecurityLevel appSecurityLevel = mock(SecurityLevel.class);
         SecurityLevel classSecurityLevel = mock(SecurityLevel.class);
@@ -455,12 +445,15 @@ class RoleValidatorTest {
 
         EndpointConfig ep = mock(EndpointConfig.class);
         when(ep.securityLevels()).thenReturn(securityLevels);
-        when(classSecurityLevel.filterAnnotations(PermitAll.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(permitAll));
-        when(classSecurityLevel.filterAnnotations(DenyAll.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(denyAll));
-        when(classSecurityLevel.filterAnnotations(RolesAllowed.class, EndpointConfig.AnnotationScope.METHOD))
-                .thenReturn(List.of(rolesAllowed));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.PERMIT_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.create(AbacProvider.PERMIT_ALL_JAKARTA_TYPE)));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.DENY_ALL_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.create(AbacProvider.DENY_ALL_JAKARTA_TYPE)));
+        when(classSecurityLevel.filterAnnotations(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE, EndpointConfig.AnnotationScope.METHOD))
+                .thenReturn(List.of(Annotation.builder()
+                                            .typeName(AbacProvider.ROLES_ALLOWED_JAKARTA_TYPE)
+                                            .putValue("value", List.of("admin"))
+                                            .build()));
 
         RoleValidator.RoleConfig rConfig = validator.fromAnnotations(ep);
 
