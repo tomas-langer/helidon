@@ -143,7 +143,7 @@ The following table lists the injectable types (through constructor or method in
 |
 |Implements `Http1Client` API
 
-|`WsClient`
+|`MyWsClient`
 |x
 |`@ServerTest`
 |websocket
@@ -153,7 +153,7 @@ The following table lists the injectable types (through constructor or method in
 |x
 |`@RoutingTest`
 |websocket
-|Implements `WsClient` API
+|Implements `MyWsClient` API
 
 |===
 
@@ -232,7 +232,7 @@ The WebSocket Testing extension adds support for routing configuration and injec
 ----
 include::{sourcedir}/se/TestingSnippets.java[tag=snippet_3, indent=0]
 ----
-<1> Declare `WsClient` and later inject it in the constructor.
+<1> Declare `MyWsClient` and later inject it in the constructor.
 <2> Using @SetUpRoute, create WebSocket routing and assign a serverside listener.
 <3> Test the WebSocket endpoint using the regular @Test annotation.
 <4> Create and assign the clientside listener.
@@ -256,7 +256,7 @@ include::{sourcedir}/se/TestingSnippets.java[tag=snippet_5, indent=0]
 ----
 <1> Send "ws" on a received message.
 
-The testing class should be annotated with `@RoutingTest` only if routing tests are required without real port opening. Instead of `WsClient`, use `DirectWsClient`.
+The testing class should be annotated with `@RoutingTest` only if routing tests are required without real port opening. Instead of `MyWsClient`, use `DirectWsClient`.
 
 
 == Reference

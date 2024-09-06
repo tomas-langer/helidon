@@ -34,6 +34,7 @@ module io.helidon.declarative.tests.http {
     requires io.helidon.security.annotations;
     requires io.helidon.websocket;
     requires io.helidon.webserver.websocket;
+    requires io.helidon.webclient.websocket;
 
     exports io.helidon.declarative.tests.http;
     exports io.helidon.declarative.tests.http.security;
