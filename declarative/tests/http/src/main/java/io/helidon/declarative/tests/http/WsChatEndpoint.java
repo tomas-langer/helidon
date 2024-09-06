@@ -4,11 +4,11 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import io.helidon.http.Http;
 import io.helidon.service.inject.api.Injection;
-import io.helidon.webserver.websocket.WsServer;
+import io.helidon.webserver.websocket.WebSocketServer;
 import io.helidon.websocket.WebSocket;
 import io.helidon.websocket.WsSession;
 
-@WsServer.Endpoint
+@WebSocketServer.Endpoint
 @Injection.Singleton
 @Http.Path("/ws/{user}")
 class WsChatEndpoint {

@@ -39,7 +39,8 @@ Create endpoints, services etc. using Helidon Service and Helidon Service Inject
 The following annotations can be used on services:
 
 - `@RestServer.Endpoint` - a service annotated with this annotation will be considered an endpoint service
-- `@RestServer.Listener("admin")` - a service annotated with this annotation will be bound to `admin` listener of the WebServer, if
+- `@RestServer.Listener("admin")` - a service annotated with this annotation will be bound to `admin` listener of the WebServer,
+  if
   available
 - `@Http.Path("/service")` - the service path (base path prefixed to all the methods)
 
@@ -87,41 +88,41 @@ The following features (this should be a full list of Helidon SE features, with 
 
 Features that have POC implemented:
 
-| Feature         | Status | Description                                                                             | 
-|-----------------|--------|-----------------------------------------------------------------------------------------|
-| Access Log      | N/A    | No changes, there is no interaction                                                     |
-| Injection       | DONE   | See annotations on `io.helidon.service.inject.api.Injection`                            | 
-| Routing HTTP    | DONE   | See annotations on `io.helidon.http.Http`, similar should be added for WebSocket, grpc  |
-| Config          | DONE   | Done through Config beans, annotations on `io.helidon.service.inject.api.Configuration` |
-| Context         | DONE   | `Context` instance can be a parameter of entry point method                             |
-| Fault Tolerance | DONE   | See annotations on `io.helidon.faulttolerance.FaultTolerance`                           | 
-| Metrics         | POC    | See annotations on `io.helidon.metrics.api.Metrics`, Counter and Timer done             |
-| Scheduling      | TODO   | See annotations on `io.helidon.scheduling.Scheduling`                                   |
-| WebClient       | TODO   | Typed client similar to rest client in MP                                               |
+| Feature         | Status | Description                                                                                                                 | 
+|-----------------|--------|-----------------------------------------------------------------------------------------------------------------------------|
+| Access Log      | N/A    | No changes, there is no interaction                                                                                         |
+| Injection       | DONE   | See annotations on `io.helidon.service.inject.api.Injection`                                                                | 
+| Routing HTTP    | DONE   | See annotations on `io.helidon.http.Http`, `io.helidon.webserver.http.RestServer` and `io.helidon.webclient.api.RestClient` |
+| Config          | DONE   | Done through Config beans, annotations on `io.helidon.service.inject.api.Configuration`                                     |
+| Context         | DONE   | `Context` instance can be a parameter of entry point method                                                                 |
+| Fault Tolerance | DONE   | See annotations on `io.helidon.faulttolerance.FaultTolerance`                                                               | 
+| Metrics         | POC    | See annotations on `io.helidon.metrics.api.Metrics`, Counter and Timer done                                                 |
+| Scheduling      | TODO   | See annotations on `io.helidon.scheduling.Scheduling`                                                                       |
+| WebClient       | TODO   | Typed client similar to rest client in MP                                                                                   |
+| Security        | TODO   | See `io.helidon.security.annotations`, (and same support as in MP, including Jakarta and javax `RolesAllowed`)              | 
 
 Features that require work:
 
-| Feature           | Status | Description                                                                                                                                | 
-|-------------------|--------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| Routing WebSocket | TODO   | See annotations on `io.helidon.websocket.WebSocket`                                                                                        |
-| Vault integration | TODO   | Support similar to CDI, single integration if possible                                                                                     |
-| Tracing           | TODO   | See annotations on `io.helidon.tracing.Tracing`                                                                                            | 
-| Health            | TODO   | Implement a `HealthCheckProvider` and mark it as a `@Service.Provider`                                                                     |
-| Validation        | TODO   | See annotations on `io.helidon.validation.Validation`                                                                                      |
-| CORS              | TODO   | See annotations on `io.helidon.cors.Cors`                                                                                                  | 
-| Security          | TODO   | See `io.helidon.security.annotations`, also security should support all annotations we support in MP                                       | 
-| Routing gRPC      | TODO   | See annotations on `io.helidon.grpc.api.Grpc`                                                                                              | 
-| OpenAPI           | TODO   | See annotations on `io.helidon.openapi.OpenApi`                                                                                            | 
-| Observe/Info      | N/A    | N/A                                                                                                                                        | 
-| Database          | TODO   | Introduction of Helidon Data                                                                                                               | 
-| GraphQL           | TBD    | TBD                                                                                                                                        | 
-| LRA               | TBD    | TBD                                                                                                                                        | 
-| Messaging         | TBD    | TBD                                                                                                                                        | 
-| Reactive          | TODO   | How to translate a reactive stream to Stream operations on `java.io.InputStream`, `java.io.OutputStream` that is compatible with Helidon 4 | 
-| OCI integration   | TODO   | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK        |
-| Batch             | TBD    | TBD                                                                                                                                        | 
-| Support in MP     | TODO   | Note that all annotations mentioned above are also supported by Helidon MP                                                                 |
-| Data              | TODO   | New feature                                                                                                                                |
+| Feature           | Status  | Description                                                                                                                                                      | 
+|-------------------|---------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Routing WebSocket | Concept | See annotations on `io.helidon.websocket.WebSocket`, `io.helidon.webserver.websocket.WebSocketServer` and (tbd) `io.helidon.webclient.websocket.WebSocketClient` |
+| Vault integration | TODO    | Support similar to CDI, single integration if possible                                                                                                           |
+| Tracing           | TODO    | See annotations on `io.helidon.tracing.Tracing`                                                                                                                  | 
+| Health            | TODO    | Implement a `HealthCheckProvider` and mark it as a `@Service.Provider`                                                                                           |
+| Validation        | TODO    | See annotations on `io.helidon.validation.Validation`                                                                                                            |
+| CORS              | TODO    | See annotations on `io.helidon.cors.Cors`                                                                                                                        | 
+| Routing gRPC      | TODO    | See annotations on `io.helidon.grpc.api.Grpc`                                                                                                                    | 
+| OpenAPI           | TODO    | See annotations on `io.helidon.openapi.OpenApi`                                                                                                                  | 
+| Observe/Info      | N/A     | N/A                                                                                                                                                              | 
+| Database          | TODO    | Introduction of Helidon Data                                                                                                                                     | 
+| GraphQL           | TBD     | TBD                                                                                                                                                              | 
+| LRA               | TBD     | TBD                                                                                                                                                              | 
+| Messaging         | TBD     | TBD                                                                                                                                                              | 
+| Reactive          | TODO    | How to translate a reactive stream to Stream operations on `java.io.InputStream`, `java.io.OutputStream` that is compatible with Helidon 4                       | 
+| OCI integration   | TODO    | Support already exists for ServiceRegistry for authentication details provider, need to add support for builders and clients of SDK                              |
+| Batch             | TBD     | TBD                                                                                                                                                              | 
+| Support in MP     | TODO    | Note that all annotations mentioned above are also supported by Helidon MP                                                                                       |
+| Data              | TODO    | New feature                                                                                                                                                      |
 
 # Testing
 

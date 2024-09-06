@@ -16,7 +16,7 @@ public class MyWsClient {
         CountDownLatch latch = new CountDownLatch(1);
         wsClient.connect("/ws/Tomas", new WsListener() {
             @Override
-            public void onMessage(WsSession session, String text, boolean last) {
+            public void onMessage(  WsSession session, String text, boolean last) {
                 System.out.println("Received: " + text);
                 session.close(WsCloseCodes.NORMAL_CLOSE, "Done");
                 latch.countDown();

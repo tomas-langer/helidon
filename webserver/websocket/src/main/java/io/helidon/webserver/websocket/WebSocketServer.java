@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * WebSocket server related annotation and Helidon Declarative types.
  */
-public class WsServer {
+public class WebSocketServer {
     @Retention(RetentionPolicy.CLASS)
     @Target(ElementType.TYPE)
     public @interface Endpoint {
