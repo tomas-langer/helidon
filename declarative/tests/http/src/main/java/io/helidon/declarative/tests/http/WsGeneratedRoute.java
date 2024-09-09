@@ -20,7 +20,7 @@ import io.helidon.websocket.WsSession;
 
 @Injection.Singleton
 @Service.ExternalContracts(WsRoute.class)
-public class WsGeneratedRoute implements Supplier<WsRoute> {
+class WsGeneratedRoute implements Supplier<WsRoute> {
     private final Supplier<WsChatEndpoint> endpoint;
 
     WsGeneratedRoute(Supplier<WsChatEndpoint> endpoint) {
@@ -38,7 +38,7 @@ public class WsGeneratedRoute implements Supplier<WsRoute> {
         private final PathMatcher pathMatcher;
 
         private volatile String username;
-        private StringBuilder messageBuilder = new StringBuilder();
+        private final StringBuilder messageBuilder = new StringBuilder();
 
         private GeneratedListener(WsChatEndpoint wsChatEndpoint) {
             this.wsChatEndpoint = wsChatEndpoint;

@@ -145,6 +145,9 @@ public abstract class ApplicationMain {
         registry.all(Lookup.builder()
                              .runLevel(Injection.RunLevel.SERVER)
                              .build());
+        registry.all(Lookup.builder()
+                             .runLevel(Injection.RunLevel.STARTUP)
+                             .build());
         return registry;
     }
 

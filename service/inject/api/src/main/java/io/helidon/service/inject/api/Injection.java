@@ -238,12 +238,11 @@ public final class Injection {
 
         /**
          * Represents an eager singleton that should be started at "startup". Note, however, that callers control the actual
-         * activation for these services, not the framework itself, as shown below:
-         * <pre>
+         * activation for these services, not the injection framework itself, as shown below:         * <pre>
          * {@code
-         * List<ServiceProvider<Object>> startupServices = services
-         *               .lookup(ServiceInfoCriteria.builder().runLevel(RunLevel.STARTUP).build());
-         *       startupServices.stream().forEach(ServiceProvider::get);
+         * registry.all(Lookup.builder()
+         *     .runLevel(Injection.RunLevel.STARTUP)
+         *     .build());
          * }
          * </pre>
          */

@@ -1,4 +1,4 @@
-package io.helidon.declarative.tests.http;
+package io.helidon.declarative.tests.http.websocket;
 
 import java.util.List;
 
