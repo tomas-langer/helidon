@@ -16,10 +16,13 @@
 
 package io.helidon.common.types;
 
+import java.util.ArrayDeque;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Set;
 
 import io.helidon.builder.api.Option;
@@ -227,6 +230,41 @@ interface TypeInfoBlueprint extends Annotated {
      */
     @Option.Redundant
     Optional<Object> originatingElement();
+
+    /**
+     * Checks if the current type implements, or extends the provided type.
+     * This method analyzes the whole dependency tree of the current type.
+     *
+     * @param typeName type of interface to check
+     * @return the super type info, or interface type info matching the provided type, with appropriate generic declarations
+     */
+    default Optional<TypeInfo> findInHierarchy(TypeName typeName) {
+        // scan super types
+        Optional<TypeInfo> superClass = superTypeInfo();
+        while (superClass.isPresent()
+                && !superClass.get().typeName().equals(TypeNames.OBJECT)) {
+            var superType = superClass.get();
+            if (typeName.equals(superType.typeName())) {
+                return Optional.of(superType);
+            }
+            superClass = superType.superTypeInfo();
+        }
+        // nope, let's try interfaces
+        Queue<TypeInfo> interfaces = new ArrayDeque<>(interfaceTypeInfo());
+        Set<TypeName> processed = new HashSet<>();
+
+        while (!interfaces.isEmpty()) {
+            TypeInfo type = interfaces.remove();
+            // make sure we process each type only once
+            if (processed.add(type.typeName())) {
+                if (typeName.equals(type.typeName())) {
+                    return Optional.of(type);
+                }
+                interfaces.addAll(type.interfaceTypeInfo());
+            }
+        }
+        return Optional.empty();
+    }
 
     /**
      * Uses {@link io.helidon.common.types.TypeInfo#referencedModuleNames()} to determine if the module name is known for the
