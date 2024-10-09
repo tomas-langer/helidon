@@ -249,11 +249,11 @@ class TypeNameTest {
         assertThat(typeName.toString(),
                    is("? extends pkg.Something"));
         assertThat(typeName.name(),
-                   is("pkg.Something"));
+                   is("?"));
         assertThat(typeName.packageName(),
-                   is("pkg"));
+                   is(""));
         assertThat(typeName.className(),
-                   is("Something"));
+                   is("?"));
 
         typeName = TypeName.create("?");
         assertThat(typeName.wildcard(), is(true));
@@ -262,11 +262,11 @@ class TypeNameTest {
         assertThat(typeName.toString(),
                    equalTo(typeName.resolvedName()));
         assertThat(typeName.name(),
-                   is(Object.class.getName()));
+                   is("?"));
         assertThat(typeName.packageName(),
-                   is(Object.class.getPackageName()));
+                   is(""));
         assertThat(typeName.className(),
-                   is(Object.class.getSimpleName()));
+                   is("?"));
 
         typeName = TypeName.builder(TypeName.create(List.class))
                 .typeArguments(Collections.singletonList(TypeName.create("? extends pkg.Something")))
@@ -395,8 +395,9 @@ class TypeNameTest {
     void extendsTypeName() {
         TypeName extendsName = TypeName.builder(create(Map.class)).wildcard(true).build();
         assertThat(extendsName.resolvedName(), equalTo("? extends java.util.Map"));
-        assertThat(extendsName.declaredName(), equalTo("java.util.Map"));
-        assertThat(extendsName.name(), equalTo("java.util.Map"));
+        assertThat(extendsName.declaredName(), equalTo("?"));
+        assertThat(extendsName.name(), equalTo("?"));
+        assertThat(extendsName.upperBounds(), contains(TypeName.create(Map.class)));
     }
 
     @Test

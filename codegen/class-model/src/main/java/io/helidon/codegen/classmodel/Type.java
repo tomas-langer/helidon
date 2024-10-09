@@ -15,6 +15,8 @@
  */
 package io.helidon.codegen.classmodel;
 
+import java.io.Serializable;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -37,15 +39,15 @@ abstract class Type extends ModelComponent {
                         .type(typeName)
                         .build();
             } else if (typeName.wildcard()) {
-                boolean isObject = typeName.name().equals("?") || Object.class.getName().equals(typeName.name());
-                if (isObject) {
+                List<TypeName> upperBounds = typeName.upperBounds();
+                if (upperBounds.isEmpty()) {
                     return TypeArgument.create("?");
-                } else {
-                    return TypeArgument.builder()
-                            .token("?")
-                            .bound(extractBoundTypeName(typeName.genericTypeName()))
-                            .build();
                 }
+
+                return TypeArgument.builder()
+                        .token("?")
+                        .bound(extractBoundTypeName(upperBounds.getFirst()))
+                        .build();
             }
             return ConcreteType.builder()
                     .type(typeName)
