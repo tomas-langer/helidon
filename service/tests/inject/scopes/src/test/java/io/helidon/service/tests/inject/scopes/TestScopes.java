@@ -22,8 +22,8 @@ import java.util.function.Supplier;
 import io.helidon.service.inject.InjectConfig;
 import io.helidon.service.inject.InjectRegistryManager;
 import io.helidon.service.inject.api.InjectRegistry;
+import io.helidon.service.inject.api.Scopes;
 import io.helidon.service.inject.api.Injection;
-import io.helidon.service.inject.api.PerRequestScopeControl;
 import io.helidon.service.inject.api.Scope;
 import io.helidon.service.inject.api.ScopeNotActiveException;
 
@@ -67,10 +67,10 @@ class TestScopes {
         Supplier<SingletonContract> serviceProvider = registry.supply(SingletonContract.class);
         SingletonContract service = serviceProvider.get();
 
-        PerRequestScopeControl requestonControl = registry.get(PerRequestScopeControl.class);
+        Scopes scopes = registry.get(Scopes.class);
 
         int id;
-        try (Scope scope = requestonControl.startRequestScope("test-1", Map.of())) {
+        try (Scope scope = scopes.createScope(Injection.PerRequest.TYPE, "test-1", Map.of())) {
             id = service.id();
             assertThat("We should get a request scope based id", id, not(-1));
         }
@@ -80,7 +80,7 @@ class TestScopes {
                    scopeNotAvailableException.scope(),
                    is(Injection.PerRequest.TYPE));
 
-        try (Scope scope = requestonControl.startRequestScope("test-2", Map.of())) {
+        try (Scope scope = scopes.createScope(Injection.PerRequest.TYPE, "test-2", Map.of())) {
             int nextId = service.id();
             assertThat("We should get a request scope based id", nextId, not(-1));
             assertThat("We should get a different request scope than last time", nextId, not(id));
@@ -89,11 +89,11 @@ class TestScopes {
 
     @Test
     void testDifferentScopeDifferentValueCustomScope() {
-        CustomScopeControl ctrl = registry.get(CustomScopeControl.class);
+        Scopes scopes = registry.get(Scopes.class);
         Supplier<CustomScopedContract> supply = registry.supply(CustomScopedContract.class);
 
         int id;
-        try (Scope scope = ctrl.startScope()) {
+        try (Scope scope = scopes.createScope(CustomScope.TYPE, "42", Map.of())) {
             id = supply.get().id();
         }
 
@@ -102,7 +102,7 @@ class TestScopes {
                    scopeNotAvailableException.scope(),
                    is(CustomScope.TYPE));
 
-        try (Scope scope = ctrl.startScope()) {
+        try (Scope scope = scopes.createScope(CustomScope.TYPE, "42", Map.of())) {
             int nextId = supply.get().id();
             assertThat("We should get a different custom scope than last time", nextId, not(id));
         }

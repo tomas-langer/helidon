@@ -34,12 +34,13 @@ import io.helidon.common.types.TypeName;
 import io.helidon.common.types.TypeNames;
 import io.helidon.service.inject.api.GeneratedInjectService;
 import io.helidon.service.inject.api.InjectRegistry;
-import io.helidon.service.inject.api.InjectRegistrySpi__ServiceDescriptor;
+import io.helidon.service.inject.api.InjectRegistry__ServiceDescriptor;
 import io.helidon.service.inject.api.InjectServiceDescriptor;
 import io.helidon.service.inject.api.InjectServiceInfo;
 import io.helidon.service.inject.api.Injection;
 import io.helidon.service.inject.api.InterceptionMetadata__ServiceDescriptor;
 import io.helidon.service.inject.api.ProviderType;
+import io.helidon.service.inject.api.Scopes__ServiceDescriptor;
 import io.helidon.service.metadata.DescriptorMetadata;
 import io.helidon.service.registry.DependencyContext;
 import io.helidon.service.registry.DescriptorHandler;
@@ -205,15 +206,20 @@ public class InjectRegistryManager implements ServiceRegistryManager {
             }
 
             // add service registry information (service registry cannot be overridden in any way)
-            InjectServiceDescriptor<?> registrySpiDescriptor = InjectRegistrySpi__ServiceDescriptor.INSTANCE;
-            Described registrySpiDescribed = new Described(registrySpiDescriptor, registrySpiDescriptor, false);
-            descriptorToDescribed.put(registrySpiDescriptor, registrySpiDescribed);
+            InjectServiceDescriptor<?> scopesDescriptor = Scopes__ServiceDescriptor.INSTANCE;
+            Described scopedDescribed = new Described(scopesDescriptor, scopesDescriptor, false);
+            descriptorToDescribed.put(scopesDescriptor, scopedDescribed);
+
+            InjectServiceDescriptor<?> registryDescriptor = InjectRegistry__ServiceDescriptor.INSTANCE;
+            Described registryDescribed = new Described(registryDescriptor, registryDescriptor, false);
+            descriptorToDescribed.put(scopesDescriptor, registryDescribed);
+
             bind(applications, scopeHandlers,
                  servicesByType,
                  servicesByContract,
                  qualifiedProvidersByQualifier,
                  typedQualifiedProviders,
-                 registrySpiDescribed);
+                 registryDescribed);
             // add injection metadata information
             InjectServiceDescriptor<?> interceptDescriptor = InterceptionMetadata__ServiceDescriptor.INSTANCE;
             Described described = new Described(interceptDescriptor, interceptDescriptor, false);
