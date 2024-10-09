@@ -82,9 +82,6 @@ public final class AptTypeFactory {
     }
 
     private static Optional<TypeName> createTypeName(Set<TypeMirror> processed, TypeMirror typeMirror) {
-        if (!processed.add(typeMirror)) {
-            return Optional.empty(); // prevent infinite loop
-        }
         TypeKind kind = typeMirror.getKind();
         if (kind.isPrimitive()) {
             Class<?> type = switch (kind) {
@@ -107,6 +104,10 @@ public final class AptTypeFactory {
             return Optional.of(TypeName.create(void.class));
         }
         case TYPEVAR -> {
+            if (!processed.add(typeMirror)) {
+                return Optional.empty(); // prevent infinite loop
+            }
+
             var builder = TypeName.builder(createFromGenericDeclaration(typeMirror.toString()));
 
             var typeVar = ((TypeVariable) typeMirror);
@@ -157,6 +158,9 @@ public final class AptTypeFactory {
                 return Optional.ofNullable(result);
             }
 
+            if (!processed.add(typeMirror)) {
+                return Optional.empty(); // prevent infinite loop
+            }
             return Optional.of(TypeName.builder(result).typeArguments(typeParams).build());
         }
 

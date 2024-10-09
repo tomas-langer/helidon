@@ -389,8 +389,8 @@ final class TypeNameSupport {
                 // wildcard set, if package + class name as well, set them as upper bounds and remove
                 if (target.className().isPresent() && !target.className().get().equals("?")) {
                     TypeName upperBound = TypeName.builder()
-                                                 .from(target)
-                                                 .wildcard(false)
+                            .from(target)
+                            .wildcard(false)
                             .build();
                     if (!upperBound.equals(TypeNames.OBJECT)) {
                         target.addUpperBound(upperBound);

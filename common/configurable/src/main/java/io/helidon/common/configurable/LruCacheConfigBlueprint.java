@@ -16,8 +16,6 @@
 
 package io.helidon.common.configurable;
 
-import java.util.function.Supplier;
-
 import io.helidon.builder.api.Option;
 import io.helidon.builder.api.Prototype;
 
@@ -29,7 +27,7 @@ import io.helidon.builder.api.Prototype;
  */
 @Prototype.Blueprint
 @Prototype.Configured
-interface LruCacheConfigBlueprint<K extends CharSequence & Supplier<String>, V> extends Prototype.Factory<LruCache<K, V>> {
+interface LruCacheConfigBlueprint<K, V> extends Prototype.Factory<LruCache<K, V>> {
     /**
      * Configure capacity of the cache. Defaults to {@value LruCache#DEFAULT_CAPACITY}.
      *

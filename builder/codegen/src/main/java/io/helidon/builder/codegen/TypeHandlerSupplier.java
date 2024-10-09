@@ -28,6 +28,7 @@ import io.helidon.common.types.TypeNames;
 import io.helidon.common.types.TypedElementInfo;
 
 import static io.helidon.builder.codegen.Types.CHAR_ARRAY;
+import static io.helidon.common.types.TypeNames.OPTIONAL;
 import static io.helidon.common.types.TypeNames.SUPPLIER;
 
 class TypeHandlerSupplier extends TypeHandler.OneTypeHandler {
@@ -55,8 +56,13 @@ class TypeHandlerSupplier extends TypeHandler.OneTypeHandler {
 
     @Override
     TypeName argumentTypeName() {
+        TypeName type = actualType();
+        if (TypeNames.STRING.equals(type) || toPrimitive(type).primitive() || type.array()) {
+            return declaredType();
+        }
+
         return TypeName.builder(SUPPLIER)
-                .addTypeArgument(toWildcard(actualType()))
+                .addTypeArgument(toWildcard(type))
                 .build();
     }
 

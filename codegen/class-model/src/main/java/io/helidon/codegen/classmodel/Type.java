@@ -46,7 +46,7 @@ abstract class Type extends ModelComponent {
 
                 return TypeArgument.builder()
                         .token("?")
-                        .bound(extractBoundTypeName(upperBounds.getFirst()))
+                        .bound(upperBounds.getFirst())
                         .build();
             }
             return ConcreteType.builder()
@@ -63,23 +63,7 @@ abstract class Type extends ModelComponent {
     abstract TypeName typeName();
 
     private static String extractBoundTypeName(TypeName instance) {
-        String name = calcName(instance);
-        StringBuilder nameBuilder = new StringBuilder(name);
-
-        if (!instance.typeArguments().isEmpty()) {
-            nameBuilder.append('<')
-                    .append(instance.typeArguments()
-                                    .stream()
-                                    .map(TypeName::resolvedName)
-                                    .collect(Collectors.joining(", ")))
-                    .append('>');
-        }
-
-        if (instance.array()) {
-            nameBuilder.append("[]");
-        }
-
-        return nameBuilder.toString();
+        return instance.resolvedName();
     }
 
     private static String calcName(TypeName instance) {
