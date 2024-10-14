@@ -63,6 +63,7 @@ import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.MapPropertiesDelegate;
 import org.glassfish.jersey.internal.inject.InjectionManager;
 import org.glassfish.jersey.internal.util.collection.Ref;
+import org.glassfish.jersey.io.spi.FlushedCloseable;
 import org.glassfish.jersey.server.ApplicationHandler;
 import org.glassfish.jersey.server.ContainerException;
 import org.glassfish.jersey.server.ContainerRequest;
@@ -351,6 +352,7 @@ class JaxRsService implements HttpService {
                                                               bufferSize);
             }
 
+            containerResponse.setEntityStream(outputStream);
             return outputStream;
         }
 
@@ -433,7 +435,7 @@ class JaxRsService implements HttpService {
         }
     }
 
-    static class BufferingOutputStream extends OutputStream {
+    static class BufferingOutputStream extends OutputStream implements FlushedCloseable {
         private final Supplier<OutputStream> delegateSupplier;
         private final Consumer<Integer> contentLengthConsumer;
         private final byte[] buffer;
