@@ -28,7 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
-import io.helidon.common.context.Context;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
 import io.helidon.http.HttpPrologue;
@@ -38,7 +37,6 @@ import io.helidon.webserver.ListenerConfig;
 import io.helidon.webserver.ListenerContext;
 import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.FilterChain;
-import io.helidon.webserver.http.RoutePathSupport;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
 import io.helidon.webserver.observe.metrics.AutoHttpMetricsConfig;
@@ -56,6 +54,7 @@ import org.junit.jupiter.api.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.hamcrest.Matchers.sameInstance;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -72,22 +71,18 @@ import static org.mockito.Mockito.when;
 class OpenTelemetryMetricsHttpSemanticConventionsTest {
 
     @Test
-    void measuredRequestUsesProvidedRouteSupplier() throws Exception {
+    void measuredRequestUsesMatchingPatternAtResponseCompletion() throws Exception {
         AtomicReference<Attributes> recordedAttributes = new AtomicReference<>();
         Filter filter = filter(recordedAttributes::set, true);
-        Context context = Context.create();
-        RoutingRequest request = request(context);
+        RoutingRequest request = request();
         FilterChain chain = mock(FilterChain.class);
         AtomicInteger routeInvocations = new AtomicInteger();
         AtomicReference<Runnable> whenSent = new AtomicReference<>();
 
-        doAnswer(invocation -> {
-            RoutePathSupport.provideRoute(context, () -> {
-                routeInvocations.incrementAndGet();
-                return "/providedRoute";
-            });
-            return null;
-        }).when(chain).proceed();
+        when(request.matchingPattern()).thenAnswer(invocation -> {
+            routeInvocations.incrementAndGet();
+            return Optional.of("/providedRoute");
+        });
 
         filter.filter(chain, request, response(whenSent));
 
@@ -101,13 +96,40 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
     }
 
     @Test
-    void unmeasuredRequestDoesNotUseProvidedRouteSupplier() throws Exception {
+    void measuredRequestOmitsUnavailableMatchingPattern() throws Exception {
+        AtomicReference<Attributes> recordedAttributes = new AtomicReference<>();
+        Filter filter = filter(recordedAttributes::set, true);
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+
+        filter.filter(mock(FilterChain.class), request(), response(whenSent));
+        whenSent.get().run();
+
+        assertThat(recordedAttributes.get().get(AttributeKey.stringKey(OpenTelemetryMetricsHttpSemanticConventions.HTTP_ROUTE)),
+                   nullValue());
+    }
+
+    @Test
+    void measuredRequestUsesRootMatchingPattern() throws Exception {
+        AtomicReference<Attributes> recordedAttributes = new AtomicReference<>();
+        Filter filter = filter(recordedAttributes::set, true);
+        RoutingRequest request = request();
+        AtomicReference<Runnable> whenSent = new AtomicReference<>();
+        when(request.matchingPattern()).thenReturn(Optional.of("/"));
+
+        filter.filter(mock(FilterChain.class), request, response(whenSent));
+        whenSent.get().run();
+
+        assertThat(recordedAttributes.get().get(AttributeKey.stringKey(OpenTelemetryMetricsHttpSemanticConventions.HTTP_ROUTE)),
+                   is("/"));
+    }
+
+    @Test
+    void unmeasuredRequestDoesNotReadMatchingPattern() throws Exception {
         AtomicInteger routeInvocations = new AtomicInteger();
         DoubleHistogram histogram = mock(DoubleHistogram.class);
         AutoHttpMetricsConfig autoConfig = mock(AutoHttpMetricsConfig.class);
         MetricsObserverConfig metricsConfig = mock(MetricsObserverConfig.class);
-        Context context = Context.create();
-        RoutingRequest request = request(context);
+        RoutingRequest request = request();
         FilterChain chain = mock(FilterChain.class);
         AtomicReference<Runnable> whenSent = new AtomicReference<>();
 
@@ -117,13 +139,10 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
         when(autoConfig.isMeasured(any(), any())).thenReturn(false);
         when(autoConfig.optIn()).thenReturn(List.of());
         when(autoConfig.useUpdatedHttpMetrics()).thenReturn(true);
-        doAnswer(invocation -> {
-            RoutePathSupport.provideRoute(context, () -> {
-                routeInvocations.incrementAndGet();
-                return "/providedRoute";
-            });
-            return null;
-        }).when(chain).proceed();
+        when(request.matchingPattern()).thenAnswer(invocation -> {
+            routeInvocations.incrementAndGet();
+            return Optional.of("/providedRoute");
+        });
 
         filter(histogram, metricsConfig).filter(chain, request, response(whenSent));
         whenSent.get().run();
@@ -320,10 +339,6 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
     }
 
     private static RoutingRequest request() {
-        return request(Context.create());
-    }
-
-    private static RoutingRequest request(Context context) {
         RoutingRequest request = mock(RoutingRequest.class);
         ListenerConfig listenerConfig = mock(ListenerConfig.class);
         ListenerContext listenerContext = mock(ListenerContext.class);
@@ -335,7 +350,6 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
                                                                 "/test",
                                                                 false));
         when(request.matchingPattern()).thenReturn(Optional.empty());
-        when(request.context()).thenReturn(context);
         when(request.listenerContext()).thenReturn(listenerContext);
         when(listenerContext.config()).thenReturn(listenerConfig);
         when(listenerConfig.name()).thenReturn("@default");

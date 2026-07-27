@@ -48,7 +48,7 @@ import io.helidon.http.Status;
 import io.helidon.webserver.KeyPerformanceIndicatorSupport;
 import io.helidon.webserver.http.HttpRules;
 import io.helidon.webserver.http.HttpService;
-import io.helidon.webserver.http.RoutePathSupport;
+import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
@@ -323,10 +323,15 @@ public class JaxRsService implements HttpService {
             writer.await();
             ExtendedUriInfo uriInfo = (ExtendedUriInfo) requestContext.getUriInfo();
             boolean matchedResourceMethod = uriInfo.getMatchedResourceMethod() != null;
-            if (matchedResourceMethod || res.status() != Status.NOT_FOUND_404) {
-                RoutePathSupport.provideRoute(ctx, () -> route(req, uriInfo.getMatchedTemplates()));
+            if ((matchedResourceMethod || res.status() != Status.NOT_FOUND_404)
+                    && req instanceof RoutingRequest routingRequest) {
+                String servicePath = servicePath(req);
+                routingRequest.matchingPattern(() -> Optional.of(route(servicePath, uriInfo.getMatchedTemplates())));
             }
             if (res.status() == Status.NOT_FOUND_404 && !matchedResourceMethod) {
+                if (req instanceof RoutingRequest routingRequest) {
+                    routingRequest.matchingPattern(Optional::empty);
+                }
                 // Jersey will not throw an exception, it will complete the request - but we must
                 // continue looking for the next route
                 // this is a tricky piece of code - the next can only be called if reset was successful
@@ -345,14 +350,17 @@ public class JaxRsService implements HttpService {
             throw e;
         } catch (io.helidon.http.NotFoundException | NotFoundException e) {
             // continue execution, maybe there is a non-JAX-RS route (such as static content)
+            if (req instanceof RoutingRequest routingRequest) {
+                routingRequest.matchingPattern(Optional::empty);
+            }
             res.next();
         } catch (Exception e) {
             throw new InternalServerException("Internal exception in JAX-RS processing", e);
         }
     }
 
-    private String route(ServerRequest req, List<UriTemplate> matchedTemplates) {
-        StringBuilder derivedPath = new StringBuilder(servicePath(req));
+    private String route(String servicePath, List<UriTemplate> matchedTemplates) {
+        StringBuilder derivedPath = new StringBuilder(servicePath);
 
         for (int i = matchedTemplates.size() - 1; i >= 0; i--) {
             appendPath(derivedPath, matchedTemplates.get(i).getTemplate());
