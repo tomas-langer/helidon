@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 
 import io.helidon.config.Config;
 import io.helidon.http.Status;
@@ -29,6 +30,7 @@ import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.FilterChain;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
+import io.helidon.webserver.http.RoutePathSupport;
 import io.helidon.webserver.observe.metrics.AutoHttpMetricsConfig;
 import io.helidon.webserver.observe.metrics.MetricsObserverConfig;
 import io.helidon.webserver.observe.metrics.spi.AutoHttpMetricsProvider;
@@ -181,19 +183,25 @@ class OpenTelemetryMetricsHttpSemanticConventions implements AutoHttpMetricsProv
         }
 
         private void filterLegacy(FilterChain chain, RoutingRequest req, RoutingResponse res, long startTime) {
-            Optional<String> matchingPattern = req.matchingPattern();
+            boolean measured = config.isMeasured(req.prologue().method(), req.prologue().uriPath());
+            var routeSupplier = new AtomicReference<Supplier<String>>();
+            if (measured) {
+                RoutePathSupport.requestRoute(req.context(), routeSupplier::set);
+            }
             try {
                 chain.proceed();
                 Thread.ofVirtual().start(() -> updateLegacyMetricsIfMeasured(req,
                                                                               res,
-                                                                              matchingPattern,
+                                                                              measured,
+                                                                              routeSupplier.get(),
                                                                               startTime,
                                                                               System.nanoTime(),
                                                                               null));
             } catch (Exception e) {
                 Thread.ofVirtual().start(() -> updateLegacyMetricsIfMeasured(req,
                                                                               res,
-                                                                              matchingPattern,
+                                                                              measured,
+                                                                              routeSupplier.get(),
                                                                               startTime,
                                                                               System.nanoTime(),
                                                                               e));
@@ -249,20 +257,22 @@ class OpenTelemetryMetricsHttpSemanticConventions implements AutoHttpMetricsProv
 
         private void updateLegacyMetricsIfMeasured(RoutingRequest req,
                                                    RoutingResponse resp,
-                                                   Optional<String> matchingPattern,
+                                                   boolean measured,
+                                                   Supplier<String> routeSupplier,
                                                    long startTime,
                                                    long endTime,
                                                    Exception exception) {
-            if (!config.isMeasured(req.prologue().method(), req.prologue().uriPath())) {
+            if (!measured) {
                 return;
             }
             AttributesBuilder attrBuilder = Attributes.builder();
+            String route = routeSupplier == null ? req.matchingPattern().orElse("") : routeSupplier.get();
 
             attrBuilder.put(AttributeKey.stringKey(HTTP_METHOD), req.prologue().method().text())
                     .put(AttributeKey.stringKey(URL_SCHEME), req.prologue().protocol())
                     .put(AttributeKey.stringKey(ERROR_TYPE), errorType(resp, exception))
                     .put(AttributeKey.longKey(STATUS_CODE), legacyStatusCode(resp, exception))
-                    .put(AttributeKey.stringKey(HTTP_ROUTE), matchingPattern.orElse(""))
+                    .put(AttributeKey.stringKey(HTTP_ROUTE), route)
                     .put(AttributeKey.stringKey(SOCKET_NAME), req.listenerContext().config().name());
 
             if (isOptedIn(config, SERVER_ADDRESS)) {

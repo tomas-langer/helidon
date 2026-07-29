@@ -50,6 +50,7 @@ import io.helidon.webserver.http.HttpRules;
 import io.helidon.webserver.http.HttpService;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
+import io.helidon.webserver.http.RoutePathSupport;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 
@@ -327,6 +328,8 @@ public class JaxRsService implements HttpService {
                     && req instanceof RoutingRequest routingRequest) {
                 String servicePath = servicePath(req);
                 List<UriTemplate> matchedTemplates = List.copyOf(uriInfo.getMatchedTemplates());
+                String webServerMatchingPattern = req.matchingPattern().orElse("");
+                RoutePathSupport.provideRoute(req.context(), () -> webServerMatchingPattern);
                 routingRequest.matchingPattern(() -> Optional.of(route(servicePath, matchedTemplates)));
             }
             if (res.status() == Status.NOT_FOUND_404 && !matchedResourceMethod) {

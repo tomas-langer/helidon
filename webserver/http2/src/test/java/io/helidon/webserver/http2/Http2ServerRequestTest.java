@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import io.helidon.common.buffers.BufferData;
 import io.helidon.http.HeaderNames;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 
 class Http2ServerRequestTest {
@@ -72,6 +74,11 @@ class Http2ServerRequestTest {
         assertThat(request.matchingPattern(), is(Optional.of("/resource/{id}")));
         assertThat(request.matchingPattern(), is(Optional.of("/resource/{id}")));
         assertThat(invocations.get(), is(1));
+
+        assertThrows(NullPointerException.class,
+                     () -> request.matchingPattern((Supplier<Optional<String>>) null));
+        request.matchingPattern(() -> null);
+        assertThrows(NullPointerException.class, request::matchingPattern);
     }
 
     @Test

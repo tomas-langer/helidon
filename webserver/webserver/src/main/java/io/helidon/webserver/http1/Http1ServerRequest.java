@@ -16,6 +16,7 @@
 
 package io.helidon.webserver.http1;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.Supplier;
@@ -229,7 +230,9 @@ abstract class Http1ServerRequest implements RoutingRequest {
 
     @Override
     public RoutingRequest matchingPattern(Supplier<Optional<String>> matchingPattern) {
-        this.matchingPatternSupplier = LazyValue.create(matchingPattern);
+        Objects.requireNonNull(matchingPattern, "Parameter 'matchingPattern' is null!");
+        this.matchingPatternSupplier = LazyValue.create(() -> Objects.requireNonNull(matchingPattern.get(),
+                                                                                     "Matching pattern supplier returned null"));
         this.matchingPattern = null;
         return this;
     }

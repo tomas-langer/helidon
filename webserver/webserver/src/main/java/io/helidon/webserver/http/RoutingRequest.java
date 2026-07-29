@@ -16,6 +16,7 @@
 
 package io.helidon.webserver.http;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -67,6 +68,7 @@ public interface RoutingRequest extends ServerRequest {
      */
     @Api.Internal
     default RoutingRequest matchingPattern(Supplier<Optional<String>> matchingPattern) {
+        Objects.requireNonNull(matchingPattern, "Parameter 'matchingPattern' is null!");
         return this;
     }
 }

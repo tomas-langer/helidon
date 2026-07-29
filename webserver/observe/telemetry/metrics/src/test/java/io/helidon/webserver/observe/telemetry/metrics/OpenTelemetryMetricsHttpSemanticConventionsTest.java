@@ -28,6 +28,7 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
 
+import io.helidon.common.context.Context;
 import io.helidon.common.media.type.MediaTypes;
 import io.helidon.config.Config;
 import io.helidon.http.HttpPrologue;
@@ -37,6 +38,7 @@ import io.helidon.webserver.ListenerConfig;
 import io.helidon.webserver.ListenerContext;
 import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.FilterChain;
+import io.helidon.webserver.http.RoutePathSupport;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
 import io.helidon.webserver.observe.metrics.AutoHttpMetricsConfig;
@@ -281,6 +283,8 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
         AtomicReference<String> matchingPattern = new AtomicReference<>("/webserver/{id}");
         when(request.matchingPattern()).thenAnswer(invocation -> Optional.of(matchingPattern.get()));
         doAnswer(invocation -> {
+            String webServerMatchingPattern = matchingPattern.get();
+            RoutePathSupport.provideRoute(request.context(), () -> webServerMatchingPattern);
             matchingPattern.set("/jersey/resource/{id}");
             return null;
         }).when(chain).proceed();
@@ -374,6 +378,7 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
                                                                 "/test",
                                                                 false));
         when(request.matchingPattern()).thenReturn(Optional.empty());
+        when(request.context()).thenReturn(Context.create());
         when(request.listenerContext()).thenReturn(listenerContext);
         when(listenerContext.config()).thenReturn(listenerConfig);
         when(listenerConfig.name()).thenReturn("@default");
