@@ -326,7 +326,8 @@ public class JaxRsService implements HttpService {
             if ((matchedResourceMethod || res.status() != Status.NOT_FOUND_404)
                     && req instanceof RoutingRequest routingRequest) {
                 String servicePath = servicePath(req);
-                routingRequest.matchingPattern(() -> Optional.of(route(servicePath, uriInfo.getMatchedTemplates())));
+                List<UriTemplate> matchedTemplates = List.copyOf(uriInfo.getMatchedTemplates());
+                routingRequest.matchingPattern(() -> Optional.of(route(servicePath, matchedTemplates)));
             }
             if (res.status() == Status.NOT_FOUND_404 && !matchedResourceMethod) {
                 if (req instanceof RoutingRequest routingRequest) {
