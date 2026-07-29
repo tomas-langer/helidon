@@ -82,6 +82,8 @@ public class JaxRsService implements HttpService {
      */
     static final String IGNORE_EXCEPTION_RESPONSE = "jersey.config.client.ignoreExceptionResponse";
     static final String DISABLE_DATASOURCE_PROVIDER = "jersey.config.server.disableDataSourceProvider";
+    private static final String USE_UPDATED_HTTP_METRICS =
+            "server.features.observe.observers.metrics.auto-http-metrics.use-updated-http-metrics";
 
     private static final System.Logger LOGGER = System.getLogger(JaxRsService.class.getName());
     private static final Type REQUEST_TYPE = (new GenericType<Ref<ServerRequest>>() { }).getType();
@@ -92,14 +94,17 @@ public class JaxRsService implements HttpService {
     private final ResourceConfig resourceConfig;
     private final Container container;
     private final Application application;
+    private final boolean useUpdatedHttpMetrics;
 
     private JaxRsService(ResourceConfig resourceConfig,
                          ApplicationHandler appHandler,
-                         Container container) {
+                         Container container,
+                         boolean useUpdatedHttpMetrics) {
         this.resourceConfig = resourceConfig;
         this.appHandler = appHandler;
         this.container = container;
         this.application = getApplication(resourceConfig);
+        this.useUpdatedHttpMetrics = useUpdatedHttpMetrics;
     }
 
     /**
@@ -227,7 +232,13 @@ public class JaxRsService implements HttpService {
             System.setProperty(IGNORE_EXCEPTION_RESPONSE, ignore);
         }
 
-        return new JaxRsService(resourceConfig, appHandler, container);
+        /*
+         * Temporary compatibility workaround. In the next major version this switch will be ignored and the JAX-RS
+         * matching pattern will always be updated.
+         */
+        boolean useUpdatedHttpMetrics = config.get(USE_UPDATED_HTTP_METRICS).asBoolean().orElse(false);
+
+        return new JaxRsService(resourceConfig, appHandler, container, useUpdatedHttpMetrics);
     }
 
     private static String basePath(UriPath path) {
@@ -323,14 +334,15 @@ public class JaxRsService implements HttpService {
             writer.await();
             ExtendedUriInfo uriInfo = (ExtendedUriInfo) requestContext.getUriInfo();
             boolean matchedResourceMethod = uriInfo.getMatchedResourceMethod() != null;
-            if ((matchedResourceMethod || res.status() != Status.NOT_FOUND_404)
+            if (useUpdatedHttpMetrics
+                    && (matchedResourceMethod || res.status() != Status.NOT_FOUND_404)
                     && req instanceof RoutingRequest routingRequest) {
                 String servicePath = servicePath(req);
                 List<UriTemplate> matchedTemplates = List.copyOf(uriInfo.getMatchedTemplates());
                 routingRequest.matchingPattern(() -> Optional.of(route(servicePath, matchedTemplates)));
             }
             if (res.status() == Status.NOT_FOUND_404 && !matchedResourceMethod) {
-                if (req instanceof RoutingRequest routingRequest) {
+                if (useUpdatedHttpMetrics && req instanceof RoutingRequest routingRequest) {
                     routingRequest.matchingPattern(Optional::empty);
                 }
                 // Jersey will not throw an exception, it will complete the request - but we must
@@ -351,7 +363,7 @@ public class JaxRsService implements HttpService {
             throw e;
         } catch (io.helidon.http.NotFoundException | NotFoundException e) {
             // continue execution, maybe there is a non-JAX-RS route (such as static content)
-            if (req instanceof RoutingRequest routingRequest) {
+            if (useUpdatedHttpMetrics && req instanceof RoutingRequest routingRequest) {
                 routingRequest.matchingPattern(Optional::empty);
             }
             res.next();

@@ -16,6 +16,7 @@
 
 package io.helidon.jersey.webserver;
 
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.helidon.config.Config;
+import io.helidon.config.ConfigSources;
 import io.helidon.http.HeaderName;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.Status;
@@ -60,6 +62,8 @@ public class JerseyOnWebServerTest {
 
     @SetUpRoute
     public static void routing(HttpRouting.Builder routing) {
+        Config updatedHttpMetricsConfig = Config.just(ConfigSources.create(Map.of(
+                "server.features.observe.observers.metrics.auto-http-metrics.use-updated-http-metrics", "true")));
         routing.addFilter((chain, req, res) -> {
             String requestId = req.headers().first(TEST_REQUEST_ID).orElse(null);
             if (requestId == null) {
@@ -77,14 +81,21 @@ public class JerseyOnWebServerTest {
             }
         });
         routing.register("/jersey",
-                         JaxRsService.create(Config.empty(), ResourceConfig.forApplication(new JaxRsApplication())));
+                         JaxRsService.create(updatedHttpMetricsConfig,
+                                             ResourceConfig.forApplication(new JaxRsApplication())));
         routing.register("/jersey-relative",
-                         JaxRsService.create(Config.empty(), ResourceConfig.forApplication(new RelativePathApplication())));
+                         JaxRsService.create(updatedHttpMetricsConfig,
+                                             ResourceConfig.forApplication(new RelativePathApplication())));
         routing.register("/jersey-trailing",
-                         JaxRsService.create(Config.empty(), ResourceConfig.forApplication(new TrailingSlashPathApplication())));
+                         JaxRsService.create(updatedHttpMetricsConfig,
+                                             ResourceConfig.forApplication(new TrailingSlashPathApplication())));
         routing.register("/jersey-locator",
-                         JaxRsService.create(Config.empty(), ResourceConfig.forApplication(new LocatorApplication())));
-        routing.register("/", JaxRsService.create(Config.empty(), ResourceConfig.forApplication(new RootApplication())));
+                         JaxRsService.create(updatedHttpMetricsConfig,
+                                             ResourceConfig.forApplication(new LocatorApplication())));
+        routing.register("/jersey-legacy",
+                         JaxRsService.create(Config.empty(), ResourceConfig.forApplication(new JaxRsApplication())));
+        routing.register("/",
+                         JaxRsService.create(updatedHttpMetricsConfig, ResourceConfig.forApplication(new RootApplication())));
     }
 
     @Test
@@ -98,6 +109,19 @@ public class JerseyOnWebServerTest {
         assertThat(response.status(), is(Status.OK_200));
         assertThat(response.entity(), is("Hello Joe!"));
         assertThat(route(requestId), is("/jersey/greet/{name}"));
+    }
+
+    @Test
+    public void testEndpointWithLegacyMetrics() throws Exception {
+        String requestId = requestId();
+
+        var response = client.get("/jersey-legacy/greet/Joe")
+                .header(TEST_REQUEST_ID, requestId)
+                .request(String.class);
+
+        assertThat(response.status(), is(Status.OK_200));
+        assertThat(response.entity(), is("Hello Joe!"));
+        assertThat(route(requestId), is("/jersey-legacy"));
     }
 
     @Test
