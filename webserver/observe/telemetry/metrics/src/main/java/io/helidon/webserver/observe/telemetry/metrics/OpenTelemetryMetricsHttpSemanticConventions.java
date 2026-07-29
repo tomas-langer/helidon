@@ -181,11 +181,22 @@ class OpenTelemetryMetricsHttpSemanticConventions implements AutoHttpMetricsProv
         }
 
         private void filterLegacy(FilterChain chain, RoutingRequest req, RoutingResponse res, long startTime) {
+            Optional<String> matchingPattern = req.matchingPattern();
             try {
                 chain.proceed();
-                Thread.ofVirtual().start(() -> updateLegacyMetricsIfMeasured(req, res, startTime, System.nanoTime(), null));
+                Thread.ofVirtual().start(() -> updateLegacyMetricsIfMeasured(req,
+                                                                              res,
+                                                                              matchingPattern,
+                                                                              startTime,
+                                                                              System.nanoTime(),
+                                                                              null));
             } catch (Exception e) {
-                Thread.ofVirtual().start(() -> updateLegacyMetricsIfMeasured(req, res, startTime, System.nanoTime(), e));
+                Thread.ofVirtual().start(() -> updateLegacyMetricsIfMeasured(req,
+                                                                              res,
+                                                                              matchingPattern,
+                                                                              startTime,
+                                                                              System.nanoTime(),
+                                                                              e));
                 throw e;
             }
         }
@@ -238,6 +249,7 @@ class OpenTelemetryMetricsHttpSemanticConventions implements AutoHttpMetricsProv
 
         private void updateLegacyMetricsIfMeasured(RoutingRequest req,
                                                    RoutingResponse resp,
+                                                   Optional<String> matchingPattern,
                                                    long startTime,
                                                    long endTime,
                                                    Exception exception) {
@@ -250,7 +262,7 @@ class OpenTelemetryMetricsHttpSemanticConventions implements AutoHttpMetricsProv
                     .put(AttributeKey.stringKey(URL_SCHEME), req.prologue().protocol())
                     .put(AttributeKey.stringKey(ERROR_TYPE), errorType(resp, exception))
                     .put(AttributeKey.longKey(STATUS_CODE), legacyStatusCode(resp, exception))
-                    .put(AttributeKey.stringKey(HTTP_ROUTE), req.matchingPattern().orElse(""))
+                    .put(AttributeKey.stringKey(HTTP_ROUTE), matchingPattern.orElse(""))
                     .put(AttributeKey.stringKey(SOCKET_NAME), req.listenerContext().config().name());
 
             if (isOptedIn(config, SERVER_ADDRESS)) {
