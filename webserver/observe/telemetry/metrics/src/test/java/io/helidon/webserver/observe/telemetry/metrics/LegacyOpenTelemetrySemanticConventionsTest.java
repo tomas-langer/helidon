@@ -17,63 +17,74 @@
 package io.helidon.webserver.observe.telemetry.metrics;
 
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.concurrent.atomic.AtomicReference;
 
-import io.helidon.common.media.type.MediaTypes;
-import io.helidon.config.Config;
+import io.helidon.common.testing.junit5.MatcherWithRetry;
 import io.helidon.webclient.http1.Http1Client;
 import io.helidon.webclient.http1.Http1ClientResponse;
-import io.helidon.webserver.WebServerConfig;
-import io.helidon.webserver.testing.junit5.ServerTest;
-import io.helidon.webserver.testing.junit5.SetUpServer;
+import io.helidon.webserver.http.HttpRouting;
+import io.helidon.webserver.observe.metrics.AutoHttpMetricsConfig;
+import io.helidon.webserver.testing.junit5.RoutingTest;
+import io.helidon.webserver.testing.junit5.SetUpFeatures;
+import io.helidon.webserver.testing.junit5.SetUpRoute;
+import io.helidon.webserver.spi.ServerFeature;
 
-import io.opentelemetry.exporter.logging.otlp.OtlpJsonLoggingMetricExporter;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.stringContainsInOrder;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyDouble;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
-@ServerTest
+@RoutingTest
 class LegacyOpenTelemetrySemanticConventionsTest {
+    private static final AtomicReference<Attributes> RECORDED_ATTRIBUTES = new AtomicReference<>();
+
     private final Http1Client client;
 
     LegacyOpenTelemetrySemanticConventionsTest(Http1Client client) {
         this.client = client;
     }
 
-    @SetUpServer
-    static void setupServer(WebServerConfig.Builder serverBuilder) {
-        Config config = Config.just("""
-                                            server:
-                                              features:
-                                                observe:
-                                                  observers:
-                                                    metrics:
-                                                      auto-http-metrics:
-                                                        use-updated-http-metrics: false
-                                            """,
-                                    MediaTypes.APPLICATION_YAML);
-        serverBuilder.config(config.get("server"))
-                .routing(rules -> rules.get("/greet/{name}",
-                                            (req, res) -> res.send("Hello, " + req.path().pathParameters().get("name"))));
+    @SetUpFeatures(false)
+    static List<ServerFeature> features() {
+        return List.of();
+    }
+
+    @SetUpRoute
+    static void setupRouting(HttpRouting.Builder routing) {
+        DoubleHistogram histogram = mock(DoubleHistogram.class);
+        doAnswer(invocation -> {
+            RECORDED_ATTRIBUTES.set(invocation.getArgument(1));
+            return null;
+        }).when(histogram).record(anyDouble(), any(Attributes.class));
+
+        AutoHttpMetricsConfig config = AutoHttpMetricsConfig.builder()
+                .useUpdatedHttpMetrics(false)
+                .build();
+
+        routing.addFilter(OpenTelemetryMetricsHttpSemanticConventions.MetricsRecordingFilter.create(histogram, config))
+                .get("/greet/{name}",
+                     (req, res) -> res.send("Hello, " + req.path().pathParameters().get("name")));
     }
 
     @Test
     void legacyMetricsUseWebServerMatchingPattern() {
-        try (TestLogHandler testLogHandler = TestLogHandler.create(
-                Logger.getLogger(OtlpJsonLoggingMetricExporter.class.getName()));
-                Http1ClientResponse response = client.get("/greet/Joe").request()) {
+        RECORDED_ATTRIBUTES.set(null);
+        try (Http1ClientResponse response = client.get("/greet/Joe").request()) {
             assertThat(response.status().code(), is(200));
-
-            List<String> metricMessages = testLogHandler.messages(
-                    hasItem(stringContainsInOrder(List.of(OpenTelemetryMetricsHttpSemanticConventions.TIMER_NAME,
-                                                          "/greet/{name}"))));
-
-            assertThat(metricMessages,
-                       hasItem(stringContainsInOrder(List.of(OpenTelemetryMetricsHttpSemanticConventions.TIMER_NAME,
-                                                             "/greet/{name}"))));
         }
+
+        Attributes attributes = MatcherWithRetry.assertThatWithRetry("Recorded legacy attributes",
+                                                                      RECORDED_ATTRIBUTES::get,
+                                                                      notNullValue());
+        assertThat(attributes.get(AttributeKey.stringKey(OpenTelemetryMetricsHttpSemanticConventions.HTTP_ROUTE)),
+                   is("/greet/{name}"));
     }
 }
