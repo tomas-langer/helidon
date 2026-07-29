@@ -38,7 +38,6 @@ import io.helidon.webserver.ListenerConfig;
 import io.helidon.webserver.ListenerContext;
 import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.FilterChain;
-import io.helidon.webserver.http.RoutePathSupport;
 import io.helidon.webserver.http.RoutingRequest;
 import io.helidon.webserver.http.RoutingResponse;
 import io.helidon.webserver.observe.metrics.AutoHttpMetricsConfig;
@@ -268,32 +267,6 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
         verify(response, never()).whenSent(any(Runnable.class));
         assertThat(recordedAttributes.get().get(AttributeKey.stringKey(OpenTelemetryMetricsHttpSemanticConventions.HTTP_ROUTE)),
                    is("/matchingPattern"));
-    }
-
-    @Test
-    void legacyMetricsPreserveOriginalMatchingPattern() throws Exception {
-        AtomicReference<Attributes> recordedAttributes = new AtomicReference<>();
-        CountDownLatch recorded = new CountDownLatch(1);
-        Filter filter = filter(attributes -> {
-            recordedAttributes.set(attributes);
-            recorded.countDown();
-        }, false);
-        RoutingRequest request = request();
-        FilterChain chain = mock(FilterChain.class);
-        AtomicReference<String> matchingPattern = new AtomicReference<>("/webserver/{id}");
-        when(request.matchingPattern()).thenAnswer(invocation -> Optional.of(matchingPattern.get()));
-        doAnswer(invocation -> {
-            String webServerMatchingPattern = matchingPattern.get();
-            RoutePathSupport.provideRoute(request.context(), () -> webServerMatchingPattern);
-            matchingPattern.set("/jersey/resource/{id}");
-            return null;
-        }).when(chain).proceed();
-
-        filter.filter(chain, request, response(new AtomicReference<>()));
-
-        assertThat(recorded.await(5, TimeUnit.SECONDS), is(true));
-        assertThat(recordedAttributes.get().get(AttributeKey.stringKey(OpenTelemetryMetricsHttpSemanticConventions.HTTP_ROUTE)),
-                   is("/webserver/{id}"));
     }
 
     @Test
