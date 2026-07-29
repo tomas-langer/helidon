@@ -209,7 +209,7 @@ class OpenTelemetryMetricsHttpSemanticConventions implements AutoHttpMetricsProv
             }
         }
 
-        static MetricsRecordingFilter create(DoubleHistogram httpRequestDuration, AutoHttpMetricsConfig config) {
+        private static MetricsRecordingFilter create(DoubleHistogram httpRequestDuration, AutoHttpMetricsConfig config) {
             return new MetricsRecordingFilter(httpRequestDuration, config);
         }
 

@@ -344,7 +344,7 @@ class OpenTelemetryMetricsHttpSemanticConventionsTest {
         return filter(histogram, config);
     }
 
-    private static Filter filter(DoubleHistogram histogram, MetricsObserverConfig metricsConfig) {
+    static Filter filter(DoubleHistogram histogram, MetricsObserverConfig metricsConfig) {
         OpenTelemetry openTelemetry = mock(OpenTelemetry.class);
         MeterBuilder meterBuilder = mock(MeterBuilder.class);
         Meter meter = mock(Meter.class);

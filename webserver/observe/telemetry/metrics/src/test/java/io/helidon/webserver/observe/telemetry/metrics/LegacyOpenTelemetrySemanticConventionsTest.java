@@ -24,6 +24,7 @@ import io.helidon.webclient.http1.Http1Client;
 import io.helidon.webclient.http1.Http1ClientResponse;
 import io.helidon.webserver.http.HttpRouting;
 import io.helidon.webserver.observe.metrics.AutoHttpMetricsConfig;
+import io.helidon.webserver.observe.metrics.MetricsObserverConfig;
 import io.helidon.webserver.testing.junit5.RoutingTest;
 import io.helidon.webserver.testing.junit5.SetUpFeatures;
 import io.helidon.webserver.testing.junit5.SetUpRoute;
@@ -65,11 +66,13 @@ class LegacyOpenTelemetrySemanticConventionsTest {
             return null;
         }).when(histogram).record(anyDouble(), any(Attributes.class));
 
-        AutoHttpMetricsConfig config = AutoHttpMetricsConfig.builder()
-                .useUpdatedHttpMetrics(false)
-                .build();
+        MetricsObserverConfig config = MetricsObserverConfig.builder()
+                .autoHttpMetrics(AutoHttpMetricsConfig.builder()
+                                         .useUpdatedHttpMetrics(false)
+                                         .build())
+                .buildPrototype();
 
-        routing.addFilter(OpenTelemetryMetricsHttpSemanticConventions.MetricsRecordingFilter.create(histogram, config))
+        routing.addFilter(OpenTelemetryMetricsHttpSemanticConventionsTest.filter(histogram, config))
                 .get("/greet/{name}",
                      (req, res) -> res.send("Hello, " + req.path().pathParameters().get("name")));
     }
