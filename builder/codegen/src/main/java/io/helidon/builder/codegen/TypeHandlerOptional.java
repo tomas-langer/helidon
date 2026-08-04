@@ -422,6 +422,13 @@ class TypeHandlerOptional extends TypeHandlerBasic {
                                     Optional<FactoryMethod> factoryMethod) {
         if (factoryMethod.isPresent()) {
             FactoryMethod fm = factoryMethod.get();
+            var parameterType = fm.parameterType().orElse(null);
+            if (parameterType != null
+                    && !(parameterType.equals(Types.CONFIG) || parameterType.equals(Types.COMMON_CONFIG))) {
+                content.addContent(".as(")
+                        .addContent(parameterType.boxed().genericTypeName())
+                        .addContent(".class)");
+            }
             content.addContent(".as(")
                     .addContent(fm.declaringType().genericTypeName())
                     .addContent("::");
