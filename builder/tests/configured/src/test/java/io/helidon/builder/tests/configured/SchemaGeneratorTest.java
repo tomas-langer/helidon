@@ -2603,6 +2603,74 @@ class SchemaGeneratorTest {
     }
 
     @Test
+    void testConfigFactoryOptionalCollectionItems() throws IOException {
+        var result = TestCompiler.builder()
+                .currentRelease()
+                .addClasspath(CLASSPATH)
+                .options(OPTS)
+                .addProcessor(AptProcessor::new)
+                .addSource("AcmeCustomType.java", """
+                        package com.acme;
+
+                        interface AcmeCustomType {
+                        }
+                        """)
+                .addSource("AcmeCustomMethods.java", """
+                        package com.acme;
+
+                        import io.helidon.builder.api.Prototype;
+
+                        class AcmeCustomMethods {
+                            @Prototype.ConfigFactoryMethod("customs")
+                            static AcmeCustomType custom(String config) {
+                                throw new UnsupportedOperationException();
+                            }
+                        }
+                        """)
+                .addSource("AcmeConfigBlueprint.java", """
+                        package com.acme;
+
+                        import java.util.List;
+                        import java.util.Optional;
+
+                        import io.helidon.builder.api.Option;
+                        import io.helidon.builder.api.Prototype;
+
+                        /**
+                         * ACME config.
+                         */
+                        @Prototype.Blueprint
+                        @Prototype.Configured
+                        @Prototype.CustomMethods(AcmeCustomMethods.class)
+                        interface AcmeConfigBlueprint {
+                            /**
+                             * Custom options.
+                             */
+                            @Option.Configured
+                            Optional<List<AcmeCustomType>> customs();
+                        }
+                        """)
+                .build()
+                .compile();
+
+        assertThat(String.join(System.lineSeparator(), result.diagnostics()), result.success(), is(true));
+        var actual = Files.readString(result.sourceOutput().resolve("com/acme/AcmeConfig.java"));
+        assertThat(actual, matches("""
+                //...
+                        @ConfiguredOption(
+                            key = "customs",
+                            description = "Custom options",
+                            type = String.class,
+                            kind = ConfiguredOption.Kind.LIST)
+                //...
+                """));
+        assertThat(actual, containsString("config.get(\"customs\")"
+                                                  + ".asList(cfg -> cfg.as(String.class)"
+                                                  + ".as(AcmeCustomMethods::custom).get())"
+                                                  + ".ifPresent(this::customs);"));
+    }
+
+    @Test
     void testConfigFactoryAdapter() throws IOException {
         var result = TestCompiler.builder()
                 .currentRelease()
