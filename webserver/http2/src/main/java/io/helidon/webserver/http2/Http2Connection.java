@@ -254,10 +254,13 @@ public class Http2Connection implements ServerConnection, InterruptableTask<Void
                                  sendErrorDetails ? e.getClass().getName() + ": " + e.getMessage() : "");
             throw e;
         } finally {
-            if (transportObservation != null) {
-                transportObservation.stop();
+            try {
+                if (transportObservation != null) {
+                    transportObservation.stop(ctx::abortSocket);
+                }
+            } finally {
+                streams.abortAll();
             }
-            streams.abortAll();
         }
     }
 

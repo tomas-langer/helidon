@@ -16,6 +16,9 @@
 
 package io.helidon.webserver.http2;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import io.helidon.http.HttpTransportObserver.ConnectionObservation;
@@ -32,7 +35,10 @@ import static io.helidon.http.HttpTransportObserver.PROTOCOL_HTTP_2;
  */
 final class Http2TransportObservation {
     private final ReentrantLock lock = new ReentrantLock();
+    private final Condition writesFinished = lock.newCondition();
+    private final Map<Thread, Integer> terminalWriters = new HashMap<>();
     private final ConnectionObservation observation;
+    private boolean stopping;
     private boolean stopped;
 
     Http2TransportObservation(ConnectionObservation observation) {
@@ -42,7 +48,7 @@ final class Http2TransportObservation {
     void protocolSelected() {
         lock.lock();
         try {
-            if (!stopped) {
+            if (!stopping && !stopped) {
                 observation.protocolSelected(PROTOCOL_HTTP_2);
             }
         } finally {
@@ -53,22 +59,43 @@ final class Http2TransportObservation {
     Stream openStream(boolean initiallyRemoteEnded) {
         lock.lock();
         try {
-            return new Stream(stopped ? StreamObservation.noop()
-                                      : observation.streamOpened(Direction.BIDIRECTIONAL, Initiator.REMOTE),
+            return new Stream(stopping || stopped ? StreamObservation.noop()
+                                                 : observation.streamOpened(Direction.BIDIRECTIONAL, Initiator.REMOTE),
                               initiallyRemoteEnded);
         } finally {
             lock.unlock();
         }
     }
 
-    void stop() {
+    void stop(Runnable abortSocket) {
+        boolean pendingWrites;
         lock.lock();
         try {
-            // The connection handler closes the physical observation after handle returns.
-            // Drain any current callback and prevent later stream callbacks from racing that close.
-            stopped = true;
+            stopping = true;
+            // A terminal write may still be waiting for flow control or socket I/O. Interrupt its actual writer,
+            // including asynchronous subprotocol writers, before waiting for success/failure publication.
+            // Keep registration locked while interrupting so a pooled thread cannot advance to unrelated work.
+            terminalWriters.keySet().forEach(Thread::interrupt);
+            pendingWrites = !terminalWriters.isEmpty();
         } finally {
             lock.unlock();
+        }
+        try {
+            if (pendingWrites) {
+                // Platform-thread writes on legacy sockets need transport close as well as interruption.
+                abortSocket.run();
+            }
+        } finally {
+            lock.lock();
+            try {
+                while (!terminalWriters.isEmpty()) {
+                    writesFinished.awaitUninterruptibly();
+                }
+                // Physical observation closes after handle returns; all admitted terminal outcomes are now published.
+                stopped = true;
+            } finally {
+                lock.unlock();
+            }
         }
     }
 
@@ -100,6 +127,36 @@ final class Http2TransportObservation {
 
         void applicationStarted() {
             applicationStarted = true;
+        }
+
+        void beginTerminalWrite() {
+            lock.lock();
+            try {
+                if (stopping || stopped) {
+                    throw new IllegalStateException("HTTP/2 connection observation is closing");
+                }
+                terminalWriters.merge(Thread.currentThread(), 1, Integer::sum);
+            } finally {
+                lock.unlock();
+            }
+        }
+
+        void endTerminalWrite() {
+            lock.lock();
+            try {
+                Thread writer = Thread.currentThread();
+                int pending = terminalWriters.get(writer);
+                if (pending == 1) {
+                    terminalWriters.remove(writer);
+                } else {
+                    terminalWriters.put(writer, pending - 1);
+                }
+                if (terminalWriters.isEmpty()) {
+                    writesFinished.signalAll();
+                }
+            } finally {
+                lock.unlock();
+            }
         }
 
         void requestFailed() {

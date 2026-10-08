@@ -34,6 +34,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -165,7 +166,7 @@ class Http2TransportObservationTest {
         when(connection.streamOpened(any(), any())).thenReturn(delegate);
         var observation = new Http2TransportObservation(connection);
         var stream = observation.openStream(initiallyRemoteEnded);
-        observation.stop();
+        observation.stop(() -> fail("No terminal write requires transport abort"));
         stream.fail();
         stream.localEnd();
         stream.remoteEnd();

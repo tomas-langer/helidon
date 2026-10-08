@@ -17,6 +17,7 @@ package io.helidon.webserver;
 
 import java.net.InetSocketAddress;
 import java.net.SocketTimeoutException;
+import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -40,10 +41,13 @@ import io.helidon.common.socket.SocketWriterException;
 import io.helidon.common.tls.Tls;
 import io.helidon.http.HttpTransportObserver.ConnectionObservation;
 import io.helidon.http.HttpTransportObserver.ConnectionOutcome;
+import io.helidon.webserver.HttpTransportObserverSupport.ConnectionObservationContext;
 import io.helidon.webserver.spi.ServerConnection;
 import io.helidon.webserver.spi.ServerConnectionSelector;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -166,6 +170,61 @@ class ConnectionHandlerTest {
         verify(transportObservation).close(ConnectionOutcome.REMOTE_CLOSE);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void abortSocketClosesChannelAndPreservesTransportOutcome(boolean useNio) throws Exception {
+        ListenerConfig listenerConfig = ListenerConfig.builder()
+                .useNio(useNio)
+                .writeQueueLength(1)
+                .build();
+        ListenerContext listenerContext = mock(ListenerContext.class);
+        when(listenerContext.config()).thenReturn(listenerConfig);
+        Tls tls = Tls.builder().enabled(false).build();
+        VirtualHostRegistry virtualHosts = VirtualHostRegistry.create("server", listenerConfig, tls);
+        ConnectionObservation observation = mock(ConnectionObservation.class);
+        CountDownLatch reading = new CountDownLatch(1);
+        AtomicReference<ConnectionHandler> removed = new AtomicReference<>();
+
+        try (ServerSocketChannel listener = ServerSocketChannel.open()) {
+            listener.bind(new InetSocketAddress("127.0.0.1", 0));
+            try (SocketChannel client = SocketChannel.open(listener.getLocalAddress());
+                 SocketChannel accepted = listener.accept()) {
+                ConnectionHandler handler = new ConnectionHandler(listenerContext,
+                                                                  Optional.empty(),
+                                                                  mock(LimitAlgorithm.Token.class),
+                                                                  mock(Limit.class),
+                                                                  ConnectionProviders.create(List.of(
+                                                                          new ReadingConnectionSelector(reading))),
+                                                                  accepted,
+                                                                  "server",
+                                                                  Router.empty(),
+                                                                  tls,
+                                                                  virtualHosts,
+                                                                  observation,
+                                                                  removed::set);
+                // A platform thread also exercises the legacy socket path without relying on interruption.
+                Thread thread = Thread.ofPlatform().start(handler::run);
+                try {
+                    assertThat("connection reached its socket read", reading.await(5, TimeUnit.SECONDS), is(true));
+                    assertThat(accepted.isOpen(), is(true));
+
+                    handler.abortSocket();
+
+                    assertThat("abort closes the physical channel", accepted.isOpen(), is(false));
+                    thread.join(TimeUnit.SECONDS.toMillis(5));
+                    assertThat("socket read and handler cleanup finish after abort", thread.isAlive(), is(false));
+                    verify(observation).close(ConnectionOutcome.REMOTE_CLOSE);
+                    assertThat(removed.get(), sameInstance(handler));
+                } finally {
+                    handler.abortSocket();
+                    client.close();
+                    thread.join(TimeUnit.SECONDS.toMillis(5));
+                    assertThat("handler thread must be stopped", thread.isAlive(), is(false));
+                }
+            }
+        }
+    }
+
     private static void assertConnectionFailureLevel(Exception failure,
                                                      Level expectedLevel,
                                                      ConnectionOutcome expectedOutcome) throws Exception {
@@ -206,6 +265,47 @@ class ConnectionHandlerTest {
             assertThat(record.getThrown(), sameInstance(failure));
             assertThat(record.getLevel(), is(expectedLevel));
             verify(transportObservation).close(expectedOutcome);
+        }
+    }
+
+    private record ReadingConnectionSelector(CountDownLatch reading) implements ServerConnectionSelector {
+        @Override
+        public int bytesToIdentifyConnection() {
+            return 0;
+        }
+
+        @Override
+        public Support supports(BufferData data) {
+            return Support.SUPPORTED;
+        }
+
+        @Override
+        public Set<String> supportedApplicationProtocols() {
+            return Set.of();
+        }
+
+        @Override
+        public ServerConnection connection(ConnectionContext ctx) {
+            return new ServerConnection() {
+                @Override
+                public void handle(Limit limit) {
+                    if (!(ctx instanceof ConnectionObservationContext observedContext)) {
+                        throw new IllegalStateException("Connection does not support transport observation");
+                    }
+                    observedContext.httpTransportOutcome(ConnectionOutcome.REMOTE_CLOSE);
+                    reading.countDown();
+                    ctx.dataReader().ensureAvailable();
+                }
+
+                @Override
+                public Duration idleTime() {
+                    return Duration.ZERO;
+                }
+
+                @Override
+                public void close(boolean interrupt) {
+                }
+            };
         }
     }
 
