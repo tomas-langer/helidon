@@ -97,6 +97,8 @@ public class GrpcTransportCompatibilityJmhBenchmark {
                                                                   METRICS_FACTORY.tagCreate("initiator", "remote"),
                                                                   METRICS_FACTORY.tagCreate("outcome", "completed"));
 
+    private final ReentrantLock callStartupLock = new ReentrantLock();
+
     @Param({"65530", "65531", "131072"})
     private int payloadSize;
 
@@ -104,7 +106,6 @@ public class GrpcTransportCompatibilityJmhBenchmark {
     @Param({"false"})
     private boolean transportMetrics;
 
-    private final ReentrantLock callStartupLock = new ReentrantLock();
     private byte[] payload;
     private WebServer server;
     private GrpcClient grpcClient;
@@ -206,6 +207,20 @@ public class GrpcTransportCompatibilityJmhBenchmark {
             throw new IllegalStateException("Call closed before first response: " + status.get());
         }
         blackhole.consume(firstResponse);
+    }
+
+    private static GrpcClientMethodDescriptor clientMethod(String methodName,
+                                                           MethodDescriptor.MethodType methodType) {
+        return GrpcClientMethodDescriptor.create(SERVICE_NAME, methodName, method(methodName, methodType));
+    }
+
+    private static MethodDescriptor.Builder<byte[], byte[]> method(String methodName,
+                                                                    MethodDescriptor.MethodType methodType) {
+        return MethodDescriptor.<byte[], byte[]>newBuilder()
+                .setFullMethodName(MethodDescriptor.generateFullMethodName(SERVICE_NAME, methodName))
+                .setType(methodType)
+                .setRequestMarshaller(ByteArrayMarshaller.INSTANCE)
+                .setResponseMarshaller(ByteArrayMarshaller.INSTANCE);
     }
 
     private void setupServer(ServerServiceDefinition service) {
@@ -423,20 +438,6 @@ public class GrpcTransportCompatibilityJmhBenchmark {
             call.request(1);
             return response;
         }
-    }
-
-    private static GrpcClientMethodDescriptor clientMethod(String methodName,
-                                                           MethodDescriptor.MethodType methodType) {
-        return GrpcClientMethodDescriptor.create(SERVICE_NAME, methodName, method(methodName, methodType));
-    }
-
-    private static MethodDescriptor.Builder<byte[], byte[]> method(String methodName,
-                                                                    MethodDescriptor.MethodType methodType) {
-        return MethodDescriptor.<byte[], byte[]>newBuilder()
-                .setFullMethodName(MethodDescriptor.generateFullMethodName(SERVICE_NAME, methodName))
-                .setType(methodType)
-                .setRequestMarshaller(ByteArrayMarshaller.INSTANCE)
-                .setResponseMarshaller(ByteArrayMarshaller.INSTANCE);
     }
 
     private enum ByteArrayMarshaller implements MethodDescriptor.Marshaller<byte[]> {
