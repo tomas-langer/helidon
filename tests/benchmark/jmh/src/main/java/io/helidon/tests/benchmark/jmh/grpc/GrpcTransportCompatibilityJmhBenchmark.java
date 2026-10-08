@@ -43,6 +43,8 @@ import io.helidon.webclient.grpc.GrpcClientMethodDescriptor;
 import io.helidon.webclient.grpc.GrpcServiceClient;
 import io.helidon.webclient.grpc.GrpcServiceDescriptor;
 import io.helidon.webserver.WebServer;
+import io.helidon.webserver.grpc.GrpcConfig;
+import io.helidon.webserver.grpc.GrpcProtocolSelector;
 import io.helidon.webserver.grpc.GrpcRouting;
 import io.helidon.webserver.http1.Http1Config;
 import io.helidon.webserver.http1.Http1ConnectionSelector;
@@ -214,7 +216,10 @@ public class GrpcTransportCompatibilityJmhBenchmark {
         var serverBuilder = WebServer.builder()
                 .featuresDiscoverServices(false)
                 .protocolsDiscoverServices(false)
-                .addConnectionSelector(Http2ConnectionSelector.builder().http2Config(http2Config).build())
+                .addConnectionSelector(Http2ConnectionSelector.builder()
+                                               .http2Config(http2Config)
+                                               .addSubProtocolSelector(GrpcProtocolSelector.create(GrpcConfig.create()))
+                                               .build())
                 .addConnectionSelector(Http1ConnectionSelector.builder()
                                                .config(Http1Config.create())
                                                .addUpgrader(Http2Upgrader.create(http2Config))
