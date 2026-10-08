@@ -374,8 +374,15 @@ class Http2ConnectionOutcomeTest {
         try {
             await(peerGoAwayProcessed, "connection must process peer GOAWAY during terminal write");
             if (writeMode == TerminalWriteMode.SUCCESS) {
-                // Permit an early return to expose a lost callback, while a correct handler waits for write completion.
-                connectionThread.join(Duration.ofMillis(100));
+                await(socketAborted, "connection teardown must start while terminal publication is held");
+                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+                while (connectionThread.isAlive()
+                        && connectionThread.getState() != Thread.State.WAITING
+                        && System.nanoTime() < deadline) {
+                    Thread.onSpinWait();
+                }
+                assertThat("connection teardown must wait for terminal outcome publication",
+                           connectionThread.getState(), is(Thread.State.WAITING));
                 releaseTerminalWrite.countDown();
             }
             assertThat("connection handler must terminate", connectionThread.join(Duration.ofSeconds(5)), is(true));
