@@ -81,6 +81,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
@@ -224,9 +227,7 @@ class Http2ConnectionOutcomeTest {
         });
         try {
             await(invalidFrameRead, "connection must read invalid frame while GOAWAY is pending");
-            assertThat("handle must not return before GOAWAY outcome is known",
-                       connectionThread.join(Duration.ofMillis(100)),
-                       is(false));
+            awaitState(connectionThread, Thread.State.WAITING, "handle waits until GOAWAY outcome is known");
             assertThat("pending GOAWAY must not preselect an error outcome", observed.outcome().get(), is(nullValue()));
             releaseGoAway.countDown();
             assertThat("GOAWAY caller must terminate", writerThread.join(Duration.ofSeconds(5)), is(true));
@@ -252,8 +253,10 @@ class Http2ConnectionOutcomeTest {
         CountDownLatch terminalResponseWritten = new CountDownLatch(1);
         CountDownLatch releaseTerminalWrite = new CountDownLatch(1);
         CountDownLatch peerGoAwayProcessed = new CountDownLatch(1);
+        CountDownLatch teardownStarted = new CountDownLatch(1);
         CountDownLatch socketAborted = new CountDownLatch(1);
         AtomicReference<InterruptedException> writerInterruption = new AtomicReference<>();
+        AtomicReference<Boolean> terminalWriteInterrupted = new AtomicReference<>();
         Queue<byte[]> input = new ConcurrentLinkedQueue<>();
         Http2Headers requestHeaders = Http2Headers.create(WritableHeaders.create());
         if (expectedOutcome == StreamOutcome.REJECTED) {
@@ -306,6 +309,7 @@ class Http2ConnectionOutcomeTest {
                 } else {
                     awaitSuccessfulWrite(releaseTerminalWrite);
                 }
+                terminalWriteInterrupted.set(Thread.currentThread().isInterrupted());
             }
             return null;
         }).when(writer).writeNow(any(BufferData.class));
@@ -326,9 +330,14 @@ class Http2ConnectionOutcomeTest {
         }).when(observationContext).httpTransportOutcome(ConnectionOutcome.REMOTE_CLOSE);
         when(ctx.router()).thenReturn(Router.empty());
         ListenerContext listenerContext = mock(ListenerContext.class);
-        when(listenerContext.config()).thenReturn(ListenerConfig.builder()
-                                                         .errorHandling(ErrorHandling.builder().includeEntity(false).build())
-                                                         .build());
+        ListenerConfig listenerConfig = spy(ListenerConfig.builder()
+                                                   .errorHandling(ErrorHandling.builder().includeEntity(false).build())
+                                                   .build());
+        doAnswer(_ -> {
+            teardownStarted.countDown();
+            return writeMode == TerminalWriteMode.SUCCESS ? Duration.ofNanos(Long.MAX_VALUE) : Duration.ZERO;
+        }).when(listenerConfig).shutdownGracePeriod();
+        when(listenerContext.config()).thenReturn(listenerConfig);
         when(listenerContext.directHandlers()).thenReturn(DirectHandlers.create());
         when(ctx.listenerContext()).thenReturn(listenerContext);
         when(ctx.dataReader()).thenReturn(reader);
@@ -374,19 +383,18 @@ class Http2ConnectionOutcomeTest {
         try {
             await(peerGoAwayProcessed, "connection must process peer GOAWAY during terminal write");
             if (writeMode == TerminalWriteMode.SUCCESS) {
-                await(socketAborted, "connection teardown must start while terminal publication is held");
-                long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-                while (connectionThread.isAlive()
-                        && connectionThread.getState() != Thread.State.WAITING
-                        && System.nanoTime() < deadline) {
-                    Thread.onSpinWait();
-                }
-                assertThat("connection teardown must wait for terminal outcome publication",
-                           connectionThread.getState(), is(Thread.State.WAITING));
+                await(teardownStarted, "connection teardown must start while terminal publication is held");
+                awaitState(connectionThread,
+                           Thread.State.TIMED_WAITING,
+                           "connection teardown waits for terminal outcome publication");
                 releaseTerminalWrite.countDown();
             }
             assertThat("connection handler must terminate", connectionThread.join(Duration.ofSeconds(5)), is(true));
             assertThat("terminal writer must terminate", streamThread.get().join(Duration.ofSeconds(5)), is(true));
+            if (writeMode == TerminalWriteMode.SUCCESS) {
+                verify(ctx, never()).abortSocket();
+                assertThat("successful terminal write must not be interrupted", terminalWriteInterrupted.get(), is(false));
+            }
             if (writeMode == TerminalWriteMode.INTERRUPTIBLE) {
                 assertThat("connection teardown must interrupt blocked socket I/O",
                            writerInterruption.get(), instanceOf(InterruptedException.class));
@@ -419,7 +427,9 @@ class Http2ConnectionOutcomeTest {
         ConnectionContext ctx = mock(ConnectionContext.class,
                                      withSettings().extraInterfaces(ConnectionObservationContext.class));
         when(ctx.router()).thenReturn(Router.empty());
-        when(ctx.listenerContext()).thenReturn(mock(ListenerContext.class));
+        ListenerContext listenerContext = mock(ListenerContext.class);
+        when(listenerContext.config()).thenReturn(ListenerConfig.create());
+        when(ctx.listenerContext()).thenReturn(listenerContext);
         when(ctx.dataWriter()).thenReturn(writer);
         when(ctx.dataReader()).thenReturn(reader);
         ConnectionObservationContext observationContext = (ConnectionObservationContext) ctx;
@@ -439,6 +449,14 @@ class Http2ConnectionOutcomeTest {
                                        1)
                 .write()
                 .readBytes();
+    }
+
+    private static void awaitState(Thread thread, Thread.State expected, String message) {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+        while (thread.isAlive() && thread.getState() != expected && System.nanoTime() < deadline) {
+            Thread.onSpinWait();
+        }
+        assertThat(message, thread.getState(), is(expected));
     }
 
     private static void await(CountDownLatch latch, String message) {

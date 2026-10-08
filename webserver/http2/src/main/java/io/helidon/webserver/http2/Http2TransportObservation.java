@@ -16,8 +16,10 @@
 
 package io.helidon.webserver.http2;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -67,13 +69,25 @@ final class Http2TransportObservation {
         }
     }
 
-    void stop(Runnable abortSocket) {
+    void stop(Duration gracePeriod, Runnable abortSocket) {
+        boolean interrupted = false;
         boolean pendingWrites;
         lock.lock();
         try {
             stopping = true;
-            // A terminal write may still be waiting for flow control or socket I/O. Interrupt its actual writer,
-            // including asynchronous subprotocol writers, before waiting for success/failure publication.
+            // A successful terminal write can still be publishing its outcome. Let admitted writers finish
+            // before cancellation so normal connection teardown retains graceful TLS closure.
+            long remaining = TimeUnit.NANOSECONDS.convert(gracePeriod);
+            while (!terminalWriters.isEmpty() && remaining > 0) {
+                try {
+                    remaining = writesFinished.awaitNanos(remaining);
+                } catch (InterruptedException _) {
+                    interrupted = true;
+                    break;
+                }
+            }
+            // Remaining writers can be blocked in flow control or socket I/O. Interrupt the actual writer,
+            // including asynchronous subprotocol writers, before draining success/failure publication.
             // Keep registration locked while interrupting so a pooled thread cannot advance to unrelated work.
             terminalWriters.keySet().forEach(Thread::interrupt);
             pendingWrites = !terminalWriters.isEmpty();
@@ -95,6 +109,9 @@ final class Http2TransportObservation {
                 stopped = true;
             } finally {
                 lock.unlock();
+                if (interrupted) {
+                    Thread.currentThread().interrupt();
+                }
             }
         }
     }

@@ -256,7 +256,7 @@ public class Http2Connection implements ServerConnection, InterruptableTask<Void
         } finally {
             try {
                 if (transportObservation != null) {
-                    transportObservation.stop(ctx::abortSocket);
+                    transportObservation.stop(ctx.listenerContext().config().shutdownGracePeriod(), ctx::abortSocket);
                 }
             } finally {
                 streams.abortAll();
