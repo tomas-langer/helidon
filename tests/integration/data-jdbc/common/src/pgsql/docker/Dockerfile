@@ -16,11 +16,25 @@
 
 FROM container-registry.oracle.com/os/oraclelinux:9-slim
 
-RUN microdnf install postgresql-server && microdnf clean all
+COPY . /usr/local/share/helidon-test-image/recipe/
+RUN sh /usr/local/share/helidon-test-image/recipe/oracle-rpms.sh install /image-rpms.txt \
+        postgresql-13.23 postgresql-private-libs-13.23 postgresql-server-13.23
 RUN mkdir -p /var/run/postgresql && \
     chown postgres:postgres /var/run/postgresql
 ADD entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN mkdir -p /usr/local/share/helidon-test-image \
+    && sh /usr/local/share/helidon-test-image/recipe/oracle-rpms.sh record \
+        /usr/local/share/helidon-test-image/rpms.txt \
+    && postgres --version > /usr/local/share/helidon-test-image/postgres-version.txt \
+    && sha256sum "$(command -v postgres)" "$(command -v initdb)" \
+        "$(command -v pg_ctl)" "$(command -v psql)" \
+        > /usr/local/share/helidon-test-image/executables.sha256 \
+    && find /usr/local/share/helidon-test-image/recipe -maxdepth 1 -type f ! -name '.*' \
+        -exec sha256sum {} + > /usr/local/share/helidon-test-image/source-inputs.sha256 \
+    && printf '%s\n' \
+        'container-registry.oracle.com/os/oraclelinux:9-slim' \
+        > /usr/local/share/helidon-test-image/base-image.txt
 ENV PGDATA /var/lib/pgsql/data
 USER postgres
 ENTRYPOINT ["entrypoint.sh"]

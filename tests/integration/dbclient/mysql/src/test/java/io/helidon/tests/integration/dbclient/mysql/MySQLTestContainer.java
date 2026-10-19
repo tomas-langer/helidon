@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 Oracle and/or its affiliates.
+ * Copyright (c) 2024, 2026 Oracle and/or its affiliates.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,8 @@ import org.testcontainers.utility.DockerImageName;
  */
 abstract class MySQLTestContainer {
 
-    private static final DockerImageName IMAGE = DockerImageName.parse("container-registry.oracle.com/mysql/community-server")
+    private static final DockerImageName IMAGE = DockerImageName.parse(
+            "container-registry.oracle.com/mysql/community-server:26.7.1")
             .asCompatibleSubstituteFor("mysql");
 
     static final MySQLContainer<?> CONTAINER = new MySQLContainer<>(IMAGE)

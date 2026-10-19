@@ -22,10 +22,41 @@ also changed.
 | H2 | `com.h2database:h2` | `org.h2.Driver` | In-memory H2 database |
 | MySQL | `com.mysql:mysql-connector-j` | `com.mysql.cj.jdbc.Driver` | Testcontainers MySQL using `container-registry.oracle.com/mysql/community-server:9.7.3` |
 | PostgreSQL | `org.postgresql:postgresql` | `org.postgresql.Driver` | Testcontainers image built from `common/src/pgsql/docker` |
-| Oracle Database | `com.oracle.database.jdbc:ojdbc17-production` | `oracle.jdbc.OracleDriver` | Testcontainers Oracle Database Free using `container-registry.oracle.com/database/free:latest-lite` |
+| Oracle Database | `com.oracle.database.jdbc:ojdbc17-production` | `oracle.jdbc.OracleDriver` | Testcontainers Oracle Database Free using `container-registry.oracle.com/database/free:23.26.3.0-lite` |
 
 External database tests require a working Docker/Testcontainers environment.
 H2 tests do not require Docker.
+
+MySQL and Oracle Database fixtures select explicit Oracle Container Registry
+version tags without digest pins:
+
+```text
+container-registry.oracle.com/mysql/community-server:9.7.3
+container-registry.oracle.com/database/free:23.26.3.0-lite
+```
+
+Oracle may refresh these version tags. Record the actual image identity and
+platform with validation. Oracle publishes separate MySQL aarch64 tags; arm64
+selection and validation remain separate work for both databases.
+
+The PostgreSQL image selects PostgreSQL `13.23` on a version-tagged Oracle
+Linux base. Oracle dependencies may refresh; actual RPM inventories are
+recorded rather than compared with a fixed closure. See the adjacent
+[image materials and refresh instructions](common/src/pgsql/docker/README.md).
+Its initialization script and Testcontainers startup behavior are unchanged.
+Validate both `helidon-tests-integration-data-jdbc-imperative-pgsql` and
+`helidon-tests-integration-data-jdbc-declarative-pgsql`, checking Failsafe reports
+for executed cases and skips. Keep the image's material receipts and immutable
+local image ID with the test results. Acceptance is scoped to Linux amd64;
+arm64 and fresh-VM bootstrap require separate validation. Refresh both this
+recipe and the DBClient PostgreSQL recipe together; unavailable selected
+PostgreSQL packages must fail rather than silently selecting another version.
+
+For an intentional database version change, review the replacement tag and platform,
+update the shared database fixture and this description together, and validate
+both imperative and declarative suites. A successful image pull alone does not
+establish test coverage. Registry access must use verified TLS and an approved
+acquisition route; an existing VM cache does not provision a fresh VM.
 
 ## Test database credentials
 

@@ -29,7 +29,8 @@ import org.testcontainers.utility.DockerImageName;
  */
 abstract class OracleTestContainer {
 
-    private static final DockerImageName IMAGE = DockerImageName.parse("container-registry.oracle.com/database/free:latest-lite");
+    private static final DockerImageName IMAGE = DockerImageName.parse(
+            "container-registry.oracle.com/database/free:23.26.3.0-lite");
 
     static final GenericContainer<?> CONTAINER = new GenericContainer<>(IMAGE)
             .withEnv("ORACLE_PWD", "oracle123")
