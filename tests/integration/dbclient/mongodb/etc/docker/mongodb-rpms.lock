@@ -1,0 +1,25 @@
+#
+# Copyright (c) 2026 Oracle and/or its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+# MongoDB RPM URL, SHA-256 and exact epoch-inclusive NEVRA (tab-separated).
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-database-tools-100.19.1-1.x86_64.rpm	dddf14dcf4b40af29973636f8d0ee7865794e6e9d9a0229244ce44857d785abb	mongodb-database-tools-0:100.19.1-1.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-mongosh-2.13.0.x86_64.rpm	f424ffff097523a7087aa334746ab5d7be6014e4581f1cd7b60e6c81ba694f0a	mongodb-mongosh-0:2.13.0-1.el8.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-org-7.0.45-1.el9.x86_64.rpm	e230743d51a7adc516a2c6438e5910409fc85573cef316f63946a541ae3a9c27	mongodb-org-0:7.0.45-1.el9.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-7.0.45-1.el9.x86_64.rpm	7a5ebbc1ab1c10328f085e6f664f51e30cced3a9d591750ac7ec5d74e9a604cb	mongodb-org-database-0:7.0.45-1.el9.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-org-database-tools-extra-7.0.45-1.el9.x86_64.rpm	e47bbeb45aa2acc7582dbd812428ad97e16bdd25162ba8b4b639dc1cc2231fe2	mongodb-org-database-tools-extra-0:7.0.45-1.el9.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-org-mongos-7.0.45-1.el9.x86_64.rpm	4c34ecdc549a8a0c2d314cb684a3be252a829cdbd56ffc6f58a993437f8a83e2	mongodb-org-mongos-0:7.0.45-1.el9.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-org-server-7.0.45-1.el9.x86_64.rpm	4142d5750b45234e744278a76b20102710881e42077cfe1e1054da0b5eba9eea	mongodb-org-server-0:7.0.45-1.el9.x86_64
+https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/RPMS/mongodb-org-tools-7.0.45-1.el9.x86_64.rpm	fb28fcbb39fa207a88c2b427b8d931ff0afd11cef96eb2849545bf67aa4f98d0	mongodb-org-tools-0:7.0.45-1.el9.x86_64

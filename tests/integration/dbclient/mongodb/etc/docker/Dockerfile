@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024, 2025 Oracle and/or its affiliates.
+# Copyright (c) 2024, 2026 Oracle and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,15 +16,8 @@
 
 FROM container-registry.oracle.com/os/oraclelinux:9-slim
 
-RUN echo "[mongodb-org-7.0]" >> .tmp && \
-    echo "name=MongoDB Repository" >> .tmp && \
-    echo "baseurl=https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/$(uname -m)/" >> .tmp && \
-    echo "gpgcheck=1" >> .tmp && \
-    echo "enabled=1" >> .tmp && \
-    echo "gpgkey=https://pgp.mongodb.com/server-7.0.asc" >> .tmp && \
-    mv .tmp /etc/yum.repos.d/mongodb-org-7.0.repo
-
-RUN microdnf install mongodb-org && microdnf clean all
+COPY . /usr/local/share/helidon-test-image/recipe/
+RUN sh /usr/local/share/helidon-test-image/recipe/mongodb-rpms.sh install
 ADD entrypoint.sh /usr/local/bin/
 
 ENTRYPOINT ["entrypoint.sh"]
