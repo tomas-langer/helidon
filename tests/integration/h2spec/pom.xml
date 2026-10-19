@@ -130,4 +130,29 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>h2spec-sshd-image</id>
+            <activation>
+                <property>
+                    <name>helidon.tests.h2spec.sshd.image</name>
+                </property>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <environmentVariables>
+                                <TESTCONTAINERS_IMAGE_SUBSTITUTOR>H2SpecSshdImageSubstitutor</TESTCONTAINERS_IMAGE_SUBSTITUTOR>
+                                <HELIDON_TEST_SSHD_IMAGE>${helidon.tests.h2spec.sshd.image}</HELIDON_TEST_SSHD_IMAGE>
+                            </environmentVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
